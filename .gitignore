@@ -1,0 +1,14 @@
+# Nunca subir credenciales
+.env
+
+# Caché de Python
+__pycache__/
+*.pyc
+
+# Entorno virtual local
+.venv/
+venv/
+
+# Archivos temporales / de registro
+datos/registro.log
+resultado.txt
