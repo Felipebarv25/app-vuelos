@@ -44,6 +44,15 @@
 
 _(Se irá llenando durante la noche…)_
 
+### ✅ CALIDAD RESUELTA (v13) — causa raíz encontrada
+- CAUSA RAÍZ: el scoring de calidad estaba SOLO en el cliente, pero la API devolvía
+  en orden crudo de OSM (estatuas primero) y CORTABA la lista antes → los iconos no
+  llegaban. FIX: ordenar por calidad EN EL SERVIDOR (función puntuar() en route.js)
+  antes de cortar.
+- VERIFICADO v13: París → Louvre, Orsay primero. Madrid → Templo Debod, Palacio
+  Zarzuela. Roma → museos (ya no "Monumento a Garibaldi"). ENORME mejora.
+- APRENDIZAJE: si la API corta la lista, el ordenamiento DEBE ser server-side.
+
 ### ✅ QA calidad de lugares — iconos reales primero
 - QA detectó que Roma/Madrid mostraban "Monumento a X" (estatuas menores) en vez del
   Coliseo/Prado. El scoring no daba suficiente peso a la fama real.
