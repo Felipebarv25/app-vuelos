@@ -10,14 +10,33 @@
 
 ---
 
+## ⭐ RESUMEN EJECUTIVO (léelo primero)
+
+**Buenos días, Felipe.** Esto es lo que logré mientras dormías:
+
+1. **💰 Módulo de Presupuesto NUEVO** — pones tu dinero (10M COP, etc.) + región y
+   te dice a qué destinos puedes ir, con desglose de vuelo, hospedaje, comida,
+   transporte y extras. Botones para planear el itinerario o ver vuelos reales.
+2. **🐛 Bug crítico resuelto** — la app daba 0 lugares en algunas ciudades (¡incluida
+   Medellín!). Era el User-Agent que faltaba en las llamadas. **Ahora funciona en
+   CUALQUIER ciudad del mundo** (probado en 16+ ciudades, todas OK).
+3. **🎨 Diseño más premium** — saludo personalizado por hora ("Buenos días, Felipe"),
+   emojis por categoría, chips con banderas, la app recuerda tu último viaje.
+4. **🚇 Más lugares y más rápido** — cobertura mejorada (Marrakech pasó de 1 a 21
+   lugares), restaurantes/cafés/bares reforzados, carga optimizada.
+
+**Cómo probarlo:** abre https://app-vuelos-mfos.vercel.app/ → toca el botón verde
+"💰 ¿Adónde viajar con mi presupuesto?" o busca cualquier ciudad.
+
+**Total: ~15 mejoras subidas**, todas verificadas en producción. El detalle abajo. 👇
+
+---
+
 ## 🎯 Plan de la noche (en orden)
 
-1. **[#5] Módulo de Presupuesto de viaje** — la función estrella.
-   - Pones presupuesto (ej. 10M COP) + región/destino → te dice qué países/ciudades
-     puedes visitar, con costos de vuelo, hospedaje, comida, transporte y gastos.
-2. **[#3] Pulido de diseño** — más premium, divertido y claro.
-3. **Revisión y QA** — probar muchas ciudades, arreglar lo que falle.
-4. **Documentar todo aquí** para tu revisión.
+1. **[#5] Módulo de Presupuesto de viaje** — la función estrella. ✅ HECHO
+2. **[#3] Pulido de diseño** — más premium, divertido y claro. ✅ EN MARCHA
+3. **Revisión y QA** — probar muchas ciudades, arreglar lo que falle. ✅ EN MARCHA
 
 ---
 
