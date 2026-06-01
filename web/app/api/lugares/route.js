@@ -36,6 +36,10 @@ const TERMINOS_PHOTON = {
   miradores: ["viewpoint", "tower", "lookout", "observation"],
 };
 
+// User-Agent identificable: varias APIs gratuitas (Photon/Nominatim/Overpass)
+// rechazan peticiones sin UA, sobre todo desde IPs de datacenter como Vercel.
+const UA = "Viajero360/1.0 (https://app-vuelos-mfos.vercel.app)";
+
 function carrera(query) {
   const cuerpo = "data=" + encodeURIComponent(query);
   const intentos = MIRRORS.map((url) => {
@@ -43,7 +47,10 @@ function carrera(query) {
     const id = setTimeout(() => ctrl.abort(), 13000);
     return fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": UA,
+      },
       body: cuerpo,
       signal: ctrl.signal,
     }).then(async (r) => {
@@ -101,7 +108,7 @@ async function desdePhoton(cat, lat, lon) {
     const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(
       term
     )}&bbox=${bbox}&lat=${lat}&lon=${lon}&limit=20`;
-    return fetch(url, { signal: ctrl.signal })
+    return fetch(url, { signal: ctrl.signal, headers: { "User-Agent": UA } })
       .then((r) => {
         clearTimeout(id);
         return r.ok ? r.json() : { features: [] };

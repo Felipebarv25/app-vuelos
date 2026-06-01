@@ -25,6 +25,17 @@
 
 _(Se irá llenando durante la noche…)_
 
+### 🐛 BUG IMPORTANTE encontrado en QA integral — Medellín (y otras) daban 0
+- QA FINAL de 8 ciudades: Medellín 0/0 (¡ciudad del usuario!) y Lisboa restaurantes=1.
+- DIAGNÓSTICO: la respuesta era no-store/MISS (no caché), Photon traía 12 desde mi PC
+  pero 0 desde Vercel. CAUSA: las APIs gratuitas (Photon/Overpass) RECHAZAN peticiones
+  sin User-Agent, especialmente desde IPs de datacenter como Vercel. fetch() de Node no
+  envía UA por defecto → bloqueo silencioso. Esto explicaba varios fallos intermitentes
+  de toda la noche.
+- ARREGLO: añadido header User-Agent identificable a TODAS las llamadas (Photon + Overpass).
+  Debería mejorar drásticamente la fiabilidad en producción.
+- Build OK. Push pendiente. PENDIENTE: verificar en prod que Medellín ya trae lugares.
+
 ### ✅ Diseño: saludo personalizado por hora
 - VERIFICADO v8: Barcelona bares 0 estaciones. Filtro definitivo.
 - DISEÑO (toque cálido/premium): la pantalla de inicio ahora saluda al usuario por
