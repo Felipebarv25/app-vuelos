@@ -10,51 +10,51 @@ export default function Bienvenida() {
   const [nombre, setNombre] = useState("");
 
   return (
-    <div style={fondo}>
-      <div style={tarjeta} className="animar-subir">
-        <div style={{ fontSize: 52, textAlign: "center" }}>🌍</div>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--azul-osc)", textAlign: "center" }}>
+    <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4 bg-gradient-to-br from-marca-500 via-marca-600 to-marca-900">
+      <div className="bg-white rounded-3xl p-7 w-full max-w-sm shadow-[0_24px_60px_rgba(49,46,129,.45)] animar-subir">
+        <div className="text-[52px] text-center leading-none">🌍</div>
+        <h1 className="text-2xl font-extrabold text-marca-900 text-center tracking-tight mt-1">
           Viajero 360
         </h1>
-        <p style={{ fontSize: 14, color: "#64748b", textAlign: "center", marginTop: 4 }}>
-          {t("tagline")}
-        </p>
+        <p className="text-sm text-slate-500 text-center mt-1">{t("tagline")}</p>
 
         {/* Selector de idioma */}
-        <div style={{ marginTop: 22 }}>
-          <div style={etiqueta}>🌐 {t("idioma")}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <div className="mt-6">
+          <div className="text-[13px] font-bold text-slate-600 mb-2">🌐 {t("idioma")}</div>
+          <div className="grid grid-cols-2 gap-2">
             {Object.entries(IDIOMAS).map(([cod, info]) => (
               <button
                 key={cod}
                 onClick={() => cambiarIdioma(cod)}
-                style={{
-                  ...idiomaBtn,
-                  borderColor: lang === cod ? "var(--azul)" : "var(--borde)",
-                  background: lang === cod ? "#eff6ff" : "#fff",
-                  fontWeight: lang === cod ? 700 : 500,
-                }}
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition ${
+                  lang === cod
+                    ? "border-marca-500 bg-marca-50 font-bold text-marca-900"
+                    : "border-slate-200 bg-white font-medium text-slate-700"
+                }`}
               >
-                <span style={{ fontSize: 20 }}>{info.bandera}</span> {info.nombre}
+                <span className="text-xl">{info.bandera}</span> {info.nombre}
               </button>
             ))}
           </div>
         </div>
 
         {/* Nombre (login ligero) */}
-        <div style={{ marginTop: 20 }}>
-          <div style={etiqueta}>{t("tuNombre")}</div>
+        <div className="mt-5">
+          <div className="text-[13px] font-bold text-slate-600 mb-2">{t("tuNombre")}</div>
           <input
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && entrar(nombre)}
             placeholder="Felipe…"
-            style={input}
+            className="w-full px-3.5 py-3 rounded-xl border border-slate-200 text-base"
             autoFocus
           />
         </div>
 
-        <button onClick={() => entrar(nombre)} style={boton}>
+        <button
+          onClick={() => entrar(nombre)}
+          className="w-full mt-6 py-3.5 rounded-2xl border-0 bg-gradient-to-r from-marca-500 to-marca-600 text-white text-base font-bold shadow-marca"
+        >
           {t("comenzar")} →
         </button>
       </div>
@@ -62,53 +62,3 @@ export default function Bienvenida() {
   );
 }
 
-const fondo = {
-  position: "fixed",
-  inset: 0,
-  background: "linear-gradient(135deg,#6366f1 0%,#4f46e5 55%,#312e81 100%)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: 18,
-  zIndex: 5000,
-};
-const tarjeta = {
-  background: "#fff",
-  borderRadius: 24,
-  padding: 28,
-  width: "100%",
-  maxWidth: 400,
-  boxShadow: "0 24px 60px rgba(49,46,129,.45)",
-};
-const etiqueta = { fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 8 };
-const idiomaBtn = {
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  padding: "11px 12px",
-  borderRadius: 10,
-  border: "1px solid var(--borde)",
-  fontSize: 14,
-  color: "var(--texto)",
-};
-const input = {
-  width: "100%",
-  padding: "13px 14px",
-  borderRadius: 10,
-  border: "1px solid var(--borde)",
-  fontSize: 16,
-  outline: "none",
-};
-const boton = {
-  width: "100%",
-  marginTop: 22,
-  padding: "15px",
-  borderRadius: 14,
-  border: "none",
-  background: "linear-gradient(135deg,#6366f1,#4f46e5)",
-  color: "#fff",
-  fontSize: 16,
-  fontWeight: 700,
-  boxShadow: "0 6px 16px rgba(79,70,229,.4)",
-  cursor: "pointer",
-};
