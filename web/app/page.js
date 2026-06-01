@@ -12,6 +12,7 @@ import Bienvenida from "@/components/Bienvenida";
 import SelectorIdioma from "@/components/SelectorIdioma";
 import Presupuesto from "@/components/Presupuesto";
 import CardDestino from "@/components/CardDestino";
+import Ofertas from "@/components/Ofertas";
 import { useApp } from "@/lib/AppContext";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
@@ -49,7 +50,7 @@ function saludoEmoji() {
 }
 
 export default function Home() {
-  const { t, usuario, salir, listo } = useApp();
+  const { t, lang, usuario, salir, listo } = useApp();
   const [consulta, setConsulta] = useState("");
   const [sugerencias, setSugerencias] = useState([]);
   const [mostrarSug, setMostrarSug] = useState(false);
@@ -343,6 +344,13 @@ export default function Home() {
               </div>
             ))}
           </div>
+
+          {/* Vuelos baratos desde Colombia (detector de precios) */}
+          <Ofertas
+            t={t}
+            lang={lang}
+            onPlanear={(q) => { setConsulta(q); setTimeout(() => buscarTexto(), 0); }}
+          />
         </div>
       )}
 

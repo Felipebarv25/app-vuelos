@@ -138,6 +138,16 @@ const T = {
     presupVueloIntl: "Vuelo internacional (ida y vuelta)",
     presupEntreCiudades: "Transporte entre ciudades",
     presupNoches: "noches",
+    // Ofertas de vuelos
+    ofertasEyebrow: "Alertas de precio",
+    ofertasTitulo: "Vuelos baratos desde Colombia",
+    ofertasSub: "Mejores precios detectados desde Bogotá y Medellín hacia el mundo, actualizados cada pocas horas.",
+    ofertasTodos: "Todos",
+    ofertasGanga: "Oferta",
+    ofertasIdaVuelta: "ida y vuelta",
+    ofertasPlanear: "Planear",
+    ofertasActualizado: "Actualizado",
+    ofertasFuente: "Precios de referencia",
   },
 
   en: {
@@ -254,6 +264,15 @@ const T = {
     presupVueloIntl: "International flight (round trip)",
     presupEntreCiudades: "Inter-city transport",
     presupNoches: "nights",
+    ofertasEyebrow: "Price alerts",
+    ofertasTitulo: "Cheap flights from Colombia",
+    ofertasSub: "Best fares detected from Bogotá and Medellín, refreshed every few hours.",
+    ofertasTodos: "All",
+    ofertasGanga: "Deal",
+    ofertasIdaVuelta: "round trip",
+    ofertasPlanear: "Plan",
+    ofertasActualizado: "Updated",
+    ofertasFuente: "Reference prices",
   },
 
   pt: {
@@ -370,6 +389,15 @@ const T = {
     presupVueloIntl: "Voo internacional (ida e volta)",
     presupEntreCiudades: "Transporte entre cidades",
     presupNoches: "noites",
+    ofertasEyebrow: "Alertas de preço",
+    ofertasTitulo: "Voos baratos da Colômbia",
+    ofertasSub: "Melhores preços detectados de Bogotá e Medellín, atualizados a cada poucas horas.",
+    ofertasTodos: "Todos",
+    ofertasGanga: "Oferta",
+    ofertasIdaVuelta: "ida e volta",
+    ofertasPlanear: "Planejar",
+    ofertasActualizado: "Atualizado",
+    ofertasFuente: "Preços de referência",
   },
 
   fr: {
@@ -487,6 +515,15 @@ const T = {
     presupVueloIntl: "Vol international (aller-retour)",
     presupEntreCiudades: "Transport entre villes",
     presupNoches: "nuits",
+    ofertasEyebrow: "Alertes de prix",
+    ofertasTitulo: "Vols pas chers depuis la Colombie",
+    ofertasSub: "Meilleurs prix détectés depuis Bogotá et Medellín, actualisés toutes les quelques heures.",
+    ofertasTodos: "Tous",
+    ofertasGanga: "Offre",
+    ofertasIdaVuelta: "aller-retour",
+    ofertasPlanear: "Planifier",
+    ofertasActualizado: "Mis à jour",
+    ofertasFuente: "Prix de référence",
   },
 };
 

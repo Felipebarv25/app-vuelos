@@ -33,10 +33,13 @@ jobs:
           EMAIL_DESTINATARIO: ${{ secrets.EMAIL_DESTINATARIO }}
         run: python detector.py
 
-      - name: Guardar historial actualizado
+      - name: Generar ofertas para la web
+        run: python generar_ofertas.py
+
+      - name: Guardar historial y ofertas actualizados
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add datos/
-          git commit -m "Actualizar historial de precios" || echo "Sin cambios"
+          git add datos/ web/public/ofertas.json
+          git commit -m "Actualizar historial y ofertas de vuelos" || echo "Sin cambios"
           git push
