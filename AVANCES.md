@@ -10,6 +10,34 @@
 
 ---
 
+## 📅 Actualización 2026-06-01 (tarde) — portal completo y pulido
+
+Sesión de día trabajando contigo en vivo. Lo entregado:
+
+- **🎨 Interfaz migrada a Tailwind y rediseñada para escritorio.** Adiós a la
+  columna angosta: layout full-width, landing con hero amplio y grid de hasta 4
+  destinos, y **vista de ciudad a dos paneles** (itinerario a la izquierda + mapa
+  fijo a la derecha, estilo Wanderlog). Look más sofisticado (etiquetas eyebrow,
+  gradientes más profundos, menos ruido de emojis).
+- **🧭 Ruta multiciudad por presupuesto.** Eliges región + ciudad de salida y la
+  app arma una ruta de varias ciudades (vuelo internacional + transporte entre
+  ciudades + estadía) que entra en tu presupuesto, con línea de tiempo, "🔄 Otra
+  ruta", **planear cada ciudad** y **excluir** las que no te gusten para regenerar.
+- **✈️ Alertas de vuelos baratos reintegradas a la web.** Nueva sección "Vuelos
+  baratos desde Colombia" alimentada por el detector (datos reales BOG/MDE),
+  precio en USD y COP, % de descuento, badge de oferta. `generar_ofertas.py`
+  produce `web/public/ofertas.json` y el GitHub Action lo regenera cada 3 h.
+- **🗺️ Más lugares, hasta 100 km.** Radio ampliado para imperdibles/miradores
+  (Medellín → Guatapé). Bug de fondo resuelto: la consulta pesada de Overpass
+  expiraba; ahora en radio amplio se usa una consulta liviana (notables con
+  wikidata) que responde en ~5 s y trae lugares de calidad. Lista desplegable
+  "Todos los lugares" con botón Agregar. Fotos miniatura en cada parada.
+- **🌍 Más ciudades.** 12 destinos en el landing, ~80 ciudades en el presupuesto
+  (con regiones África y Oceanía), desplegable de ~80 ciudades en el buscador,
+  y días 1–60 en el presupuesto.
+
+---
+
 ## ⭐ RESUMEN EJECUTIVO (léelo primero)
 
 **Buenos días, Felipe.** Esto es lo que logré mientras dormías:
