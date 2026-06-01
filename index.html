@@ -54,6 +54,17 @@
   .cargando { text-align: center; padding: 40px; color: #64748b; }
   footer { text-align: center; color: #94a3b8; font-size: 13px; margin-top: 32px; }
   canvas { max-height: 340px; }
+  .nav { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+  .nav-btn {
+    text-decoration: none; color: var(--azul-osc); background: white;
+    border: 1px solid var(--borde); padding: 10px 18px; border-radius: 999px;
+    font-weight: 600; font-size: 15px; transition: all .15s;
+  }
+  .nav-btn:hover { background: var(--gris); }
+  .nav-btn.activo { background: var(--azul); color: white; border-color: var(--azul); }
+  tr.clic { cursor: pointer; }
+  tr.clic:hover td { background: #eff6ff; }
+  .pista { font-size: 13px; color: #64748b; margin-bottom: 12px; }
 </style>
 </head>
 <body>
@@ -62,6 +73,11 @@
     <h1>✈️ Panel de Vuelos Baratos</h1>
     <p>Evolución de precios desde Bogotá y Medellín hacia el mundo</p>
   </header>
+
+  <nav class="nav">
+    <a class="nav-btn activo" href="index.html">📊 Precios y ofertas</a>
+    <a class="nav-btn" href="itinerario.html">🗺️ Planear itinerario</a>
+  </nav>
 
   <div id="contenido" class="cargando">Cargando datos del historial…</div>
 
@@ -85,6 +101,16 @@ let graf = null;
 function nombreRuta(o, d) {
   const dn = DESTINOS[d] ? DESTINOS[d][0] : d;
   return `${ORIGENES[o]||o} → ${dn}`;
+}
+
+// Tu marker de Travelpayouts (para ganar comisión por reservas)
+const MARKER = "734652";
+
+// Construye un enlace de Aviasales (metabuscador legítimo) para esas fechas.
+// Aviasales/Jetradar redirige a aerolíneas y agencias reales y seguras.
+function enlaceOferta(o, d, ida, vuelta) {
+  const dm = s => { const p = (s || "").split("-"); return (p[2] || "") + (p[1] || ""); };
+  return `https://www.aviasales.com/search/${o}${dm(ida)}${d}${dm(vuelta)}1?marker=${MARKER}`;
 }
 
 Papa.parse("datos/historial.csv", {
@@ -175,11 +201,13 @@ function dibujar(filas, ruta) {
     if (!porMes[mes] || f.precio < porMes[mes].precio) porMes[mes] = f;
   });
   const meses = Object.keys(porMes).sort();
-  let html = `<table><tr><th>Mes de salida</th><th>Fechas</th><th>Precio</th><th>Aerolínea</th></tr>`;
+  let html = `<p class="pista">👆 Haz clic en cualquier fila para ver y reservar la oferta en Aviasales.</p>`;
+  html += `<table><tr><th>Mes de salida</th><th>Fechas</th><th>Precio</th><th>Aerolínea</th></tr>`;
   meses.forEach(m => {
     const f = porMes[m];
     const esGanga = umbral && f.precio <= umbral;
-    html += `<tr class="${esGanga?'ganga':''}">
+    const link = enlaceOferta(f.origen, f.destino, f.fecha_ida, f.fecha_vuelta);
+    html += `<tr class="clic ${esGanga?'ganga':''}" onclick="window.open('${link}','_blank')">
       <td>${m}</td><td>${f.fecha_ida} → ${f.fecha_vuelta}</td>
       <td class="precio">US$ ${Math.round(f.precio)}${esGanga?'<span class="badge">ganga</span>':''}</td>
       <td>${f.aerolinea||'—'}</td></tr>`;
@@ -200,9 +228,11 @@ function tablaTop(filas, rutas) {
     top.push({ ruta: nombreRuta(o,d), ...min, umbral, esGanga: min.precio <= umbral });
   });
   top.sort((a,b) => a.precio - b.precio);
-  let html = `<table><tr><th>Ruta</th><th>Mejor precio</th><th>Fechas</th><th>Aerolínea</th></tr>`;
+  let html = `<p class="pista">👆 Haz clic en cualquier fila para ver y reservar la oferta en Aviasales.</p>`;
+  html += `<table><tr><th>Ruta</th><th>Mejor precio</th><th>Fechas</th><th>Aerolínea</th></tr>`;
   top.forEach(t => {
-    html += `<tr class="${t.esGanga?'ganga':''}">
+    const link = enlaceOferta(t.origen, t.destino, t.fecha_ida, t.fecha_vuelta);
+    html += `<tr class="clic ${t.esGanga?'ganga':''}" onclick="window.open('${link}','_blank')">
       <td>${t.ruta}</td>
       <td class="precio">US$ ${Math.round(t.precio)}${t.esGanga?'<span class="badge">ganga</span>':''}</td>
       <td>${t.fecha_ida} → ${t.fecha_vuelta}</td><td>${t.aerolinea||'—'}</td></tr>`;

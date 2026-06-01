@@ -42,8 +42,21 @@ MESES_A_EXPLORAR = 8
 # ¿Solo vuelos directos? (False = permite escalas; recomendado para mejor precio)
 SOLO_DIRECTOS = False
 
-# Avisar también cuando el precio sea el más bajo jamás registrado para la ruta
-AVISAR_NUEVO_MINIMO = True
+# --- Detección INTELIGENTE de gangas ("solo precios fuera de lo normal") ---
+# Estos ajustes evitan "avisar por avisar": solo alertan cuando el precio es
+# realmente excepcional comparado con lo que suele costar esa misma ruta y mes.
+
+# Mínimo de observaciones previas (de la misma ruta y mes de salida) que se
+# necesitan para confiar en la estadística. Antes de eso, modo conservador.
+MIN_MUESTRAS_HISTORIAL = 5
+
+# Qué tan por debajo de lo "habitual" debe estar para considerarse ganga.
+# 0.15 = al menos 15% más barato que el precio típico de esa ruta+mes.
+DESCUENTO_MINIMO = 0.15
+
+# Un precio dentro del X% más barato jamás visto para esa ruta+mes se considera
+# ganga (20 = pertenece al 20% de precios más bajos del histórico).
+PERCENTIL_GANGA = 20
 
 # Segundos de espera entre llamadas a la API (para no exceder los límites)
 ESPERA_ENTRE_LLAMADAS = 0.3

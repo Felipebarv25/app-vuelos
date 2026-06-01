@@ -2,7 +2,8 @@ name: Detector de vuelos
 
 on:
   schedule:
-    - cron: "0 13 * * *"   # 13:00 UTC = 8:00 a.m. en Colombia, todos los días
+    # Cada 3 horas (cerca de "tiempo real"). Detecta y avisa apenas hay ganga.
+    - cron: "0 */3 * * *"
   workflow_dispatch:        # permite ejecutarlo a mano desde la pestaña Actions
 
 permissions:

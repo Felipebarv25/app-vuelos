@@ -165,6 +165,14 @@ precios de cada ruta, las gangas actuales y los precios por mes de salida.
 > Para ver los datos más recientes que recogió la nube, antes ejecuta
 > `git pull` en la carpeta (trae el historial actualizado por GitHub Actions).
 
+**El panel tiene dos secciones** (botones arriba):
+- **📊 Precios y ofertas:** gráficas e historial. Haz clic en cualquier fila de
+  oferta para abrirla y reservarla en Aviasales (metabuscador legítimo).
+- **🗺️ Planear itinerario:** mapa interactivo de cada destino con los lugares
+  imperdibles, transporte y precios aproximados. El botón "Cómo llegar" abre
+  Google Maps con la ruta real (estaciones, transbordos, horarios). Para añadir
+  ciudades, edita `datos_ciudades.js`.
+
 **Verlo como página web pública (opcional, con GitHub Pages):**
 
 Requiere que el repositorio sea **público**. En el repo:

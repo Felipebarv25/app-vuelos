@@ -45,6 +45,28 @@ def minimo_historico(origen, destino):
     return min(precios) if precios else None
 
 
+def cargar_precios_por_ruta_mes():
+    """Devuelve un índice {(origen, destino, mes_salida): [precios previos]}.
+
+    Se carga una sola vez al inicio para que la detección inteligente sea
+    rápida (no releer el CSV en cada consulta). El 'mes_salida' es YYYY-MM
+    de la fecha de ida, para comparar peras con peras (un mismo viaje).
+    """
+    idx = {}
+    if not os.path.exists(ARCHIVO_HISTORIAL):
+        return idx
+    with open(ARCHIVO_HISTORIAL, newline="", encoding="utf-8") as f:
+        for fila in csv.DictReader(f):
+            try:
+                precio = float(fila["precio"])
+            except (TypeError, ValueError, KeyError):
+                continue
+            mes = (fila.get("fecha_ida") or "")[:7]
+            clave = (fila["origen"], fila["destino"], mes)
+            idx.setdefault(clave, []).append(precio)
+    return idx
+
+
 def ya_se_alerto(clave):
     if not os.path.exists(ARCHIVO_ALERTAS):
         return False
