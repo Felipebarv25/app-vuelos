@@ -4,10 +4,14 @@
 // Si una falla o viene vacía, usamos la otra. Así la categoría NUNCA queda vacía.
 // Cachea en el edge de Vercel solo cuando hay datos.
 
+// Permite a la función de Vercel correr hasta 20s (Overpass puede tardar varios
+// segundos en zonas amplias). El resultado se cachea, así solo la 1ª vez es lenta.
+export const maxDuration = 20;
+
 const MIRRORS = [
+  "https://overpass-api.de/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter",
   "https://overpass.private.coffee/api/interpreter",
-  "https://overpass-api.de/api/interpreter",
   "https://overpass.osm.ch/api/interpreter",
 ];
 
@@ -32,6 +36,19 @@ const FILTROS = {
   miradores: ['node["tourism"="viewpoint"]["name"]'],
 };
 
+// Para RADIO AMPLIO (>=30 km): consulta LIVIANA = solo nodos NOTABLES (con
+// wikidata) y sin "way" (que es lo pesado). Así Overpass responde en pocos
+// segundos en un área grande y trae solo lugares que valen la pena, incluidas
+// excursiones cercanas a la ciudad (p. ej. Guatapé/Piedra del Peñol).
+const FILTROS_AMPLIO = {
+  imperdibles: [
+    'node["tourism"~"attraction|museum|theme_park|zoo|aquarium|viewpoint"]["name"]["wikidata"]',
+    'node["historic"~"castle|fort|monastery|archaeological_site|palace|monument"]["name"]["wikidata"]',
+    'node["natural"~"peak|volcano|waterfall"]["name"]["wikidata"]',
+  ],
+  miradores: ['node["tourism"="viewpoint"]["name"]["wikidata"]'],
+};
+
 // Respaldo Photon: términos descriptivos por categoría (en inglés, que es como
 // suelen estar las etiquetas). Buscar por palabra + cercanía funciona mejor que
 // q=a. Se prueban varios y se unifican.
@@ -51,7 +68,7 @@ function carrera(query) {
   const cuerpo = "data=" + encodeURIComponent(query);
   const intentos = MIRRORS.map((url) => {
     const ctrl = new AbortController();
-    const id = setTimeout(() => ctrl.abort(), 13000);
+    const id = setTimeout(() => ctrl.abort(), 16000);
     return fetch(url, {
       method: "POST",
       headers: {
@@ -160,11 +177,14 @@ async function desdePhoton(cat, lat, lon, radio = 12000) {
       // Evitar traer ciudades/calles/parkings/estaciones: solo puntos relevantes.
       const key = p.osm_key || "";
       const val = p.osm_value || "";
-      if (["place", "highway", "boundary", "railway", "aeroway", "public_transport"].includes(key)) continue;
-      if (["parking", "fuel", "bus_stop", "parking_entrance", "station", "stop_position"].includes(val)) continue;
+      if (["place", "highway", "boundary", "railway", "aeroway", "public_transport", "waterway", "natural"].includes(key)) continue;
+      if (["parking", "fuel", "bus_stop", "parking_entrance", "station", "stop_position",
+           "school", "college", "university", "kindergarten", "hospital", "clinic",
+           "pharmacy", "supermarket", "convenience", "doctors", "dentist"].includes(val)) continue;
       // Descartar por nombre cosas que claramente no son lugares de interés.
-      // (estaci → cubre "estación", "estació", "estación de"; gare/bahnhof otros idiomas)
       if (/\b(parking|aparcamiento|estaci[óo]?|station|gare|bahnhof|aeropuerto|airport|parada|metro|terminal)\b/i.test(nombre)) continue;
+      // Centros educativos, de salud y quebradas/ríos: no son atractivos turísticos.
+      if (/\b(colegio|escuela|liceo|institut|instituci[óo]n educativa|educativ|universidad|jard[íi]n infantil|hospital|cl[íi]nica|eps|ips|quebrada|r[íi]o|arroyo|caja de)\b/i.test(nombre)) continue;
       vistos.add(nombre);
       out.push({
         type: "node",
@@ -198,10 +218,14 @@ export async function GET(req) {
   // más cantidad; Photon es rápido y estable. Así una ciudad lenta en Overpass
   // no nos hace esperar 13s: Photon ya viene en camino y unimos lo que llegue.
   const radioAmplio = Math.min(radio + 5000, 100000);
-  const filtros = FILTROS[cat]
+  // En radio amplio usamos la consulta LIVIANA (notables con wikidata) para que
+  // Overpass responda rápido en un área grande; en radio normal, la completa.
+  const ampliar = radio >= 30000;
+  const filtroSet = (ampliar && FILTROS_AMPLIO[cat]) || FILTROS[cat];
+  const filtros = filtroSet
     .map((f) => `${f}(around:${radioAmplio},${lat},${lon});`)
     .join("");
-  const query = `[out:json][timeout:12];(${filtros});out center 90;`;
+  const query = `[out:json][timeout:18];(${filtros});out center 80;`;
 
   const pOverpass = carrera(query)
     .then((d) => desdeOverpass(d))
@@ -214,7 +238,7 @@ export async function GET(req) {
   // en paralelo como respaldo rápido. Antes el margen corto cortaba Overpass y
   // dejaba solo resultados pobres de Photon.
   const deadline = (ms, val) => new Promise((res) => setTimeout(() => res(val), ms));
-  const topeOverpass = radio >= 30000 ? 11000 : 8000;
+  const topeOverpass = ampliar ? 15000 : 8000;
   const [overpRaw, phot] = await Promise.all([
     Promise.race([pOverpass, deadline(topeOverpass, null)]),
     Promise.race([pPhoton, deadline(7000, [])]),

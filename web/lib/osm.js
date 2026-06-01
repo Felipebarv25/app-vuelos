@@ -146,9 +146,10 @@ export async function geocodificar(consulta) {
 }
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
-// v15: radio ampliado hasta 100 km + prioridad a Overpass (calidad y lugares
-// lejanos como Guatapé). Subir la versión invalida cachés viejas (cliente y edge).
-const API_VER = "15";
+// v16: radio amplio usa consulta liviana (notables con wikidata) para que
+// Overpass responda rápido y traiga lugares de calidad y lejanos (Guatapé).
+// Subir la versión invalida cachés viejas (cliente y edge).
+const API_VER = "16";
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.
