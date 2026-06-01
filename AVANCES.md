@@ -25,6 +25,13 @@
 
 _(Se irá llenando durante la noche…)_
 
+### ✅ QA #2 — Velocidad: fuentes en paralelo
+- VERIFICADO v4 en prod: Marrakech 21, Bali 28, Cartagena 38, Sydney 27 imperdibles. ¡Resuelto!
+- PERO como usuario noté: Cartagena tardó 13.7s (Overpass lento + Photon secuencial DESPUÉS).
+- ARREGLO: ahora Overpass y Photon corren EN PARALELO desde el inicio (Promise.all),
+  Overpass timeout bajado a 9s. Si Overpass tarda, Photon ya viene en camino → mucho
+  más rápido. Se unen sin duplicar. Caché v5. Build OK.
+
 ### ✅ QA #1 — Más lugares en ciudades con pocos resultados
 - PROBÉ como usuario: Marrakech salía con 1 imperdible, Cartagena 4, Bali 7. Decepcionante.
 - CAUSA: Overpass con timeout corto (9s) fallaba en algunas ciudades, y el respaldo

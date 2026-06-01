@@ -158,34 +158,30 @@ export async function GET(req) {
     return Response.json({ error: "parámetros", elements: [] }, { status: 400 });
   }
 
+  // Lanzamos AMBAS fuentes EN PARALELO (no secuencial). Overpass suele traer
+  // más cantidad; Photon es rápido y estable. Así una ciudad lenta en Overpass
+  // no nos hace esperar 13s: Photon ya viene en camino y unimos lo que llegue.
+  const radioAmplio = Math.min(radio + 4000, 12000);
+  const filtros = FILTROS[cat]
+    .map((f) => `${f}(around:${radioAmplio},${lat},${lon});`)
+    .join("");
+  const query = `[out:json][timeout:9];(${filtros});out center 60;`;
+
+  const pOverpass = carrera(query)
+    .then((d) => desdeOverpass(d))
+    .catch(() => []);
+  const pPhoton = desdePhoton(cat, lat, lon).catch(() => []);
+
+  const [overp, phot] = await Promise.all([pOverpass, pPhoton]);
+
+  // Unir sin duplicar nombres; Overpass primero (suele ser más rico/limpio).
+  const vistos = new Set();
   let elementos = [];
-
-  // 1) Intentar Overpass (con radio ampliado para cubrir ciudades grandes)
-  try {
-    const radioAmplio = Math.min(radio + 4000, 12000);
-    const filtros = FILTROS[cat]
-      .map((f) => `${f}(around:${radioAmplio},${lat},${lon});`)
-      .join("");
-    const query = `[out:json][timeout:14];(${filtros});out center 60;`;
-    const datos = await carrera(query);
-    elementos = desdeOverpass(datos);
-  } catch {
-    elementos = [];
-  }
-
-  // 2) Si Overpass trajo POCOS (no solo cero), complementar con Photon.
-  //    Así ciudades grandes siempre tienen una buena variedad de lugares.
-  if (elementos.length < 15) {
-    try {
-      const extra = await desdePhoton(cat, lat, lon);
-      const vistos = new Set(elementos.map((e) => e.tags?.name));
-      for (const e of extra) {
-        if (!vistos.has(e.tags?.name)) {
-          elementos.push(e);
-          vistos.add(e.tags?.name);
-        }
-      }
-    } catch {}
+  for (const e of [...overp, ...phot]) {
+    const n = e.tags?.name;
+    if (!n || vistos.has(n)) continue;
+    vistos.add(n);
+    elementos.push(e);
   }
 
   const tieneDatos = elementos.length > 0;
