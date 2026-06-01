@@ -22,12 +22,22 @@ const FILTROS = {
 };
 
 // Términos de búsqueda para el respaldo Photon, por categoría.
-const TERMINOS_PHOTON = {
-  imperdibles: ["museo", "monumento", "plaza", "parque", "catedral", "mirador"],
-  restaurantes: ["restaurante", "restaurant"],
-  cafes: ["cafe", "coffee"],
-  bares: ["bar", "pub"],
-  miradores: ["mirador", "viewpoint", "torre", "observation deck"],
+// Photon admite filtrar por etiqueta OSM (osm_tag), que es geográficamente
+// fiable: trae lugares de ESE tipo cerca del punto, sin depender del idioma
+// del nombre. Cada categoría mapea a sus etiquetas OSM.
+const TAGS_PHOTON = {
+  imperdibles: [
+    "tourism:attraction",
+    "tourism:museum",
+    "tourism:viewpoint",
+    "historic:monument",
+    "historic:memorial",
+    "historic:castle",
+  ],
+  restaurantes: ["amenity:restaurant"],
+  cafes: ["amenity:cafe"],
+  bares: ["amenity:bar", "amenity:pub", "amenity:nightclub"],
+  miradores: ["tourism:viewpoint", "man_made:tower"],
 };
 
 function carrera(query) {
@@ -80,18 +90,23 @@ function desdeOverpass(datos) {
     .filter((e) => e.lat && e.lon);
 }
 
-// RESPALDO: busca en Photon varios términos en paralelo y unifica.
+// RESPALDO: Photon filtrando por ETIQUETA OSM (osm_tag) dentro de un bbox
+// alrededor del punto. Esto trae lugares del tipo correcto y CERCA, sin
+// depender del idioma del nombre (el bug anterior traía "museos" de Italia).
 async function desdePhoton(cat, lat, lon) {
-  const terminos = TERMINOS_PHOTON[cat] || ["turismo"];
-  const llamadas = terminos.map((t) => {
+  const tags = TAGS_PHOTON[cat] || ["tourism:attraction"];
+  // bbox ~ ±0.18° (~20 km) alrededor del punto: minLon,minLat,maxLon,maxLat
+  const d = 0.18;
+  const bbox = `${lon - d},${lat - d},${lon + d},${lat + d}`;
+
+  const llamadas = tags.map((tag) => {
     const ctrl = new AbortController();
     const id = setTimeout(() => ctrl.abort(), 6000);
-    return fetch(
-      `https://photon.komoot.io/api/?q=${encodeURIComponent(
-        t
-      )}&lat=${lat}&lon=${lon}&limit=20`,
-      { signal: ctrl.signal }
-    )
+    // q=* con osm_tag filtra por tipo; bbox lo acota geográficamente.
+    const url = `https://photon.komoot.io/api/?q=a&osm_tag=${encodeURIComponent(
+      tag
+    )}&bbox=${bbox}&limit=30`;
+    return fetch(url, { signal: ctrl.signal })
       .then((r) => {
         clearTimeout(id);
         return r.ok ? r.json() : { features: [] };
@@ -111,9 +126,9 @@ async function desdePhoton(cat, lat, lon) {
       const nombre = p.name;
       const coords = f.geometry?.coordinates; // [lon, lat]
       if (!nombre || !coords || vistos.has(nombre)) continue;
-      // Filtrar a la zona (~15 km) para no traer cosas lejanas.
+      // Seguridad extra: descartar lo que se salga del bbox (~25 km).
       const dist = Math.hypot(coords[1] - lat, coords[0] - lon);
-      if (dist > 0.15) continue;
+      if (dist > 0.25) continue;
       vistos.add(nombre);
       out.push({
         type: "node",

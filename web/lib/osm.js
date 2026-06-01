@@ -147,10 +147,13 @@ export async function geocodificar(consulta) {
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
 // radio menor + límite ajustado = consulta más liviana y rápida.
-export async function traerLugares(categoria, lat, lon, radio = 6000, limite = 30) {
+// v3: versión de la API/caché. Subirla invalida cachés viejas (cliente y edge).
+const API_VER = "3";
+
+export async function traerLugares(categoria, lat, lon, radio = 8000, limite = 40) {
   const cat = CATEGORIAS[categoria];
   if (!cat) throw new Error("Categoría desconocida");
-  const clave = `lug:${categoria}:${lat.toFixed(3)},${lon.toFixed(3)}`;
+  const clave = `lug${API_VER}:${categoria}:${lat.toFixed(3)},${lon.toFixed(3)}`;
   return cacheado(clave, TTL_LUGARES, () =>
     traerLugaresRed(cat, categoria, lat, lon, radio, limite)
   );
@@ -161,7 +164,7 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
   // 1) Intentar nuestra API cacheada en el edge de Vercel (muy rápida en repeticiones).
   try {
     const r = await fetchRapido(
-      `/api/lugares?cat=${categoria}&lat=${lat}&lon=${lon}&radio=${radio}`,
+      `/api/lugares?cat=${categoria}&lat=${lat}&lon=${lon}&radio=${radio}&v=${API_VER}`,
       {},
       14000
     );
