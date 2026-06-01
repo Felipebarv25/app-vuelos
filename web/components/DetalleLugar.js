@@ -195,7 +195,7 @@ const fotoSinImg = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  background: "linear-gradient(135deg,#3b82f6,#1e3a8a)",
+  background: "linear-gradient(135deg,#6366f1,#312e81)",
 };
 const fotoTexto = {
   position: "absolute",

@@ -44,6 +44,11 @@
 
 _(Se irá llenando durante la noche…)_
 
+### 🎨 REDISEÑO PRO — consistencia (3/3)
+- Pantalla de bienvenida/login con fondo índigo, tarjeta más redondeada y botón con
+  degradado+sombra. Modal de detalle con header índigo. Todo el diseño ahora coherente
+  con la paleta índigo. Build OK.
+
 ### 🎨 REDISEÑO PRO (feedback "diseño feo")
 - Fuente premium Plus Jakarta Sans (Google Fonts). Paleta cambiada a ÍNDIGO moderno
   (#4f46e5) en vez del azul plano. Cabecera con degradado índigo, bordes 26px y sombra.

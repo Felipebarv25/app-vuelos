@@ -65,7 +65,7 @@ export default function Bienvenida() {
 const fondo = {
   position: "fixed",
   inset: 0,
-  background: "linear-gradient(135deg,#2563eb,#1e3a8a)",
+  background: "linear-gradient(135deg,#6366f1 0%,#4f46e5 55%,#312e81 100%)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -74,11 +74,11 @@ const fondo = {
 };
 const tarjeta = {
   background: "#fff",
-  borderRadius: 20,
-  padding: 26,
+  borderRadius: 24,
+  padding: 28,
   width: "100%",
   maxWidth: 400,
-  boxShadow: "0 20px 50px rgba(0,0,0,.35)",
+  boxShadow: "0 24px 60px rgba(49,46,129,.45)",
 };
 const etiqueta = { fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 8 };
 const idiomaBtn = {
@@ -102,11 +102,13 @@ const input = {
 const boton = {
   width: "100%",
   marginTop: 22,
-  padding: "14px",
-  borderRadius: 12,
+  padding: "15px",
+  borderRadius: 14,
   border: "none",
-  background: "var(--azul)",
+  background: "linear-gradient(135deg,#6366f1,#4f46e5)",
   color: "#fff",
   fontSize: 16,
   fontWeight: 700,
+  boxShadow: "0 6px 16px rgba(79,70,229,.4)",
+  cursor: "pointer",
 };
