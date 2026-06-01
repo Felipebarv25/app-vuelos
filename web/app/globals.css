@@ -1,14 +1,21 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
 :root {
-  --azul: #2563eb;
-  --azul-osc: #1e3a8a;
-  --verde: #16a34a;
+  --azul: #4f46e5;
+  --azul-osc: #312e81;
+  --azul-claro: #6366f1;
+  --verde: #059669;
   --naranja: #ea580c;
+  --rosa: #ec4899;
   --gris: #f1f5f9;
   --gris-med: #94a3b8;
   --texto: #1e293b;
-  --borde: #e2e8f0;
-  --sombra: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --sombra-md: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --texto-sec: #64748b;
+  --borde: #eef2f7;
+  --sombra: 0 1px 2px rgba(15, 23, 42, 0.04), 0 2px 8px rgba(15, 23, 42, 0.05);
+  --sombra-md: 0 4px 16px rgba(15, 23, 42, 0.1);
+  --sombra-lg: 0 12px 32px rgba(15, 23, 42, 0.16);
+  --radio: 18px;
 }
 
 * {
@@ -20,10 +27,11 @@
 
 html,
 body {
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
   color: var(--texto);
-  background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 280px, #f8fafc 100%);
+  background: #f6f7fb;
   overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {

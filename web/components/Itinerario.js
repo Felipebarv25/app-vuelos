@@ -50,19 +50,19 @@ export default function Itinerario({
   return (
     <div>
       {/* Resumen del día */}
-      <Tarjeta style={{ marginBottom: 12, background: "#eff6ff", borderColor: "#bfdbfe" }}>
+      <Tarjeta style={{ marginBottom: 12, background: "linear-gradient(135deg,#eef2ff,#faf5ff)", border: "1px solid #e0e7ff" }}>
         <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 17, color: "var(--azul-osc)" }}>
+            <div style={{ fontWeight: 800, fontSize: 19, color: "var(--azul-osc)", letterSpacing: "-0.02em" }}>
               {t("dia")} {numeroDia}
             </div>
-            <div style={{ fontSize: 13, color: "#475569" }}>
+            <div style={{ fontSize: 13, color: "var(--texto-sec)", marginTop: 2 }}>
               {r.paradas} {t("paradas")} · {r.totalTexto} {t("enTotal")}
             </div>
           </div>
-          <div style={{ textAlign: "right", fontSize: 12, color: "#475569" }}>
-            <div>👣 {t("visitas")}: {r.visitaTexto}</div>
-            <div>🚇 {t("traslados")}: {r.trasladoTexto}</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <div style={statBox}><div style={statNum}>{r.visitaTexto}</div><div style={statLbl}>👣 {t("visitas")}</div></div>
+            <div style={statBox}><div style={statNum}>{r.trasladoTexto}</div><div style={statLbl}>🚇 {t("traslados")}</div></div>
           </div>
         </div>
 
@@ -110,49 +110,53 @@ export default function Itinerario({
           <Tarjeta
             style={{
               marginBottom: 4,
-              borderColor: seguimiento && i === paradaActual ? "var(--verde)" : "var(--borde)",
-              borderWidth: seguimiento && i === paradaActual ? 2 : 1,
+              padding: 16,
+              boxShadow: seguimiento && i === paradaActual
+                ? "0 0 0 2px var(--verde), var(--sombra)"
+                : "var(--sombra)",
             }}
           >
-            <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ display: "flex", gap: 13 }}>
               <div
                 onClick={() => onVerLugar?.(p)}
                 style={{
-                  background: "var(--azul)",
+                  background: "linear-gradient(135deg,#6366f1,#4f46e5)",
                   color: "#fff",
-                  minWidth: 28,
-                  height: 28,
-                  borderRadius: "50%",
+                  minWidth: 34,
+                  height: 34,
+                  borderRadius: 12,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontWeight: 700,
-                  fontSize: 14,
+                  fontWeight: 800,
+                  fontSize: 16,
                   flexShrink: 0,
                   cursor: "pointer",
+                  boxShadow: "0 4px 10px rgba(79,70,229,.35)",
                 }}
               >
                 {i + 1}
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   onClick={() => onVerLugar?.(p)}
-                  style={{ fontWeight: 700, fontSize: 16, cursor: "pointer" }}
+                  style={{ fontWeight: 700, fontSize: 16.5, cursor: "pointer", letterSpacing: "-0.01em" }}
                 >
                   {p.nombre}
                 </div>
-                <div style={{ fontSize: 12, color: "#64748b" }}>
-                  {emojiCat(p.categoria)} {p.categoria}
-                  {p.cocina ? ` · ${p.cocina}` : ""} · ⏱️ {fmtMin(p.minutos)}
-                  {p.notable ? " · ⭐" : ""}
+                <div style={{ fontSize: 12.5, color: "var(--texto-sec)", marginTop: 3, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                  <span>{emojiCat(p.categoria)} {p.categoria}</span>
+                  {p.cocina && <span>· {p.cocina}</span>}
+                  <span style={pill}>⏱️ {fmtMin(p.minutos)}</span>
+                  {p.notable && <span style={{ ...pill, background: "#fef3c7", color: "#92400e" }}>⭐ Top</span>}
                 </div>
-                <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-                  <button style={{ ...mini, background: "#eff6ff", color: "var(--azul)" }}
+                <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                  <button style={{ ...mini, background: "#eef2ff", color: "var(--azul)" }}
                     onClick={() => onVerLugar?.(p)}>📷 {t("verFoto")}</button>
                   {alternativas?.length > 0 && (
                     <button style={mini} onClick={() => onCambiarParada(i)}>🔄 {t("cambiar")}</button>
                   )}
-                  <button style={{ ...mini, color: "#dc2626" }} onClick={() => onQuitarParada(i)}>
+                  <button style={{ ...mini, background: "#fef2f2", color: "#dc2626" }} onClick={() => onQuitarParada(i)}>
                     ✕ {t("quitar")}
                   </button>
                 </div>
@@ -167,13 +171,31 @@ export default function Itinerario({
 
 const mini = {
   fontSize: 13,
-  padding: "8px 12px",
-  borderRadius: 8,
+  padding: "9px 13px",
+  borderRadius: 10,
   background: "var(--gris)",
   color: "var(--azul-osc)",
   fontWeight: 600,
   border: "none",
+  cursor: "pointer",
 };
+const pill = {
+  fontSize: 11.5,
+  padding: "2px 8px",
+  borderRadius: 999,
+  background: "#f1f5f9",
+  color: "var(--texto-sec)",
+  fontWeight: 600,
+};
+const statBox = {
+  background: "rgba(255,255,255,.7)",
+  borderRadius: 12,
+  padding: "8px 12px",
+  textAlign: "center",
+  minWidth: 64,
+};
+const statNum = { fontWeight: 800, fontSize: 14, color: "var(--azul-osc)" };
+const statLbl = { fontSize: 10.5, color: "var(--texto-sec)", marginTop: 1 };
 
 function PanelTiempo({ estado, paradaActual, total, onSiguiente, onParar, t = (k) => k }) {
   const est = estado ? textoEstado(estado, t) : null;
