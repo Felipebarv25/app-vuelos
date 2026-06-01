@@ -10,6 +10,7 @@ import Itinerario from "@/components/Itinerario";
 import DetalleLugar from "@/components/DetalleLugar";
 import Bienvenida from "@/components/Bienvenida";
 import SelectorIdioma from "@/components/SelectorIdioma";
+import Presupuesto from "@/components/Presupuesto";
 import { useApp } from "@/lib/AppContext";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
@@ -39,6 +40,7 @@ export default function Home() {
   // Lugar abierto en detalle + ruta trazada en el mapa
   const [detalle, setDetalle] = useState(null);
   const [rutaTrazada, setRutaTrazada] = useState(null);
+  const [mostrarPresupuesto, setMostrarPresupuesto] = useState(false);
 
   // GPS
   const [gpsOn, setGpsOn] = useState(false);
@@ -249,7 +251,12 @@ export default function Home() {
             ))}
           </div>
 
-          <div style={{ textAlign: "center", fontSize: 13, color: "#94a3b8", marginBottom: 8 }}>
+          {/* Botón destacado: viajar por presupuesto */}
+          <button onClick={() => setMostrarPresupuesto(true)} style={btnPresup} className="animar-pop">
+            💰 {t("presupBoton")}
+          </button>
+
+          <div style={{ textAlign: "center", fontSize: 13, color: "#94a3b8", margin: "18px 0 8px" }}>
             {t("pruebaPopular")}
           </div>
           <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
@@ -260,6 +267,20 @@ export default function Home() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Módulo de presupuesto */}
+      {mostrarPresupuesto && (
+        <Presupuesto
+          t={t}
+          onCerrar={() => setMostrarPresupuesto(false)}
+          onElegirCiudad={(d) => {
+            setMostrarPresupuesto(false);
+            const q = `${d.ciudad}, ${d.pais}`;
+            setConsulta(q);
+            setTimeout(() => buscarTexto(), 0);
+          }}
+        />
       )}
 
       {cargando && (
@@ -420,3 +441,17 @@ const lista = { position: "absolute", top: "100%", left: 0, right: 0, marginTop:
 const item = { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", cursor: "pointer", color: "var(--texto)", borderBottom: "1px solid var(--borde)" };
 const lbl = { display: "flex", flexDirection: "column", gap: 4, fontSize: 13, color: "#475569", fontWeight: 600 };
 const sel = { padding: "8px 10px", borderRadius: 8, border: "1px solid var(--borde)", fontSize: 15, background: "#fff" };
+const btnPresup = {
+  display: "block",
+  width: "100%",
+  maxWidth: 460,
+  margin: "20px auto 0",
+  padding: "15px",
+  borderRadius: 14,
+  border: "none",
+  background: "linear-gradient(135deg,#16a34a,#15803d)",
+  color: "#fff",
+  fontSize: 16,
+  fontWeight: 700,
+  boxShadow: "0 6px 18px rgba(22,163,74,.35)",
+};
