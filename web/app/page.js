@@ -64,28 +64,17 @@ export default function Home() {
 
   const debounce = useRef(null);
 
-  // Recordar el último viaje: al volver a abrir, restaura la última ciudad.
-  useEffect(() => {
-    if (!usuario || ciudad) return;
-    try {
-      const u = localStorage.getItem("ultimaCiudad");
-      if (u) {
-        const c = JSON.parse(u);
-        setCiudad(c);
-        cargarCategoria("imperdibles", c);
-      }
-    } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [usuario]);
-
-  // Guardar la ciudad actual cada vez que cambia.
-  useEffect(() => {
-    if (ciudad) {
-      try {
-        localStorage.setItem("ultimaCiudad", JSON.stringify(ciudad));
-      } catch {}
-    }
-  }, [ciudad]);
+  // Volver al menú principal (sin cerrar sesión): limpia la ciudad y resultados.
+  function irAlInicio() {
+    setCiudad(null);
+    setConsulta("");
+    setLugaresBase([]);
+    setSeleccion([]);
+    setPlan([]);
+    setDetalle(null);
+    setRutaTrazada(null);
+    setError(null);
+  }
 
   // Autocompletado con debounce (rápido, sin saturar la red)
   useEffect(() => {
@@ -222,7 +211,7 @@ export default function Home() {
       {/* Cabecera */}
       <header style={cab}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
+          <div onClick={irAlInicio} style={{ cursor: "pointer" }}>
             <div style={{ fontSize: 22, fontWeight: 800, display: "flex", alignItems: "center", gap: 8 }}>
               🌍 Viajero 360
             </div>
@@ -233,10 +222,15 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Saludo al usuario */}
-        <div style={{ fontSize: 12, opacity: 0.9, marginTop: 6 }}>
-          👋 {t("hola")}, <b>{usuario.nombre}</b> ·{" "}
-          <button onClick={salir} style={{ background: "none", border: "none", color: "#bfdbfe", textDecoration: "underline", fontSize: 12, padding: 0 }}>
+        {/* Saludo + acciones */}
+        <div style={{ fontSize: 12, opacity: 0.9, marginTop: 6, display: "flex", gap: 12, alignItems: "center" }}>
+          <span>👋 {t("hola")}, <b>{usuario.nombre}</b></span>
+          {ciudad && (
+            <button onClick={irAlInicio} style={btnLink}>
+              🏠 {t("inicio")}
+            </button>
+          )}
+          <button onClick={salir} style={btnLink}>
             {t("salir")}
           </button>
         </div>
@@ -499,6 +493,7 @@ const cab = {
   borderRadius: "0 0 22px 22px",
   boxShadow: "0 6px 20px rgba(37,99,235,.35)",
 };
+const btnLink = { background: "none", border: "none", color: "#bfdbfe", textDecoration: "underline", fontSize: 12, padding: 0, cursor: "pointer" };
 const input = { flex: 1, padding: "13px 16px", borderRadius: 12, border: "none", fontSize: 16, outline: "none", boxShadow: "0 2px 8px rgba(0,0,0,.12)" };
 const btnBuscar = { background: "#fff", color: "var(--azul)", border: "none", padding: "0 16px", borderRadius: 12, fontWeight: 700, fontSize: 18, boxShadow: "0 2px 8px rgba(0,0,0,.12)" };
 const lista = { position: "absolute", top: "100%", left: 0, right: 0, marginTop: 6, background: "#fff", borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,.18)", overflow: "hidden", zIndex: 1100 };

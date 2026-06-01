@@ -44,6 +44,18 @@
 
 _(Se irá llenando durante la noche…)_
 
+### 🔧 FEEDBACK USUARIO (mañana, 3ª tanda)
+- **BUG GRAVE fotos equivocadas**: "77 Towers" en Medellín mostraba foto Y descripción
+  de NUEVA YORK. CAUSA: Wikipedia/Commons devolvían artículos no relacionados por
+  coincidencia parcial. FIX: verificación de relevancia `tituloCoincide()` — el título
+  encontrado debe solapar ≥50% de palabras significativas con el nombre del lugar; si
+  no, NO se muestra foto (mejor sin foto que foto errada). Validado 8/8 casos incluido
+  el bug exacto. Aplica a Wikipedia Y Commons.
+- **"Salir" llevaba al login y reabría última ciudad**: FIX: (1) quitada la restauración
+  automática de última ciudad. (2) Logo + nuevo botón "🏠 Inicio" vuelven al MENÚ
+  PRINCIPAL (limpia ciudad sin cerrar sesión). "Salir" sigue cerrando sesión. Traducido
+  4 idiomas. Build OK.
+
 ### 🔧 FEEDBACK USUARIO (mañana, 2ª tanda)
 - **"Cambiar" cambiaba TODA la ruta**: cambiarParada llamaba reconstruir() que
   rearmaba todo. FIX: ahora reemplaza SOLO esa parada en su sitio (mismo día/posición),

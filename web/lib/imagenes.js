@@ -26,6 +26,10 @@ export async function fotoDeLugar(nombre, ciudad = "") {
 async function fotoWikipedia(nombre, ciudad) {
   const titulo = await buscarTitulo(nombre, ciudad);
   if (!titulo) return null;
+  // VERIFICACIÓN DE RELEVANCIA: el título encontrado debe corresponder de verdad
+  // al lugar. Si no, Wikipedia trae artículos no relacionados (ej. "77 Towers"
+  // devolvía el artículo de Nueva York). Mejor sin foto que con foto equivocada.
+  if (!tituloCoincide(nombre, titulo)) return null;
   try {
     const r = await fetchRapido(
       `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(titulo)}`
@@ -42,6 +46,33 @@ async function fotoWikipedia(nombre, ciudad) {
   } catch {
     return null;
   }
+}
+
+// Normaliza texto: minúsculas, sin tildes, sin paréntesis/puntuación.
+function norm(s) {
+  return (s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// ¿El título de Wikipedia/Commons corresponde de verdad al lugar buscado?
+// Exige solapamiento real de palabras significativas (>3 letras).
+function tituloCoincide(nombreLugar, titulo) {
+  const a = norm(nombreLugar);
+  const b = norm(titulo);
+  if (!a || !b) return false;
+  if (a === b || a.includes(b) || b.includes(a)) return true;
+  const palabrasA = a.split(" ").filter((w) => w.length > 3);
+  const palabrasB = new Set(b.split(" ").filter((w) => w.length > 3));
+  if (!palabrasA.length) return false;
+  const comunes = palabrasA.filter((w) => palabrasB.has(w)).length;
+  // Al menos la mitad de las palabras significativas deben coincidir.
+  return comunes / palabrasA.length >= 0.5;
 }
 
 async function fotoCommons(nombre, ciudad) {
@@ -61,6 +92,10 @@ async function fotoCommons(nombre, ciudad) {
     const info = primera?.imageinfo?.[0];
     const url = info?.thumburl || info?.url || null;
     if (!url) return null;
+    // Verificar que el archivo de Commons corresponda al lugar (el título del
+    // archivo debe mencionar el nombre). Evita fotos de otra ciudad.
+    const tituloArchivo = (primera?.title || "").replace(/^File:|\.[a-z]+$/gi, "");
+    if (!tituloCoincide(nombre, tituloArchivo)) return null;
     return { url, ancho: info?.thumbwidth || 800, link: info?.descriptionurl || null };
   } catch {
     return null;
