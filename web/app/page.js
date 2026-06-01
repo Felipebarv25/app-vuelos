@@ -218,55 +218,50 @@ export default function Home() {
   if (!usuario) return <Bienvenida />;
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto", paddingBottom: 40 }}>
+    <div className="max-w-3xl mx-auto pb-12">
       {/* Cabecera */}
-      <header style={cab}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div onClick={irAlInicio} style={{ cursor: "pointer" }}>
-            <div style={{ fontSize: 22, fontWeight: 800, display: "flex", alignItems: "center", gap: 8 }}>
+      <header className="sticky top-0 z-[1000] bg-gradient-to-br from-marca-500 via-marca-600 to-marca-900 text-white px-5 pt-5 pb-6 rounded-b-[28px] shadow-marca">
+        <div className="flex justify-between items-start">
+          <div onClick={irAlInicio} className="cursor-pointer">
+            <div className="text-[22px] font-extrabold flex items-center gap-2 tracking-tight">
               🌍 Viajero 360
             </div>
-            <div style={{ fontSize: 13, opacity: 0.92 }}>{t("tagline")}</div>
+            <div className="text-[13px] text-white/85">{t("tagline")}</div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <SelectorIdioma />
-          </div>
+          <SelectorIdioma />
         </div>
 
         {/* Saludo + acciones */}
-        <div style={{ fontSize: 12, opacity: 0.9, marginTop: 6, display: "flex", gap: 12, alignItems: "center" }}>
+        <div className="text-xs text-white/90 mt-2 flex gap-3 items-center">
           <span>👋 {t("hola")}, <b>{usuario.nombre}</b></span>
           {ciudad && (
-            <button onClick={irAlInicio} style={btnLink}>
-              🏠 {t("inicio")}
-            </button>
+            <button onClick={irAlInicio} className="text-marca-200 underline">🏠 {t("inicio")}</button>
           )}
-          <button onClick={salir} style={btnLink}>
-            {t("salir")}
-          </button>
+          <button onClick={salir} className="text-marca-200 underline">{t("salir")}</button>
         </div>
 
-        {/* Buscador con autocompletado */}
-        <div style={{ position: "relative", marginTop: 12 }}>
-          <form onSubmit={buscarTexto} style={{ display: "flex", gap: 8 }}>
+        {/* Buscador */}
+        <div className="relative mt-3">
+          <form onSubmit={buscarTexto} className="flex gap-2">
             <input
               value={consulta}
               onChange={(e) => setConsulta(e.target.value)}
               onFocus={() => sugerencias.length && setMostrarSug(true)}
               placeholder={t("buscarPlaceholder")}
-              style={input}
+              className="flex-1 px-4 py-3.5 rounded-2xl border-0 text-base outline-none shadow-md text-slate-800"
             />
-            <button type="submit" style={btnBuscar}>🔎</button>
+            <button type="submit" className="bg-white text-marca-600 px-4 rounded-2xl font-bold text-lg shadow-md">🔎</button>
           </form>
 
           {mostrarSug && sugerencias.length > 0 && (
-            <div style={lista} className="animar-subir">
+            <div className="absolute top-full inset-x-0 mt-1.5 bg-white rounded-2xl shadow-xl overflow-hidden z-[1100] animar-subir">
               {sugerencias.map((s, i) => (
-                <div key={i} style={item} onClick={() => elegirCiudad(s)}>
-                  <span style={{ fontSize: 18 }}>📍</span>
+                <div key={i} className="flex items-center gap-2.5 px-4 py-3 cursor-pointer text-slate-800 border-b border-slate-100 hover:bg-marca-50"
+                  onClick={() => elegirCiudad(s)}>
+                  <span className="text-lg">📍</span>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 15 }}>{s.ciudad}</div>
-                    <div style={{ fontSize: 12, color: "#64748b" }}>{s.pais}</div>
+                    <div className="font-semibold text-[15px]">{s.ciudad}</div>
+                    <div className="text-xs text-slate-500">{s.pais}</div>
                   </div>
                 </div>
               ))}
@@ -276,57 +271,49 @@ export default function Home() {
       </header>
 
       {error && (
-        <div style={{ margin: 14, background: "#fee2e2", color: "#991b1b", padding: 14, borderRadius: 10, fontSize: 14 }}>
-          {error}
-        </div>
+        <div className="m-3.5 bg-red-100 text-red-800 p-3.5 rounded-xl text-sm">{error}</div>
       )}
 
       {!ciudad && !cargando && (
-        <div style={{ padding: "20px 16px 8px" }} className="animar-subir">
+        <div className="px-4 pt-5 pb-2 animar-subir">
           {/* Saludo */}
-          <div style={{ fontSize: 22, fontWeight: 800, color: "var(--azul-osc)", letterSpacing: "-0.02em" }}>
+          <h1 className="text-[23px] font-extrabold text-marca-900 tracking-tight">
             {t(saludoClave())}, {usuario.nombre} {saludoEmoji()}
-          </div>
-          <p style={{ fontSize: 14.5, color: "var(--texto-sec)", marginTop: 2, lineHeight: 1.5 }}>
-            {t("heroTexto")}
-          </p>
+          </h1>
+          <p className="text-[14.5px] text-slate-500 mt-1 leading-relaxed">{t("heroTexto")}</p>
 
-          {/* Tarjeta CTA presupuesto (estilo banner premium) */}
-          <button onClick={() => setMostrarPresupuesto(true)} style={bannerPresup} className="animar-pop">
-            <div style={{ textAlign: "left", position: "relative", zIndex: 1 }}>
-              <div style={{ fontSize: 12, opacity: 0.9, fontWeight: 600 }}>💰 NUEVO</div>
-              <div style={{ fontSize: 17, fontWeight: 800, marginTop: 2 }}>{t("presupBoton")}</div>
+          {/* Banner presupuesto */}
+          <button onClick={() => setMostrarPresupuesto(true)}
+            className="w-full mt-5 px-5 py-4 rounded-2xl border-0 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 text-white flex items-center justify-between cursor-pointer shadow-[0_8px_22px_rgba(5,150,105,.35)] animar-pop hover:brightness-105 transition">
+            <div className="text-left">
+              <div className="text-xs font-semibold opacity-90">💰 NUEVO</div>
+              <div className="text-[17px] font-extrabold mt-0.5">{t("presupBoton")}</div>
             </div>
-            <span style={{ fontSize: 26, position: "relative", zIndex: 1 }}>→</span>
+            <span className="text-2xl">→</span>
           </button>
 
-          {/* Destinos populares con FOTO (estilo Airbnb/Booking) */}
-          <div style={{ fontSize: 17, fontWeight: 800, color: "var(--azul-osc)", margin: "22px 2px 12px", letterSpacing: "-0.01em" }}>
+          {/* Destinos con foto */}
+          <h2 className="text-[17px] font-extrabold text-marca-900 mt-6 mb-3 px-0.5 tracking-tight">
             ✨ {t("pruebaPopular")}
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
             {DESTINOS_DESTACADOS.map((d) => (
-              <CardDestino
-                key={d.q}
-                nombre={d.nombre}
-                pais={d.pais}
-                hint={d.hint}
-                onClick={() => { setConsulta(d.q); setTimeout(() => buscarTexto(), 0); }}
-              />
+              <CardDestino key={d.q} nombre={d.nombre} pais={d.pais} hint={d.hint}
+                onClick={() => { setConsulta(d.q); setTimeout(() => buscarTexto(), 0); }} />
             ))}
           </div>
 
-          {/* Beneficios (chips horizontales discretos) */}
-          <div style={{ display: "flex", gap: 10, overflowX: "auto", margin: "22px 0 6px", paddingBottom: 4 }}>
+          {/* Beneficios */}
+          <div className="flex gap-2.5 overflow-x-auto mt-6 pb-1">
             {[
               ["📅", t("benDiaTitulo")],
               ["📍", t("benGpsTitulo")],
               ["🍽️", t("benComerTitulo")],
               ["🚇", t("benLlegarTitulo")],
             ].map(([ic, tit]) => (
-              <div key={tit} style={benChip}>
-                <span style={{ fontSize: 17 }}>{ic}</span>
-                <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--azul-osc)" }}>{tit}</span>
+              <div key={tit} className="flex items-center gap-1.5 bg-white border border-slate-100 rounded-full px-3.5 py-2 whitespace-nowrap shrink-0 shadow-suave">
+                <span className="text-base">{ic}</span>
+                <span className="text-[12.5px] font-semibold text-marca-900">{tit}</span>
               </div>
             ))}
           </div>

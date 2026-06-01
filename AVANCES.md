@@ -61,6 +61,17 @@ _(Se irá llenando durante la noche…)_
   Así los lugares con artículo de Wikipedia (= famosos de verdad) suben al top. Caché v11.
 - Build OK.
 
+### 🚀 MIGRACIÓN A TAILWIND CSS (feedback "trabaja con código potente")
+- El usuario tenía razón: estaba usando inline styles (amateur). MIGRADO a Tailwind CSS,
+  el estándar profesional (Vercel, GitHub, OpenAI lo usan). Instalado tailwindcss 3 +
+  postcss + autoprefixer. tailwind.config.js con paleta "marca" (índigo), fuente Jakarta,
+  sombras custom. postcss.config.js. Directivas @tailwind en globals.css.
+- Pantalla de inicio REESCRITA con clases Tailwind: gradientes, sombras, hover states,
+  responsive. Build OK local. La app sigue siendo Next.js+React (siempre lo fue); ahora
+  el ESTILO es con utility-classes profesionales en vez de style inline.
+- En progreso: migrar el resto de componentes (header de ciudad, itinerario, presupuesto)
+  a Tailwind para consistencia total.
+
 ### 🎨 REDISEÑO INTERFAZ PRO (feedback "se ve noob")
 - Pantalla de inicio rediseñada estilo Airbnb/Booking: tarjetas de destino con FOTO
   REAL (Torre Eiffel, Coliseo, Tokyo Tower...) en grid 2 columnas, con overlay degradado
