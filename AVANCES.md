@@ -61,6 +61,15 @@ _(Se irá llenando durante la noche…)_
   Así los lugares con artículo de Wikipedia (= famosos de verdad) suben al top. Caché v11.
 - Build OK.
 
+### 🎨 Pulido transversal + presupuesto
+- Presupuesto refinado (bordes 16-26px, sombras, gradientes, backdrop-blur). Botones
+  con gradiente índigo.
+- Pulido GLOBAL en globals.css: transición suave en todos los botones + brillo al hover,
+  focus de inputs con anillo índigo, selección de texto color marca. Da sensación premium
+  en toda la app de un solo cambio.
+- Verificado prod: Tailwind sirviéndose (14KB con grid+gradient), datos OK (París 86).
+- Build OK.
+
 ### 🚀 MIGRACIÓN A TAILWIND CSS (feedback "trabaja con código potente")
 - El usuario tenía razón: estaba usando inline styles (amateur). MIGRADO a Tailwind CSS,
   el estándar profesional (Vercel, GitHub, OpenAI lo usan). Instalado tailwindcss 3 +
