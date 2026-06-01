@@ -214,16 +214,16 @@ function Fila({ icono, nombre, valor }) {
   );
 }
 
-const fondo = { position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 4000, display: "flex", alignItems: "flex-end", justifyContent: "center" };
-const hoja = { background: "#fff", width: "100%", maxWidth: 560, maxHeight: "94vh", overflowY: "auto", borderRadius: "20px 20px 0 0", boxShadow: "0 -8px 30px rgba(0,0,0,.3)" };
-const cab = { background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", padding: "18px 16px", position: "sticky", top: 0, zIndex: 2 };
-const cerrar = { width: 34, height: 34, borderRadius: "50%", border: "none", background: "rgba(0,0,0,.25)", color: "#fff", fontSize: 16 };
-const lbl = { fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 6 };
-const input = { padding: "11px 12px", borderRadius: 10, border: "1px solid var(--borde)", fontSize: 15, outline: "none", background: "#fff" };
-const chip = { border: "none", padding: "8px 12px", borderRadius: 999, fontSize: 13, fontWeight: 600 };
-const resumen = { display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 12, padding: "12px 16px", marginTop: 16 };
-const card = { border: "1px solid var(--borde)", borderRadius: 12, padding: 12, marginBottom: 8 };
-const badge = { marginLeft: 8, background: "var(--verde)", color: "#fff", fontSize: 11, padding: "1px 7px", borderRadius: 999, fontWeight: 700, verticalAlign: "middle" };
-const desglose = { marginTop: 10, paddingTop: 10, borderTop: "1px dashed var(--borde)" };
-const btnPlanear = { width: "100%", marginTop: 10, padding: "11px", borderRadius: 10, border: "none", background: "var(--azul)", color: "#fff", fontWeight: 700, fontSize: 14 };
-const btnVuelos = { flex: 1, padding: "11px", borderRadius: 10, border: "1px solid var(--azul)", background: "#fff", color: "var(--azul)", fontWeight: 700, fontSize: 14, textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" };
+const fondo = { position: "fixed", inset: 0, background: "rgba(15,23,42,.6)", backdropFilter: "blur(3px)", zIndex: 4000, display: "flex", alignItems: "flex-end", justifyContent: "center" };
+const hoja = { background: "#fff", width: "100%", maxWidth: 560, maxHeight: "94vh", overflowY: "auto", borderRadius: "26px 26px 0 0", boxShadow: "0 -12px 40px rgba(0,0,0,.35)" };
+const cab = { background: "linear-gradient(135deg,#10b981,#059669,#047857)", color: "#fff", padding: "20px 18px", position: "sticky", top: 0, zIndex: 2, borderRadius: "26px 26px 0 0" };
+const cerrar = { width: 36, height: 36, borderRadius: "50%", border: "none", background: "rgba(0,0,0,.22)", color: "#fff", fontSize: 16, cursor: "pointer" };
+const lbl = { fontSize: 13, fontWeight: 700, color: "#475569", marginBottom: 7 };
+const input = { padding: "12px 14px", borderRadius: 12, border: "1px solid #e2e8f0", fontSize: 15, outline: "none", background: "#fff" };
+const chip = { border: "none", padding: "9px 14px", borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: "pointer" };
+const resumen = { display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(135deg,#ecfdf5,#f0fdfa)", border: "1px solid #bbf7d0", borderRadius: 16, padding: "14px 18px", marginTop: 16 };
+const card = { border: "1px solid #eef2f7", borderRadius: 16, padding: 14, marginBottom: 10, boxShadow: "0 1px 3px rgba(15,23,42,.05)" };
+const badge = { marginLeft: 8, background: "#059669", color: "#fff", fontSize: 11, padding: "2px 8px", borderRadius: 999, fontWeight: 700, verticalAlign: "middle" };
+const desglose = { marginTop: 12, paddingTop: 12, borderTop: "1px dashed #e2e8f0" };
+const btnPlanear = { width: "100%", marginTop: 10, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg,#6366f1,#4f46e5)", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer", boxShadow: "0 4px 12px rgba(79,70,229,.3)" };
+const btnVuelos = { flex: 1, padding: "12px", borderRadius: 12, border: "1.5px solid #e0e7ff", background: "#fff", color: "var(--azul)", fontWeight: 700, fontSize: 14, textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" };
