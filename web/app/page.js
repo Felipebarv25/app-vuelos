@@ -230,10 +230,22 @@ export default function Home() {
           </div>
 
           <div style={{ padding: 14 }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: "var(--azul-osc)" }}>
-              {ciudad.nombre}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 14 }}>
+              <div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "var(--azul-osc)" }}>
+                  {ciudad.nombre}
+                </div>
+                <div style={{ fontSize: 13, color: "#64748b" }}>{ciudad.pais}</div>
+              </div>
+              {lugaresBase.length > 0 && (
+                <div style={{ textAlign: "right", fontSize: 12, color: "#64748b" }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "var(--verde)" }}>
+                    {lugaresBase.length}
+                  </div>
+                  lugares
+                </div>
+              )}
             </div>
-            <div style={{ fontSize: 13, color: "#64748b", marginBottom: 14 }}>{ciudad.pais}</div>
 
             {/* Configuración del viaje */}
             <Tarjeta style={{ marginBottom: 14 }}>

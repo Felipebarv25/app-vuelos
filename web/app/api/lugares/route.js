@@ -23,11 +23,11 @@ const FILTROS = {
 
 // Términos de búsqueda para el respaldo Photon, por categoría.
 const TERMINOS_PHOTON = {
-  imperdibles: ["museo", "monumento", "plaza", "parque", "iglesia", "mirador"],
-  restaurantes: ["restaurante"],
-  cafes: ["café"],
-  bares: ["bar", "discoteca"],
-  miradores: ["mirador"],
+  imperdibles: ["museo", "monumento", "plaza", "parque", "catedral", "mirador"],
+  restaurantes: ["restaurante", "restaurant"],
+  cafes: ["cafe", "coffee"],
+  bares: ["bar", "pub"],
+  miradores: ["mirador", "viewpoint"],
 };
 
 function carrera(query) {
@@ -89,7 +89,7 @@ async function desdePhoton(cat, lat, lon) {
     return fetch(
       `https://photon.komoot.io/api/?q=${encodeURIComponent(
         t
-      )}&lat=${lat}&lon=${lon}&limit=20&lang=es`,
+      )}&lat=${lat}&lon=${lon}&limit=20`,
       { signal: ctrl.signal }
     )
       .then((r) => {
@@ -111,9 +111,9 @@ async function desdePhoton(cat, lat, lon) {
       const nombre = p.name;
       const coords = f.geometry?.coordinates; // [lon, lat]
       if (!nombre || !coords || vistos.has(nombre)) continue;
-      // Filtrar a la zona (~12 km) para no traer cosas lejanas.
+      // Filtrar a la zona (~15 km) para no traer cosas lejanas.
       const dist = Math.hypot(coords[1] - lat, coords[0] - lon);
-      if (dist > 0.13) continue;
+      if (dist > 0.15) continue;
       vistos.add(nombre);
       out.push({
         type: "node",
