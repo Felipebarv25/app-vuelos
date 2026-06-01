@@ -143,25 +143,32 @@ export async function GET(req) {
 
   let elementos = [];
 
-  // 1) Intentar Overpass
+  // 1) Intentar Overpass (con radio ampliado para cubrir ciudades grandes)
   try {
+    const radioAmplio = Math.min(radio + 4000, 12000);
     const filtros = FILTROS[cat]
-      .map((f) => `${f}(around:${radio},${lat},${lon});`)
+      .map((f) => `${f}(around:${radioAmplio},${lat},${lon});`)
       .join("");
-    const query = `[out:json][timeout:9];(${filtros});out center 40;`;
+    const query = `[out:json][timeout:9];(${filtros});out center 60;`;
     const datos = await carrera(query);
     elementos = desdeOverpass(datos);
   } catch {
     elementos = [];
   }
 
-  // 2) Si Overpass falló o vino vacío, usar Photon (respaldo robusto)
-  if (elementos.length === 0) {
+  // 2) Si Overpass trajo POCOS (no solo cero), complementar con Photon.
+  //    Así ciudades grandes siempre tienen una buena variedad de lugares.
+  if (elementos.length < 10) {
     try {
-      elementos = await desdePhoton(cat, lat, lon);
-    } catch {
-      elementos = [];
-    }
+      const extra = await desdePhoton(cat, lat, lon);
+      const vistos = new Set(elementos.map((e) => e.tags?.name));
+      for (const e of extra) {
+        if (!vistos.has(e.tags?.name)) {
+          elementos.push(e);
+          vistos.add(e.tags?.name);
+        }
+      }
+    } catch {}
   }
 
   const tieneDatos = elementos.length > 0;
