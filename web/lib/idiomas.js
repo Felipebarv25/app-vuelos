@@ -121,6 +121,23 @@ const T = {
     presupVerVuelos: "Ver vuelos",
     presupAviso:
       "Costos promedio orientativos para un turista de gama media (USD). Los vuelos son aproximados desde Colombia; confirma el precio real con el detector de vuelos.",
+    // Diseño / etiquetas
+    heroEyebrow: "Planifica tu próxima aventura",
+    destinosEyebrow: "Inspiración",
+    // Presupuesto · modos y ruta
+    presupModoDestino: "Un destino",
+    presupModoRuta: "Ruta multiciudad",
+    presupRutaSub: "Arma una ruta de varias ciudades que entre en tu presupuesto",
+    presupDesdeCiudad: "Saliendo desde",
+    presupRutaTitulo: "Tu ruta recomendada",
+    presupOtraRuta: "Otra ruta",
+    presupRutaCiudades: "ciudades",
+    presupRutaDias: "días",
+    presupNoRuta:
+      "No encontramos una ruta dentro de tu presupuesto aquí. Sube el presupuesto o los días, o elige otra región.",
+    presupVueloIntl: "Vuelo internacional (ida y vuelta)",
+    presupEntreCiudades: "Transporte entre ciudades",
+    presupNoches: "noches",
   },
 
   en: {
@@ -222,6 +239,21 @@ const T = {
     presupVerVuelos: "Flights",
     presupAviso:
       "Average estimated costs for a mid-range tourist (USD). Flights are approximate from Colombia; confirm the real price with the flight detector.",
+    heroEyebrow: "Plan your next adventure",
+    destinosEyebrow: "Inspiration",
+    presupModoDestino: "One destination",
+    presupModoRuta: "Multi-city route",
+    presupRutaSub: "Build a multi-city route that fits your budget",
+    presupDesdeCiudad: "Departing from",
+    presupRutaTitulo: "Your recommended route",
+    presupOtraRuta: "Another route",
+    presupRutaCiudades: "cities",
+    presupRutaDias: "days",
+    presupNoRuta:
+      "We couldn't find a route within your budget here. Raise the budget or days, or pick another region.",
+    presupVueloIntl: "International flight (round trip)",
+    presupEntreCiudades: "Inter-city transport",
+    presupNoches: "nights",
   },
 
   pt: {
@@ -323,6 +355,21 @@ const T = {
     presupVerVuelos: "Voos",
     presupAviso:
       "Custos médios estimados para um turista intermediário (USD). Os voos são aproximados desde a Colômbia; confirme o preço real com o detector de voos.",
+    heroEyebrow: "Planeje sua próxima aventura",
+    destinosEyebrow: "Inspiração",
+    presupModoDestino: "Um destino",
+    presupModoRuta: "Rota multicidades",
+    presupRutaSub: "Monte uma rota de várias cidades que caiba no seu orçamento",
+    presupDesdeCiudad: "Saindo de",
+    presupRutaTitulo: "Sua rota recomendada",
+    presupOtraRuta: "Outra rota",
+    presupRutaCiudades: "cidades",
+    presupRutaDias: "dias",
+    presupNoRuta:
+      "Não encontramos uma rota dentro do seu orçamento aqui. Aumente o orçamento ou os dias, ou escolha outra região.",
+    presupVueloIntl: "Voo internacional (ida e volta)",
+    presupEntreCiudades: "Transporte entre cidades",
+    presupNoches: "noites",
   },
 
   fr: {
@@ -425,6 +472,21 @@ const T = {
     presupVerVuelos: "Vols",
     presupAviso:
       "Coûts moyens estimés pour un touriste de gamme moyenne (USD). Les vols sont approximatifs depuis la Colombie ; confirmez le prix réel avec le détecteur de vols.",
+    heroEyebrow: "Planifiez votre prochaine aventure",
+    destinosEyebrow: "Inspiration",
+    presupModoDestino: "Une destination",
+    presupModoRuta: "Itinéraire multi-villes",
+    presupRutaSub: "Composez un itinéraire de plusieurs villes selon votre budget",
+    presupDesdeCiudad: "Au départ de",
+    presupRutaTitulo: "Votre itinéraire recommandé",
+    presupOtraRuta: "Autre itinéraire",
+    presupRutaCiudades: "villes",
+    presupRutaDias: "jours",
+    presupNoRuta:
+      "Aucun itinéraire dans votre budget ici. Augmentez le budget ou les jours, ou choisissez une autre région.",
+    presupVueloIntl: "Vol international (aller-retour)",
+    presupEntreCiudades: "Transport entre villes",
+    presupNoches: "nuits",
   },
 };
 

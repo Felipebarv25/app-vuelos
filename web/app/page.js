@@ -24,6 +24,12 @@ const DESTINOS_DESTACADOS = [
   { nombre: "Nueva York", pais: "EE. UU.", q: "Nueva York, Estados Unidos", hint: "Manhattan skyline" },
   { nombre: "Cartagena", pais: "Colombia", q: "Cartagena, Colombia", hint: "Cartagena de Indias" },
   { nombre: "Barcelona", pais: "España", q: "Barcelona, España", hint: "Sagrada Familia" },
+  { nombre: "Londres", pais: "Reino Unido", q: "Londres, Reino Unido", hint: "Big Ben London" },
+  { nombre: "Estambul", pais: "Turquía", q: "Estambul, Turquía", hint: "Hagia Sophia Istanbul" },
+  { nombre: "Dubái", pais: "Emiratos Árabes", q: "Dubái, Emiratos Árabes Unidos", hint: "Burj Khalifa Dubai" },
+  { nombre: "Río de Janeiro", pais: "Brasil", q: "Río de Janeiro, Brasil", hint: "Christ the Redeemer Rio de Janeiro" },
+  { nombre: "Ámsterdam", pais: "Países Bajos", q: "Ámsterdam, Países Bajos", hint: "Amsterdam canals" },
+  { nombre: "Buenos Aires", pais: "Argentina", q: "Buenos Aires, Argentina", hint: "Obelisco Buenos Aires" },
 ];
 
 // Saludo según la hora del día (cálido y personalizado).
@@ -220,7 +226,7 @@ export default function Home() {
   return (
     <div className="min-h-screen pb-10">
       {/* Cabecera full-width */}
-      <header className="sticky top-0 z-[1000] bg-gradient-to-br from-marca-500 via-marca-600 to-marca-900 text-white shadow-marca">
+      <header className="sticky top-0 z-[1000] bg-gradient-to-br from-marca-600 via-marca-700 to-marca-900 text-white shadow-marca">
         <div className="mx-auto max-w-7xl px-4 pt-4 pb-5 lg:px-8">
           <div className="flex items-center justify-between gap-4">
             <div onClick={irAlInicio} className="cursor-pointer">
@@ -288,10 +294,13 @@ export default function Home() {
         <div className="animar-subir mx-auto max-w-7xl px-4 pb-4 pt-6 lg:px-8 lg:pt-8">
           {/* Saludo (hero) */}
           <div className="max-w-3xl">
-            <h1 className="text-[26px] font-extrabold tracking-tight text-marca-900 lg:text-4xl">
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-marca-500">
+              {t("heroEyebrow")}
+            </div>
+            <h1 className="text-[28px] font-extrabold leading-[1.1] tracking-tight text-marca-900 lg:text-[44px]">
               {t(saludoClave())}, {usuario.nombre} {saludoEmoji()}
             </h1>
-            <p className="mt-2 text-[15px] leading-relaxed text-slate-500 lg:text-lg">{t("heroTexto")}</p>
+            <p className="mt-3 text-[15px] leading-relaxed text-slate-500 lg:text-lg">{t("heroTexto")}</p>
           </div>
 
           {/* Banner presupuesto */}
@@ -305,9 +314,14 @@ export default function Home() {
           </button>
 
           {/* Destinos con foto */}
-          <h2 className="mb-4 mt-9 text-[18px] font-extrabold tracking-tight text-marca-900 lg:text-2xl">
-            ✨ {t("pruebaPopular")}
-          </h2>
+          <div className="mb-4 mt-10">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-marca-500">
+              {t("destinosEyebrow")}
+            </div>
+            <h2 className="mt-1 text-[20px] font-extrabold tracking-tight text-marca-900 lg:text-[26px]">
+              {t("pruebaPopular")}
+            </h2>
+          </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-4">
             {DESTINOS_DESTACADOS.map((d) => (
               <CardDestino key={d.q} nombre={d.nombre} pais={d.pais} hint={d.hint}
