@@ -17,6 +17,7 @@ export default function Home() {
   const [mostrarSug, setMostrarSug] = useState(false);
   const [ciudad, setCiudad] = useState(null);
   const [cargando, setCargando] = useState(false);
+  const [cargandoLugares, setCargandoLugares] = useState(false);
   const [error, setError] = useState(null);
 
   // Configuración del viaje
@@ -56,26 +57,15 @@ export default function Home() {
     return () => clearTimeout(debounce.current);
   }, [consulta]);
 
-  async function elegirCiudad(sug) {
+  function elegirCiudad(sug) {
     setConsulta(sug.etiqueta);
     setMostrarSug(false);
     setSugerencias([]);
-    setCargando(true);
     setError(null);
-    try {
-      const c = {
-        nombre: sug.ciudad,
-        pais: sug.pais,
-        lat: sug.lat,
-        lon: sug.lon,
-      };
-      setCiudad(c);
-      await cargarCategoria("imperdibles", c);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setCargando(false);
-    }
+    // Mostramos el mapa y la ciudad de INMEDIATO (ya tenemos coords del autocompletado).
+    const c = { nombre: sug.ciudad, pais: sug.pais, lat: sug.lat, lon: sug.lon };
+    setCiudad(c);
+    cargarCategoria("imperdibles", c); // los lugares cargan en segundo plano
   }
 
   async function buscarTexto(e) {
@@ -83,25 +73,26 @@ export default function Home() {
     const q = consulta.trim();
     if (!q) return;
     setMostrarSug(false);
-    setCargando(true);
     setError(null);
+    setCargando(true);
     try {
       const c = await geocodificar(q);
-      setCiudad(c);
-      await cargarCategoria("imperdibles", c);
+      setCiudad(c); // mapa visible ya
+      setCargando(false);
+      cargarCategoria("imperdibles", c); // lugares en segundo plano
     } catch (err) {
       setError(err.message);
       setCiudad(null);
-    } finally {
       setCargando(false);
     }
   }
 
+  // Carga lugares SIN bloquear la pantalla: usa un indicador propio (cargandoLugares).
   async function cargarCategoria(cat, c = ciudad, mom = momento) {
     if (!c) return;
-    setCargando(true);
     setError(null);
     setCategoria(cat);
+    setCargandoLugares(true);
     const catReal = mom === "nocturno" && cat === "imperdibles" ? "bares" : cat;
     try {
       const lugares = await traerLugares(catReal, c.lat, c.lon);
@@ -111,9 +102,9 @@ export default function Home() {
       setSeleccion(sel);
       reconstruir(sel, c);
     } catch (err) {
-      setError(err.message);
+      setError("Tardó demasiado en cargar lugares. Toca una categoría para reintentar.");
     } finally {
-      setCargando(false);
+      setCargandoLugares(false);
     }
   }
 
@@ -280,6 +271,13 @@ export default function Home() {
                 </Chip>
               ))}
             </div>
+
+            {/* Indicador sutil de carga de lugares (no bloquea la pantalla) */}
+            {cargandoLugares && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 2px", color: "#64748b", fontSize: 14 }}>
+                <span className="spin" /> Buscando los mejores lugares…
+              </div>
+            )}
 
             {/* Pestañas de días */}
             {plan.length > 0 && (

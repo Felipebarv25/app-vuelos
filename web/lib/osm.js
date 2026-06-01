@@ -13,25 +13,44 @@ const OVERPASS_MIRRORS = [
   "https://overpass.osm.ch/api/interpreter",
 ];
 
+// Consulta TODOS los espejos en paralelo y usa el PRIMERO que responde bien.
+// Así no esperamos a que uno falle para probar el siguiente: la velocidad
+// la marca el servidor más rápido en ese momento, no el más lento.
 async function consultarOverpass(query) {
-  let ultimoError;
-  for (const url of OVERPASS_MIRRORS) {
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: "data=" + encodeURIComponent(query),
+  const cuerpo = "data=" + encodeURIComponent(query);
+
+  const intentos = OVERPASS_MIRRORS.map((url) => {
+    const ctrl = new AbortController();
+    const id = setTimeout(() => ctrl.abort(), 6000);
+    return fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: cuerpo,
+      signal: ctrl.signal,
+    })
+      .then(async (res) => {
+        clearTimeout(id);
+        if (!res.ok) throw new Error(`Overpass ${res.status}`);
+        return res.json();
+      })
+      .catch((e) => {
+        clearTimeout(id);
+        throw e;
       });
-      if (!res.ok) {
-        ultimoError = new Error(`Overpass ${res.status}`);
-        continue;
-      }
-      return await res.json();
-    } catch (e) {
-      ultimoError = e;
-    }
-  }
-  throw ultimoError || new Error("No se pudieron cargar los lugares.");
+  });
+
+  // "promesa que gana el primero en cumplir; ignora los que fallan"
+  return new Promise((resolve, reject) => {
+    let pendientes = intentos.length;
+    let ultimoError;
+    intentos.forEach((p) =>
+      p.then(resolve).catch((e) => {
+        ultimoError = e;
+        if (--pendientes === 0)
+          reject(ultimoError || new Error("No se pudieron cargar los lugares."));
+      })
+    );
+  });
 }
 
 // Categorías de lugares que sabemos pedir a Overpass.
@@ -89,7 +108,7 @@ const ETIQUETAS = {
   nightclub: "Discoteca",
 };
 
-import { cacheado } from "./cache";
+import { cacheado, fetchRapido } from "./cache";
 
 const TTL_CIUDAD = 1000 * 60 * 60 * 24 * 7; // 7 días
 const TTL_LUGARES = 1000 * 60 * 60 * 12; // 12 horas
@@ -116,7 +135,8 @@ export async function geocodificar(consulta) {
 }
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
-export async function traerLugares(categoria, lat, lon, radio = 9000, limite = 40) {
+// radio menor + límite ajustado = consulta más liviana y rápida.
+export async function traerLugares(categoria, lat, lon, radio = 6000, limite = 30) {
   const cat = CATEGORIAS[categoria];
   if (!cat) throw new Error("Categoría desconocida");
   const clave = `lug:${categoria}:${lat.toFixed(3)},${lon.toFixed(3)}`;
@@ -126,12 +146,25 @@ export async function traerLugares(categoria, lat, lon, radio = 9000, limite = 4
 }
 
 async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
-  const cuerpoFiltros = cat.filtros
-    .map((f) => `${f}(around:${radio},${lat},${lon});`)
-    .join("\n");
-  const query = `[out:json][timeout:25];(${cuerpoFiltros});out center ${limite * 3};`;
+  let datos;
+  // 1) Intentar nuestra API cacheada en el edge de Vercel (muy rápida en repeticiones).
+  try {
+    const r = await fetchRapido(
+      `/api/lugares?cat=${categoria}&lat=${lat}&lon=${lon}&radio=${radio}`,
+      {},
+      7000
+    );
+    if (r.ok) datos = await r.json();
+  } catch {}
 
-  const datos = await consultarOverpass(query);
+  // 2) Respaldo: ir directo a los espejos de Overpass.
+  if (!datos || datos.error || !datos.elements) {
+    const cuerpoFiltros = cat.filtros
+      .map((f) => `${f}(around:${radio},${lat},${lon});`)
+      .join("\n");
+    const query = `[out:json][timeout:10];(${cuerpoFiltros});out center ${limite + 10};`;
+    datos = await consultarOverpass(query);
+  }
 
   const vistos = new Set();
   const lugares = [];
