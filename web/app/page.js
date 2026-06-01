@@ -8,10 +8,14 @@ import { useGeo } from "@/lib/useGeo";
 import { Chip, Boton, Tarjeta } from "@/components/ui";
 import Itinerario from "@/components/Itinerario";
 import DetalleLugar from "@/components/DetalleLugar";
+import Bienvenida from "@/components/Bienvenida";
+import SelectorIdioma from "@/components/SelectorIdioma";
+import { useApp } from "@/lib/AppContext";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
 
 export default function Home() {
+  const { t, usuario, salir, listo } = useApp();
   const [consulta, setConsulta] = useState("");
   const [sugerencias, setSugerencias] = useState([]);
   const [mostrarSug, setMostrarSug] = useState(false);
@@ -153,15 +157,33 @@ export default function Home() {
 
   const lugaresDelDia = plan[diaVisible]?.paradas || [];
 
+  // Mientras carga el estado guardado, no parpadear.
+  if (!listo) return null;
+  // Primera vez: pantalla de bienvenida (idioma + nombre).
+  if (!usuario) return <Bienvenida />;
+
   return (
     <div style={{ maxWidth: 720, margin: "0 auto", paddingBottom: 40 }}>
       {/* Cabecera */}
       <header style={cab}>
-        <div style={{ fontSize: 22, fontWeight: 800, display: "flex", alignItems: "center", gap: 8 }}>
-          🌍 Viajero 360
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 800, display: "flex", alignItems: "center", gap: 8 }}>
+              🌍 Viajero 360
+            </div>
+            <div style={{ fontSize: 13, opacity: 0.92 }}>{t("tagline")}</div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <SelectorIdioma />
+          </div>
         </div>
-        <div style={{ fontSize: 13, opacity: 0.92 }}>
-          Tu itinerario perfecto en cualquier ciudad del mundo
+
+        {/* Saludo al usuario */}
+        <div style={{ fontSize: 12, opacity: 0.9, marginTop: 6 }}>
+          👋 {t("hola")}, <b>{usuario.nombre}</b> ·{" "}
+          <button onClick={salir} style={{ background: "none", border: "none", color: "#bfdbfe", textDecoration: "underline", fontSize: 12, padding: 0 }}>
+            {t("salir")}
+          </button>
         </div>
 
         {/* Buscador con autocompletado */}
@@ -171,7 +193,7 @@ export default function Home() {
               value={consulta}
               onChange={(e) => setConsulta(e.target.value)}
               onFocus={() => sugerencias.length && setMostrarSug(true)}
-              placeholder="Ciudad, País (ej. Madrid, España)"
+              placeholder={t("buscarPlaceholder")}
               style={input}
             />
             <button type="submit" style={btnBuscar}>🔎</button>
@@ -204,32 +226,31 @@ export default function Home() {
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 56 }}>🗺️</div>
             <h2 style={{ fontSize: 19, color: "var(--azul-osc)", marginTop: 6 }}>
-              Tu viaje, planeado en segundos
+              {t("heroTitulo")}
             </h2>
             <p style={{ marginTop: 6, fontSize: 14, lineHeight: 1.5, maxWidth: 460, marginInline: "auto" }}>
-              Itinerario día a día con los mejores lugares, fotos, restaurantes y
-              cómo moverte entre ellos. <b>Todo aquí, sin salir de la app.</b>
+              {t("heroTexto")}
             </p>
           </div>
 
           {/* Beneficios rápidos (claridad visual) */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, margin: "20px auto", maxWidth: 460 }}>
             {[
-              ["📅", "Día por día", "Reparte los lugares según tu tiempo"],
-              ["📍", "GPS en vivo", "Te avisa si vas adelantado o atrasado"],
-              ["🍽️", "Comer y salir", "Restaurantes, cafés y vida nocturna"],
-              ["🚇", "Cómo llegar", "Transporte, tiempo y costo entre puntos"],
-            ].map(([ic, t, d]) => (
-              <div key={t} style={{ background: "#fff", border: "1px solid var(--borde)", borderRadius: 12, padding: 12 }}>
+              ["📅", t("benDiaTitulo"), t("benDiaTexto")],
+              ["📍", t("benGpsTitulo"), t("benGpsTexto")],
+              ["🍽️", t("benComerTitulo"), t("benComerTexto")],
+              ["🚇", t("benLlegarTitulo"), t("benLlegarTexto")],
+            ].map(([ic, tit, d]) => (
+              <div key={tit} style={{ background: "#fff", border: "1px solid var(--borde)", borderRadius: 12, padding: 12 }}>
                 <div style={{ fontSize: 24 }}>{ic}</div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: "var(--azul-osc)", marginTop: 4 }}>{t}</div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: "var(--azul-osc)", marginTop: 4 }}>{tit}</div>
                 <div style={{ fontSize: 12, color: "#64748b" }}>{d}</div>
               </div>
             ))}
           </div>
 
           <div style={{ textAlign: "center", fontSize: 13, color: "#94a3b8", marginBottom: 8 }}>
-            Prueba con un destino popular:
+            {t("pruebaPopular")}
           </div>
           <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
             {["Madrid, España", "Tokio, Japón", "Cusco, Perú", "Roma, Italia", "Cartagena, Colombia"].map((c) => (
@@ -243,7 +264,7 @@ export default function Home() {
 
       {cargando && (
         <div style={{ padding: 28, textAlign: "center", color: "#64748b" }}>
-          <span className="spin" /> <span style={{ marginLeft: 8 }}>Cargando…</span>
+          <span className="spin" /> <span style={{ marginLeft: 8 }}>{t("cargando")}</span>
         </div>
       )}
 
@@ -272,7 +293,7 @@ export default function Home() {
                   <div style={{ fontSize: 20, fontWeight: 800, color: "var(--verde)" }}>
                     {lugaresBase.length}
                   </div>
-                  lugares
+                  {t("lugares")}
                 </div>
               )}
             </div>
@@ -281,26 +302,26 @@ export default function Home() {
             <Tarjeta style={{ marginBottom: 14 }}>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
                 <label style={lbl}>
-                  📅 Días
+                  📅 {t("dias")}
                   <select value={dias} onChange={(e) => setDias(+e.target.value)} style={sel}>
                     {[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </label>
                 <label style={lbl}>
-                  ⏰ Horas/día
+                  ⏰ {t("horasDia")}
                   <select value={horas} onChange={(e) => setHoras(+e.target.value)} style={sel}>
                     {[4, 5, 6, 7, 8, 9, 10, 12].map((n) => <option key={n} value={n}>{n}h</option>)}
                   </select>
                 </label>
                 <Boton onClick={() => reconstruir()} variante="sec" style={{ marginLeft: "auto" }}>
-                  🔄 Recalcular
+                  🔄 {t("recalcular")}
                 </Boton>
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-                <Chip activo={momento === "diurno"} onClick={() => cambiarMomento("diurno")}>☀️ Diurno</Chip>
-                <Chip activo={momento === "nocturno"} onClick={() => cambiarMomento("nocturno")}>🌙 Nocturno</Chip>
+                <Chip activo={momento === "diurno"} onClick={() => cambiarMomento("diurno")}>☀️ {t("diurno")}</Chip>
+                <Chip activo={momento === "nocturno"} onClick={() => cambiarMomento("nocturno")}>🌙 {t("nocturno")}</Chip>
                 <span style={{ fontSize: 12, color: "#64748b", alignSelf: "center" }}>
-                  {momento === "nocturno" ? "Bares, miradores y vida nocturna" : "Monumentos, museos y paseos"}
+                  {momento === "nocturno" ? t("nocturnoDesc") : t("diurnoDesc")}
                 </span>
               </div>
             </Tarjeta>
@@ -309,7 +330,7 @@ export default function Home() {
             <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 8 }}>
               {Object.entries(CATEGORIAS).map(([k, c]) => (
                 <Chip key={k} activo={categoria === k} onClick={() => cargarCategoria(k)}>
-                  {c.icono} {c.nombre}
+                  {c.icono} {t("cat_" + k)}
                 </Chip>
               ))}
             </div>
@@ -317,7 +338,7 @@ export default function Home() {
             {/* Indicador sutil de carga de lugares (no bloquea la pantalla) */}
             {cargandoLugares && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 2px", color: "#64748b", fontSize: 14 }}>
-                <span className="spin" /> Buscando los mejores lugares…
+                <span className="spin" /> {t("cargandoLugares")}
               </div>
             )}
 
@@ -325,10 +346,7 @@ export default function Home() {
             {!cargandoLugares && lugaresBase.length === 0 && (
               <Tarjeta style={{ textAlign: "center", color: "#64748b" }}>
                 <div style={{ fontSize: 30 }}>🔍</div>
-                <p style={{ fontSize: 14, marginTop: 6 }}>
-                  No encontramos lugares de esta categoría cerca del centro.
-                  Prueba otra categoría o toca <b>Recalcular</b>.
-                </p>
+                <p style={{ fontSize: 14, marginTop: 6 }}>{t("sinResultados")}</p>
               </Tarjeta>
             )}
 
@@ -336,7 +354,7 @@ export default function Home() {
             {plan.length > 0 && (
               <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 14 }}>
                 {plan.map((d, i) => (
-                  <Chip key={i} activo={diaVisible === i} onClick={() => setDiaVisible(i)}>Día {i + 1}</Chip>
+                  <Chip key={i} activo={diaVisible === i} onClick={() => setDiaVisible(i)}>{t("dia")} {i + 1}</Chip>
                 ))}
               </div>
             )}
@@ -347,6 +365,7 @@ export default function Home() {
                 numeroDia={diaVisible + 1}
                 alternativas={lugaresBase}
                 gps={gps}
+                t={t}
                 onCambiarParada={(idx) => cambiarParada(diaVisible, idx)}
                 onQuitarParada={(idx) => quitarParada(diaVisible, idx)}
                 onVerLugar={(p) => { setRutaTrazada(null); setDetalle(p); }}
@@ -358,8 +377,8 @@ export default function Home() {
               <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                 <input type="checkbox" checked={gpsOn} onChange={(e) => setGpsOn(e.target.checked)} />
                 <span style={{ fontSize: 14 }}>
-                  📍 Activar GPS para verme en el mapa y calcular tiempos en vivo
-                  {gpsOn && gps && <span style={{ color: "var(--verde)", fontWeight: 600 }}> · activo</span>}
+                  📍 {t("activarGps")}
+                  {gpsOn && gps && <span style={{ color: "var(--verde)", fontWeight: 600 }}> · {t("activo")}</span>}
                 </span>
               </label>
             </Tarjeta>
@@ -373,13 +392,14 @@ export default function Home() {
           lugar={detalle}
           ciudad={ciudad}
           origen={gps}
+          t={t}
           onCerrar={() => setDetalle(null)}
           onTrazarRuta={(r) => { setRutaTrazada(r); setDetalle(null); }}
         />
       )}
 
       <footer style={{ textAlign: "center", color: "#94a3b8", fontSize: 12, padding: 20 }}>
-        Datos de OpenStreetMap y Wikipedia · Viajero 360
+        {t("footer")} · Viajero 360
       </footer>
     </div>
   );

@@ -20,11 +20,11 @@ export function estadoTiempo(dia, indiceActual, horaInicioMs, ahoraMs) {
   return { planeado, transcurrido, diferencia, estado };
 }
 
-export function textoEstado(est) {
+export function textoEstado(est, t = (k) => k) {
   const abs = Math.abs(est.diferencia);
   if (est.estado === "atrasado")
-    return { emoji: "🔴", texto: `Vas ${abs} min atrasado`, color: "#dc2626" };
+    return { emoji: "🔴", texto: t("atrasado", { n: abs }), color: "#dc2626" };
   if (est.estado === "adelantado")
-    return { emoji: "🟢", texto: `Vas ${abs} min adelantado`, color: "#16a34a" };
-  return { emoji: "🟡", texto: "Vas en hora", color: "#ca8a04" };
+    return { emoji: "🟢", texto: t("adelantado", { n: abs }), color: "#16a34a" };
+  return { emoji: "🟡", texto: t("enHora"), color: "#ca8a04" };
 }

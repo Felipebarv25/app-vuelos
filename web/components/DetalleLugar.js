@@ -8,7 +8,7 @@ import { fmtMin } from "@/lib/itinerario";
 // Panel/modal que muestra TODO sobre un lugar SIN salir de la app:
 // foto, descripción, y cómo llegar desde la ubicación del usuario
 // (transporte, tiempo, costo y ruta dibujada en nuestro mapa).
-export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazarRuta }) {
+export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazarRuta, t = (k) => k }) {
   const [foto, setFoto] = useState(null);
   const [cargandoFoto, setCargandoFoto] = useState(true);
   const [modoSel, setModoSel] = useState(null);
@@ -82,57 +82,52 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
 
           {/* Cómo llegar desde tu ubicación */}
           <div style={{ fontWeight: 700, color: "var(--azul-osc)", marginBottom: 8 }}>
-            🧭 Cómo llegar {origen ? "desde tu ubicación" : ""}
+            🧭 {t("comoLlegar")} {origen ? t("desdeTuUbicacion") : ""}
           </div>
 
-          {!origen && (
-            <div style={avisoGps}>
-              📍 Activa el GPS (abajo en la app) para ver el transporte y el tiempo
-              exactos desde donde estás.
-            </div>
-          )}
+          {!origen && <div style={avisoGps}>📍 {t("activaGps")}</div>}
 
           {origen && (
             <>
               <div style={{ fontSize: 13, color: "#64748b", marginBottom: 10 }}>
-                Estás a{" "}
+                {t("estasA")}{" "}
                 <b>
                   {metros < 1000
                     ? `${Math.round(metros)} m`
                     : `${(metros / 1000).toFixed(1)} km`}
                 </b>{" "}
-                de aquí. Elige cómo llegar:
+                {t("deAqui")}
               </div>
               <div style={{ display: "grid", gap: 8 }}>
-                {transportes.map((t) => (
+                {transportes.map((tr) => (
                   <button
-                    key={t.modo}
-                    onClick={() => elegirTransporte(t)}
+                    key={tr.modo}
+                    onClick={() => elegirTransporte(tr)}
                     style={{
                       ...opcion,
-                      borderColor: modoSel === t.modo ? "var(--azul)" : "var(--borde)",
+                      borderColor: modoSel === tr.modo ? "var(--azul)" : "var(--borde)",
                       background:
-                        modoSel === t.modo ? "#eff6ff" : t.recomendado ? "#f0fdf4" : "#fff",
+                        modoSel === tr.modo ? "#eff6ff" : tr.recomendado ? "#f0fdf4" : "#fff",
                     }}
                   >
-                    <span style={{ fontSize: 22 }}>{t.icono}</span>
+                    <span style={{ fontSize: 22 }}>{tr.icono}</span>
                     <div style={{ flex: 1, textAlign: "left" }}>
                       <div style={{ fontWeight: 700, fontSize: 15 }}>
-                        {t.nombre}
-                        {t.recomendado && <span style={recom}>recomendado</span>}
+                        {tr.nombre}
+                        {tr.recomendado && <span style={recom}>{t("recomendado")}</span>}
                       </div>
                       <div style={{ fontSize: 12, color: "#64748b" }}>
-                        ⏱️ {fmtMin(t.minutos)} · 💵 {t.costo}
+                        ⏱️ {fmtMin(tr.minutos)} · 💵 {tr.costo}
                       </div>
                     </div>
                     <span style={{ color: "var(--azul)", fontWeight: 700, fontSize: 13 }}>
-                      Ver ruta →
+                      {t("verRuta")} →
                     </span>
                   </button>
                 ))}
               </div>
               <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>
-                Tiempos y costos aproximados. La ruta se dibuja en el mapa de la app.
+                {t("aproxAviso")}
               </div>
             </>
           )}

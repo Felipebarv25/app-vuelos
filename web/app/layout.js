@@ -1,4 +1,5 @@
 import "./globals.css";
+import { AppProvider } from "@/lib/AppContext";
 
 export const metadata = {
   title: "Viajero 360 · Planea tu viaje perfecto",
@@ -40,7 +41,7 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body>
-        {children}
+        <AppProvider>{children}</AppProvider>
         {/* Registra el service worker para que la app sea instalable y rápida */}
         <script
           dangerouslySetInnerHTML={{

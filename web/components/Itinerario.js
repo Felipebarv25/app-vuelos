@@ -14,6 +14,7 @@ export default function Itinerario({
   onQuitarParada,
   onVerLugar,
   gps,
+  t = (k) => k,
 }) {
   const r = resumenDia(dia);
   const [seguimiento, setSeguimiento] = useState(false);
@@ -38,15 +39,15 @@ export default function Itinerario({
         <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
           <div>
             <div style={{ fontWeight: 800, fontSize: 17, color: "var(--azul-osc)" }}>
-              Día {numeroDia}
+              {t("dia")} {numeroDia}
             </div>
             <div style={{ fontSize: 13, color: "#475569" }}>
-              {r.paradas} paradas · {r.totalTexto} en total
+              {r.paradas} {t("paradas")} · {r.totalTexto} {t("enTotal")}
             </div>
           </div>
           <div style={{ textAlign: "right", fontSize: 12, color: "#475569" }}>
-            <div>👣 Visitas: {r.visitaTexto}</div>
-            <div>🚇 Traslados: {r.trasladoTexto}</div>
+            <div>👣 {t("visitas")}: {r.visitaTexto}</div>
+            <div>🚇 {t("traslados")}: {r.trasladoTexto}</div>
           </div>
         </div>
 
@@ -55,12 +56,13 @@ export default function Itinerario({
           <div style={{ marginTop: 12 }}>
             {!seguimiento ? (
               <Boton variante="verde" onClick={iniciar} style={{ width: "100%" }}>
-                ▶️ Empezar día con seguimiento GPS
+                ▶️ {t("empezarGps")}
               </Boton>
             ) : (
               <PanelTiempo
                 estado={estado}
                 gps={gps}
+                t={t}
                 paradaActual={paradaActual}
                 total={dia.paradas.length}
                 onSiguiente={() => setParadaActual((x) => Math.min(x + 1, dia.paradas.length - 1))}
@@ -73,10 +75,7 @@ export default function Itinerario({
 
       {dia.paradas.length === 0 && (
         <Tarjeta>
-          <p style={{ color: "#64748b", fontSize: 14 }}>
-            No hay paradas para este día con el tiempo configurado. Sube las horas
-            por día o reduce el número de días.
-          </p>
+          <p style={{ color: "#64748b", fontSize: 14 }}>{t("sinParadas")}</p>
         </Tarjeta>
       )}
 
@@ -134,12 +133,12 @@ export default function Itinerario({
                 </div>
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
                   <button style={{ ...mini, background: "#eff6ff", color: "var(--azul)" }}
-                    onClick={() => onVerLugar?.(p)}>📷 Ver foto y cómo llegar</button>
+                    onClick={() => onVerLugar?.(p)}>📷 {t("verFoto")}</button>
                   {alternativas?.length > 0 && (
-                    <button style={mini} onClick={() => onCambiarParada(i)}>🔄 Cambiar</button>
+                    <button style={mini} onClick={() => onCambiarParada(i)}>🔄 {t("cambiar")}</button>
                   )}
                   <button style={{ ...mini, color: "#dc2626" }} onClick={() => onQuitarParada(i)}>
-                    ✕ Quitar
+                    ✕ {t("quitar")}
                   </button>
                 </div>
               </div>
@@ -161,29 +160,29 @@ const mini = {
   border: "none",
 };
 
-function PanelTiempo({ estado, paradaActual, total, onSiguiente, onParar }) {
-  const t = estado ? textoEstado(estado) : null;
+function PanelTiempo({ estado, paradaActual, total, onSiguiente, onParar, t = (k) => k }) {
+  const est = estado ? textoEstado(estado, t) : null;
   return (
     <div style={{ background: "#fff", borderRadius: 10, padding: 12, border: "1px solid var(--borde)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700, color: t?.color }}>
-          {t?.emoji} {t?.texto}
+        <div style={{ fontWeight: 700, color: est?.color }}>
+          {est?.emoji} {est?.texto}
         </div>
         <div style={{ fontSize: 12, color: "#64748b" }}>
-          Parada {paradaActual + 1}/{total}
+          {t("parada")} {paradaActual + 1}/{total}
         </div>
       </div>
       {estado && (
         <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
-          Planeado: {fmtMin(estado.planeado)} · Real: {fmtMin(estado.transcurrido)}
+          {fmtMin(estado.planeado)} · {fmtMin(estado.transcurrido)}
         </div>
       )}
       <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
         <Boton onClick={onSiguiente} style={{ flex: 1 }}>
-          ✓ Llegué a la siguiente
+          ✓ {t("llegueSiguiente")}
         </Boton>
         <Boton variante="sec" onClick={onParar} style={{ flex: 1 }}>
-          ⏹️ Terminar
+          ⏹️ {t("terminar")}
         </Boton>
       </div>
     </div>
