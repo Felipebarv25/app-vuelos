@@ -147,8 +147,8 @@ export async function geocodificar(consulta) {
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
 // radio menor + límite ajustado = consulta más liviana y rápida.
-// v6: versión de la API/caché. Subirla invalida cachés viejas (cliente y edge).
-const API_VER = "6";
+// v7: versión de la API/caché. Subirla invalida cachés viejas (cliente y edge).
+const API_VER = "7";
 
 export async function traerLugares(categoria, lat, lon, radio = 8000, limite = 40) {
   const cat = CATEGORIAS[categoria];

@@ -124,13 +124,13 @@ async function desdePhoton(cat, lat, lon) {
       // Descartar lo que se salga del bbox (~28 km) y resultados sin tipo útil.
       const dist = Math.hypot(coords[1] - lat, coords[0] - lon);
       if (dist > 0.28) continue;
-      // Evitar traer ciudades/calles/parkings: solo puntos relevantes.
+      // Evitar traer ciudades/calles/parkings/estaciones: solo puntos relevantes.
       const key = p.osm_key || "";
       const val = p.osm_value || "";
-      if (["place", "highway", "boundary", "railway", "aeroway"].includes(key)) continue;
-      if (["parking", "fuel", "bus_stop", "parking_entrance"].includes(val)) continue;
-      // El nombre no debería ser solo "Parking ..." o similar.
-      if (/^(parking|aparcamiento|bus|metro)\b/i.test(nombre)) continue;
+      if (["place", "highway", "boundary", "railway", "aeroway", "public_transport"].includes(key)) continue;
+      if (["parking", "fuel", "bus_stop", "parking_entrance", "station", "stop_position"].includes(val)) continue;
+      // Descartar por nombre cosas que claramente no son lugares de interés.
+      if (/\b(parking|aparcamiento|estaci[óo]n|station|aeropuerto|airport|parada|metro|terminal)\b/i.test(nombre)) continue;
       vistos.add(nombre);
       out.push({
         type: "node",

@@ -283,9 +283,16 @@ export default function Home() {
             {t("pruebaPopular")}
           </div>
           <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-            {["Madrid, España", "Tokio, Japón", "Cusco, Perú", "Roma, Italia", "Cartagena, Colombia"].map((c) => (
+            {[
+              ["🇪🇸", "Madrid, España"],
+              ["🗼", "Tokio, Japón"],
+              ["🏔️", "Cusco, Perú"],
+              ["🏛️", "Roma, Italia"],
+              ["🏖️", "Cartagena, Colombia"],
+              ["🗽", "Nueva York, Estados Unidos"],
+            ].map(([emo, c]) => (
               <Chip key={c} onClick={() => { setConsulta(c); setTimeout(() => buscarTexto(), 0); }}>
-                {c}
+                {emo} {c.split(",")[0]}
               </Chip>
             ))}
           </div>

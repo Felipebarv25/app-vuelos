@@ -25,6 +25,16 @@
 
 _(Se irá llenando durante la noche…)_
 
+### ✅ QA #5 + diseño chips
+- Verifiqué modo día/noche: Barcelona 46 imperdibles vs 35 bares. Funciona.
+- PERO detecté ruido: "Estació de Barcelona - Sants" (estación de tren) aparecía como bar.
+- ARREGLO: filtro reforzado en Photon que descarta estaciones/aeropuertos/paradas/terminales
+  por key (public_transport, station) y por nombre (estación, airport, terminal, metro...).
+  Caché v7.
+- DISEÑO: chips de destinos populares ahora con emoji icónico (🇪🇸 Madrid, 🗼 Tokio,
+  🏔️ Cusco, 🏛️ Roma, 🏖️ Cartagena, 🗽 Nueva York). Más visual y atractivo.
+- Build OK. Push pendiente.
+
 ### ✅ Visión 360: presupuesto conectado con vuelos reales
 - VERIFICADO v6: Seúl 0→20 restaurantes, Atenas 2→29, Vancouver 1→28, Oslo 6→23. ¡Resuelto!
   (Algunas tardan ~11s en 1ª carga porque esperan a Overpass; se cachea y la 2ª es instantánea.
