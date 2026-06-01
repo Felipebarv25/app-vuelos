@@ -61,6 +61,15 @@ _(Se irá llenando durante la noche…)_
   Así los lugares con artículo de Wikipedia (= famosos de verdad) suben al top. Caché v11.
 - Build OK.
 
+### 🎨 REDISEÑO INTERFAZ PRO (feedback "se ve noob")
+- Pantalla de inicio rediseñada estilo Airbnb/Booking: tarjetas de destino con FOTO
+  REAL (Torre Eiffel, Coliseo, Tokyo Tower...) en grid 2 columnas, con overlay degradado
+  y nombre encima, zoom al hover. Componente `CardDestino.js` carga la foto vía
+  fotoDeLugar (robusto: nunca queda rota, degradado si no hay foto).
+- Banner verde premium para el presupuesto (gradiente + sombra). Beneficios como chips
+  horizontales discretos. Saludo más grande. Verificado: 4/4 fotos cargan vía API.
+- Build OK.
+
 ### 🎨 REDISEÑO PRO — consistencia (3/3)
 - Pantalla de bienvenida/login con fondo índigo, tarjeta más redondeada y botón con
   degradado+sombra. Modal de detalle con header índigo. Todo el diseño ahora coherente

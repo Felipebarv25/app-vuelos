@@ -11,9 +11,20 @@ import DetalleLugar from "@/components/DetalleLugar";
 import Bienvenida from "@/components/Bienvenida";
 import SelectorIdioma from "@/components/SelectorIdioma";
 import Presupuesto from "@/components/Presupuesto";
+import CardDestino from "@/components/CardDestino";
 import { useApp } from "@/lib/AppContext";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
+
+// Destinos destacados con foto (fotos libres de Wikimedia Commons).
+const DESTINOS_DESTACADOS = [
+  { nombre: "París", pais: "Francia", q: "París, Francia", hint: "Torre Eiffel" },
+  { nombre: "Roma", pais: "Italia", q: "Roma, Italia", hint: "Coliseo" },
+  { nombre: "Tokio", pais: "Japón", q: "Tokio, Japón", hint: "Tokyo Tower" },
+  { nombre: "Nueva York", pais: "EE. UU.", q: "Nueva York, Estados Unidos", hint: "Manhattan skyline" },
+  { nombre: "Cartagena", pais: "Colombia", q: "Cartagena, Colombia", hint: "Cartagena de Indias" },
+  { nombre: "Barcelona", pais: "España", q: "Barcelona, España", hint: "Sagrada Familia" },
+];
 
 // Saludo según la hora del día (cálido y personalizado).
 function saludoClave() {
@@ -271,56 +282,52 @@ export default function Home() {
       )}
 
       {!ciudad && !cargando && (
-        <div style={{ padding: "24px 18px", color: "#475569" }} className="animar-subir">
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 56 }}>{saludoEmoji()}</div>
-            <div style={{ fontSize: 14, color: "var(--verde)", fontWeight: 700, marginTop: 4 }}>
-              {t(saludoClave())}, {usuario.nombre} 👋
-            </div>
-            <h2 style={{ fontSize: 19, color: "var(--azul-osc)", marginTop: 6 }}>
-              {t("heroTitulo")}
-            </h2>
-            <p style={{ marginTop: 6, fontSize: 14, lineHeight: 1.5, maxWidth: 460, marginInline: "auto" }}>
-              {t("heroTexto")}
-            </p>
+        <div style={{ padding: "20px 16px 8px" }} className="animar-subir">
+          {/* Saludo */}
+          <div style={{ fontSize: 22, fontWeight: 800, color: "var(--azul-osc)", letterSpacing: "-0.02em" }}>
+            {t(saludoClave())}, {usuario.nombre} {saludoEmoji()}
           </div>
+          <p style={{ fontSize: 14.5, color: "var(--texto-sec)", marginTop: 2, lineHeight: 1.5 }}>
+            {t("heroTexto")}
+          </p>
 
-          {/* Beneficios rápidos (claridad visual) */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, margin: "20px auto", maxWidth: 460 }}>
-            {[
-              ["📅", t("benDiaTitulo"), t("benDiaTexto")],
-              ["📍", t("benGpsTitulo"), t("benGpsTexto")],
-              ["🍽️", t("benComerTitulo"), t("benComerTexto")],
-              ["🚇", t("benLlegarTitulo"), t("benLlegarTexto")],
-            ].map(([ic, tit, d]) => (
-              <div key={tit} style={{ background: "#fff", border: "1px solid var(--borde)", borderRadius: 12, padding: 12 }}>
-                <div style={{ fontSize: 24 }}>{ic}</div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: "var(--azul-osc)", marginTop: 4 }}>{tit}</div>
-                <div style={{ fontSize: 12, color: "#64748b" }}>{d}</div>
-              </div>
+          {/* Tarjeta CTA presupuesto (estilo banner premium) */}
+          <button onClick={() => setMostrarPresupuesto(true)} style={bannerPresup} className="animar-pop">
+            <div style={{ textAlign: "left", position: "relative", zIndex: 1 }}>
+              <div style={{ fontSize: 12, opacity: 0.9, fontWeight: 600 }}>💰 NUEVO</div>
+              <div style={{ fontSize: 17, fontWeight: 800, marginTop: 2 }}>{t("presupBoton")}</div>
+            </div>
+            <span style={{ fontSize: 26, position: "relative", zIndex: 1 }}>→</span>
+          </button>
+
+          {/* Destinos populares con FOTO (estilo Airbnb/Booking) */}
+          <div style={{ fontSize: 17, fontWeight: 800, color: "var(--azul-osc)", margin: "22px 2px 12px", letterSpacing: "-0.01em" }}>
+            ✨ {t("pruebaPopular")}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {DESTINOS_DESTACADOS.map((d) => (
+              <CardDestino
+                key={d.q}
+                nombre={d.nombre}
+                pais={d.pais}
+                hint={d.hint}
+                onClick={() => { setConsulta(d.q); setTimeout(() => buscarTexto(), 0); }}
+              />
             ))}
           </div>
 
-          {/* Botón destacado: viajar por presupuesto */}
-          <button onClick={() => setMostrarPresupuesto(true)} style={btnPresup} className="animar-pop">
-            💰 {t("presupBoton")}
-          </button>
-
-          <div style={{ textAlign: "center", fontSize: 13, color: "#94a3b8", margin: "18px 0 8px" }}>
-            {t("pruebaPopular")}
-          </div>
-          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+          {/* Beneficios (chips horizontales discretos) */}
+          <div style={{ display: "flex", gap: 10, overflowX: "auto", margin: "22px 0 6px", paddingBottom: 4 }}>
             {[
-              ["🇪🇸", "Madrid, España"],
-              ["🗼", "Tokio, Japón"],
-              ["🏔️", "Cusco, Perú"],
-              ["🏛️", "Roma, Italia"],
-              ["🏖️", "Cartagena, Colombia"],
-              ["🗽", "Nueva York, Estados Unidos"],
-            ].map(([emo, c]) => (
-              <Chip key={c} onClick={() => { setConsulta(c); setTimeout(() => buscarTexto(), 0); }}>
-                {emo} {c.split(",")[0]}
-              </Chip>
+              ["📅", t("benDiaTitulo")],
+              ["📍", t("benGpsTitulo")],
+              ["🍽️", t("benComerTitulo")],
+              ["🚇", t("benLlegarTitulo")],
+            ].map(([ic, tit]) => (
+              <div key={tit} style={benChip}>
+                <span style={{ fontSize: 17 }}>{ic}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--azul-osc)" }}>{tit}</span>
+              </div>
             ))}
           </div>
         </div>
@@ -493,7 +500,35 @@ const cab = {
   borderRadius: "0 0 26px 26px",
   boxShadow: "0 8px 28px rgba(79,70,229,.4)",
 };
-const btnLink = { background: "none", border: "none", color: "#bfdbfe", textDecoration: "underline", fontSize: 12, padding: 0, cursor: "pointer" };
+const btnLink = { background: "none", border: "none", color: "#c7d2fe", textDecoration: "underline", fontSize: 12, padding: 0, cursor: "pointer" };
+const bannerPresup = {
+  width: "100%",
+  marginTop: 18,
+  padding: "16px 18px",
+  borderRadius: 18,
+  border: "none",
+  background: "linear-gradient(120deg,#10b981 0%,#059669 60%,#047857 100%)",
+  color: "#fff",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  cursor: "pointer",
+  boxShadow: "0 8px 22px rgba(5,150,105,.35)",
+  position: "relative",
+  overflow: "hidden",
+};
+const benChip = {
+  display: "flex",
+  alignItems: "center",
+  gap: 7,
+  background: "#fff",
+  border: "1px solid var(--borde)",
+  borderRadius: 999,
+  padding: "8px 14px",
+  whiteSpace: "nowrap",
+  flexShrink: 0,
+  boxShadow: "var(--sombra)",
+};
 const input = { flex: 1, padding: "13px 16px", borderRadius: 12, border: "none", fontSize: 16, outline: "none", boxShadow: "0 2px 8px rgba(0,0,0,.12)" };
 const btnBuscar = { background: "#fff", color: "var(--azul)", border: "none", padding: "0 16px", borderRadius: 12, fontWeight: 700, fontSize: 18, boxShadow: "0 2px 8px rgba(0,0,0,.12)" };
 const lista = { position: "absolute", top: "100%", left: 0, right: 0, marginTop: 6, background: "#fff", borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,.18)", overflow: "hidden", zIndex: 1100 };

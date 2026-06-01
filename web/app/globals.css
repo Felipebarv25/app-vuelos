@@ -91,6 +91,21 @@ button:active {
   transform: scale(0.97);
 }
 
+/* Tarjetas de destino con foto: zoom suave al pasar el cursor */
+.card-destino {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.card-destino:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sombra-md);
+}
+.card-destino img {
+  transition: transform 0.4s ease;
+}
+.card-destino:hover img {
+  transform: scale(1.08);
+}
+
 /* Animación de carga */
 .spin {
   display: inline-block;
