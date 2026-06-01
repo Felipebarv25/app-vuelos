@@ -66,7 +66,50 @@ export const DESTINOS_PRESUPUESTO = [
   { ciudad: "Bali", pais: "Indonesia", region: "asia", bandera: "🇮🇩", vuelo: 1250, dia: 60, lat: -8.3405, lon: 115.092 },
   { ciudad: "Singapur", pais: "Singapur", region: "asia", bandera: "🇸🇬", vuelo: 1300, dia: 110, lat: 1.3521, lon: 103.8198 },
   { ciudad: "Dubái", pais: "Emiratos Árabes", region: "asia", bandera: "🇦🇪", vuelo: 1000, dia: 130, lat: 25.2048, lon: 55.2708 },
+  { ciudad: "Abu Dabi", pais: "Emiratos Árabes", region: "asia", bandera: "🇦🇪", vuelo: 1000, dia: 120, lat: 24.4539, lon: 54.3773 },
   { ciudad: "Pekín", pais: "China", region: "asia", bandera: "🇨🇳", vuelo: 1150, dia: 80, lat: 39.9042, lon: 116.4074 },
+  { ciudad: "Shanghái", pais: "China", region: "asia", bandera: "🇨🇳", vuelo: 1180, dia: 90, lat: 31.2304, lon: 121.4737 },
+  { ciudad: "Hong Kong", pais: "China", region: "asia", bandera: "🇭🇰", vuelo: 1250, dia: 120, lat: 22.3193, lon: 114.1694 },
+  { ciudad: "Osaka", pais: "Japón", region: "asia", bandera: "🇯🇵", vuelo: 1200, dia: 110, lat: 34.6937, lon: 135.5023 },
+  { ciudad: "Bombay", pais: "India", region: "asia", bandera: "🇮🇳", vuelo: 1300, dia: 60, lat: 19.076, lon: 72.8777 },
+  { ciudad: "Phuket", pais: "Tailandia", region: "asia", bandera: "🇹🇭", vuelo: 1200, dia: 60, lat: 7.8804, lon: 98.3923 },
+
+  // ---- Más Sudamérica ----
+  { ciudad: "Guayaquil", pais: "Ecuador", region: "sudamerica", bandera: "🇪🇨", vuelo: 320, dia: 50, lat: -2.1709, lon: -79.9224 },
+  { ciudad: "Arequipa", pais: "Perú", region: "sudamerica", bandera: "🇵🇪", vuelo: 380, dia: 50, lat: -16.409, lon: -71.5375 },
+  { ciudad: "Florianópolis", pais: "Brasil", region: "sudamerica", bandera: "🇧🇷", vuelo: 520, dia: 70, lat: -27.5954, lon: -48.548 },
+  { ciudad: "Bariloche", pais: "Argentina", region: "sudamerica", bandera: "🇦🇷", vuelo: 600, dia: 75, lat: -41.1335, lon: -71.3103 },
+  { ciudad: "Asunción", pais: "Paraguay", region: "sudamerica", bandera: "🇵🇾", vuelo: 520, dia: 55, lat: -25.2637, lon: -57.5759 },
+
+  // ---- Más Norte y Centroamérica ----
+  { ciudad: "Guadalajara", pais: "México", region: "norteamerica", bandera: "🇲🇽", vuelo: 400, dia: 60, lat: 20.6597, lon: -103.3496 },
+  { ciudad: "Playa del Carmen", pais: "México", region: "norteamerica", bandera: "🇲🇽", vuelo: 430, dia: 85, lat: 20.6296, lon: -87.0739 },
+  { ciudad: "San Francisco", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 560, dia: 160, lat: 37.7749, lon: -122.4194 },
+  { ciudad: "Las Vegas", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 540, dia: 130, lat: 36.1699, lon: -115.1398 },
+  { ciudad: "Chicago", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 520, dia: 140, lat: 41.8781, lon: -87.6298 },
+  { ciudad: "Orlando", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 460, dia: 120, lat: 28.5383, lon: -81.3792 },
+  { ciudad: "Montreal", pais: "Canadá", region: "norteamerica", bandera: "🇨🇦", vuelo: 560, dia: 115, lat: 45.5019, lon: -73.5674 },
+  { ciudad: "Ciudad de Guatemala", pais: "Guatemala", region: "norteamerica", bandera: "🇬🇹", vuelo: 340, dia: 55, lat: 14.6349, lon: -90.5069 },
+
+  // ---- Más Europa ----
+  { ciudad: "Valencia", pais: "España", region: "europa", bandera: "🇪🇸", vuelo: 820, dia: 95, lat: 39.4699, lon: -0.3763 },
+  { ciudad: "Nápoles", pais: "Italia", region: "europa", bandera: "🇮🇹", vuelo: 890, dia: 100, lat: 40.8518, lon: 14.2681 },
+  { ciudad: "Edimburgo", pais: "Reino Unido", region: "europa", bandera: "🇬🇧", vuelo: 910, dia: 130, lat: 55.9533, lon: -3.1883 },
+  { ciudad: "Dublín", pais: "Irlanda", region: "europa", bandera: "🇮🇪", vuelo: 900, dia: 120, lat: 53.3498, lon: -6.2603 },
+  { ciudad: "Copenhague", pais: "Dinamarca", region: "europa", bandera: "🇩🇰", vuelo: 950, dia: 140, lat: 55.6761, lon: 12.5683 },
+  { ciudad: "Estocolmo", pais: "Suecia", region: "europa", bandera: "🇸🇪", vuelo: 980, dia: 140, lat: 59.3293, lon: 18.0686 },
+  { ciudad: "Zúrich", pais: "Suiza", region: "europa", bandera: "🇨🇭", vuelo: 950, dia: 160, lat: 47.3769, lon: 8.5417 },
+  { ciudad: "Varsovia", pais: "Polonia", region: "europa", bandera: "🇵🇱", vuelo: 920, dia: 80, lat: 52.2297, lon: 21.0122 },
+
+  // ---- África ----
+  { ciudad: "El Cairo", pais: "Egipto", region: "africa", bandera: "🇪🇬", vuelo: 1100, dia: 60, lat: 30.0444, lon: 31.2357 },
+  { ciudad: "Marrakech", pais: "Marruecos", region: "africa", bandera: "🇲🇦", vuelo: 1000, dia: 65, lat: 31.6295, lon: -7.9811 },
+  { ciudad: "Ciudad del Cabo", pais: "Sudáfrica", region: "africa", bandera: "🇿🇦", vuelo: 1300, dia: 95, lat: -33.9249, lon: 18.4241 },
+
+  // ---- Oceanía ----
+  { ciudad: "Sídney", pais: "Australia", region: "oceania", bandera: "🇦🇺", vuelo: 1800, dia: 140, lat: -33.8688, lon: 151.2093 },
+  { ciudad: "Melbourne", pais: "Australia", region: "oceania", bandera: "🇦🇺", vuelo: 1850, dia: 130, lat: -37.8136, lon: 144.9631 },
+  { ciudad: "Auckland", pais: "Nueva Zelanda", region: "oceania", bandera: "🇳🇿", vuelo: 1900, dia: 130, lat: -36.8485, lon: 174.7633 },
 ];
 
 export const REGIONES = {
@@ -75,6 +118,8 @@ export const REGIONES = {
   norteamerica: "🌎 Norte y Centroamérica",
   europa: "🇪🇺 Europa",
   asia: "🌏 Asia",
+  africa: "🌍 África",
+  oceania: "🌏 Oceanía",
 };
 
 // Tasa de cambio aproximada para mostrar el presupuesto en moneda local.

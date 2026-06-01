@@ -122,10 +122,10 @@ function desdeOverpass(datos) {
 // RESPALDO: Photon buscando por TÉRMINOS descriptivos cerca del punto.
 // Buscar "monument", "palace", "mosque"... + lat/lon trae lugares reales del
 // tipo correcto y cercanos. Filtramos por bbox para descartar lo lejano.
-async function desdePhoton(cat, lat, lon) {
+async function desdePhoton(cat, lat, lon, radio = 12000) {
   const terminos = TERMINOS_PHOTON[cat] || ["attraction"];
-  // bbox ~ ±0.2° (~22 km): minLon,minLat,maxLon,maxLat
-  const d = 0.2;
+  // bbox proporcional al radio pedido (grados ≈ metros/111000), tope ~100 km.
+  const d = Math.min(0.9, Math.max(0.2, radio / 111000));
   const bbox = `${lon - d},${lat - d},${lon + d},${lat + d}`;
 
   const llamadas = terminos.map((term) => {
@@ -154,9 +154,9 @@ async function desdePhoton(cat, lat, lon) {
       const nombre = p.name;
       const coords = f.geometry?.coordinates; // [lon, lat]
       if (!nombre || !coords || vistos.has(nombre)) continue;
-      // Descartar lo que se salga del bbox (~28 km) y resultados sin tipo útil.
+      // Descartar lo que se salga del radio pedido (con un pequeño margen).
       const dist = Math.hypot(coords[1] - lat, coords[0] - lon);
-      if (dist > 0.28) continue;
+      if (dist > d * 1.25) continue;
       // Evitar traer ciudades/calles/parkings/estaciones: solo puntos relevantes.
       const key = p.osm_key || "";
       const val = p.osm_value || "";
@@ -186,7 +186,9 @@ export async function GET(req) {
   const cat = searchParams.get("cat") || "imperdibles";
   const lat = parseFloat(searchParams.get("lat"));
   const lon = parseFloat(searchParams.get("lon"));
-  const radio = Math.min(parseInt(searchParams.get("radio") || "6000"), 12000);
+  // Radio hasta 100 km (para incluir atractivos cercanos a la ciudad, p. ej.
+  // Guatapé desde Medellín). El cliente pide más radio para imperdibles/miradores.
+  const radio = Math.min(parseInt(searchParams.get("radio") || "8000"), 100000);
 
   if (!FILTROS[cat] || isNaN(lat) || isNaN(lon)) {
     return Response.json({ error: "parámetros", elements: [] }, { status: 400 });
@@ -195,16 +197,16 @@ export async function GET(req) {
   // Lanzamos AMBAS fuentes EN PARALELO (no secuencial). Overpass suele traer
   // más cantidad; Photon es rápido y estable. Así una ciudad lenta en Overpass
   // no nos hace esperar 13s: Photon ya viene en camino y unimos lo que llegue.
-  const radioAmplio = Math.min(radio + 4000, 12000);
+  const radioAmplio = Math.min(radio + 5000, 100000);
   const filtros = FILTROS[cat]
     .map((f) => `${f}(around:${radioAmplio},${lat},${lon});`)
     .join("");
-  const query = `[out:json][timeout:9];(${filtros});out center 60;`;
+  const query = `[out:json][timeout:12];(${filtros});out center 90;`;
 
   const pOverpass = carrera(query)
     .then((d) => desdeOverpass(d))
     .catch(() => []);
-  const pPhoton = desdePhoton(cat, lat, lon).catch(() => []);
+  const pPhoton = desdePhoton(cat, lat, lon, radio).catch(() => []);
 
   // Esperamos Photon (rápido) primero. Luego a Overpass le damos un margen
   // ADAPTATIVO: si Photon ya trajo suficientes lugares (>=20), solo esperamos

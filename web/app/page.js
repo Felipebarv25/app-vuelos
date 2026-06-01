@@ -2,7 +2,8 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { geocodificar, traerLugares, CATEGORIAS } from "@/lib/osm";
-import { construirItinerario } from "@/lib/itinerario";
+import { construirItinerario, agregarLugarADia } from "@/lib/itinerario";
+import { CIUDADES_POPULARES } from "@/lib/ciudadesPopulares";
 import { sugerirCiudades } from "@/lib/autocompletar";
 import { useGeo } from "@/lib/useGeo";
 import { Chip, Boton, Tarjeta } from "@/components/ui";
@@ -75,6 +76,7 @@ export default function Home() {
   const [detalle, setDetalle] = useState(null);
   const [rutaTrazada, setRutaTrazada] = useState(null);
   const [mostrarPresupuesto, setMostrarPresupuesto] = useState(false);
+  const [mostrarTodos, setMostrarTodos] = useState(false);
 
   // GPS
   const [gpsOn, setGpsOn] = useState(false);
@@ -217,6 +219,13 @@ export default function Home() {
     cargarCategoria("imperdibles", ciudad, mom);
   }
 
+  // Agregar un lugar (de la lista completa) al día visible del itinerario.
+  function agregarParada(lugar) {
+    if (!plan[diaVisible]) return;
+    setPlan((p) => agregarLugarADia(p, diaVisible, lugar));
+    setSeleccion((s) => (s.some((x) => x.id === lugar.id) ? s : [...s, lugar]));
+  }
+
   const lugaresDelDia = plan[diaVisible]?.paradas || [];
 
   // Mientras carga el estado guardado, no parpadear.
@@ -262,8 +271,14 @@ export default function Home() {
                 onChange={(e) => setConsulta(e.target.value)}
                 onFocus={() => sugerencias.length && setMostrarSug(true)}
                 placeholder={t("buscarPlaceholder")}
+                list="ciudades-pop"
                 className="flex-1 rounded-2xl border-0 px-5 py-3.5 text-base text-slate-800 shadow-md outline-none"
               />
+              <datalist id="ciudades-pop">
+                {CIUDADES_POPULARES.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
               <button type="submit" className="rounded-2xl bg-white px-5 text-lg font-bold text-marca-600 shadow-md transition hover:bg-marca-50">
                 🔎
               </button>
@@ -465,6 +480,53 @@ export default function Home() {
                 onQuitarParada={(idx) => quitarParada(diaVisible, idx)}
                 onVerLugar={(p) => { setRutaTrazada(null); setDetalle(p); }}
               />
+            )}
+
+            {/* Lista completa de lugares encontrados (radio amplio ~100 km) */}
+            {lugaresBase.length > 0 && (
+              <div className="mt-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave">
+                <button
+                  onClick={() => setMostrarTodos((v) => !v)}
+                  className="flex w-full items-center justify-between px-4 py-3 text-left"
+                >
+                  <span className="text-sm font-bold text-marca-900">
+                    📍 {t("todosLugares")} ({lugaresBase.length})
+                  </span>
+                  <span className="text-slate-400">{mostrarTodos ? "▲" : "▼"}</span>
+                </button>
+                {mostrarTodos && (
+                  <div className="max-h-[420px] overflow-y-auto border-t border-slate-100">
+                    {lugaresBase.map((l) => {
+                      const enPlan = plan[diaVisible]?.paradas?.some((p) => p.id === l.id);
+                      return (
+                        <div key={l.id} className="flex items-center gap-2 border-b border-slate-50 px-3 py-2.5 last:border-0">
+                          <button
+                            onClick={() => { setRutaTrazada(null); setDetalle(l); }}
+                            className="min-w-0 flex-1 text-left"
+                          >
+                            <div className="flex items-center gap-1.5 truncate text-[14px] font-semibold text-slate-800">
+                              {l.notable && <span className="text-[11px]">⭐</span>}
+                              <span className="truncate">{l.nombre}</span>
+                            </div>
+                            <div className="truncate text-[12px] text-slate-500">{l.categoria}</div>
+                          </button>
+                          <button
+                            onClick={() => agregarParada(l)}
+                            disabled={enPlan}
+                            className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[12px] font-bold transition ${
+                              enPlan
+                                ? "bg-slate-100 text-slate-400"
+                                : "bg-marca-50 text-marca-600 hover:bg-marca-100"
+                            }`}
+                          >
+                            {enPlan ? "✓" : "＋ " + t("agregar")}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             )}
 
             {/* GPS toggle */}

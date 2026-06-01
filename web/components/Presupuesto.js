@@ -28,6 +28,9 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
   const [inicio, setInicio] = useState(""); // llaveCiudad de la ciudad de salida
   const [semilla, setSemilla] = useState(0);
 
+  // Modo destino: buscador de texto.
+  const [buscarDestino, setBuscarDestino] = useState("");
+
   const presupuestoUsd = monto * MONEDAS[moneda].aUsd;
 
   const resultados = useMemo(
@@ -218,8 +221,21 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                 </div>
               </div>
 
+              <input
+                value={buscarDestino}
+                onChange={(e) => setBuscarDestino(e.target.value)}
+                placeholder={t("presupBuscarCiudad")}
+                className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[14px] outline-none focus:border-emerald-400"
+              />
+
               <div className="mt-3 space-y-2.5">
-                {resultados.map((d) => (
+                {resultados
+                  .filter((d) => {
+                    const q = buscarDestino.trim().toLowerCase();
+                    if (!q) return true;
+                    return (d.ciudad + " " + d.pais).toLowerCase().includes(q);
+                  })
+                  .map((d) => (
                   <div
                     key={llaveCiudad(d)}
                     className={`rounded-2xl border bg-white p-3.5 transition ${

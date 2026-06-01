@@ -89,6 +89,29 @@ export function construirItinerario(lugares, opciones) {
   return plan;
 }
 
+// Agrega un lugar al final de un día concreto, calculando su traslado desde
+// la última parada. Devuelve un NUEVO plan (no muta el original).
+export function agregarLugarADia(plan, diaIdx, lugar) {
+  const nuevo = plan.map((d, i) =>
+    i === diaIdx ? { ...d, paradas: d.paradas.slice() } : d
+  );
+  const dia = nuevo[diaIdx];
+  const ref = dia.paradas.length ? dia.paradas[dia.paradas.length - 1].coord : null;
+  const metros = ref ? distanciaMetros(ref, lugar.coord) : 0;
+  const traslado = ref ? minutosDesplazamiento(metros) : 0;
+  const visita = lugar.minutos || 60;
+  dia.paradas.push({
+    ...lugar,
+    traslado,
+    metros: Math.round(metros),
+    transporte: recomendarTransporte(metros),
+  });
+  dia.minutosUsados = (dia.minutosUsados || 0) + traslado + visita;
+  dia.minutosVisita = (dia.minutosVisita || 0) + visita;
+  dia.minutosTraslado = (dia.minutosTraslado || 0) + traslado;
+  return nuevo;
+}
+
 // Resumen legible de un día.
 export function resumenDia(dia) {
   const h = Math.floor(dia.minutosUsados / 60);

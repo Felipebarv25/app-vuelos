@@ -146,16 +146,28 @@ export async function geocodificar(consulta) {
 }
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
-// radio menor + límite ajustado = consulta más liviana y rápida.
-// v13: versión de la API/caché. Subirla invalida cachés viejas (cliente y edge).
-const API_VER = "13";
+// v14: radio ampliado hasta 100 km para imperdibles/miradores (incluye
+// atractivos cercanos a la ciudad, p. ej. Guatapé desde Medellín). Subir la
+// versión invalida cachés viejas (cliente y edge).
+const API_VER = "14";
 
-export async function traerLugares(categoria, lat, lon, radio = 8000, limite = 40) {
+// Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
+// (excursiones de un día); comida/cafés/bares se buscan cerca.
+const RADIO_POR_CAT = {
+  imperdibles: 90000,
+  miradores: 90000,
+  restaurantes: 15000,
+  cafes: 12000,
+  bares: 15000,
+};
+
+export async function traerLugares(categoria, lat, lon, radio, limite = 60) {
   const cat = CATEGORIAS[categoria];
   if (!cat) throw new Error("Categoría desconocida");
+  const r = radio || RADIO_POR_CAT[categoria] || 12000;
   const clave = `lug${API_VER}:${categoria}:${lat.toFixed(3)},${lon.toFixed(3)}`;
   return cacheado(clave, TTL_LUGARES, () =>
-    traerLugaresRed(cat, categoria, lat, lon, radio, limite)
+    traerLugaresRed(cat, categoria, lat, lon, r, limite)
   );
 }
 

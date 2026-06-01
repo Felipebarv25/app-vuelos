@@ -148,6 +148,9 @@ const T = {
     ofertasPlanear: "Planear",
     ofertasActualizado: "Actualizado",
     ofertasFuente: "Precios de referencia",
+    todosLugares: "Todos los lugares",
+    agregar: "Agregar",
+    presupBuscarCiudad: "Buscar ciudad o país…",
   },
 
   en: {
@@ -273,6 +276,9 @@ const T = {
     ofertasPlanear: "Plan",
     ofertasActualizado: "Updated",
     ofertasFuente: "Reference prices",
+    todosLugares: "All places",
+    agregar: "Add",
+    presupBuscarCiudad: "Search city or country…",
   },
 
   pt: {
@@ -398,6 +404,9 @@ const T = {
     ofertasPlanear: "Planejar",
     ofertasActualizado: "Atualizado",
     ofertasFuente: "Preços de referência",
+    todosLugares: "Todos os lugares",
+    agregar: "Adicionar",
+    presupBuscarCiudad: "Buscar cidade ou país…",
   },
 
   fr: {
@@ -524,6 +533,9 @@ const T = {
     ofertasPlanear: "Planifier",
     ofertasActualizado: "Mis à jour",
     ofertasFuente: "Prix de référence",
+    todosLugares: "Tous les lieux",
+    agregar: "Ajouter",
+    presupBuscarCiudad: "Rechercher ville ou pays…",
   },
 };
 
