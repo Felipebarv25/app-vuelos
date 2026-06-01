@@ -24,8 +24,8 @@ DESTINOS = {
     "PAR": ("París", 800),
     "LON": ("Londres", 800),
     # --- Asia ---
-    "TYO": ("Tokio", 1100),
-    "BJS": ("Beijing", 1000),
+    "TYO": ("Tokio", 1300),
+    "BJS": ("Beijing", 1700),
     # --- Norteamérica ---
     "MIA": ("Miami (EE. UU.)", 400),
     "NYC": ("Nueva York (EE. UU.)", 450),

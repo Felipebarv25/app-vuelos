@@ -151,6 +151,29 @@ Todo se ajusta en **`config.py`**:
 
 ---
 
+## 6b. Panel web con gráficas 📈
+
+El archivo `index.html` es un panel visual que muestra la evolución de los
+precios de cada ruta, las gangas actuales y los precios por mes de salida.
+
+**Verlo en tu PC (la forma más fácil):**
+
+1. Haz doble clic en **`panel.bat`**.
+2. Se abrirá tu navegador en `http://localhost:8000` con el panel.
+3. Para cerrar, cierra la ventanita negra que quedó abierta.
+
+> Para ver los datos más recientes que recogió la nube, antes ejecuta
+> `git pull` en la carpeta (trae el historial actualizado por GitHub Actions).
+
+**Verlo como página web pública (opcional, con GitHub Pages):**
+
+Requiere que el repositorio sea **público**. En el repo:
+**Settings → Pages → Source: Deploy from a branch → rama `main`, carpeta `/root`**.
+En un par de minutos tendrás el panel en
+`https://TU_USUARIO.github.io/app-vuelos/`.
+
+---
+
 ## 7. Notas importantes
 
 - **No existe API oficial gratuita de Google Flights.** Usamos Travelpayouts,
