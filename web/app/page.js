@@ -335,14 +335,14 @@ export default function Home() {
       )}
 
       {cargando && (
-        <div style={{ padding: 28, textAlign: "center", color: "#64748b" }}>
-          <span className="spin" /> <span style={{ marginLeft: 8 }}>{t("cargando")}</span>
+        <div className="p-7 text-center text-slate-500">
+          <span className="spin" /> <span className="ml-2">{t("cargando")}</span>
         </div>
       )}
 
       {ciudad && (
         <>
-          <div style={{ height: "40vh", minHeight: 260 }}>
+          <div className="h-[40vh] min-h-[260px]">
             <Mapa
               centro={[ciudad.lat, ciudad.lon]}
               lugares={lugaresDelDia}
@@ -352,54 +352,53 @@ export default function Home() {
             />
           </div>
 
-          <div style={{ padding: 14 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 14 }}>
+          <div className="p-4">
+            <div className="flex justify-between items-end mb-4">
               <div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: "var(--azul-osc)" }}>
-                  {ciudad.nombre}
-                </div>
-                <div style={{ fontSize: 13, color: "#64748b" }}>{ciudad.pais}</div>
+                <h1 className="text-2xl font-extrabold text-marca-900 tracking-tight">{ciudad.nombre}</h1>
+                <div className="text-[13px] text-slate-500">{ciudad.pais}</div>
               </div>
               {lugaresBase.length > 0 && (
-                <div style={{ textAlign: "right", fontSize: 12, color: "#64748b" }}>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: "var(--verde)" }}>
-                    {lugaresBase.length}
-                  </div>
-                  {t("lugares")}
+                <div className="text-right">
+                  <div className="text-xl font-extrabold text-emerald-600">{lugaresBase.length}</div>
+                  <div className="text-xs text-slate-500">{t("lugares")}</div>
                 </div>
               )}
             </div>
 
             {/* Configuración del viaje */}
-            <Tarjeta style={{ marginBottom: 14 }}>
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-                <label style={lbl}>
+            <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-suave mb-3.5">
+              <div className="flex gap-3 flex-wrap items-end">
+                <label className="flex flex-col gap-1 text-[13px] text-slate-600 font-semibold">
                   📅 {t("dias")}
-                  <select value={dias} onChange={(e) => setDias(+e.target.value)} style={sel}>
+                  <select value={dias} onChange={(e) => setDias(+e.target.value)}
+                    className="px-2.5 py-2 rounded-lg border border-slate-200 text-[15px] bg-white">
                     {[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </label>
-                <label style={lbl}>
+                <label className="flex flex-col gap-1 text-[13px] text-slate-600 font-semibold">
                   ⏰ {t("horasDia")}
-                  <select value={horas} onChange={(e) => setHoras(+e.target.value)} style={sel}>
+                  <select value={horas} onChange={(e) => setHoras(+e.target.value)}
+                    className="px-2.5 py-2 rounded-lg border border-slate-200 text-[15px] bg-white">
                     {[4, 5, 6, 7, 8, 9, 10, 12].map((n) => <option key={n} value={n}>{n}h</option>)}
                   </select>
                 </label>
-                <Boton onClick={() => reconstruir()} variante="sec" style={{ marginLeft: "auto" }}>
+                <button onClick={() => reconstruir()}
+                  className="ml-auto px-4 py-2.5 rounded-xl bg-white text-marca-600 border-[1.5px] border-marca-100 font-bold text-sm">
                   🔄 {t("recalcular")}
-                </Boton>
+                </button>
               </div>
-              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+              <div className="flex gap-2 mt-3 flex-wrap items-center">
                 <Chip activo={momento === "diurno"} onClick={() => cambiarMomento("diurno")}>☀️ {t("diurno")}</Chip>
                 <Chip activo={momento === "nocturno"} onClick={() => cambiarMomento("nocturno")}>🌙 {t("nocturno")}</Chip>
-                <span style={{ fontSize: 12, color: "#64748b", alignSelf: "center" }}>
+                <span className="text-xs text-slate-500 self-center">
                   {momento === "nocturno" ? t("nocturnoDesc") : t("diurnoDesc")}
                 </span>
               </div>
-            </Tarjeta>
+            </div>
 
             {/* Categorías */}
-            <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 8 }}>
+            <div className="flex gap-2 overflow-x-auto pb-2 mb-2">
               {Object.entries(CATEGORIAS).map(([k, c]) => (
                 <Chip key={k} activo={categoria === k} onClick={() => cargarCategoria(k)}>
                   {c.icono} {t("cat_" + k)}
@@ -407,24 +406,22 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Indicador sutil de carga de lugares (no bloquea la pantalla) */}
             {cargandoLugares && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 2px", color: "#64748b", fontSize: 14 }}>
+              <div className="flex items-center gap-2 py-2.5 px-0.5 text-slate-500 text-sm">
                 <span className="spin" /> {t("cargandoLugares")}
               </div>
             )}
 
-            {/* Sin resultados en esta categoría (mensaje claro, no pantalla vacía) */}
             {!cargandoLugares && lugaresBase.length === 0 && (
-              <Tarjeta style={{ textAlign: "center", color: "#64748b" }}>
-                <div style={{ fontSize: 30 }}>🔍</div>
-                <p style={{ fontSize: 14, marginTop: 6 }}>{t("sinResultados")}</p>
-              </Tarjeta>
+              <div className="bg-white border border-slate-100 rounded-2xl p-4 text-center text-slate-500 shadow-suave">
+                <div className="text-3xl">🔍</div>
+                <p className="text-sm mt-1.5">{t("sinResultados")}</p>
+              </div>
             )}
 
-            {/* Pestañas de días (solo los que tienen paradas, sin días vacíos) */}
+            {/* Pestañas de días */}
             {plan.length > 0 && (
-              <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 14 }}>
+              <div className="flex gap-2 overflow-x-auto mb-3.5">
                 {plan.map((d, i) => (d.paradas.length > 0 ? (
                   <Chip key={i} activo={diaVisible === i} onClick={() => setDiaVisible(i)}>{t("dia")} {i + 1}</Chip>
                 ) : null))}
