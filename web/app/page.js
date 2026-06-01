@@ -477,16 +477,17 @@ export default function Home() {
 }
 
 const cab = {
-  background: "linear-gradient(135deg,#2563eb,#1e3a8a)",
+  background: "linear-gradient(135deg,#3b82f6 0%,#2563eb 50%,#1e3a8a 100%)",
   color: "#fff",
-  padding: "18px 18px 16px",
+  padding: "18px 18px 20px",
   position: "sticky",
   top: 0,
   zIndex: 1000,
-  boxShadow: "0 2px 12px rgba(0,0,0,.2)",
+  borderRadius: "0 0 22px 22px",
+  boxShadow: "0 6px 20px rgba(37,99,235,.35)",
 };
-const input = { flex: 1, padding: "12px 14px", borderRadius: 10, border: "none", fontSize: 16, outline: "none" };
-const btnBuscar = { background: "#fff", color: "var(--azul)", border: "none", padding: "0 16px", borderRadius: 10, fontWeight: 700, fontSize: 18 };
+const input = { flex: 1, padding: "13px 16px", borderRadius: 12, border: "none", fontSize: 16, outline: "none", boxShadow: "0 2px 8px rgba(0,0,0,.12)" };
+const btnBuscar = { background: "#fff", color: "var(--azul)", border: "none", padding: "0 16px", borderRadius: 12, fontWeight: 700, fontSize: 18, boxShadow: "0 2px 8px rgba(0,0,0,.12)" };
 const lista = { position: "absolute", top: "100%", left: 0, right: 0, marginTop: 6, background: "#fff", borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,.18)", overflow: "hidden", zIndex: 1100 };
 const item = { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", cursor: "pointer", color: "var(--texto)", borderBottom: "1px solid var(--borde)" };
 const lbl = { display: "flex", flexDirection: "column", gap: 4, fontSize: 13, color: "#475569", fontWeight: 600 };

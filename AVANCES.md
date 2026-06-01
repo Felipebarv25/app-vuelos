@@ -52,7 +52,11 @@ _(Se irá llenando durante la noche…)_
 - **Días vacíos**: el algoritmo dejaba días sin paradas. FIX: reparto por bloques
   geográficos contiguos (uno por día) + reubicar sobrantes. Validado: [4,4,4],
   [3,3,3,3] sin vacíos. Cupo subido a 5 lugares/día. Pestañas de días vacíos OCULTAS.
-- PENDIENTE de este feedback: velocidad (#1) y diseño (#4).
+- **Diseño #4**: rediseño visual premium — cabecera con degradado de 3 tonos y
+  bordes redondeados inferiores + sombra azul, fondo de la app con degradado sutil,
+  tarjetas con sombra más suave y bordes 16px, chips blancos con sombra (activo con
+  glow azul), buscador con sombra. Look más moderno y con profundidad.
+- PENDIENTE de este feedback: velocidad (#1) — seguir afinando.
 
 ### ✅ FIX User-Agent VERIFICADO — ¡resuelto!
 - Tras el fix: Medellín 0/0 → 36/85, Lisboa 89/1 → 89/103, Praga 5/17 → 59/131, Bogotá 51/86.

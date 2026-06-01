@@ -7,14 +7,16 @@ export function Chip({ activo, onClick, children }) {
       onClick={onClick}
       style={{
         whiteSpace: "nowrap",
-        background: activo ? "var(--azul)" : "var(--gris)",
+        background: activo ? "var(--azul)" : "#fff",
         color: activo ? "#fff" : "var(--azul-osc)",
         border: "1px solid " + (activo ? "var(--azul)" : "var(--borde)"),
-        padding: "8px 14px",
+        padding: "9px 16px",
         borderRadius: 999,
         fontSize: 14,
         fontWeight: 600,
         flexShrink: 0,
+        boxShadow: activo ? "0 2px 8px rgba(37,99,235,.3)" : "0 1px 3px rgba(15,23,42,.05)",
+        transition: "all .15s",
       }}
     >
       {children}
@@ -60,10 +62,10 @@ export function Tarjeta({ children, style }) {
     <div
       style={{
         background: "#fff",
-        border: "1px solid var(--borde)",
-        borderRadius: 14,
-        padding: 14,
-        boxShadow: "var(--sombra)",
+        border: "1px solid #eef2f7",
+        borderRadius: 16,
+        padding: 16,
+        boxShadow: "0 2px 10px rgba(15,23,42,.06)",
         ...style,
       }}
     >

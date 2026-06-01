@@ -22,7 +22,7 @@ html,
 body {
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
   color: var(--texto);
-  background: #f8fafc;
+  background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 280px, #f8fafc 100%);
   overscroll-behavior-y: none;
 }
 
