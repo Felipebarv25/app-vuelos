@@ -218,85 +218,97 @@ export default function Home() {
   if (!usuario) return <Bienvenida />;
 
   return (
-    <div className="max-w-3xl mx-auto pb-12">
-      {/* Cabecera */}
-      <header className="sticky top-0 z-[1000] bg-gradient-to-br from-marca-500 via-marca-600 to-marca-900 text-white px-5 pt-5 pb-6 rounded-b-[28px] shadow-marca">
-        <div className="flex justify-between items-start">
-          <div onClick={irAlInicio} className="cursor-pointer">
-            <div className="text-[22px] font-extrabold flex items-center gap-2 tracking-tight">
-              🌍 Viajero 360
+    <div className="min-h-screen pb-10">
+      {/* Cabecera full-width */}
+      <header className="sticky top-0 z-[1000] bg-gradient-to-br from-marca-500 via-marca-600 to-marca-900 text-white shadow-marca">
+        <div className="mx-auto max-w-7xl px-4 pt-4 pb-5 lg:px-8">
+          <div className="flex items-center justify-between gap-4">
+            <div onClick={irAlInicio} className="cursor-pointer">
+              <div className="flex items-center gap-2 text-[22px] font-extrabold tracking-tight lg:text-2xl">
+                🌍 Viajero 360
+              </div>
+              <div className="hidden text-[13px] text-white/85 sm:block">{t("tagline")}</div>
             </div>
-            <div className="text-[13px] text-white/85">{t("tagline")}</div>
+
+            {/* Acciones + idioma (barra de navegación) */}
+            <div className="flex items-center gap-3 lg:gap-5">
+              <span className="hidden text-sm text-white/90 md:inline">
+                👋 {t("hola")}, <b>{usuario.nombre}</b>
+              </span>
+              {ciudad && (
+                <button onClick={irAlInicio} className="text-[13px] text-white/90 underline-offset-2 hover:underline">
+                  🏠 {t("inicio")}
+                </button>
+              )}
+              <button onClick={salir} className="text-[13px] text-white/90 underline-offset-2 hover:underline">
+                {t("salir")}
+              </button>
+              <SelectorIdioma />
+            </div>
           </div>
-          <SelectorIdioma />
-        </div>
 
-        {/* Saludo + acciones */}
-        <div className="text-xs text-white/90 mt-2 flex gap-3 items-center">
-          <span>👋 {t("hola")}, <b>{usuario.nombre}</b></span>
-          {ciudad && (
-            <button onClick={irAlInicio} className="text-marca-200 underline">🏠 {t("inicio")}</button>
-          )}
-          <button onClick={salir} className="text-marca-200 underline">{t("salir")}</button>
-        </div>
+          {/* Buscador */}
+          <div className="relative mt-4 max-w-2xl">
+            <form onSubmit={buscarTexto} className="flex gap-2">
+              <input
+                value={consulta}
+                onChange={(e) => setConsulta(e.target.value)}
+                onFocus={() => sugerencias.length && setMostrarSug(true)}
+                placeholder={t("buscarPlaceholder")}
+                className="flex-1 rounded-2xl border-0 px-5 py-3.5 text-base text-slate-800 shadow-md outline-none"
+              />
+              <button type="submit" className="rounded-2xl bg-white px-5 text-lg font-bold text-marca-600 shadow-md transition hover:bg-marca-50">
+                🔎
+              </button>
+            </form>
 
-        {/* Buscador */}
-        <div className="relative mt-3">
-          <form onSubmit={buscarTexto} className="flex gap-2">
-            <input
-              value={consulta}
-              onChange={(e) => setConsulta(e.target.value)}
-              onFocus={() => sugerencias.length && setMostrarSug(true)}
-              placeholder={t("buscarPlaceholder")}
-              className="flex-1 px-4 py-3.5 rounded-2xl border-0 text-base outline-none shadow-md text-slate-800"
-            />
-            <button type="submit" className="bg-white text-marca-600 px-4 rounded-2xl font-bold text-lg shadow-md">🔎</button>
-          </form>
-
-          {mostrarSug && sugerencias.length > 0 && (
-            <div className="absolute top-full inset-x-0 mt-1.5 bg-white rounded-2xl shadow-xl overflow-hidden z-[1100] animar-subir">
-              {sugerencias.map((s, i) => (
-                <div key={i} className="flex items-center gap-2.5 px-4 py-3 cursor-pointer text-slate-800 border-b border-slate-100 hover:bg-marca-50"
-                  onClick={() => elegirCiudad(s)}>
-                  <span className="text-lg">📍</span>
-                  <div>
-                    <div className="font-semibold text-[15px]">{s.ciudad}</div>
-                    <div className="text-xs text-slate-500">{s.pais}</div>
+            {mostrarSug && sugerencias.length > 0 && (
+              <div className="animar-subir absolute inset-x-0 top-full z-[1100] mt-1.5 overflow-hidden rounded-2xl bg-white shadow-xl">
+                {sugerencias.map((s, i) => (
+                  <div key={i} className="flex cursor-pointer items-center gap-2.5 border-b border-slate-100 px-4 py-3 text-slate-800 hover:bg-marca-50"
+                    onClick={() => elegirCiudad(s)}>
+                    <span className="text-lg">📍</span>
+                    <div>
+                      <div className="text-[15px] font-semibold">{s.ciudad}</div>
+                      <div className="text-xs text-slate-500">{s.pais}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       {error && (
-        <div className="m-3.5 bg-red-100 text-red-800 p-3.5 rounded-xl text-sm">{error}</div>
+        <div className="mx-auto mt-3.5 max-w-7xl rounded-xl bg-red-100 px-4 py-3.5 text-sm text-red-800 lg:px-8">{error}</div>
       )}
 
       {!ciudad && !cargando && (
-        <div className="px-4 pt-5 pb-2 animar-subir">
-          {/* Saludo */}
-          <h1 className="text-[23px] font-extrabold text-marca-900 tracking-tight">
-            {t(saludoClave())}, {usuario.nombre} {saludoEmoji()}
-          </h1>
-          <p className="text-[14.5px] text-slate-500 mt-1 leading-relaxed">{t("heroTexto")}</p>
+        <div className="animar-subir mx-auto max-w-7xl px-4 pb-4 pt-6 lg:px-8 lg:pt-8">
+          {/* Saludo (hero) */}
+          <div className="max-w-3xl">
+            <h1 className="text-[26px] font-extrabold tracking-tight text-marca-900 lg:text-4xl">
+              {t(saludoClave())}, {usuario.nombre} {saludoEmoji()}
+            </h1>
+            <p className="mt-2 text-[15px] leading-relaxed text-slate-500 lg:text-lg">{t("heroTexto")}</p>
+          </div>
 
           {/* Banner presupuesto */}
           <button onClick={() => setMostrarPresupuesto(true)}
-            className="w-full mt-5 px-5 py-4 rounded-2xl border-0 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 text-white flex items-center justify-between cursor-pointer shadow-[0_8px_22px_rgba(5,150,105,.35)] animar-pop hover:brightness-105 transition">
+            className="animar-pop mt-6 flex w-full items-center justify-between rounded-2xl border-0 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 px-5 py-4 text-white shadow-[0_8px_22px_rgba(5,150,105,.35)] transition hover:brightness-105 lg:max-w-2xl lg:py-5">
             <div className="text-left">
               <div className="text-xs font-semibold opacity-90">💰 NUEVO</div>
-              <div className="text-[17px] font-extrabold mt-0.5">{t("presupBoton")}</div>
+              <div className="mt-0.5 text-[17px] font-extrabold lg:text-xl">{t("presupBoton")}</div>
             </div>
             <span className="text-2xl">→</span>
           </button>
 
           {/* Destinos con foto */}
-          <h2 className="text-[17px] font-extrabold text-marca-900 mt-6 mb-3 px-0.5 tracking-tight">
+          <h2 className="mb-4 mt-9 text-[18px] font-extrabold tracking-tight text-marca-900 lg:text-2xl">
             ✨ {t("pruebaPopular")}
           </h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-4">
             {DESTINOS_DESTACADOS.map((d) => (
               <CardDestino key={d.q} nombre={d.nombre} pais={d.pais} hint={d.hint}
                 onClick={() => { setConsulta(d.q); setTimeout(() => buscarTexto(), 0); }} />
@@ -304,14 +316,14 @@ export default function Home() {
           </div>
 
           {/* Beneficios */}
-          <div className="flex gap-2.5 overflow-x-auto mt-6 pb-1">
+          <div className="mt-9 flex flex-wrap gap-2.5">
             {[
               ["📅", t("benDiaTitulo")],
               ["📍", t("benGpsTitulo")],
               ["🍽️", t("benComerTitulo")],
               ["🚇", t("benLlegarTitulo")],
             ].map(([ic, tit]) => (
-              <div key={tit} className="flex items-center gap-1.5 bg-white border border-slate-100 rounded-full px-3.5 py-2 whitespace-nowrap shrink-0 shadow-suave">
+              <div key={tit} className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-100 bg-white px-3.5 py-2 shadow-suave">
                 <span className="text-base">{ic}</span>
                 <span className="text-[12.5px] font-semibold text-marca-900">{tit}</span>
               </div>
@@ -335,27 +347,19 @@ export default function Home() {
       )}
 
       {cargando && (
-        <div className="p-7 text-center text-slate-500">
+        <div className="p-10 text-center text-slate-500">
           <span className="spin" /> <span className="ml-2">{t("cargando")}</span>
         </div>
       )}
 
+      {/* Vista de ciudad: dos paneles en escritorio (itinerario + mapa fijo) */}
       {ciudad && (
-        <>
-          <div className="h-[40vh] min-h-[260px]">
-            <Mapa
-              centro={[ciudad.lat, ciudad.lon]}
-              lugares={lugaresDelDia}
-              ubicacionUsuario={gps}
-              rutaTrazada={rutaTrazada}
-              onClicLugar={(l) => { setRutaTrazada(null); setDetalle(l); }}
-            />
-          </div>
-
-          <div className="p-4">
-            <div className="flex justify-between items-end mb-4">
+        <div className="mx-auto max-w-7xl lg:flex lg:gap-6 lg:px-8 lg:py-6">
+          {/* Panel izquierdo: planeación */}
+          <div className="order-2 px-4 py-5 lg:order-1 lg:flex-1 lg:min-w-0 lg:px-0 lg:py-0">
+            <div className="mb-4 flex items-end justify-between">
               <div>
-                <h1 className="text-2xl font-extrabold text-marca-900 tracking-tight">{ciudad.nombre}</h1>
+                <h1 className="text-2xl font-extrabold tracking-tight text-marca-900 lg:text-3xl">{ciudad.nombre}</h1>
                 <div className="text-[13px] text-slate-500">{ciudad.pais}</div>
               </div>
               {lugaresBase.length > 0 && (
@@ -367,38 +371,38 @@ export default function Home() {
             </div>
 
             {/* Configuración del viaje */}
-            <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-suave mb-3.5">
-              <div className="flex gap-3 flex-wrap items-end">
-                <label className="flex flex-col gap-1 text-[13px] text-slate-600 font-semibold">
+            <div className="mb-3.5 rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
+              <div className="flex flex-wrap items-end gap-3">
+                <label className="flex flex-col gap-1 text-[13px] font-semibold text-slate-600">
                   📅 {t("dias")}
                   <select value={dias} onChange={(e) => setDias(+e.target.value)}
-                    className="px-2.5 py-2 rounded-lg border border-slate-200 text-[15px] bg-white">
+                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[15px]">
                     {[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </label>
-                <label className="flex flex-col gap-1 text-[13px] text-slate-600 font-semibold">
+                <label className="flex flex-col gap-1 text-[13px] font-semibold text-slate-600">
                   ⏰ {t("horasDia")}
                   <select value={horas} onChange={(e) => setHoras(+e.target.value)}
-                    className="px-2.5 py-2 rounded-lg border border-slate-200 text-[15px] bg-white">
+                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[15px]">
                     {[4, 5, 6, 7, 8, 9, 10, 12].map((n) => <option key={n} value={n}>{n}h</option>)}
                   </select>
                 </label>
                 <button onClick={() => reconstruir()}
-                  className="ml-auto px-4 py-2.5 rounded-xl bg-white text-marca-600 border-[1.5px] border-marca-100 font-bold text-sm">
+                  className="ml-auto rounded-xl border-[1.5px] border-marca-100 bg-white px-4 py-2.5 text-sm font-bold text-marca-600 transition hover:bg-marca-50">
                   🔄 {t("recalcular")}
                 </button>
               </div>
-              <div className="flex gap-2 mt-3 flex-wrap items-center">
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Chip activo={momento === "diurno"} onClick={() => cambiarMomento("diurno")}>☀️ {t("diurno")}</Chip>
                 <Chip activo={momento === "nocturno"} onClick={() => cambiarMomento("nocturno")}>🌙 {t("nocturno")}</Chip>
-                <span className="text-xs text-slate-500 self-center">
+                <span className="self-center text-xs text-slate-500">
                   {momento === "nocturno" ? t("nocturnoDesc") : t("diurnoDesc")}
                 </span>
               </div>
             </div>
 
             {/* Categorías */}
-            <div className="flex gap-2 overflow-x-auto pb-2 mb-2">
+            <div className="mb-2 flex gap-2 overflow-x-auto pb-2">
               {Object.entries(CATEGORIAS).map(([k, c]) => (
                 <Chip key={k} activo={categoria === k} onClick={() => cargarCategoria(k)}>
                   {c.icono} {t("cat_" + k)}
@@ -407,21 +411,21 @@ export default function Home() {
             </div>
 
             {cargandoLugares && (
-              <div className="flex items-center gap-2 py-2.5 px-0.5 text-slate-500 text-sm">
+              <div className="flex items-center gap-2 px-0.5 py-2.5 text-sm text-slate-500">
                 <span className="spin" /> {t("cargandoLugares")}
               </div>
             )}
 
             {!cargandoLugares && lugaresBase.length === 0 && (
-              <div className="bg-white border border-slate-100 rounded-2xl p-4 text-center text-slate-500 shadow-suave">
+              <div className="rounded-2xl border border-slate-100 bg-white p-4 text-center text-slate-500 shadow-suave">
                 <div className="text-3xl">🔍</div>
-                <p className="text-sm mt-1.5">{t("sinResultados")}</p>
+                <p className="mt-1.5 text-sm">{t("sinResultados")}</p>
               </div>
             )}
 
             {/* Pestañas de días */}
             {plan.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto mb-3.5">
+              <div className="mb-3.5 flex gap-2 overflow-x-auto">
                 {plan.map((d, i) => (d.paradas.length > 0 ? (
                   <Chip key={i} activo={diaVisible === i} onClick={() => setDiaVisible(i)}>{t("dia")} {i + 1}</Chip>
                 ) : null))}
@@ -442,17 +446,30 @@ export default function Home() {
             )}
 
             {/* GPS toggle */}
-            <Tarjeta style={{ marginTop: 14, background: gpsOn ? "#dcfce7" : "#fff" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-                <input type="checkbox" checked={gpsOn} onChange={(e) => setGpsOn(e.target.checked)} />
-                <span style={{ fontSize: 14 }}>
-                  📍 {t("activarGps")}
-                  {gpsOn && gps && <span style={{ color: "var(--verde)", fontWeight: 600 }}> · {t("activo")}</span>}
-                </span>
-              </label>
-            </Tarjeta>
+            <label className={`mt-3.5 flex cursor-pointer items-center gap-2.5 rounded-2xl border border-slate-100 p-4 shadow-suave transition ${gpsOn ? "bg-emerald-50" : "bg-white"}`}>
+              <input type="checkbox" checked={gpsOn} onChange={(e) => setGpsOn(e.target.checked)} />
+              <span className="text-sm">
+                📍 {t("activarGps")}
+                {gpsOn && gps && <span className="font-semibold text-emerald-600"> · {t("activo")}</span>}
+              </span>
+            </label>
           </div>
-        </>
+
+          {/* Panel derecho: mapa (arriba en móvil, fijo a la derecha en escritorio) */}
+          <div className="order-1 lg:order-2 lg:w-[44%] lg:shrink-0">
+            <div className="lg:sticky lg:top-[150px]">
+              <div className="h-[42vh] min-h-[260px] overflow-hidden lg:h-[calc(100vh-172px)] lg:rounded-2xl lg:shadow-media">
+                <Mapa
+                  centro={[ciudad.lat, ciudad.lon]}
+                  lugares={lugaresDelDia}
+                  ubicacionUsuario={gps}
+                  rutaTrazada={rutaTrazada}
+                  onClicLugar={(l) => { setRutaTrazada(null); setDetalle(l); }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Detalle del lugar (dentro de la app) */}
@@ -467,69 +484,9 @@ export default function Home() {
         />
       )}
 
-      <footer style={{ textAlign: "center", color: "#94a3b8", fontSize: 12, padding: 20 }}>
+      <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-slate-400 lg:px-8">
         {t("footer")} · Viajero 360
       </footer>
     </div>
   );
 }
-
-const cab = {
-  background: "linear-gradient(135deg,#6366f1 0%,#4f46e5 55%,#312e81 100%)",
-  color: "#fff",
-  padding: "20px 18px 22px",
-  position: "sticky",
-  top: 0,
-  zIndex: 1000,
-  borderRadius: "0 0 26px 26px",
-  boxShadow: "0 8px 28px rgba(79,70,229,.4)",
-};
-const btnLink = { background: "none", border: "none", color: "#c7d2fe", textDecoration: "underline", fontSize: 12, padding: 0, cursor: "pointer" };
-const bannerPresup = {
-  width: "100%",
-  marginTop: 18,
-  padding: "16px 18px",
-  borderRadius: 18,
-  border: "none",
-  background: "linear-gradient(120deg,#10b981 0%,#059669 60%,#047857 100%)",
-  color: "#fff",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  cursor: "pointer",
-  boxShadow: "0 8px 22px rgba(5,150,105,.35)",
-  position: "relative",
-  overflow: "hidden",
-};
-const benChip = {
-  display: "flex",
-  alignItems: "center",
-  gap: 7,
-  background: "#fff",
-  border: "1px solid var(--borde)",
-  borderRadius: 999,
-  padding: "8px 14px",
-  whiteSpace: "nowrap",
-  flexShrink: 0,
-  boxShadow: "var(--sombra)",
-};
-const input = { flex: 1, padding: "13px 16px", borderRadius: 12, border: "none", fontSize: 16, outline: "none", boxShadow: "0 2px 8px rgba(0,0,0,.12)" };
-const btnBuscar = { background: "#fff", color: "var(--azul)", border: "none", padding: "0 16px", borderRadius: 12, fontWeight: 700, fontSize: 18, boxShadow: "0 2px 8px rgba(0,0,0,.12)" };
-const lista = { position: "absolute", top: "100%", left: 0, right: 0, marginTop: 6, background: "#fff", borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,.18)", overflow: "hidden", zIndex: 1100 };
-const item = { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", cursor: "pointer", color: "var(--texto)", borderBottom: "1px solid var(--borde)" };
-const lbl = { display: "flex", flexDirection: "column", gap: 4, fontSize: 13, color: "#475569", fontWeight: 600 };
-const sel = { padding: "8px 10px", borderRadius: 8, border: "1px solid var(--borde)", fontSize: 15, background: "#fff" };
-const btnPresup = {
-  display: "block",
-  width: "100%",
-  maxWidth: 460,
-  margin: "20px auto 0",
-  padding: "15px",
-  borderRadius: 14,
-  border: "none",
-  background: "linear-gradient(135deg,#16a34a,#15803d)",
-  color: "#fff",
-  fontSize: 16,
-  fontWeight: 700,
-  boxShadow: "0 6px 18px rgba(22,163,74,.35)",
-};
