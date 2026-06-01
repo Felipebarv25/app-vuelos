@@ -27,7 +27,7 @@ const TERMINOS_PHOTON = {
   restaurantes: ["restaurante", "restaurant"],
   cafes: ["cafe", "coffee"],
   bares: ["bar", "pub"],
-  miradores: ["mirador", "viewpoint"],
+  miradores: ["mirador", "viewpoint", "torre", "observation deck"],
 };
 
 function carrera(query) {

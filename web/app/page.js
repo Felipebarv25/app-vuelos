@@ -194,15 +194,39 @@ export default function Home() {
       )}
 
       {!ciudad && !cargando && (
-        <div style={{ padding: 28, textAlign: "center", color: "#64748b" }} className="animar-subir">
-          <div style={{ fontSize: 56 }}>🗺️</div>
-          <p style={{ marginTop: 8, fontSize: 15, lineHeight: 1.5 }}>
-            Escribe una ciudad y te armo un itinerario día a día con los mejores
-            lugares, fotos, restaurantes y cómo moverte entre ellos —{" "}
-            <b>todo aquí, sin salir de la app</b>.
-          </p>
-          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginTop: 14 }}>
-            {["Madrid, España", "Tokio, Japón", "Cusco, Perú", "Roma, Italia"].map((c) => (
+        <div style={{ padding: "24px 18px", color: "#475569" }} className="animar-subir">
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 56 }}>🗺️</div>
+            <h2 style={{ fontSize: 19, color: "var(--azul-osc)", marginTop: 6 }}>
+              Tu viaje, planeado en segundos
+            </h2>
+            <p style={{ marginTop: 6, fontSize: 14, lineHeight: 1.5, maxWidth: 460, marginInline: "auto" }}>
+              Itinerario día a día con los mejores lugares, fotos, restaurantes y
+              cómo moverte entre ellos. <b>Todo aquí, sin salir de la app.</b>
+            </p>
+          </div>
+
+          {/* Beneficios rápidos (claridad visual) */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, margin: "20px auto", maxWidth: 460 }}>
+            {[
+              ["📅", "Día por día", "Reparte los lugares según tu tiempo"],
+              ["📍", "GPS en vivo", "Te avisa si vas adelantado o atrasado"],
+              ["🍽️", "Comer y salir", "Restaurantes, cafés y vida nocturna"],
+              ["🚇", "Cómo llegar", "Transporte, tiempo y costo entre puntos"],
+            ].map(([ic, t, d]) => (
+              <div key={t} style={{ background: "#fff", border: "1px solid var(--borde)", borderRadius: 12, padding: 12 }}>
+                <div style={{ fontSize: 24 }}>{ic}</div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: "var(--azul-osc)", marginTop: 4 }}>{t}</div>
+                <div style={{ fontSize: 12, color: "#64748b" }}>{d}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign: "center", fontSize: 13, color: "#94a3b8", marginBottom: 8 }}>
+            Prueba con un destino popular:
+          </div>
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+            {["Madrid, España", "Tokio, Japón", "Cusco, Perú", "Roma, Italia", "Cartagena, Colombia"].map((c) => (
               <Chip key={c} onClick={() => { setConsulta(c); setTimeout(() => buscarTexto(), 0); }}>
                 {c}
               </Chip>
