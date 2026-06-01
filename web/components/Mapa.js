@@ -1,6 +1,11 @@
 "use client";
 import { useEffect, useRef } from "react";
 
+// Distancia simple en grados (para decidir si el GPS está cerca de la ciudad).
+function lejos(a, b) {
+  return Math.hypot(a[0] - b[0], a[1] - b[1]) > 0.6; // ~60 km
+}
+
 // Mapa Leaflet (OpenStreetMap). Recibe lugares con {coord, nombre} y dibuja
 // marcadores numerados + una línea que une la ruta del día.
 export default function Mapa({
@@ -14,6 +19,7 @@ export default function Mapa({
   const mapaRef = useRef(null);
   const capaRef = useRef([]);
   const rutaRef = useRef(null);
+  const centroAnterior = useRef(null);
 
   useEffect(() => {
     let L;
@@ -21,7 +27,7 @@ export default function Mapa({
 
     async function init() {
       L = (await import("leaflet")).default;
-      if (cancelado) return;
+      if (cancelado || !ref.current) return;
 
       if (!mapaRef.current) {
         mapaRef.current = L.map(ref.current, { zoomControl: true });
@@ -32,7 +38,19 @@ export default function Mapa({
       }
       const mapa = mapaRef.current;
 
-      // Limpiar capas previas
+      // ¿Cambió la ciudad? Si el centro es nuevo, recentramos SIEMPRE ahí.
+      // Esto evita que el mapa se quede mostrando la ciudad anterior.
+      const centroCambio =
+        centro &&
+        (!centroAnterior.current ||
+          centroAnterior.current[0] !== centro[0] ||
+          centroAnterior.current[1] !== centro[1]);
+      if (centroCambio) {
+        mapa.setView(centro, 13);
+        centroAnterior.current = centro;
+      }
+
+      // Limpiar capas previas (marcadores y líneas).
       capaRef.current.forEach((c) => mapa.removeLayer(c));
       capaRef.current = [];
 
@@ -56,8 +74,10 @@ export default function Mapa({
         puntos.push(l.coord);
       });
 
-      // Marcador del usuario (GPS)
-      if (ubicacionUsuario) {
+      // Marcador del usuario (GPS) — solo se DIBUJA si está cerca de la ciudad.
+      const gpsCerca =
+        ubicacionUsuario && centro && !lejos(ubicacionUsuario, centro);
+      if (gpsCerca) {
         const icon = L.divIcon({
           className: "",
           html: `<div style="background:#16a34a;width:18px;height:18px;border-radius:50%;
@@ -71,6 +91,8 @@ export default function Mapa({
         puntos.push(ubicacionUsuario);
       }
 
+      // Encuadre: ajustamos a los puntos (lugares + GPS cercano). El GPS lejano
+      // ya quedó excluido, así que el mapa nunca se va a otra ciudad/país.
       if (puntos.length > 1) {
         const linea = L.polyline(
           lugares.map((l) => l.coord),
@@ -80,11 +102,12 @@ export default function Mapa({
         try {
           mapa.fitBounds(L.latLngBounds(puntos).pad(0.18));
         } catch {}
-      } else if (centro) {
-        mapa.setView(centro, 13);
+      } else if (puntos.length === 1) {
+        mapa.setView(puntos[0], 14);
       }
+      // Si no hay puntos, ya recentramos en la ciudad arriba (centroCambio).
 
-      // Ruta trazada (camino real entre el usuario y un lugar)
+      // Ruta trazada (camino real entre el usuario y un lugar).
       if (rutaRef.current) {
         mapa.removeLayer(rutaRef.current);
         rutaRef.current = null;
@@ -99,6 +122,13 @@ export default function Mapa({
           mapa.fitBounds(L.latLngBounds(rutaTrazada.coords).pad(0.25));
         } catch {}
       }
+
+      // Recalcular tamaño (evita el mapa "roto"/gris al cambiar de vista).
+      setTimeout(() => {
+        try {
+          mapa.invalidateSize();
+        } catch {}
+      }, 100);
     }
 
     init();

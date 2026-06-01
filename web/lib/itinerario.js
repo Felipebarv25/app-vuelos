@@ -31,45 +31,59 @@ export function construirItinerario(lugares, opciones) {
     minutosTraslado: 0,
   }));
 
-  let d = 0;
-
-  for (const lugar of ordenados) {
+  // Función para añadir un lugar a un día concreto (calculando traslado).
+  function agregar(dia, lugar) {
     const visita = lugar.minutos || 60;
+    const esPrimera = dia.paradas.length === 0;
+    const refAnterior = esPrimera ? null : dia.paradas[dia.paradas.length - 1].coord;
+    const metros = refAnterior ? distanciaMetros(refAnterior, lugar.coord) : 0;
+    const traslado = refAnterior ? minutosDesplazamiento(metros) : 0;
+    dia.paradas.push({
+      ...lugar,
+      traslado,
+      metros: Math.round(metros),
+      transporte: recomendarTransporte(metros),
+    });
+    dia.minutosUsados += traslado + visita;
+    dia.minutosVisita += visita;
+    dia.minutosTraslado += traslado;
+  }
 
-    // Buscar un día (desde el actual) donde quepa.
-    let colocado = false;
-    for (let intento = 0; intento < dias; intento++) {
-      const diaIdx = (d + intento) % dias;
-      const dia = plan[diaIdx];
-      const esPrimeraDelDia = dia.paradas.length === 0;
+  function cabe(dia, lugar) {
+    const visita = lugar.minutos || 60;
+    const esPrimera = dia.paradas.length === 0;
+    const refAnterior = esPrimera ? null : dia.paradas[dia.paradas.length - 1].coord;
+    const metros = refAnterior ? distanciaMetros(refAnterior, lugar.coord) : 0;
+    const traslado = refAnterior ? minutosDesplazamiento(metros) : 0;
+    return dia.minutosUsados + traslado + visita <= presupuesto;
+  }
 
-      // El traslado solo cuenta ENTRE lugares del día. La llegada a la
-      // primera parada del día no consume presupuesto (el viajero decide
-      // a qué hora sale del hotel y cómo llega al primer punto).
-      const refAnterior = esPrimeraDelDia
-        ? null
-        : dia.paradas[dia.paradas.length - 1].coord;
-      const metros = refAnterior ? distanciaMetros(refAnterior, lugar.coord) : 0;
-      const traslado = refAnterior ? minutosDesplazamiento(metros) : 0;
+  // Estrategia: dividir la lista (ya ordenada geográficamente) en N bloques
+  // contiguos —uno por día— para que cada día sea compacto Y ningún día quede
+  // vacío. Cada bloque se llena respetando el presupuesto de horas; lo que no
+  // cabe en su día se intenta colocar en los días siguientes con hueco.
+  const porDia = Math.ceil(ordenados.length / dias);
+  const sobrantes = [];
 
-      if (dia.minutosUsados + traslado + visita <= presupuesto) {
-        const trans = recomendarTransporte(metros);
-        dia.paradas.push({
-          ...lugar,
-          traslado,
-          metros: Math.round(metros),
-          transporte: trans,
-        });
-        dia.minutosUsados += traslado + visita;
-        dia.minutosVisita += visita;
-        dia.minutosTraslado += traslado;
-        colocado = true;
-        d = diaIdx;
+  for (let dIdx = 0; dIdx < dias; dIdx++) {
+    const dia = plan[dIdx];
+    const desde = dIdx * porDia;
+    const hasta = Math.min(desde + porDia, ordenados.length);
+    for (let i = desde; i < hasta; i++) {
+      const lugar = ordenados[i];
+      if (cabe(dia, lugar)) agregar(dia, lugar);
+      else sobrantes.push(lugar);
+    }
+  }
+
+  // Reubicar sobrantes en cualquier día con hueco (de día 1 en adelante).
+  for (const lugar of sobrantes) {
+    for (let dIdx = 0; dIdx < dias; dIdx++) {
+      if (cabe(plan[dIdx], lugar)) {
+        agregar(plan[dIdx], lugar);
         break;
       }
     }
-    // Si no cupo en ningún día, se descarta (sobran lugares para el tiempo dado).
-    if (!colocado) continue;
   }
 
   return plan;

@@ -142,7 +142,8 @@ export default function Home() {
     try {
       const lugares = await traerLugares(catReal, c.lat, c.lon);
       setLugaresBase(lugares);
-      const cupo = Math.max(dias * 4, 6);
+      // Tomamos hasta 5 lugares por día (con margen) para llenar bien cada día.
+      const cupo = Math.max(dias * 5, 6);
       const sel = lugares.slice(0, cupo);
       setSeleccion(sel);
       reconstruir(sel, c);
@@ -420,12 +421,12 @@ export default function Home() {
               </Tarjeta>
             )}
 
-            {/* Pestañas de días */}
+            {/* Pestañas de días (solo los que tienen paradas, sin días vacíos) */}
             {plan.length > 0 && (
               <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 14 }}>
-                {plan.map((d, i) => (
+                {plan.map((d, i) => (d.paradas.length > 0 ? (
                   <Chip key={i} activo={diaVisible === i} onClick={() => setDiaVisible(i)}>{t("dia")} {i + 1}</Chip>
-                ))}
+                ) : null))}
               </div>
             )}
 

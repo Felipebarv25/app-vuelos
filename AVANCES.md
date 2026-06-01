@@ -44,6 +44,16 @@
 
 _(Se irá llenando durante la noche…)_
 
+### 🔧 FEEDBACK USUARIO (mañana) — arreglos en curso
+- **Bug mapa al cambiar ciudad**: buscaba "Madrid" pero el mapa seguía en Medellín.
+  CAUSA: el GPS (Medellín) arrastraba el encuadre + no recentraba en la ciudad nueva.
+  FIX: el mapa ahora recentra SIEMPRE en la ciudad nueva, NO dibuja el GPS si está
+  lejos (>60km) de la ciudad, y llama invalidateSize() para que no se vea roto/gris.
+- **Días vacíos**: el algoritmo dejaba días sin paradas. FIX: reparto por bloques
+  geográficos contiguos (uno por día) + reubicar sobrantes. Validado: [4,4,4],
+  [3,3,3,3] sin vacíos. Cupo subido a 5 lugares/día. Pestañas de días vacíos OCULTAS.
+- PENDIENTE de este feedback: velocidad (#1) y diseño (#4).
+
 ### ✅ FIX User-Agent VERIFICADO — ¡resuelto!
 - Tras el fix: Medellín 0/0 → 36/85, Lisboa 89/1 → 89/103, Praga 5/17 → 59/131, Bogotá 51/86.
 - QA AMPLIO post-fix (8 ciudades nuevas): Tokio 107, Sydney 36, El Cairo 26, Mumbai 48,
