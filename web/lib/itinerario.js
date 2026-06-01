@@ -95,8 +95,10 @@ export function construirItinerario(lugares, opciones) {
   }
   while (plan.length < dias) plan.push(nuevoDia());
 
-  // Reubicar sobrantes en el día con hueco GEOGRÁFICAMENTE más cercano (para no
-  // romper la compacidad de los días).
+  // Reubicar sobrantes SOLO en un día cuyo grupo quede cerca (≤20 km). Si la
+  // única opción está lejos, se descarta la parada: preferimos una ruta compacta
+  // a meter un lugar que obligue a cruzar la región (evita el zigzag).
+  const MAX_REUBIC = 20000;
   for (const lugar of sobrantes) {
     let mejor = -1;
     let mejorDist = Infinity;
@@ -104,14 +106,14 @@ export function construirItinerario(lugares, opciones) {
       if (!cabe(plan[j], lugar)) continue;
       const ref = plan[j].paradas.length
         ? plan[j].paradas[plan[j].paradas.length - 1].coord
-        : lugar.coord;
+        : lugar.coord; // día vacío: puede iniciar un grupo nuevo
       const dd = distanciaMetros(ref, lugar.coord);
       if (dd < mejorDist) {
         mejorDist = dd;
         mejor = j;
       }
     }
-    if (mejor >= 0) agregar(plan[mejor], lugar);
+    if (mejor >= 0 && mejorDist <= MAX_REUBIC) agregar(plan[mejor], lugar);
   }
 
   return plan.slice(0, dias);
