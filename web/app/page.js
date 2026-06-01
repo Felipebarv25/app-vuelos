@@ -279,6 +279,17 @@ export default function Home() {
               </div>
             )}
 
+            {/* Sin resultados en esta categoría (mensaje claro, no pantalla vacía) */}
+            {!cargandoLugares && lugaresBase.length === 0 && (
+              <Tarjeta style={{ textAlign: "center", color: "#64748b" }}>
+                <div style={{ fontSize: 30 }}>🔍</div>
+                <p style={{ fontSize: 14, marginTop: 6 }}>
+                  No encontramos lugares de esta categoría cerca del centro.
+                  Prueba otra categoría o toca <b>Recalcular</b>.
+                </p>
+              </Tarjeta>
+            )}
+
             {/* Pestañas de días */}
             {plan.length > 0 && (
               <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 14 }}>

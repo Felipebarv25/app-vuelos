@@ -1,8 +1,8 @@
-// API propia en Vercel: consulta Overpass del lado servidor y cachea el
-// resultado. Beneficios:
-//  - Caché compartida entre usuarios (el 2º que busque una ciudad va instantáneo).
-//  - Corre varios espejos en paralelo y usa el más rápido.
-//  - La respuesta se sirve desde el edge de Vercel con cache HTTP.
+// API propia en Vercel para traer lugares. Estrategia robusta de 2 fuentes:
+//  1) Overpass (OpenStreetMap) — trae todo lo de la zona por categoría.
+//  2) Photon (Komoot) como RESPALDO — rápido y estable, busca por palabras.
+// Si una falla o viene vacía, usamos la otra. Así la categoría NUNCA queda vacía.
+// Cachea en el edge de Vercel solo cuando hay datos.
 
 const MIRRORS = [
   "https://overpass.private.coffee/api/interpreter",
@@ -21,14 +21,20 @@ const FILTROS = {
   miradores: ['node["tourism"="viewpoint"]["name"]'],
 };
 
-// Lanza la consulta a todos los espejos en paralelo y se queda con la PRIMERA
-// respuesta que trae datos reales (elements no vacío). Si todas las que llegan
-// vienen vacías, devuelve la última (vacía) en vez de fallar.
+// Términos de búsqueda para el respaldo Photon, por categoría.
+const TERMINOS_PHOTON = {
+  imperdibles: ["museo", "monumento", "plaza", "parque", "iglesia", "mirador"],
+  restaurantes: ["restaurante"],
+  cafes: ["café"],
+  bares: ["bar", "discoteca"],
+  miradores: ["mirador"],
+};
+
 function carrera(query) {
   const cuerpo = "data=" + encodeURIComponent(query);
   const intentos = MIRRORS.map((url) => {
     const ctrl = new AbortController();
-    const id = setTimeout(() => ctrl.abort(), 12000);
+    const id = setTimeout(() => ctrl.abort(), 8000);
     return fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -43,26 +49,85 @@ function carrera(query) {
 
   return new Promise((resolve, reject) => {
     let pend = intentos.length;
-    let vacio = null; // guardamos una respuesta vacía por si todas lo son
+    let vacio = null;
     intentos.forEach((p) =>
       p
         .then((data) => {
-          const n = data?.elements?.length || 0;
-          if (n > 0) {
-            resolve(data); // ¡con datos! ganadora
-          } else {
+          if ((data?.elements?.length || 0) > 0) resolve(data);
+          else {
             vacio = data;
             if (--pend === 0) resolve(vacio || { elements: [] });
           }
         })
         .catch(() => {
-          if (--pend === 0) {
-            if (vacio) resolve(vacio);
-            else reject(new Error("overpass"));
-          }
+          if (--pend === 0) (vacio ? resolve(vacio) : reject(new Error("overpass")));
         })
     );
   });
+}
+
+// Convierte la respuesta de Overpass al formato unificado {elements:[...]}.
+function desdeOverpass(datos) {
+  return (datos.elements || [])
+    .filter((e) => e.tags?.name)
+    .map((e) => ({
+      type: e.type,
+      id: e.id,
+      lat: e.lat ?? e.center?.lat,
+      lon: e.lon ?? e.center?.lon,
+      tags: e.tags,
+    }))
+    .filter((e) => e.lat && e.lon);
+}
+
+// RESPALDO: busca en Photon varios términos en paralelo y unifica.
+async function desdePhoton(cat, lat, lon) {
+  const terminos = TERMINOS_PHOTON[cat] || ["turismo"];
+  const llamadas = terminos.map((t) => {
+    const ctrl = new AbortController();
+    const id = setTimeout(() => ctrl.abort(), 6000);
+    return fetch(
+      `https://photon.komoot.io/api/?q=${encodeURIComponent(
+        t
+      )}&lat=${lat}&lon=${lon}&limit=20&lang=es`,
+      { signal: ctrl.signal }
+    )
+      .then((r) => {
+        clearTimeout(id);
+        return r.ok ? r.json() : { features: [] };
+      })
+      .catch(() => {
+        clearTimeout(id);
+        return { features: [] };
+      });
+  });
+  const resultados = await Promise.all(llamadas);
+
+  const vistos = new Set();
+  const out = [];
+  for (const res of resultados) {
+    for (const f of res.features || []) {
+      const p = f.properties || {};
+      const nombre = p.name;
+      const coords = f.geometry?.coordinates; // [lon, lat]
+      if (!nombre || !coords || vistos.has(nombre)) continue;
+      // Filtrar a la zona (~12 km) para no traer cosas lejanas.
+      const dist = Math.hypot(coords[1] - lat, coords[0] - lon);
+      if (dist > 0.13) continue;
+      vistos.add(nombre);
+      out.push({
+        type: "node",
+        id: p.osm_id || nombre,
+        lat: coords[1],
+        lon: coords[0],
+        tags: {
+          name: nombre,
+          [p.osm_key || "tourism"]: p.osm_value || "attraction",
+        },
+      });
+    }
+  }
+  return out;
 }
 
 export async function GET(req) {
@@ -73,28 +138,39 @@ export async function GET(req) {
   const radio = Math.min(parseInt(searchParams.get("radio") || "6000"), 12000);
 
   if (!FILTROS[cat] || isNaN(lat) || isNaN(lon)) {
-    return Response.json({ error: "parámetros" }, { status: 400 });
+    return Response.json({ error: "parámetros", elements: [] }, { status: 400 });
   }
 
-  const filtros = FILTROS[cat]
-    .map((f) => `${f}(around:${radio},${lat},${lon});`)
-    .join("");
-  const query = `[out:json][timeout:10];(${filtros});out center 40;`;
+  let elementos = [];
 
+  // 1) Intentar Overpass
   try {
+    const filtros = FILTROS[cat]
+      .map((f) => `${f}(around:${radio},${lat},${lon});`)
+      .join("");
+    const query = `[out:json][timeout:9];(${filtros});out center 40;`;
     const datos = await carrera(query);
-    const tieneDatos = (datos?.elements?.length || 0) > 0;
-    return new Response(JSON.stringify(datos), {
-      headers: {
-        "Content-Type": "application/json",
-        // Solo cacheamos respuestas CON datos. Las vacías no se cachean
-        // (así un fallo temporal no deja la categoría vacía 24h).
-        "Cache-Control": tieneDatos
-          ? "public, s-maxage=86400, stale-while-revalidate=604800"
-          : "no-store",
-      },
-    });
+    elementos = desdeOverpass(datos);
   } catch {
-    return Response.json({ error: "overpass", elements: [] }, { status: 502 });
+    elementos = [];
   }
+
+  // 2) Si Overpass falló o vino vacío, usar Photon (respaldo robusto)
+  if (elementos.length === 0) {
+    try {
+      elementos = await desdePhoton(cat, lat, lon);
+    } catch {
+      elementos = [];
+    }
+  }
+
+  const tieneDatos = elementos.length > 0;
+  return new Response(JSON.stringify({ elements: elementos }), {
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": tieneDatos
+        ? "public, s-maxage=86400, stale-while-revalidate=604800"
+        : "no-store",
+    },
+  });
 }
