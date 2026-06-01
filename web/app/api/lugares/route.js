@@ -86,6 +86,25 @@ function carrera(query) {
   });
 }
 
+// Puntuación de calidad de un lugar (para ordenar los mejores primero).
+function puntuar(t = {}) {
+  const nombre = t.name || "";
+  let s = 0;
+  if (t.wikipedia) s += 30;
+  if (t.wikidata) s += 10;
+  if (t.heritage || t["heritage:operator"]) s += 12;
+  if (t.tourism === "museum") s += 10;
+  if (t.tourism === "attraction") s += 8;
+  if (t.historic === "castle" || t.historic === "palace" || t.historic === "fort") s += 8;
+  if (t.tourism === "viewpoint") s += 4;
+  if (t.image || t.wikimedia_commons) s += 5;
+  if (t.website || t["contact:website"]) s += 2;
+  if (/^\s*(monumento|estatua|busto|placa|fuente|memorial)\s*$/i.test(nombre)) s -= 30;
+  if (/^\s*(monumento a|estatua de|busto de|monument |monumento di|statue of|memorial)\b/i.test(nombre)) s -= 20;
+  if (t.historic === "memorial" || t.tourism === "artwork") s -= 15;
+  return s;
+}
+
 // Convierte la respuesta de Overpass al formato unificado {elements:[...]}.
 function desdeOverpass(datos) {
   return (datos.elements || [])
@@ -198,7 +217,7 @@ export async function GET(req) {
     new Promise((res) => setTimeout(() => res([]), margenOverpass)),
   ]);
 
-  // Unir sin duplicar nombres; Overpass primero (suele ser más rico/limpio).
+  // Unir sin duplicar nombres.
   const vistos = new Set();
   let elementos = [];
   for (const e of [...overp, ...phot]) {
@@ -207,6 +226,11 @@ export async function GET(req) {
     vistos.add(n);
     elementos.push(e);
   }
+
+  // Ordenar por CALIDAD en el servidor: los lugares icónicos (Wikipedia, museos,
+  // castillos) primero; las estatuas/monumentos menores al final. Así el cliente
+  // recibe ya los mejores arriba aunque luego corte la lista.
+  elementos.sort((a, b) => puntuar(b.tags) - puntuar(a.tags));
 
   const tieneDatos = elementos.length > 0;
   return new Response(JSON.stringify({ elements: elementos }), {
