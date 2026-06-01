@@ -24,20 +24,19 @@ export function construirItinerario(lugares, opciones) {
   // Ordenar geográficamente para que cada día sea compacto.
   const ordenados = ordenarPorCercania(lugares, inicio);
 
-  const plan = Array.from({ length: dias }, () => ({
+  const nuevoDia = () => ({
     paradas: [],
     minutosUsados: 0,
     minutosVisita: 0,
     minutosTraslado: 0,
-  }));
+  });
 
-  // Función para añadir un lugar a un día concreto (calculando traslado).
+  // Añade un lugar a un día (calculando traslado desde la última parada).
   function agregar(dia, lugar) {
     const visita = lugar.minutos || 60;
-    const esPrimera = dia.paradas.length === 0;
-    const refAnterior = esPrimera ? null : dia.paradas[dia.paradas.length - 1].coord;
-    const metros = refAnterior ? distanciaMetros(refAnterior, lugar.coord) : 0;
-    const traslado = refAnterior ? minutosDesplazamiento(metros) : 0;
+    const ref = dia.paradas.length ? dia.paradas[dia.paradas.length - 1].coord : null;
+    const metros = ref ? distanciaMetros(ref, lugar.coord) : 0;
+    const traslado = ref ? minutosDesplazamiento(metros) : 0;
     dia.paradas.push({
       ...lugar,
       traslado,
@@ -51,42 +50,71 @@ export function construirItinerario(lugares, opciones) {
 
   function cabe(dia, lugar) {
     const visita = lugar.minutos || 60;
-    const esPrimera = dia.paradas.length === 0;
-    const refAnterior = esPrimera ? null : dia.paradas[dia.paradas.length - 1].coord;
-    const metros = refAnterior ? distanciaMetros(refAnterior, lugar.coord) : 0;
-    const traslado = refAnterior ? minutosDesplazamiento(metros) : 0;
+    const ref = dia.paradas.length ? dia.paradas[dia.paradas.length - 1].coord : null;
+    const metros = ref ? distanciaMetros(ref, lugar.coord) : 0;
+    const traslado = ref ? minutosDesplazamiento(metros) : 0;
     return dia.minutosUsados + traslado + visita <= presupuesto;
   }
 
-  // Estrategia: dividir la lista (ya ordenada geográficamente) en N bloques
-  // contiguos —uno por día— para que cada día sea compacto Y ningún día quede
-  // vacío. Cada bloque se llena respetando el presupuesto de horas; lo que no
-  // cabe en su día se intenta colocar en los días siguientes con hueco.
-  const porDia = Math.ceil(ordenados.length / dias);
-  const sobrantes = [];
+  // ESTRATEGIA DE OPTIMIZACIÓN (evitar zigzags):
+  // La ruta ya viene ordenada por cercanía (vecino más cercano). La cortamos en
+  // `dias` segmentos justo por los SALTOS MÁS GRANDES entre paradas consecutivas.
+  // Así, una excursión lejana (p. ej. Guatapé a ~50 km de Medellín) queda aislada
+  // en su propio día y cada día es geográficamente COMPACTO (mínimo tiempo en
+  // traslados), en vez de ir y volver entre zonas lejanas el mismo día.
+  const gaps = [];
+  for (let i = 1; i < ordenados.length; i++) {
+    gaps.push({ i, d: distanciaMetros(ordenados[i - 1].coord, ordenados[i].coord) });
+  }
+  const numCortes = Math.max(0, Math.min(dias - 1, gaps.length));
+  const cortes = gaps
+    .slice()
+    .sort((a, b) => b.d - a.d)
+    .slice(0, numCortes)
+    .map((g) => g.i)
+    .sort((a, b) => a - b);
 
-  for (let dIdx = 0; dIdx < dias; dIdx++) {
-    const dia = plan[dIdx];
-    const desde = dIdx * porDia;
-    const hasta = Math.min(desde + porDia, ordenados.length);
-    for (let i = desde; i < hasta; i++) {
-      const lugar = ordenados[i];
+  const segmentos = [];
+  let ini = 0;
+  for (const c of cortes) {
+    segmentos.push(ordenados.slice(ini, c));
+    ini = c;
+  }
+  segmentos.push(ordenados.slice(ini));
+
+  // Llenar cada día respetando el presupuesto de horas; lo que no cabe va aparte.
+  const plan = [];
+  const sobrantes = [];
+  for (const seg of segmentos) {
+    const dia = nuevoDia();
+    for (const lugar of seg) {
       if (cabe(dia, lugar)) agregar(dia, lugar);
       else sobrantes.push(lugar);
     }
+    plan.push(dia);
   }
+  while (plan.length < dias) plan.push(nuevoDia());
 
-  // Reubicar sobrantes en cualquier día con hueco (de día 1 en adelante).
+  // Reubicar sobrantes en el día con hueco GEOGRÁFICAMENTE más cercano (para no
+  // romper la compacidad de los días).
   for (const lugar of sobrantes) {
-    for (let dIdx = 0; dIdx < dias; dIdx++) {
-      if (cabe(plan[dIdx], lugar)) {
-        agregar(plan[dIdx], lugar);
-        break;
+    let mejor = -1;
+    let mejorDist = Infinity;
+    for (let j = 0; j < plan.length; j++) {
+      if (!cabe(plan[j], lugar)) continue;
+      const ref = plan[j].paradas.length
+        ? plan[j].paradas[plan[j].paradas.length - 1].coord
+        : lugar.coord;
+      const dd = distanciaMetros(ref, lugar.coord);
+      if (dd < mejorDist) {
+        mejorDist = dd;
+        mejor = j;
       }
     }
+    if (mejor >= 0) agregar(plan[mejor], lugar);
   }
 
-  return plan;
+  return plan.slice(0, dias);
 }
 
 // Agrega un lugar al final de un día concreto, calculando su traslado desde

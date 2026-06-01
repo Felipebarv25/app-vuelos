@@ -120,6 +120,7 @@ const ETIQUETAS = {
 };
 
 import { cacheado, fetchRapido } from "./cache";
+import { distanciaMetros } from "./rutas";
 
 const TTL_CIUDAD = 1000 * 60 * 60 * 24 * 7; // 7 días
 const TTL_LUGARES = 1000 * 60 * 60 * 12; // 12 horas
@@ -146,10 +147,10 @@ export async function geocodificar(consulta) {
 }
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
-// v16: radio amplio usa consulta liviana (notables con wikidata) para que
-// Overpass responda rápido y traiga lugares de calidad y lejanos (Guatapé).
+// v17: regla anti-zigzag (cercanos siempre; lejanos solo si famosos y máx 2) +
+// días cortados por saltos grandes para itinerarios compactos.
 // Subir la versión invalida cachés viejas (cliente y edge).
-const API_VER = "16";
+const API_VER = "17";
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.
@@ -238,6 +239,7 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
       categoria: ETIQUETAS[tipoRaw] || cat.nombre,
       coord,
       notable: !!(t.wikidata || t.wikipedia),
+      wiki: !!t.wikipedia,
       score,
       cocina,
       minutos: sugerirMinutos(categoria, tipoRaw),
@@ -246,7 +248,26 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
 
   // Ordenar por calidad (score), los mejores primero.
   lugares.sort((a, b) => b.score - a.score);
-  return lugares.slice(0, limite);
+
+  // REGLA ANTI-ZIGZAG: los lugares cercanos al centro siempre entran; las
+  // excursiones lejanas (>25 km) SOLO si son famosas (Wikipedia) y como máximo
+  // las 2 mejor puntuadas. Así una excursión icónica (p. ej. Guatapé) aparece,
+  // pero picos/monumentos remotos sin relevancia no dispersan la ruta.
+  const CERCA = 25000;
+  const LEJOS = 100000;
+  const centro = [lat, lon];
+  let lejanos = 0;
+  const filtrados = [];
+  for (const l of lugares) {
+    const d = distanciaMetros(centro, l.coord);
+    if (d <= CERCA) {
+      filtrados.push(l);
+    } else if (d <= LEJOS && l.wiki && lejanos < 2) {
+      filtrados.push(l);
+      lejanos++;
+    }
+  }
+  return filtrados.slice(0, limite);
 }
 
 function sugerirMinutos(categoria, tipo) {
