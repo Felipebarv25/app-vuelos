@@ -31,6 +31,9 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
   // Modo destino: buscador de texto.
   const [buscarDestino, setBuscarDestino] = useState("");
 
+  // Ruta: ciudades excluidas (las que el usuario no quiere en su ruta).
+  const [excluidos, setExcluidos] = useState([]);
+
   const presupuestoUsd = monto * MONEDAS[moneda].aUsd;
 
   const resultados = useMemo(
@@ -43,9 +46,12 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
 
   const ruta = useMemo(
     () =>
-      construirRuta({ presupuestoUsd, dias, personas, region, inicio, semilla }),
-    [presupuestoUsd, dias, personas, region, inicio, semilla]
+      construirRuta({ presupuestoUsd, dias, personas, region, inicio, semilla, excluir: excluidos }),
+    [presupuestoUsd, dias, personas, region, inicio, semilla, excluidos]
   );
+
+  // Nombre legible de una ciudad excluida (a partir de su llave).
+  const nombreLlave = (k) => k.split("|")[0];
 
   function fmtUsd(v) {
     return "US$ " + Math.round(v).toLocaleString("en-US");
@@ -154,7 +160,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                 {Object.entries(REGIONES).map(([k, nombre]) => (
                   <button
                     key={k}
-                    onClick={() => { setRegion(k); setInicio(""); setSemilla(0); }}
+                    onClick={() => { setRegion(k); setInicio(""); setSemilla(0); setExcluidos([]); }}
                     className={`rounded-full px-3.5 py-2 text-[13px] font-semibold transition ${
                       region === k
                         ? "bg-emerald-600 text-white shadow"
@@ -203,7 +209,30 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                   onOtra={() => setSemilla((s) => s + 1)}
                   onPlanear={() => onElegirCiudad?.(ruta.entrada)}
                   onPlanearCiudad={(c) => onElegirCiudad?.(c)}
+                  onExcluir={(c) =>
+                    setExcluidos((x) =>
+                      x.includes(llaveCiudad(c)) ? x : [...x, llaveCiudad(c)]
+                    )
+                  }
                 />
+              )}
+
+              {/* Ciudades excluidas: fichas para volver a incluirlas */}
+              {excluidos.length > 0 && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="text-[12px] font-semibold text-slate-500">
+                    {t("presupExcluidas")}:
+                  </span>
+                  {excluidos.map((k) => (
+                    <button
+                      key={k}
+                      onClick={() => setExcluidos((x) => x.filter((y) => y !== k))}
+                      className="flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[12px] font-medium text-slate-600 transition hover:bg-slate-200"
+                    >
+                      {nombreLlave(k)} <span className="text-slate-400">↩</span>
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           )}
@@ -317,7 +346,7 @@ function Fila({ nombre, valor }) {
 }
 
 // Tarjeta de la ruta multiciudad: línea de tiempo de ciudades + resumen + desglose.
-function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear, onPlanearCiudad }) {
+function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear, onPlanearCiudad, onExcluir }) {
   const { ciudades, desglose, total, cabe, sobra, diasTotales } = ruta;
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-suave">
@@ -371,6 +400,15 @@ function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear, onPlanearCiuda
               <div className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
                 {c.diasAqui} {t("presupRutaDias")}
               </div>
+              {ciudades.length > 1 && (
+                <button
+                  onClick={() => onExcluir?.(c)}
+                  title={t("presupExcluir")}
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-slate-300 transition hover:bg-red-50 hover:text-red-500"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
         ))}

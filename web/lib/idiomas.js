@@ -151,6 +151,8 @@ const T = {
     todosLugares: "Todos los lugares",
     agregar: "Agregar",
     presupBuscarCiudad: "Buscar ciudad o país…",
+    presupExcluidas: "Excluidas",
+    presupExcluir: "Quitar esta ciudad de la ruta",
   },
 
   en: {
@@ -279,6 +281,8 @@ const T = {
     todosLugares: "All places",
     agregar: "Add",
     presupBuscarCiudad: "Search city or country…",
+    presupExcluidas: "Excluded",
+    presupExcluir: "Remove this city from the route",
   },
 
   pt: {
@@ -407,6 +411,8 @@ const T = {
     todosLugares: "Todos os lugares",
     agregar: "Adicionar",
     presupBuscarCiudad: "Buscar cidade ou país…",
+    presupExcluidas: "Excluídas",
+    presupExcluir: "Remover esta cidade da rota",
   },
 
   fr: {
@@ -536,6 +542,8 @@ const T = {
     todosLugares: "Tous les lieux",
     agregar: "Ajouter",
     presupBuscarCiudad: "Rechercher ville ou pays…",
+    presupExcluidas: "Exclues",
+    presupExcluir: "Retirer cette ville de l'itinéraire",
   },
 };
 

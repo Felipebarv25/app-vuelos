@@ -243,9 +243,12 @@ export function construirRuta({
   region = "europa",
   inicio,
   semilla = 0,
+  excluir = [],
 }) {
+  const fuera = new Set(excluir);
   const cands = DESTINOS_PRESUPUESTO.filter(
-    (d) => region === "todas" || d.region === region
+    (d) =>
+      (region === "todas" || d.region === region) && !fuera.has(llaveCiudad(d))
   );
   if (!cands.length) return null;
 
