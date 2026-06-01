@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-01T15:09:12",
+  "generado": "2026-06-01T21:32:25",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -109,8 +109,8 @@
       "fecha_vuelta": "2026-11-24",
       "aerolinea": "AM",
       "umbral": 800,
-      "mediana": 1071,
-      "descuento": 37,
+      "mediana": 1233,
+      "descuento": 46,
       "esGanga": true,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Mil%C3%A1n%202026-11-10%202026-11-24"
     },
@@ -157,14 +157,14 @@
       "pais": "España",
       "bandera": "🇪🇸",
       "q": "Madrid, España",
-      "precio": 985,
+      "precio": 967,
       "moneda": "USD",
       "fecha_ida": "2026-09-16",
       "fecha_vuelta": "2026-09-20",
       "aerolinea": "JA",
       "umbral": 750,
       "mediana": 1181,
-      "descuento": 17,
+      "descuento": 18,
       "esGanga": true,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Madrid%202026-09-16%202026-09-20"
     },
@@ -343,8 +343,8 @@
       "fecha_vuelta": "2027-01-21",
       "aerolinea": "AC",
       "umbral": 800,
-      "mediana": 849,
-      "descuento": 6,
+      "mediana": 823,
+      "descuento": 3,
       "esGanga": false,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Roma%202027-01-10%202027-01-21"
     },
@@ -373,16 +373,16 @@
       "pais": "España",
       "bandera": "🇪🇸",
       "q": "Barcelona, España",
-      "precio": 850,
+      "precio": 818,
       "moneda": "USD",
-      "fecha_ida": "2026-10-04",
-      "fecha_vuelta": "2026-10-20",
+      "fecha_ida": "2026-10-08",
+      "fecha_vuelta": "2026-10-28",
       "aerolinea": "AC",
       "umbral": 750,
       "mediana": 949,
-      "descuento": 10,
+      "descuento": 14,
       "esGanga": false,
-      "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Barcelona%202026-10-04%202026-10-20"
+      "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Barcelona%202026-10-08%202026-10-28"
     },
     {
       "origen": "MDE",
@@ -397,8 +397,8 @@
       "fecha_vuelta": "2027-02-20",
       "aerolinea": "UX",
       "umbral": 750,
-      "mediana": 1099,
-      "descuento": 11,
+      "mediana": 1038,
+      "descuento": 6,
       "esGanga": false,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Barcelona%202027-02-06%202027-02-20"
     },
