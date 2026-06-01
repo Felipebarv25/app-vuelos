@@ -15,23 +15,38 @@
   body { font-family:'Segoe UI',system-ui,sans-serif; color:var(--texto); background:#f8fafc; }
   header {
     background:linear-gradient(135deg,var(--azul) 0%,var(--azul-osc) 100%);
-    color:white; padding:16px 18px; position:sticky; top:0; z-index:1000;
-    box-shadow:0 2px 10px rgba(0,0,0,0.15);
+    color:white; padding:16px 18px; box-shadow:0 2px 10px rgba(0,0,0,0.15);
   }
   header h1 { font-size:19px; display:flex; align-items:center; gap:8px; }
   .volver { color:#bfdbfe; text-decoration:none; font-size:13px; display:inline-block; margin-bottom:4px; }
-  .barra { padding:12px 14px; background:white; border-bottom:1px solid var(--borde);
-    position:sticky; top:0; z-index:900; }
-  select {
-    width:100%; padding:13px 14px; border-radius:10px; border:1px solid var(--borde);
-    font-size:16px; background:white; font-weight:600; color:var(--azul-osc);
+  .barra { padding:12px 14px; background:white; border-bottom:1px solid var(--borde); }
+  .buscador { display:flex; gap:8px; }
+  .buscador input {
+    flex:1; padding:13px 14px; border-radius:10px; border:1px solid var(--borde);
+    font-size:16px; outline:none;
   }
-  #mapa { width:100%; height:46vh; min-height:280px; z-index:1; }
+  .buscador input:focus { border-color:var(--azul); }
+  .buscador button {
+    background:var(--azul); color:white; border:none; padding:0 18px;
+    border-radius:10px; font-size:16px; font-weight:600; cursor:pointer;
+  }
+  .chips { display:flex; gap:8px; overflow-x:auto; padding:10px 14px 4px; background:white;
+    border-bottom:1px solid var(--borde); -webkit-overflow-scrolling:touch; }
+  .chip {
+    white-space:nowrap; background:var(--gris); border:1px solid var(--borde);
+    color:var(--azul-osc); padding:8px 14px; border-radius:999px; font-size:14px;
+    font-weight:600; cursor:pointer; flex-shrink:0;
+  }
+  .chip.activo { background:var(--azul); color:white; border-color:var(--azul); }
+  .chip .est { font-size:11px; opacity:.8; }
+  #mapa { width:100%; height:44vh; min-height:260px; z-index:1; }
   .seccion { padding:14px; }
-  .titulo { font-size:16px; font-weight:700; color:var(--azul-osc); margin:6px 2px 12px; }
+  .titulo { font-size:16px; font-weight:700; color:var(--azul-osc); margin:6px 2px 12px; display:flex; align-items:center; gap:8px; }
+  .ciudad-nom { font-size:21px; font-weight:800; color:var(--azul-osc); margin:4px 2px 2px; }
+  .ciudad-sub { font-size:13px; color:#64748b; margin-bottom:12px; }
   .acciones { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
   .btn {
-    flex:1; min-width:140px; text-align:center; text-decoration:none;
+    flex:1; min-width:150px; text-align:center; text-decoration:none;
     background:var(--azul); color:white; padding:13px 12px; border-radius:10px;
     font-weight:600; font-size:14px; border:none; cursor:pointer;
   }
@@ -43,12 +58,12 @@
   .parada .top { display:flex; align-items:flex-start; gap:10px; }
   .num {
     background:var(--azul); color:white; min-width:28px; height:28px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;
   }
   .parada h3 { font-size:16px; margin-bottom:2px; }
   .cat { font-size:12px; color:#64748b; }
   .parada p { font-size:14px; color:#334155; margin:8px 0; line-height:1.45; }
-  .horas { font-size:12px; color:var(--verde); font-weight:600; }
+  .horas { color:var(--verde); font-weight:600; }
   .links { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
   .mini {
     font-size:13px; text-decoration:none; padding:9px 12px; border-radius:8px;
@@ -61,7 +76,13 @@
   .tk:last-child { border-bottom:none; }
   .tk .p { font-weight:700; color:var(--verde); white-space:nowrap; }
   .consejo { font-size:13px; color:#475569; background:var(--gris); border-radius:8px; padding:10px 12px; margin-top:6px; line-height:1.45; }
-  .aviso { font-size:12px; color:#92400e; background:#fef3c7; border-radius:8px; padding:10px 12px; margin:0 14px 14px; line-height:1.45; }
+  .aviso { font-size:12px; color:#92400e; background:#fef3c7; border-radius:8px; padding:10px 12px; margin:14px; line-height:1.45; }
+  .cargando { text-align:center; padding:30px 16px; color:#64748b; font-size:15px; }
+  .spin { display:inline-block; width:20px; height:20px; border:3px solid var(--borde);
+    border-top-color:var(--azul); border-radius:50%; animation:g 0.8s linear infinite; vertical-align:middle; margin-right:8px; }
+  @keyframes g { to { transform:rotate(360deg); } }
+  .error { background:#fee2e2; color:#991b1b; border-radius:10px; padding:14px; margin:14px; font-size:14px; line-height:1.5; }
+  .badge-prem { background:#fbbf24; color:#78350f; font-size:10px; padding:2px 7px; border-radius:999px; font-weight:700; margin-left:6px; vertical-align:middle; }
   .leaflet-popup-content { font-size:14px; }
   .leaflet-popup-content a { color:var(--azul); font-weight:600; }
 </style>
@@ -73,125 +94,222 @@
 </header>
 
 <div class="barra">
-  <select id="ciudad"></select>
+  <form class="buscador" id="form">
+    <input id="q" type="text" placeholder="Escribe cualquier ciudad (ej. Ámsterdam, Cusco, Estambul…)" autocomplete="off">
+    <button type="submit">Buscar</button>
+  </form>
 </div>
+<div class="chips" id="chips"></div>
 
 <div id="mapa"></div>
 
 <div class="aviso">
-  💡 Los precios de transporte son <b>aproximados</b> (verifica los actuales).
-  Al tocar “Cómo llegar” se abre <b>Google Maps</b> con la ruta real: estaciones,
-  transbordos, horarios y tarifas al día. Funciona perfecto desde el celular.
+  💡 Toca <b>“Cómo llegar”</b> en cada lugar y se abre <b>Google Maps</b> con la ruta real:
+  estaciones, transbordos, horarios y tarifas al día. Las ciudades con
+  <span class="badge-prem">PREMIUM</span> traen guía de transporte y precios curada.
 </div>
 
-<div class="seccion">
-  <div class="acciones" id="acciones"></div>
-  <div id="transporte"></div>
-  <div class="titulo">📍 Lugares imperdibles (en orden sugerido)</div>
-  <div id="paradas"></div>
-</div>
+<div id="contenido"></div>
 
 <script src="datos_ciudades.js"></script>
 <script>
 let mapa, capa = [];
 
+/* ---------- utilidades ---------- */
 function enc(t){ return encodeURIComponent(t); }
-function lugarTxt(l, ciudad){ return `${l.n}, ${ciudad.nombre}, ${ciudad.pais}`; }
-
-// Enlaces a Google Maps (datos reales, gratis, legítimo)
-function linkBuscar(l, ciudad){
-  return `https://www.google.com/maps/search/?api=1&query=${enc(lugarTxt(l,ciudad))}`;
+function lugarTxt(l, ctx){ return `${l.n}, ${ctx}`; }
+function linkBuscar(l, ctx){ return `https://www.google.com/maps/search/?api=1&query=${enc(lugarTxt(l,ctx))}`; }
+function linkComoLlegar(a, b, ctx, modo){
+  return `https://www.google.com/maps/dir/?api=1&origin=${enc(lugarTxt(a,ctx))}&destination=${enc(lugarTxt(b,ctx))}&travelmode=${modo}`;
 }
-function linkComoLlegar(desde, hasta, ciudad, modo){
-  return `https://www.google.com/maps/dir/?api=1`
-    + `&origin=${enc(lugarTxt(desde,ciudad))}`
-    + `&destination=${enc(lugarTxt(hasta,ciudad))}`
-    + `&travelmode=${modo}`;
+function linkRutaCompleta(lugares, ctx){
+  const o = enc(lugarTxt(lugares[0],ctx));
+  const d = enc(lugarTxt(lugares[lugares.length-1],ctx));
+  const w = lugares.slice(1,-1).slice(0,9).map(l=>enc(lugarTxt(l,ctx)));
+  let u = `https://www.google.com/maps/dir/?api=1&origin=${o}&destination=${d}&travelmode=transit`;
+  if (w.length) u += `&waypoints=${w.join('|')}`;
+  return u;
 }
-function linkRutaCompleta(ciudad){
-  const ls = ciudad.lugares;
-  const origin = enc(lugarTxt(ls[0],ciudad));
-  const dest = enc(lugarTxt(ls[ls.length-1],ciudad));
-  const medios = ls.slice(1,-1).slice(0,9).map(l=>enc(lugarTxt(l,ciudad)));
-  let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}&travelmode=transit`;
-  if (medios.length) url += `&waypoints=${medios.join('|')}`;
-  return url;
+function dist(a,b){ const dx=a[0]-b[0], dy=a[1]-b[1]; return dx*dx+dy*dy; }
+// Ordena los lugares en una ruta sensata (vecino más cercano)
+function ordenarRuta(lugares){
+  if (lugares.length < 3) return lugares.slice();
+  const rest = lugares.slice(), ruta = [rest.shift()];
+  while (rest.length){
+    const ult = ruta[ruta.length-1].coord;
+    let bi=0, bd=Infinity;
+    rest.forEach((l,i)=>{ const d=dist(ult,l.coord); if(d<bd){bd=d;bi=i;} });
+    ruta.push(rest.splice(bi,1)[0]);
+  }
+  return ruta;
 }
 
-function render(clave){
-  const ciudad = CIUDADES[clave];
-
-  // ---- Mapa ----
+/* ---------- mapa ---------- */
+function pintarMapa(centro, zoom, lugares, ctx){
   if (!mapa){
     mapa = L.map('mapa');
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       { maxZoom:19, attribution:'© OpenStreetMap' }).addTo(mapa);
   }
-  capa.forEach(c=>mapa.removeLayer(c)); capa = [];
-  mapa.setView(ciudad.centro, ciudad.zoom);
-
-  const puntos = [];
-  ciudad.lugares.forEach((l,i)=>{
-    const icon = L.divIcon({ className:'', html:
+  capa.forEach(c=>mapa.removeLayer(c)); capa=[];
+  mapa.setView(centro, zoom);
+  const pts=[];
+  lugares.forEach((l,i)=>{
+    const icon=L.divIcon({className:'',html:
       `<div style="background:#2563eb;color:#fff;width:26px;height:26px;border-radius:50%;
         display:flex;align-items:center;justify-content:center;font-weight:700;
         border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)">${i+1}</div>`,
-      iconSize:[26,26], iconAnchor:[13,13] });
-    const m = L.marker(l.coord,{icon}).addTo(mapa);
-    m.bindPopup(`<b>${i+1}. ${l.n}</b><br>${l.cat}<br>
-      <a href="${linkBuscar(l,ciudad)}" target="_blank">Ver en Google Maps →</a>`);
-    capa.push(m); puntos.push(l.coord);
+      iconSize:[26,26],iconAnchor:[13,13]});
+    const m=L.marker(l.coord,{icon}).addTo(mapa);
+    m.bindPopup(`<b>${i+1}. ${l.n}</b><br>${l.cat}<br><a href="${linkBuscar(l,ctx)}" target="_blank">Ver en Google Maps →</a>`);
+    capa.push(m); pts.push(l.coord);
   });
-  const linea = L.polyline(puntos,{color:'#2563eb',weight:3,opacity:.5,dashArray:'6,8'}).addTo(mapa);
-  capa.push(linea);
-
-  // ---- Botones de acción ----
-  document.getElementById('acciones').innerHTML = `
-    <a class="btn" href="${linkRutaCompleta(ciudad)}" target="_blank">🚇 Ver TODA la ruta en Google Maps</a>
-    <a class="btn sec" href="https://www.google.com/maps/search/?api=1&query=${enc('qué ver en '+ciudad.nombre)}" target="_blank">🔎 Explorar más lugares</a>
-  `;
-
-  // ---- Transporte ----
-  let t = `<div class="transporte"><h3>🚉 Transporte en ${ciudad.nombre}</h3>`;
-  ciudad.transporte.billetes.forEach(b=>{
-    t += `<div class="tk"><span>${b.t}${b.nota?` <span class="cat">(${b.nota})</span>`:''}</span><span class="p">${b.p}</span></div>`;
-  });
-  ciudad.transporte.consejos.forEach(c=> t += `<div class="consejo">💬 ${c}</div>`);
-  t += `</div>`;
-  document.getElementById('transporte').innerHTML = t;
-
-  // ---- Lista de paradas ----
-  let html = '';
-  ciudad.lugares.forEach((l,i)=>{
-    const sig = ciudad.lugares[i+1];
-    html += `<div class="parada">
-      <div class="top">
-        <div class="num">${i+1}</div>
-        <div>
-          <h3>${l.n}</h3>
-          <div class="cat">${l.cat}${l.horas?` · <span class="horas">${l.horas}</span>`:''}</div>
-        </div>
-      </div>
-      <p>${l.desc}</p>
-      <div class="links">
-        <a class="mini" href="${linkBuscar(l,ciudad)}" target="_blank">📍 Ver lugar</a>
-        ${sig ? `<a class="mini transit" href="${linkComoLlegar(l,sig,ciudad,'transit')}" target="_blank">🚇 Cómo llegar a (${i+2})</a>
-                 <a class="mini" href="${linkComoLlegar(l,sig,ciudad,'walking')}" target="_blank">🚶 A pie</a>` : ''}
-      </div>
-    </div>`;
-  });
-  document.getElementById('paradas').innerHTML = html;
+  if (pts.length>1){
+    const linea=L.polyline(pts,{color:'#2563eb',weight:3,opacity:.5,dashArray:'6,8'}).addTo(mapa);
+    capa.push(linea);
+    try { mapa.fitBounds(L.latLngBounds(pts).pad(0.15)); } catch(e){}
+  }
 }
 
-// Llenar el selector y arrancar
-const sel = document.getElementById('ciudad');
-Object.keys(CIUDADES).forEach(k=>{
-  const o = document.createElement('option');
-  o.value = k; o.textContent = `${CIUDADES[k].bandera} ${CIUDADES[k].nombre}, ${CIUDADES[k].pais}`;
-  sel.appendChild(o);
+/* ---------- render de lugares (común) ---------- */
+function pintarLugares(lugares, ctx){
+  let html='';
+  lugares.forEach((l,i)=>{
+    const sig=lugares[i+1];
+    html+=`<div class="parada">
+      <div class="top"><div class="num">${i+1}</div>
+        <div><h3>${l.n}</h3>
+          <div class="cat">${l.cat}${l.horas?` · <span class="horas">${l.horas}</span>`:''}</div>
+        </div></div>
+      ${l.desc?`<p>${l.desc}</p>`:''}
+      <div class="links">
+        <a class="mini" href="${linkBuscar(l,ctx)}" target="_blank">📍 Ver lugar</a>
+        ${sig?`<a class="mini transit" href="${linkComoLlegar(l,sig,ctx,'transit')}" target="_blank">🚇 Cómo llegar a (${i+2})</a>
+               <a class="mini" href="${linkComoLlegar(l,sig,ctx,'walking')}" target="_blank">🚶 A pie</a>`:''}
+      </div></div>`;
+  });
+  return html;
+}
+
+/* ---------- ciudad PREMIUM (curada) ---------- */
+function renderCurada(clave){
+  marcarChip(clave);
+  const c = CIUDADES[clave];
+  const ctx = `${c.nombre}, ${c.pais}`;
+  pintarMapa(c.centro, c.zoom, c.lugares, ctx);
+
+  let t = `<div class="transporte"><h3>🚉 Transporte en ${c.nombre}</h3>`;
+  c.transporte.billetes.forEach(b=> t+=`<div class="tk"><span>${b.t}${b.nota?` <span class="cat">(${b.nota})</span>`:''}</span><span class="p">${b.p}</span></div>`);
+  c.transporte.consejos.forEach(x=> t+=`<div class="consejo">💬 ${x}</div>`);
+  t+=`</div>`;
+
+  document.getElementById('contenido').innerHTML = `
+    <div class="seccion">
+      <div class="ciudad-nom">${c.bandera} ${c.nombre} <span class="badge-prem">PREMIUM</span></div>
+      <div class="ciudad-sub">${c.pais} · ${c.lugares.length} lugares imperdibles</div>
+      <div class="acciones">
+        <a class="btn" href="${linkRutaCompleta(c.lugares,ctx)}" target="_blank">🚇 Ver TODA la ruta en Google Maps</a>
+        <a class="btn sec" href="https://www.google.com/maps/search/?api=1&query=${enc('qué ver en '+c.nombre)}" target="_blank">🔎 Explorar más</a>
+      </div>
+      ${t}
+      <div class="titulo">📍 Lugares imperdibles (en orden sugerido)</div>
+      ${pintarLugares(c.lugares, ctx)}
+    </div>`;
+}
+
+/* ---------- ciudad DINÁMICA (cualquier ciudad del mundo) ---------- */
+async function renderDinamica(consulta){
+  marcarChip(null);
+  const cont = document.getElementById('contenido');
+  cont.innerHTML = `<div class="cargando"><span class="spin"></span>Buscando “${consulta}” y sus mejores lugares…</div>`;
+  try {
+    // 1) Geocodificar la ciudad (OpenStreetMap Nominatim, gratis)
+    const g = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=es&q=${enc(consulta)}`,
+      { headers:{ 'Accept':'application/json' } }).then(r=>r.json());
+    if (!g.length) throw new Error('No encontré esa ciudad. Revisa el nombre e intenta de nuevo.');
+    const lat=parseFloat(g[0].lat), lon=parseFloat(g[0].lon);
+    const nombre = g[0].display_name.split(',')[0];
+    const pais = g[0].display_name.split(',').pop().trim();
+    const ctx = g[0].display_name.split(',').slice(0,1).concat(pais).join(', ');
+
+    // 2) Traer atracciones turísticas reales (OpenStreetMap Overpass, gratis)
+    const query = `[out:json][timeout:25];(
+      node(around:9000,${lat},${lon})["tourism"~"attraction|museum|viewpoint|gallery|theme_park|zoo|aquarium"]["name"];
+      node(around:9000,${lat},${lon})["historic"~"monument|memorial|castle|ruins|monastery|archaeological_site"]["name"];
+    );out body 80;`;
+    const o = await fetch('https://overpass-api.de/api/interpreter',
+      { method:'POST', body:'data='+enc(query) }).then(r=>r.json());
+
+    const cat = { attraction:'Atracción', museum:'Museo', viewpoint:'Mirador', gallery:'Galería',
+      theme_park:'Parque temático', zoo:'Zoológico', aquarium:'Acuario', monument:'Monumento',
+      memorial:'Memorial', castle:'Castillo', ruins:'Ruinas', monastery:'Monasterio',
+      archaeological_site:'Sitio arqueológico' };
+
+    let vistos=new Set(), lugares=[];
+    (o.elements||[]).forEach(e=>{
+      const n=e.tags && e.tags.name; if(!n || vistos.has(n)) return; vistos.add(n);
+      const tipo = (e.tags.tourism||e.tags.historic||'');
+      const notable = !!(e.tags.wikidata || e.tags.wikipedia);
+      lugares.push({ n, cat: cat[tipo]||'Lugar de interés', coord:[e.lat,e.lon], notable });
+    });
+    // Priorizar lugares notables (con Wikipedia/Wikidata) y limitar a 14
+    lugares.sort((a,b)=> (b.notable?1:0)-(a.notable?1:0));
+    lugares = ordenarRuta(lugares.slice(0,14));
+
+    if (!lugares.length){
+      cont.innerHTML = `<div class="error">Encontré <b>${nombre}</b> pero sin lugares turísticos en el mapa abierto.
+        <br><br><a class="btn" style="display:inline-block" href="https://www.google.com/maps/search/?api=1&query=${enc('qué ver en '+nombre)}" target="_blank">Explorar ${nombre} en Google Maps →</a></div>`;
+      pintarMapa([lat,lon], 13, [], ctx);
+      return;
+    }
+
+    pintarMapa([lat,lon], 13, lugares, ctx);
+    cont.innerHTML = `
+      <div class="seccion">
+        <div class="ciudad-nom">📍 ${nombre}</div>
+        <div class="ciudad-sub">${pais} · ${lugares.length} lugares destacados (OpenStreetMap)</div>
+        <div class="acciones">
+          <a class="btn" href="${linkRutaCompleta(lugares,ctx)}" target="_blank">🚇 Ver TODA la ruta en Google Maps</a>
+          <a class="btn sec" href="https://www.google.com/maps/search/?api=1&query=${enc('transporte público en '+nombre)}" target="_blank">🚉 Transporte en Google Maps</a>
+        </div>
+        <div class="consejo">💬 Para tarifas y rutas exactas de metro/bus en ${nombre}, usa el botón
+          <b>“Cómo llegar”</b> de cada lugar: Google Maps te da estaciones, transbordos y precio del trayecto al día.</div>
+        <div class="titulo" style="margin-top:14px">📍 Lugares destacados (ruta optimizada)</div>
+        ${pintarLugares(lugares, ctx)}
+      </div>`;
+  } catch(err){
+    cont.innerHTML = `<div class="error">${err.message||'Hubo un problema buscando la ciudad.'}<br><br>
+      Intenta con el nombre en español o inglés (ej. “Roma”, “Tokyo”).</div>`;
+  }
+}
+
+/* ---------- chips de ciudades premium ---------- */
+function marcarChip(clave){
+  document.querySelectorAll('.chip').forEach(c=> c.classList.toggle('activo', c.dataset.k===clave));
+}
+function construirChips(){
+  const cont=document.getElementById('chips');
+  Object.keys(CIUDADES).forEach(k=>{
+    const c=CIUDADES[k];
+    const el=document.createElement('div');
+    el.className='chip'; el.dataset.k=k;
+    el.innerHTML=`${c.bandera} ${c.nombre} <span class="est">★</span>`;
+    el.onclick=()=>renderCurada(k);
+    cont.appendChild(el);
+  });
+}
+
+/* ---------- arranque ---------- */
+construirChips();
+document.getElementById('form').addEventListener('submit', e=>{
+  e.preventDefault();
+  const q=document.getElementById('q').value.trim();
+  if (q){
+    const exacta=Object.keys(CIUDADES).find(k=>CIUDADES[k].nombre.toLowerCase()===q.toLowerCase());
+    exacta ? renderCurada(exacta) : renderDinamica(q);
+  }
 });
-sel.addEventListener('change', e=>render(e.target.value));
-render(Object.keys(CIUDADES)[0]);
+renderCurada(Object.keys(CIUDADES)[0]);
 </script>
 </body>
 </html>
