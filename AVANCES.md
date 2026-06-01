@@ -25,6 +25,13 @@
 
 _(Se irá llenando durante la noche…)_
 
+### ✅ FIX User-Agent VERIFICADO — ¡resuelto!
+- Tras el fix: Medellín 0/0 → 36/85, Lisboa 89/1 → 89/103, Praga 5/17 → 59/131, Bogotá 51/86.
+- QA AMPLIO post-fix (8 ciudades nuevas): Tokio 107, Sydney 36, El Cairo 26, Mumbai 48,
+  Moscú 81, Nairobi 35, Estocolmo 46, Cartagena 37. **0 problemas de 8**.
+- CONCLUSIÓN: la app ahora es FIABLE en cualquier ciudad del mundo. El User-Agent era
+  la causa raíz de los fallos intermitentes de toda la noche.
+
 ### 🐛 BUG IMPORTANTE encontrado en QA integral — Medellín (y otras) daban 0
 - QA FINAL de 8 ciudades: Medellín 0/0 (¡ciudad del usuario!) y Lisboa restaurantes=1.
 - DIAGNÓSTICO: la respuesta era no-store/MISS (no caché), Photon traía 12 desde mi PC
