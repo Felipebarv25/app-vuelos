@@ -113,11 +113,17 @@ export default function Home() {
       setPlan([]);
       return;
     }
-    const p = construirItinerario(sel, {
-      dias,
-      horasPorDia: horas,
-      inicio: gps || [c.lat, c.lon],
-    });
+    // Punto de partida: el centro de la ciudad destino.
+    // Solo usamos el GPS si el usuario YA está físicamente en esa ciudad
+    // (a menos de ~60 km). Así, planear NY desde Colombia no rompe el día.
+    const centro = [c.lat, c.lon];
+    let inicio = centro;
+    if (gps) {
+      const cerca =
+        Math.hypot(gps[0] - c.lat, gps[1] - c.lon) < 0.6; // ~60 km
+      if (cerca) inicio = gps;
+    }
+    const p = construirItinerario(sel, { dias, horasPorDia: horas, inicio });
     setPlan(p);
     setDiaVisible(0);
   }

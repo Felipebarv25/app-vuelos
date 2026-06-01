@@ -32,7 +32,6 @@ export function construirItinerario(lugares, opciones) {
   }));
 
   let d = 0;
-  let anterior = inicio;
 
   for (const lugar of ordenados) {
     const visita = lugar.minutos || 60;
@@ -42,10 +41,14 @@ export function construirItinerario(lugares, opciones) {
     for (let intento = 0; intento < dias; intento++) {
       const diaIdx = (d + intento) % dias;
       const dia = plan[diaIdx];
-      const refAnterior = dia.paradas.length
-        ? dia.paradas[dia.paradas.length - 1].coord
-        : inicio;
+      const esPrimeraDelDia = dia.paradas.length === 0;
 
+      // El traslado solo cuenta ENTRE lugares del día. La llegada a la
+      // primera parada del día no consume presupuesto (el viajero decide
+      // a qué hora sale del hotel y cómo llega al primer punto).
+      const refAnterior = esPrimeraDelDia
+        ? null
+        : dia.paradas[dia.paradas.length - 1].coord;
       const metros = refAnterior ? distanciaMetros(refAnterior, lugar.coord) : 0;
       const traslado = refAnterior ? minutosDesplazamiento(metros) : 0;
 
@@ -61,8 +64,7 @@ export function construirItinerario(lugares, opciones) {
         dia.minutosVisita += visita;
         dia.minutosTraslado += traslado;
         colocado = true;
-        d = diaIdx; // continuar llenando este día
-        anterior = lugar.coord;
+        d = diaIdx;
         break;
       }
     }
