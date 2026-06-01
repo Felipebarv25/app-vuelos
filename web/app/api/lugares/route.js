@@ -5,15 +5,19 @@
 // Cachea en el edge de Vercel solo cuando hay datos.
 
 const MIRRORS = [
+  "https://overpass.kumi.systems/api/interpreter",
   "https://overpass.private.coffee/api/interpreter",
   "https://overpass-api.de/api/interpreter",
-  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.osm.ch/api/interpreter",
 ];
 
 const FILTROS = {
+  // "imperdibles" amplio: incluye templos/iglesias (atracciones top en muchas
+  // culturas), plazas y parques notables.
   imperdibles: [
-    'node["tourism"~"attraction|museum|viewpoint|gallery|artwork"]["name"]',
-    'node["historic"~"monument|memorial|castle|ruins|monastery|archaeological_site"]["name"]',
+    'node["tourism"~"attraction|museum|viewpoint|gallery|artwork|theme_park|zoo"]["name"]',
+    'node["historic"~"monument|memorial|castle|ruins|monastery|archaeological_site|fort"]["name"]',
+    'node["amenity"="place_of_worship"]["name"]["wikidata"]',
   ],
   restaurantes: ['node["amenity"="restaurant"]["name"]'],
   cafes: ['node["amenity"~"cafe|coffee_shop"]["name"]'],
@@ -21,30 +25,22 @@ const FILTROS = {
   miradores: ['node["tourism"="viewpoint"]["name"]'],
 };
 
-// Términos de búsqueda para el respaldo Photon, por categoría.
-// Photon admite filtrar por etiqueta OSM (osm_tag), que es geográficamente
-// fiable: trae lugares de ESE tipo cerca del punto, sin depender del idioma
-// del nombre. Cada categoría mapea a sus etiquetas OSM.
-const TAGS_PHOTON = {
-  imperdibles: [
-    "tourism:attraction",
-    "tourism:museum",
-    "tourism:viewpoint",
-    "historic:monument",
-    "historic:memorial",
-    "historic:castle",
-  ],
-  restaurantes: ["amenity:restaurant"],
-  cafes: ["amenity:cafe"],
-  bares: ["amenity:bar", "amenity:pub", "amenity:nightclub"],
-  miradores: ["tourism:viewpoint", "man_made:tower"],
+// Respaldo Photon: términos descriptivos por categoría (en inglés, que es como
+// suelen estar las etiquetas). Buscar por palabra + cercanía funciona mejor que
+// q=a. Se prueban varios y se unifican.
+const TERMINOS_PHOTON = {
+  imperdibles: ["monument", "museum", "palace", "temple", "church", "mosque", "castle", "square", "park", "viewpoint"],
+  restaurantes: ["restaurant"],
+  cafes: ["cafe", "coffee"],
+  bares: ["bar", "pub", "club"],
+  miradores: ["viewpoint", "tower", "lookout"],
 };
 
 function carrera(query) {
   const cuerpo = "data=" + encodeURIComponent(query);
   const intentos = MIRRORS.map((url) => {
     const ctrl = new AbortController();
-    const id = setTimeout(() => ctrl.abort(), 8000);
+    const id = setTimeout(() => ctrl.abort(), 13000);
     return fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -90,22 +86,21 @@ function desdeOverpass(datos) {
     .filter((e) => e.lat && e.lon);
 }
 
-// RESPALDO: Photon filtrando por ETIQUETA OSM (osm_tag) dentro de un bbox
-// alrededor del punto. Esto trae lugares del tipo correcto y CERCA, sin
-// depender del idioma del nombre (el bug anterior traía "museos" de Italia).
+// RESPALDO: Photon buscando por TÉRMINOS descriptivos cerca del punto.
+// Buscar "monument", "palace", "mosque"... + lat/lon trae lugares reales del
+// tipo correcto y cercanos. Filtramos por bbox para descartar lo lejano.
 async function desdePhoton(cat, lat, lon) {
-  const tags = TAGS_PHOTON[cat] || ["tourism:attraction"];
-  // bbox ~ ±0.18° (~20 km) alrededor del punto: minLon,minLat,maxLon,maxLat
-  const d = 0.18;
+  const terminos = TERMINOS_PHOTON[cat] || ["attraction"];
+  // bbox ~ ±0.2° (~22 km): minLon,minLat,maxLon,maxLat
+  const d = 0.2;
   const bbox = `${lon - d},${lat - d},${lon + d},${lat + d}`;
 
-  const llamadas = tags.map((tag) => {
+  const llamadas = terminos.map((term) => {
     const ctrl = new AbortController();
     const id = setTimeout(() => ctrl.abort(), 6000);
-    // q=* con osm_tag filtra por tipo; bbox lo acota geográficamente.
-    const url = `https://photon.komoot.io/api/?q=a&osm_tag=${encodeURIComponent(
-      tag
-    )}&bbox=${bbox}&limit=30`;
+    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(
+      term
+    )}&bbox=${bbox}&lat=${lat}&lon=${lon}&limit=20`;
     return fetch(url, { signal: ctrl.signal })
       .then((r) => {
         clearTimeout(id);
@@ -126,9 +121,16 @@ async function desdePhoton(cat, lat, lon) {
       const nombre = p.name;
       const coords = f.geometry?.coordinates; // [lon, lat]
       if (!nombre || !coords || vistos.has(nombre)) continue;
-      // Seguridad extra: descartar lo que se salga del bbox (~25 km).
+      // Descartar lo que se salga del bbox (~28 km) y resultados sin tipo útil.
       const dist = Math.hypot(coords[1] - lat, coords[0] - lon);
-      if (dist > 0.25) continue;
+      if (dist > 0.28) continue;
+      // Evitar traer ciudades/calles/parkings: solo puntos relevantes.
+      const key = p.osm_key || "";
+      const val = p.osm_value || "";
+      if (["place", "highway", "boundary", "railway", "aeroway"].includes(key)) continue;
+      if (["parking", "fuel", "bus_stop", "parking_entrance"].includes(val)) continue;
+      // El nombre no debería ser solo "Parking ..." o similar.
+      if (/^(parking|aparcamiento|bus|metro)\b/i.test(nombre)) continue;
       vistos.add(nombre);
       out.push({
         type: "node",
@@ -137,7 +139,7 @@ async function desdePhoton(cat, lat, lon) {
         lon: coords[0],
         tags: {
           name: nombre,
-          [p.osm_key || "tourism"]: p.osm_value || "attraction",
+          [key || "tourism"]: p.osm_value || "attraction",
         },
       });
     }
@@ -164,7 +166,7 @@ export async function GET(req) {
     const filtros = FILTROS[cat]
       .map((f) => `${f}(around:${radioAmplio},${lat},${lon});`)
       .join("");
-    const query = `[out:json][timeout:9];(${filtros});out center 60;`;
+    const query = `[out:json][timeout:14];(${filtros});out center 60;`;
     const datos = await carrera(query);
     elementos = desdeOverpass(datos);
   } catch {
@@ -173,7 +175,7 @@ export async function GET(req) {
 
   // 2) Si Overpass trajo POCOS (no solo cero), complementar con Photon.
   //    Así ciudades grandes siempre tienen una buena variedad de lugares.
-  if (elementos.length < 10) {
+  if (elementos.length < 15) {
     try {
       const extra = await desdePhoton(cat, lat, lon);
       const vistos = new Set(elementos.map((e) => e.tags?.name));

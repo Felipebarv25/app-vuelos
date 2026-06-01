@@ -25,6 +25,18 @@
 
 _(Se irá llenando durante la noche…)_
 
+### ✅ QA #1 — Más lugares en ciudades con pocos resultados
+- PROBÉ como usuario: Marrakech salía con 1 imperdible, Cartagena 4, Bali 7. Decepcionante.
+- CAUSA: Overpass con timeout corto (9s) fallaba en algunas ciudades, y el respaldo
+  Photon usaba `q=a` (traía casi nada).
+- ARREGLOS: (1) Overpass timeout 9→14s y 4 espejos. (2) "imperdibles" ahora incluye
+  templos/mezquitas/iglesias notables, theme_park, zoo, fort (atracciones top en
+  muchas culturas). (3) Photon respaldo reescrito: busca por términos descriptivos
+  (monument, palace, mosque, temple…) cerca del punto, en vez de q=a. (4) Filtro que
+  descarta parkings/calles/paradas. (5) Caché subida a v4 (invalida la vieja con pocos
+  lugares). (6) Complemento Photon se activa con <15 (antes <10).
+- VERIFICADO simulación: Marrakech imperdibles 1→28. Build OK. Push pendiente.
+
 ### ✅ [#5] Módulo de Presupuesto de viaje — COMPLETADO
 - Creado `lib/presupuesto.js`: 30 destinos (Sudamérica, Norte/Centroamérica, Europa, Asia)
   con costo de vuelo i/v desde Colombia + costo diario por persona. Función
