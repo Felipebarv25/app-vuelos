@@ -180,14 +180,16 @@ export async function GET(req) {
     .catch(() => []);
   const pPhoton = desdePhoton(cat, lat, lon).catch(() => []);
 
-  // Photon siempre lo esperamos (es rápido). A Overpass le damos hasta 11s;
-  // si para entonces no respondió, seguimos con lo de Photon para no hacer
-  // esperar al usuario. (Overpass se cacheará igual si llega después vía SWR.)
-  const overpConLimite = Promise.race([
+  // Esperamos Photon (rápido) primero. Luego a Overpass le damos un margen
+  // ADAPTATIVO: si Photon ya trajo suficientes lugares (>=20), solo esperamos
+  // 3s extra a Overpass (prioriza VELOCIDAD); si Photon trajo pocos, esperamos
+  // hasta 9s (prioriza COBERTURA). Así la app se siente rápida sin quedar vacía.
+  const phot = await pPhoton;
+  const margenOverpass = phot.length >= 20 ? 3000 : 9000;
+  const overp = await Promise.race([
     pOverpass,
-    new Promise((res) => setTimeout(() => res([]), 11000)),
+    new Promise((res) => setTimeout(() => res([]), margenOverpass)),
   ]);
-  const [overp, phot] = await Promise.all([overpConLimite, pPhoton]);
 
   // Unir sin duplicar nombres; Overpass primero (suele ser más rico/limpio).
   const vistos = new Set();

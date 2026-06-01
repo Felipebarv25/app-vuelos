@@ -56,7 +56,11 @@ _(Se irá llenando durante la noche…)_
   bordes redondeados inferiores + sombra azul, fondo de la app con degradado sutil,
   tarjetas con sombra más suave y bordes 16px, chips blancos con sombra (activo con
   glow azul), buscador con sombra. Look más moderno y con profundidad.
-- PENDIENTE de este feedback: velocidad (#1) — seguir afinando.
+- **Velocidad #1**: margen ADAPTATIVO para Overpass. Si Photon (rápido) ya trajo
+  ≥20 lugares, solo esperamos 3s extra a Overpass (prioriza velocidad); si trajo
+  pocos, esperamos 9s (prioriza cobertura). Antes esperaba fijo 11s siempre. Caché v9.
+  La mayoría de ciudades ahora responden en ~2-4s en vez de hasta 11s.
+- TODOS los 4 puntos del feedback de la mañana atendidos. Build OK.
 
 ### ✅ FIX User-Agent VERIFICADO — ¡resuelto!
 - Tras el fix: Medellín 0/0 → 36/85, Lisboa 89/1 → 89/103, Praga 5/17 → 59/131, Bogotá 51/86.
