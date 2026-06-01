@@ -147,8 +147,8 @@ export async function geocodificar(consulta) {
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
 // radio menor + límite ajustado = consulta más liviana y rápida.
-// v11: versión de la API/caché. Subirla invalida cachés viejas (cliente y edge).
-const API_VER = "11";
+// v12: versión de la API/caché. Subirla invalida cachés viejas (cliente y edge).
+const API_VER = "12";
 
 export async function traerLugares(categoria, lat, lon, radio = 8000, limite = 40) {
   const cat = CATEGORIAS[categoria];
@@ -203,19 +203,21 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
     // sobre los "corrientes". OSM no tiene rating, así que usamos señales.
     // Wikipedia/Wikidata pesan MUCHO: son la mejor señal de "lugar icónico".
     let score = 0;
-    if (t.wikidata) score += 25;      // entrada en Wikidata = lugar relevante
     if (t.wikipedia) score += 30;     // artículo en Wikipedia = FAMOSO de verdad
+    if (t.wikidata) score += 10;      // wikidata = relevante (pero menos que wiki)
     if (t.heritage || t["heritage:operator"]) score += 12; // patrimonio mundial
-    if (t.tourism === "museum") score += 8;
-    if (t.tourism === "attraction") score += 6;
+    if (t.tourism === "museum") score += 10;
+    if (t.tourism === "attraction") score += 8;
+    if (t.historic === "castle" || t.historic === "palace" || t.historic === "fort") score += 8;
     if (t.tourism === "viewpoint") score += 4;
     if (t.image || t.wikimedia_commons) score += 5; // tiene foto = documentado
     if (t.website || t["contact:website"]) score += 2;
     if (t.opening_hours) score += 1;
     if (t.stars) score += 3;
-    // Penalizar fuerte nombres genéricos/placeholder (estatuas menores, comercios).
-    if (/^\s*(monumento|estatua|busto|placa|fuente|pizza|burger|pollo|comida|tienda)\s*$/i.test(nombre)) score -= 15;
-    if (/^\s*(monumento a|estatua de|busto de|monument to|statue of)\b/i.test(nombre)) score -= 6;
+    // Penalizar fuerte estatuas/monumentos menores (aunque tengan wikidata).
+    if (/^\s*(monumento|estatua|busto|placa|fuente|memorial)\s*$/i.test(nombre)) score -= 30;
+    if (/^\s*(monumento a|estatua de|busto de|monument |monumento di|statue of|memorial)\b/i.test(nombre)) score -= 20;
+    if (t.historic === "memorial" || t.tourism === "artwork") score -= 15;
     if (/^\s*(pizza|burger|pollo|comida|tienda|bar el|cafe el)\b/i.test(nombre)) score -= 4;
 
     lugares.push({

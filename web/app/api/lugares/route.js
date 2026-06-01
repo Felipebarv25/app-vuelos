@@ -15,9 +15,16 @@ const FILTROS = {
   // "imperdibles" amplio: incluye templos/iglesias (atracciones top en muchas
   // culturas), plazas y parques notables.
   imperdibles: [
-    'node["tourism"~"attraction|museum|viewpoint|gallery|artwork|theme_park|zoo"]["name"]',
-    'node["historic"~"monument|memorial|castle|ruins|monastery|archaeological_site|fort"]["name"]',
+    // Atracciones turísticas reales (sin "artwork" = estatuas/grafitis menores).
+    'node["tourism"~"attraction|museum|theme_park|zoo|aquarium"]["name"]',
+    'way["tourism"~"attraction|museum|theme_park"]["name"]',
+    // Históricos que SÍ son destinos (sin "memorial" = monumentos menores/placas).
+    'node["historic"~"castle|fort|monastery|archaeological_site|palace|monument"]["name"]["wikidata"]',
+    'way["historic"~"castle|fort|monastery|archaeological_site|palace"]["name"]',
+    // Miradores y templos notables (con wikidata = relevantes).
+    'node["tourism"="viewpoint"]["name"]["wikidata"]',
     'node["amenity"="place_of_worship"]["name"]["wikidata"]',
+    'way["amenity"="place_of_worship"]["name"]["wikidata"]',
   ],
   restaurantes: ['node["amenity"="restaurant"]["name"]'],
   cafes: ['node["amenity"~"cafe|coffee_shop"]["name"]'],
