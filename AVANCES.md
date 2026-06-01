@@ -25,6 +25,19 @@
 
 _(Se irá llenando durante la noche…)_
 
+### ✅ QA #4 — Restaurantes vacíos en varias ciudades
+- QA AMPLIO (6 ciudades): detecté restaurantes bajo/vacío en Seúl (0), Atenas (2),
+  Vancouver (1), Oslo (6). Mal para un viajero que busca dónde comer.
+- CAUSA: Overpass trae 40 restaurantes pero a veces se pasa del tope 8s y se descarta;
+  Photon "restaurant" solo traía 2 en Seúl.
+- ARREGLO: (1) tope Overpass 8s→11s (los restaurantes son datos densos que valen). (2)
+  Más términos de comida en Photon: food, grill, bbq, kitchen, bistro, diner (bbq solo
+  ya trae 20 en Seúl). También más términos para cafés (bakery, tea) y bares (lounge,
+  brewery). Caché v6.
+- VALIDÉ el módulo de presupuesto con casos reales: 10M COP/7d/Europa → Estambul $1340,
+  Lisboa $1410, Madrid $1500 (números con sentido). Lógica correcta.
+- Build OK. Push pendiente.
+
 ### ✅ Diseño + UX: emojis y recordar viaje
 - VERIFICADO velocidad tras tope 8s: Hanoi 13.3s→8.9s, Lagos/Tbilisi/Kioto 1-1.6s. OK.
 - DISEÑO: cada parada del itinerario ahora muestra emoji de su categoría (🖼️🍽️☕🍸🏰⛪🌳)

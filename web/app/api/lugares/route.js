@@ -30,10 +30,10 @@ const FILTROS = {
 // q=a. Se prueban varios y se unifican.
 const TERMINOS_PHOTON = {
   imperdibles: ["monument", "museum", "palace", "temple", "church", "mosque", "castle", "square", "park", "viewpoint"],
-  restaurantes: ["restaurant"],
-  cafes: ["cafe", "coffee"],
-  bares: ["bar", "pub", "club"],
-  miradores: ["viewpoint", "tower", "lookout"],
+  restaurantes: ["restaurant", "food", "grill", "bbq", "kitchen", "bistro", "diner"],
+  cafes: ["cafe", "coffee", "bakery", "tea"],
+  bares: ["bar", "pub", "club", "lounge", "brewery"],
+  miradores: ["viewpoint", "tower", "lookout", "observation"],
 };
 
 function carrera(query) {
@@ -172,12 +172,12 @@ export async function GET(req) {
     .catch(() => []);
   const pPhoton = desdePhoton(cat, lat, lon).catch(() => []);
 
-  // Photon siempre lo esperamos (es rápido). A Overpass le damos como mucho 8s
-  // más; si para entonces no respondió, seguimos con lo de Photon para no hacer
+  // Photon siempre lo esperamos (es rápido). A Overpass le damos hasta 11s;
+  // si para entonces no respondió, seguimos con lo de Photon para no hacer
   // esperar al usuario. (Overpass se cacheará igual si llega después vía SWR.)
   const overpConLimite = Promise.race([
     pOverpass,
-    new Promise((res) => setTimeout(() => res([]), 8000)),
+    new Promise((res) => setTimeout(() => res([]), 11000)),
   ]);
   const [overp, phot] = await Promise.all([overpConLimite, pPhoton]);
 
