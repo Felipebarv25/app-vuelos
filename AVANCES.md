@@ -25,6 +25,14 @@
 
 _(Se irá llenando durante la noche…)_
 
+### ✅ Diseño: saludo personalizado por hora
+- VERIFICADO v8: Barcelona bares 0 estaciones. Filtro definitivo.
+- DISEÑO (toque cálido/premium): la pantalla de inicio ahora saluda al usuario por
+  su nombre según la hora — "☀️ Buenos días, Felipe 👋" / "🌤️ Buenas tardes" /
+  "🌆 Buenas noches". Emoji de cielo acorde. Traducido a 4 idiomas. Personaliza la
+  experiencia desde el primer segundo.
+- Build OK. Push pendiente.
+
 ### ✅ QA #6 — Filtro anti-ruido afinado (catalán)
 - El filtro v7 NO quitó "Estació de Barcelona - Sants" porque el regex pedía
   "estación/estacion" pero en catalán es "Estació" (sin n).

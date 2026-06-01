@@ -15,6 +15,22 @@ import { useApp } from "@/lib/AppContext";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
 
+// Saludo según la hora del día (cálido y personalizado).
+function saludoClave() {
+  const h = new Date().getHours();
+  if (h < 6) return "saludoNoche";
+  if (h < 12) return "saludoManana";
+  if (h < 19) return "saludoTarde";
+  return "saludoNoche";
+}
+function saludoEmoji() {
+  const h = new Date().getHours();
+  if (h < 6) return "🌙";
+  if (h < 12) return "☀️";
+  if (h < 19) return "🌤️";
+  return "🌆";
+}
+
 export default function Home() {
   const { t, usuario, salir, listo } = useApp();
   const [consulta, setConsulta] = useState("");
@@ -249,7 +265,10 @@ export default function Home() {
       {!ciudad && !cargando && (
         <div style={{ padding: "24px 18px", color: "#475569" }} className="animar-subir">
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 56 }}>🗺️</div>
+            <div style={{ fontSize: 56 }}>{saludoEmoji()}</div>
+            <div style={{ fontSize: 14, color: "var(--verde)", fontWeight: 700, marginTop: 4 }}>
+              {t(saludoClave())}, {usuario.nombre} 👋
+            </div>
             <h2 style={{ fontSize: 19, color: "var(--azul-osc)", marginTop: 6 }}>
               {t("heroTitulo")}
             </h2>
