@@ -146,10 +146,9 @@ export async function geocodificar(consulta) {
 }
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
-// v14: radio ampliado hasta 100 km para imperdibles/miradores (incluye
-// atractivos cercanos a la ciudad, p. ej. Guatapé desde Medellín). Subir la
-// versión invalida cachés viejas (cliente y edge).
-const API_VER = "14";
+// v15: radio ampliado hasta 100 km + prioridad a Overpass (calidad y lugares
+// lejanos como Guatapé). Subir la versión invalida cachés viejas (cliente y edge).
+const API_VER = "15";
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.

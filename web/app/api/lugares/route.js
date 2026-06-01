@@ -208,16 +208,18 @@ export async function GET(req) {
     .catch(() => []);
   const pPhoton = desdePhoton(cat, lat, lon, radio).catch(() => []);
 
-  // Esperamos Photon (rápido) primero. Luego a Overpass le damos un margen
-  // ADAPTATIVO: si Photon ya trajo suficientes lugares (>=20), solo esperamos
-  // 3s extra a Overpass (prioriza VELOCIDAD); si Photon trajo pocos, esperamos
-  // hasta 9s (prioriza COBERTURA). Así la app se siente rápida sin quedar vacía.
-  const phot = await pPhoton;
-  const margenOverpass = phot.length >= 20 ? 3000 : 9000;
-  const overp = await Promise.race([
-    pOverpass,
-    new Promise((res) => setTimeout(() => res([]), margenOverpass)),
+  // Overpass es la fuente de CALIDAD (filtra por wikidata, museos, castillos) y
+  // la que encuentra atractivos LEJANOS (p. ej. Guatapé a ~50 km de Medellín).
+  // Le damos PRIORIDAD con un tope alto (mayor si el radio es amplio); Photon va
+  // en paralelo como respaldo rápido. Antes el margen corto cortaba Overpass y
+  // dejaba solo resultados pobres de Photon.
+  const deadline = (ms, val) => new Promise((res) => setTimeout(() => res(val), ms));
+  const topeOverpass = radio >= 30000 ? 11000 : 8000;
+  const [overpRaw, phot] = await Promise.all([
+    Promise.race([pOverpass, deadline(topeOverpass, null)]),
+    Promise.race([pPhoton, deadline(7000, [])]),
   ]);
+  const overp = overpRaw || [];
 
   // Unir sin duplicar nombres.
   const vistos = new Set();
