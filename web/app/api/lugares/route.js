@@ -130,7 +130,8 @@ async function desdePhoton(cat, lat, lon) {
       if (["place", "highway", "boundary", "railway", "aeroway", "public_transport"].includes(key)) continue;
       if (["parking", "fuel", "bus_stop", "parking_entrance", "station", "stop_position"].includes(val)) continue;
       // Descartar por nombre cosas que claramente no son lugares de interés.
-      if (/\b(parking|aparcamiento|estaci[óo]n|station|aeropuerto|airport|parada|metro|terminal)\b/i.test(nombre)) continue;
+      // (estaci → cubre "estación", "estació", "estación de"; gare/bahnhof otros idiomas)
+      if (/\b(parking|aparcamiento|estaci[óo]?|station|gare|bahnhof|aeropuerto|airport|parada|metro|terminal)\b/i.test(nombre)) continue;
       vistos.add(nombre);
       out.push({
         type: "node",

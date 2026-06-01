@@ -25,6 +25,14 @@
 
 _(Se irá llenando durante la noche…)_
 
+### ✅ QA #6 — Filtro anti-ruido afinado (catalán)
+- El filtro v7 NO quitó "Estació de Barcelona - Sants" porque el regex pedía
+  "estación/estacion" pero en catalán es "Estació" (sin n).
+- ARREGLO: regex ampliado (estaci con n opcional + gare/bahnhof de otros idiomas).
+  VALIDADO con 9 casos (Node): descarta estaciones/terminales pero CONSERVA bares
+  legítimos (Bar Pepe, Pub Fiction, Metropolitan Club). Caché v8.
+- Build OK. Push pendiente.
+
 ### ✅ QA #5 + diseño chips
 - Verifiqué modo día/noche: Barcelona 46 imperdibles vs 35 bares. Funciona.
 - PERO detecté ruido: "Estació de Barcelona - Sants" (estación de tren) aparecía como bar.
