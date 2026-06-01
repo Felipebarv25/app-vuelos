@@ -147,8 +147,8 @@ export async function geocodificar(consulta) {
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
 // radio menor + límite ajustado = consulta más liviana y rápida.
-// v9: versión de la API/caché. Subirla invalida cachés viejas (cliente y edge).
-const API_VER = "9";
+// v10: versión de la API/caché. Subirla invalida cachés viejas (cliente y edge).
+const API_VER = "10";
 
 export async function traerLugares(categoria, lat, lon, radio = 8000, limite = 40) {
   const cat = CATEGORIAS[categoria];
@@ -197,23 +197,37 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
 
     const tipoRaw =
       t.tourism || t.historic || t.amenity || "";
-    const notable = !!(t.wikidata || t.wikipedia);
     const cocina = t.cuisine ? t.cuisine.split(";")[0].replace(/_/g, " ") : null;
+
+    // PUNTUACIÓN DE CALIDAD: para priorizar lugares famosos/bien establecidos
+    // sobre los "corrientes". OSM no tiene rating, así que usamos señales:
+    let score = 0;
+    if (t.wikidata) score += 10;      // tiene entrada en Wikidata = relevante
+    if (t.wikipedia) score += 8;      // tiene artículo en Wikipedia = famoso
+    if (t.website || t["contact:website"]) score += 3; // negocio establecido
+    if (t.opening_hours) score += 2;  // tiene horarios = activo
+    if (t.phone || t["contact:phone"]) score += 1;
+    if (t.stars) score += 3;          // hoteles/atracciones con estrellas
+    if (t.tourism === "attraction" || t.tourism === "museum") score += 4;
+    if (t.historic) score += 3;       // monumentos/históricos suelen valer la pena
+    if (t.heritage || t["heritage:operator"]) score += 5; // patrimonio
+    // Penalizar nombres que parecen comercios genéricos/cadenas pequeñas.
+    if (/^\s*(pizza|burger|pollo|comida|tienda|bar el|cafe el)\b/i.test(nombre)) score -= 3;
 
     lugares.push({
       id: `${el.type}/${el.id}`,
       nombre,
       categoria: ETIQUETAS[tipoRaw] || cat.nombre,
       coord,
-      notable,
+      notable: !!(t.wikidata || t.wikipedia),
+      score,
       cocina,
-      // Minutos sugeridos de visita según el tipo (heurística sensata)
       minutos: sugerirMinutos(categoria, tipoRaw),
     });
   }
 
-  // Priorizar lugares notables (con Wikipedia/Wikidata)
-  lugares.sort((a, b) => (b.notable ? 1 : 0) - (a.notable ? 1 : 0));
+  // Ordenar por calidad (score), los mejores primero.
+  lugares.sort((a, b) => b.score - a.score);
   return lugares.slice(0, limite);
 }
 

@@ -44,6 +44,20 @@
 
 _(Se irá llenando durante la noche…)_
 
+### 🔧 FEEDBACK USUARIO (mañana, 2ª tanda)
+- **"Cambiar" cambiaba TODA la ruta**: cambiarParada llamaba reconstruir() que
+  rearmaba todo. FIX: ahora reemplaza SOLO esa parada en su sitio (mismo día/posición),
+  sin tocar las demás. Igual quitarParada. Build OK.
+- **Lugares corrientes, no los mejores**: antes ordenaba solo por notable (booleano).
+  FIX: sistema de PUNTUACIÓN de calidad (score) — wikidata +10, wikipedia +8, web +3,
+  horarios +2, estrellas +3, atracción/museo +4, histórico/patrimonio +3/+5, penaliza
+  nombres genéricos (pizza/burger/comida -3). Ordena por score. Caché v10.
+- **Faltan fotos**: añadido respaldo Wikimedia Commons cuando Wikipedia no tiene foto
+  (Parque Lleras, Pueblito Paisa ahora con foto). Lugares muy locales sin foto en
+  ninguna fuente gratis → degradado+emoji (aceptable). Cobertura de fotos muy mejorada.
+- **Velocidad VERIFICADA v9**: Viena 4.4s, Dublín 3.4s, Helsinki 3.5s, Madrid 4.4s
+  (antes hasta 11s). Margen adaptativo funciona.
+
 ### 🔧 FEEDBACK USUARIO (mañana) — arreglos en curso
 - **Bug mapa al cambiar ciudad**: buscaba "Madrid" pero el mapa seguía en Medellín.
   CAUSA: el GPS (Medellín) arrastraba el encuadre + no recentraba en la ciudad nueva.

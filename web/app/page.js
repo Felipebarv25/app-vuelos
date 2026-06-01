@@ -174,22 +174,35 @@ export default function Home() {
     setDiaVisible(0);
   }
 
+  // Cambiar SOLO esa parada por una alternativa, SIN rearmar todo el itinerario.
+  // Se reemplaza en el mismo lugar (mismo día, misma posición).
   function cambiarParada(diaIdx, paradaIdx) {
     const usados = new Set();
     plan.forEach((d) => d.paradas.forEach((p) => usados.add(p.id)));
     const alt = lugaresBase.find((l) => !usados.has(l.id));
     if (!alt) return;
-    const quitar = plan[diaIdx].paradas[paradaIdx];
-    const nuevaSel = seleccion.map((s) => (s.id === quitar.id ? alt : s));
-    setSeleccion(nuevaSel);
-    reconstruir(nuevaSel);
+
+    const vieja = plan[diaIdx].paradas[paradaIdx];
+    // Copia profunda mínima del plan, reemplazando solo esa parada.
+    const nuevoPlan = plan.map((d) => ({ ...d, paradas: d.paradas.slice() }));
+    nuevoPlan[diaIdx].paradas[paradaIdx] = {
+      ...alt,
+      traslado: vieja.traslado,
+      metros: vieja.metros,
+      transporte: vieja.transporte,
+    };
+    setPlan(nuevoPlan);
+    // Mantener la selección coherente (por si se recalcula luego).
+    setSeleccion((s) => s.map((x) => (x.id === vieja.id ? alt : x)));
   }
 
+  // Quitar SOLO esa parada del día, sin rearmar el resto.
   function quitarParada(diaIdx, paradaIdx) {
-    const quitar = plan[diaIdx].paradas[paradaIdx];
-    const nuevaSel = seleccion.filter((s) => s.id !== quitar.id);
-    setSeleccion(nuevaSel);
-    reconstruir(nuevaSel);
+    const vieja = plan[diaIdx].paradas[paradaIdx];
+    const nuevoPlan = plan.map((d) => ({ ...d, paradas: d.paradas.slice() }));
+    nuevoPlan[diaIdx].paradas.splice(paradaIdx, 1);
+    setPlan(nuevoPlan);
+    setSeleccion((s) => s.filter((x) => x.id !== vieja.id));
   }
 
   function cambiarMomento(mom) {
