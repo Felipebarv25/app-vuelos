@@ -102,6 +102,9 @@ select:focus {
 .animar-subir {
   animation: subir 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+.animar-aparecer {
+  animation: aparece 0.2s ease both;
+}
 .animar-pop {
   animation: pop 0.25s ease both;
 }

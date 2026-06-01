@@ -46,38 +46,47 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
     };
   }, [lugar, ciudad]);
 
-  async function elegirTransporte(t) {
-    setModoSel(t.modo);
+  async function elegirTransporte(tr) {
+    setModoSel(tr.modo);
     if (!origen) return;
-    const ruta = await trazarRuta(origen, lugar.coord, perfilDeModo(t.modo));
-    onTrazarRuta?.({ ...ruta, modo: t.modo, lugar });
+    const ruta = await trazarRuta(origen, lugar.coord, perfilDeModo(tr.modo));
+    onTrazarRuta?.({ ...ruta, modo: tr.modo, lugar });
   }
 
   return (
-    <div style={fondo} onClick={onCerrar}>
-      <div style={hoja} onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-[3000] flex items-end justify-center bg-slate-900/55 animar-aparecer"
+      onClick={onCerrar}
+    >
+      <div
+        className="max-h-[92vh] w-full max-w-[560px] overflow-y-auto rounded-t-[20px] bg-white shadow-[0_-8px_30px_rgba(0,0,0,.3)] animar-subir"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Asa para arrastrar (estética móvil) */}
-        <div style={asa} />
+        <div className="mx-auto mb-1 mt-2.5 h-[5px] w-[42px] rounded-full bg-slate-300" />
 
         {/* Foto del lugar */}
-        <div style={fotoCaja}>
+        <div className="relative h-[220px] overflow-hidden bg-slate-200">
           {cargandoFoto ? (
-            <div style={fotoPlaceholder}>
+            <div className="flex h-full w-full items-center justify-center text-slate-400">
               <span className="spin" />
             </div>
           ) : foto?.url ? (
-            <img src={foto.url} alt={lugar.nombre} style={fotoImg} />
+            <img src={foto.url} alt={lugar.nombre} className="h-full w-full object-cover" />
           ) : (
-            <div style={fotoSinImg}>
-              <span style={{ fontSize: 58 }}>{emojiCategoria(lugar.categoria)}</span>
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-marca-400 to-marca-900">
+              <span className="text-[58px]">{emojiCategoria(lugar.categoria)}</span>
             </div>
           )}
-          <button style={cerrar} onClick={onCerrar}>
+          <button
+            className="absolute right-3 top-3 flex h-[34px] w-[34px] items-center justify-center rounded-full border-0 bg-black/50 text-base text-white"
+            onClick={onCerrar}
+          >
             ✕
           </button>
-          <div style={fotoTexto}>
-            <div style={{ fontSize: 22, fontWeight: 800 }}>{lugar.nombre}</div>
-            <div style={{ fontSize: 13, opacity: 0.95 }}>
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-4 pb-3.5 pt-8 text-white">
+            <div className="text-[22px] font-extrabold">{lugar.nombre}</div>
+            <div className="text-[13px] opacity-95">
               {lugar.categoria}
               {lugar.cocina ? ` · ${lugar.cocina}` : ""}
               {lugar.notable ? " · ⭐ Destacado" : ""}
@@ -85,10 +94,10 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
           </div>
         </div>
 
-        <div style={{ padding: 16 }}>
+        <div className="p-4">
           {/* Descripción (de Wikipedia) */}
           {foto?.extracto && (
-            <p style={{ fontSize: 14, color: "#334155", lineHeight: 1.5, marginBottom: 14 }}>
+            <p className="mb-3.5 text-sm leading-relaxed text-slate-700">
               {foto.extracto.length > 240
                 ? foto.extracto.slice(0, 240) + "…"
                 : foto.extracto}
@@ -96,15 +105,19 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
           )}
 
           {/* Cómo llegar desde tu ubicación */}
-          <div style={{ fontWeight: 700, color: "var(--azul-osc)", marginBottom: 8 }}>
+          <div className="mb-2 font-bold text-marca-900">
             🧭 {t("comoLlegar")} {origen ? t("desdeTuUbicacion") : ""}
           </div>
 
-          {!origen && <div style={avisoGps}>📍 {t("activaGps")}</div>}
+          {!origen && (
+            <div className="rounded-[10px] bg-amber-100 p-3 text-[13px] leading-snug text-amber-800">
+              📍 {t("activaGps")}
+            </div>
+          )}
 
           {origen && (
             <>
-              <div style={{ fontSize: 13, color: "#64748b", marginBottom: 10 }}>
+              <div className="mb-2.5 text-[13px] text-slate-500">
                 {t("estasA")}{" "}
                 <b>
                   {metros < 1000
@@ -113,35 +126,40 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
                 </b>{" "}
                 {t("deAqui")}
               </div>
-              <div style={{ display: "grid", gap: 8 }}>
+              <div className="grid gap-2">
                 {transportes.map((tr) => (
                   <button
                     key={tr.modo}
                     onClick={() => elegirTransporte(tr)}
-                    style={{
-                      ...opcion,
-                      borderColor: modoSel === tr.modo ? "var(--azul)" : "var(--borde)",
-                      background:
-                        modoSel === tr.modo ? "#eff6ff" : tr.recomendado ? "#f0fdf4" : "#fff",
-                    }}
+                    className={`flex items-center gap-3 rounded-xl border p-3 transition ${
+                      modoSel === tr.modo
+                        ? "border-marca-500 bg-marca-50"
+                        : tr.recomendado
+                        ? "border-slate-100 bg-emerald-50"
+                        : "border-slate-100 bg-white"
+                    }`}
                   >
-                    <span style={{ fontSize: 22 }}>{tr.icono}</span>
-                    <div style={{ flex: 1, textAlign: "left" }}>
-                      <div style={{ fontWeight: 700, fontSize: 15 }}>
+                    <span className="text-[22px]">{tr.icono}</span>
+                    <div className="flex-1 text-left">
+                      <div className="text-[15px] font-bold">
                         {tr.nombre}
-                        {tr.recomendado && <span style={recom}>{t("recomendado")}</span>}
+                        {tr.recomendado && (
+                          <span className="ml-2 rounded-full bg-emerald-600 px-1.5 py-0.5 align-middle text-[10px] font-bold text-white">
+                            {t("recomendado")}
+                          </span>
+                        )}
                       </div>
-                      <div style={{ fontSize: 12, color: "#64748b" }}>
+                      <div className="text-xs text-slate-500">
                         ⏱️ {fmtMin(tr.minutos)} · 💵 {tr.costo}
                       </div>
                     </div>
-                    <span style={{ color: "var(--azul)", fontWeight: 700, fontSize: 13 }}>
+                    <span className="text-[13px] font-bold text-marca-600">
                       {t("verRuta")} →
                     </span>
                   </button>
                 ))}
               </div>
-              <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>
+              <div className="mt-2 text-[11px] text-slate-400">
                 {t("aproxAviso")}
               </div>
             </>
@@ -151,97 +169,3 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
     </div>
   );
 }
-
-const fondo = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(15,23,42,.55)",
-  zIndex: 3000,
-  display: "flex",
-  alignItems: "flex-end",
-  justifyContent: "center",
-  animation: "aparece .2s ease",
-};
-const hoja = {
-  background: "#fff",
-  width: "100%",
-  maxWidth: 560,
-  maxHeight: "92vh",
-  overflowY: "auto",
-  borderRadius: "20px 20px 0 0",
-  boxShadow: "0 -8px 30px rgba(0,0,0,.3)",
-};
-const asa = {
-  width: 42,
-  height: 5,
-  background: "#cbd5e1",
-  borderRadius: 999,
-  margin: "10px auto 4px",
-};
-const fotoCaja = { position: "relative", height: 220, background: "#e2e8f0", overflow: "hidden" };
-const fotoImg = { width: "100%", height: "100%", objectFit: "cover" };
-const fotoPlaceholder = {
-  width: "100%",
-  height: "100%",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  color: "#94a3b8",
-};
-// Cuando no hay foto: degradado agradable + emoji de la categoría.
-const fotoSinImg = {
-  width: "100%",
-  height: "100%",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  background: "linear-gradient(135deg,#6366f1,#312e81)",
-};
-const fotoTexto = {
-  position: "absolute",
-  bottom: 0,
-  left: 0,
-  right: 0,
-  padding: "30px 16px 14px",
-  background: "linear-gradient(transparent, rgba(0,0,0,.78))",
-  color: "#fff",
-};
-const cerrar = {
-  position: "absolute",
-  top: 12,
-  right: 12,
-  width: 34,
-  height: 34,
-  borderRadius: "50%",
-  border: "none",
-  background: "rgba(0,0,0,.5)",
-  color: "#fff",
-  fontSize: 16,
-};
-const opcion = {
-  display: "flex",
-  alignItems: "center",
-  gap: 12,
-  padding: 12,
-  borderRadius: 12,
-  border: "1px solid var(--borde)",
-  background: "#fff",
-};
-const recom = {
-  marginLeft: 8,
-  fontSize: 10,
-  background: "var(--verde)",
-  color: "#fff",
-  padding: "2px 7px",
-  borderRadius: 999,
-  fontWeight: 700,
-  verticalAlign: "middle",
-};
-const avisoGps = {
-  fontSize: 13,
-  background: "#fef3c7",
-  color: "#92400e",
-  padding: 12,
-  borderRadius: 10,
-  lineHeight: 1.4,
-};
