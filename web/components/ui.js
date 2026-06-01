@@ -30,18 +30,19 @@ export function Boton({ onClick, href, variante = "primario", children, style })
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    padding: "12px 16px",
-    borderRadius: 10,
-    fontSize: 14,
-    fontWeight: 600,
+    padding: "13px 18px",
+    borderRadius: 12,
+    fontSize: 14.5,
+    fontWeight: 700,
     border: "none",
     textAlign: "center",
+    cursor: "pointer",
     ...style,
   };
   const estilos = {
-    primario: { background: "var(--azul)", color: "#fff" },
-    sec: { background: "#fff", color: "var(--azul)", border: "1px solid var(--azul)" },
-    verde: { background: "var(--verde)", color: "#fff" },
+    primario: { background: "linear-gradient(135deg,#6366f1,#4f46e5)", color: "#fff", boxShadow: "0 4px 12px rgba(79,70,229,.32)" },
+    sec: { background: "#fff", color: "var(--azul)", border: "1.5px solid #e0e7ff" },
+    verde: { background: "linear-gradient(135deg,#10b981,#059669)", color: "#fff", boxShadow: "0 4px 12px rgba(5,150,105,.3)" },
   };
   const s = { ...base, ...estilos[variante] };
   if (href)

@@ -44,6 +44,14 @@
 
 _(Se irá llenando durante la noche…)_
 
+### 🎨 REDISEÑO PRO (feedback "diseño feo")
+- Fuente premium Plus Jakarta Sans (Google Fonts). Paleta cambiada a ÍNDIGO moderno
+  (#4f46e5) en vez del azul plano. Cabecera con degradado índigo, bordes 26px y sombra.
+- Tarjetas de parada rediseñadas: badge numerado con degradado y sombra, pills para
+  duración/Top, botones con fondos de color suave (azul/rojo). Resumen del día con
+  cajas de stats. Botones con degradado y sombra. Chips blancos con glow al activo.
+- Build OK. 2 commits (rediseño 1/2 y 2/2).
+
 ### 🔧 FEEDBACK USUARIO (mañana, 3ª tanda)
 - **BUG GRAVE fotos equivocadas**: "77 Towers" en Medellín mostraba foto Y descripción
   de NUEVA YORK. CAUSA: Wikipedia/Commons devolvían artículos no relacionados por

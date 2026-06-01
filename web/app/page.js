@@ -484,14 +484,14 @@ export default function Home() {
 }
 
 const cab = {
-  background: "linear-gradient(135deg,#3b82f6 0%,#2563eb 50%,#1e3a8a 100%)",
+  background: "linear-gradient(135deg,#6366f1 0%,#4f46e5 55%,#312e81 100%)",
   color: "#fff",
-  padding: "18px 18px 20px",
+  padding: "20px 18px 22px",
   position: "sticky",
   top: 0,
   zIndex: 1000,
-  borderRadius: "0 0 22px 22px",
-  boxShadow: "0 6px 20px rgba(37,99,235,.35)",
+  borderRadius: "0 0 26px 26px",
+  boxShadow: "0 8px 28px rgba(79,70,229,.4)",
 };
 const btnLink = { background: "none", border: "none", color: "#bfdbfe", textDecoration: "underline", fontSize: 12, padding: 0, cursor: "pointer" };
 const input = { flex: 1, padding: "13px 16px", borderRadius: 12, border: "none", fontSize: 16, outline: "none", boxShadow: "0 2px 8px rgba(0,0,0,.12)" };
