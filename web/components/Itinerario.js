@@ -4,6 +4,21 @@ import { Boton, Tarjeta } from "./ui";
 import { fmtMin, resumenDia } from "@/lib/itinerario";
 import { estadoTiempo, textoEstado } from "@/lib/reloj";
 
+// Emoji según el tipo de lugar (para identificar de un vistazo en la lista).
+function emojiCat(cat = "") {
+  const c = cat.toLowerCase();
+  if (c.includes("muse") || c.includes("galer")) return "🖼️";
+  if (c.includes("restaur")) return "🍽️";
+  if (c.includes("caf")) return "☕";
+  if (c.includes("bar") || c.includes("pub") || c.includes("disco")) return "🍸";
+  if (c.includes("mirad") || c.includes("viewpoint")) return "🌅";
+  if (c.includes("castil") || c.includes("castle") || c.includes("fort")) return "🏰";
+  if (c.includes("monu") || c.includes("memor")) return "🗿";
+  if (c.includes("igle") || c.includes("church") || c.includes("templ") || c.includes("mosq")) return "⛪";
+  if (c.includes("parq") || c.includes("park")) return "🌳";
+  return "📍";
+}
+
 // Muestra el itinerario de UN día: paradas, traslados, transporte, tiempos,
 // y el seguimiento por GPS (si está activo).
 export default function Itinerario({
@@ -127,9 +142,9 @@ export default function Itinerario({
                   {p.nombre}
                 </div>
                 <div style={{ fontSize: 12, color: "#64748b" }}>
-                  {p.categoria}
+                  {emojiCat(p.categoria)} {p.categoria}
                   {p.cocina ? ` · ${p.cocina}` : ""} · ⏱️ {fmtMin(p.minutos)}
-                  {p.notable ? " · ⭐ destacado" : ""}
+                  {p.notable ? " · ⭐" : ""}
                 </div>
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
                   <button style={{ ...mini, background: "#eff6ff", color: "var(--azul)" }}

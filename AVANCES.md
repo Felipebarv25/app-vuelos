@@ -25,6 +25,17 @@
 
 _(Se irá llenando durante la noche…)_
 
+### ✅ Diseño + UX: emojis y recordar viaje
+- VERIFICADO velocidad tras tope 8s: Hanoi 13.3s→8.9s, Lagos/Tbilisi/Kioto 1-1.6s. OK.
+- DISEÑO: cada parada del itinerario ahora muestra emoji de su categoría (🖼️🍽️☕🍸🏰⛪🌳)
+  para identificarla de un vistazo. Más visual y claro.
+- UX (pensando como usuario): la app ahora RECUERDA tu último viaje. Si cierras y
+  vuelves, restaura automáticamente la última ciudad que estabas viendo (localStorage).
+  Antes se perdía todo al cerrar — frustrante para un viajero.
+- Build OK. Push pendiente.
+- NOTA: no usé el navegador Chrome para QA visual porque el usuario duerme y podría
+  interferir con sus pestañas; QA por API y revisión de código.
+
 ### ✅ QA #3 — Velocidad tope 8s + diseño detalle
 - VERIFICADO v5: Cartagena 13.7s→0.7s (cacheada). Pero Hanoi (nueva) aún 13.3s
   porque Promise.all esperaba a Overpass lento.

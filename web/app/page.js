@@ -48,6 +48,29 @@ export default function Home() {
 
   const debounce = useRef(null);
 
+  // Recordar el último viaje: al volver a abrir, restaura la última ciudad.
+  useEffect(() => {
+    if (!usuario || ciudad) return;
+    try {
+      const u = localStorage.getItem("ultimaCiudad");
+      if (u) {
+        const c = JSON.parse(u);
+        setCiudad(c);
+        cargarCategoria("imperdibles", c);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usuario]);
+
+  // Guardar la ciudad actual cada vez que cambia.
+  useEffect(() => {
+    if (ciudad) {
+      try {
+        localStorage.setItem("ultimaCiudad", JSON.stringify(ciudad));
+      } catch {}
+    }
+  }, [ciudad]);
+
   // Autocompletado con debounce (rápido, sin saturar la red)
   useEffect(() => {
     if (consulta.trim().length < 2) {
