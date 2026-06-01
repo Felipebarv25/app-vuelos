@@ -147,8 +147,8 @@ export async function geocodificar(consulta) {
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
 // radio menor + límite ajustado = consulta más liviana y rápida.
-// v10: versión de la API/caché. Subirla invalida cachés viejas (cliente y edge).
-const API_VER = "10";
+// v11: versión de la API/caché. Subirla invalida cachés viejas (cliente y edge).
+const API_VER = "11";
 
 export async function traerLugares(categoria, lat, lon, radio = 8000, limite = 40) {
   const cat = CATEGORIAS[categoria];
@@ -200,19 +200,23 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
     const cocina = t.cuisine ? t.cuisine.split(";")[0].replace(/_/g, " ") : null;
 
     // PUNTUACIÓN DE CALIDAD: para priorizar lugares famosos/bien establecidos
-    // sobre los "corrientes". OSM no tiene rating, así que usamos señales:
+    // sobre los "corrientes". OSM no tiene rating, así que usamos señales.
+    // Wikipedia/Wikidata pesan MUCHO: son la mejor señal de "lugar icónico".
     let score = 0;
-    if (t.wikidata) score += 10;      // tiene entrada en Wikidata = relevante
-    if (t.wikipedia) score += 8;      // tiene artículo en Wikipedia = famoso
-    if (t.website || t["contact:website"]) score += 3; // negocio establecido
-    if (t.opening_hours) score += 2;  // tiene horarios = activo
-    if (t.phone || t["contact:phone"]) score += 1;
-    if (t.stars) score += 3;          // hoteles/atracciones con estrellas
-    if (t.tourism === "attraction" || t.tourism === "museum") score += 4;
-    if (t.historic) score += 3;       // monumentos/históricos suelen valer la pena
-    if (t.heritage || t["heritage:operator"]) score += 5; // patrimonio
-    // Penalizar nombres que parecen comercios genéricos/cadenas pequeñas.
-    if (/^\s*(pizza|burger|pollo|comida|tienda|bar el|cafe el)\b/i.test(nombre)) score -= 3;
+    if (t.wikidata) score += 25;      // entrada en Wikidata = lugar relevante
+    if (t.wikipedia) score += 30;     // artículo en Wikipedia = FAMOSO de verdad
+    if (t.heritage || t["heritage:operator"]) score += 12; // patrimonio mundial
+    if (t.tourism === "museum") score += 8;
+    if (t.tourism === "attraction") score += 6;
+    if (t.tourism === "viewpoint") score += 4;
+    if (t.image || t.wikimedia_commons) score += 5; // tiene foto = documentado
+    if (t.website || t["contact:website"]) score += 2;
+    if (t.opening_hours) score += 1;
+    if (t.stars) score += 3;
+    // Penalizar fuerte nombres genéricos/placeholder (estatuas menores, comercios).
+    if (/^\s*(monumento|estatua|busto|placa|fuente|pizza|burger|pollo|comida|tienda)\s*$/i.test(nombre)) score -= 15;
+    if (/^\s*(monumento a|estatua de|busto de|monument to|statue of)\b/i.test(nombre)) score -= 6;
+    if (/^\s*(pizza|burger|pollo|comida|tienda|bar el|cafe el)\b/i.test(nombre)) score -= 4;
 
     lugares.push({
       id: `${el.type}/${el.id}`,

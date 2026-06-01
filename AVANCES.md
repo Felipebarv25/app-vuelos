@@ -44,6 +44,14 @@
 
 _(Se irá llenando durante la noche…)_
 
+### ✅ QA calidad de lugares — iconos reales primero
+- QA detectó que Roma/Madrid mostraban "Monumento a X" (estatuas menores) en vez del
+  Coliseo/Prado. El scoring no daba suficiente peso a la fama real.
+- FIX: Wikipedia +30, Wikidata +25, patrimonio +12 (antes +8/+10/+5). Penalización
+  FUERTE a nombres genéricos: "monumento"/"estatua" solos -15, "Monumento a X" -6.
+  Así los lugares con artículo de Wikipedia (= famosos de verdad) suben al top. Caché v11.
+- Build OK.
+
 ### 🎨 REDISEÑO PRO — consistencia (3/3)
 - Pantalla de bienvenida/login con fondo índigo, tarjeta más redondeada y botón con
   degradado+sombra. Modal de detalle con header índigo. Todo el diseño ahora coherente
