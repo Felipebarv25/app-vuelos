@@ -25,6 +25,15 @@
 
 _(Se irá llenando durante la noche…)_
 
+### ✅ Visión 360: presupuesto conectado con vuelos reales
+- VERIFICADO v6: Seúl 0→20 restaurantes, Atenas 2→29, Vancouver 1→28, Oslo 6→23. ¡Resuelto!
+  (Algunas tardan ~11s en 1ª carga porque esperan a Overpass; se cachea y la 2ª es instantánea.
+  Decisión de producto: priorizar SIEMPRE tener datos sobre 2-3s de diferencia.)
+- NUEVO en presupuesto: cada destino ahora tiene 2 botones: "🗺️ Planear" (itinerario) y
+  "✈️ Ver vuelos" (abre Google Flights al destino). Cierra el círculo 360: presupuesto →
+  vuelo real → itinerario. Traducido a 4 idiomas.
+- Build OK. Push pendiente.
+
 ### ✅ QA #4 — Restaurantes vacíos en varias ciudades
 - QA AMPLIO (6 ciudades): detecté restaurantes bajo/vacío en Seúl (0), Atenas (2),
   Vancouver (1), Oslo (6). Mal para un viajero que busca dónde comer.

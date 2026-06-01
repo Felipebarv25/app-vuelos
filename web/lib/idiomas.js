@@ -114,6 +114,7 @@ const T = {
     presupTeFalta: "Te falta",
     presupAlcanza: "alcanza para",
     presupPlanear: "Planear",
+    presupVerVuelos: "Ver vuelos",
     presupAviso:
       "Costos promedio orientativos para un turista de gama media (USD). Los vuelos son aproximados desde Colombia; confirma el precio real con el detector de vuelos.",
   },
@@ -210,6 +211,7 @@ const T = {
     presupTeFalta: "You're short",
     presupAlcanza: "enough for",
     presupPlanear: "Plan",
+    presupVerVuelos: "Flights",
     presupAviso:
       "Average estimated costs for a mid-range tourist (USD). Flights are approximate from Colombia; confirm the real price with the flight detector.",
   },
@@ -306,6 +308,7 @@ const T = {
     presupTeFalta: "Faltam",
     presupAlcanza: "dá para",
     presupPlanear: "Planejar",
+    presupVerVuelos: "Voos",
     presupAviso:
       "Custos médios estimados para um turista intermediário (USD). Os voos são aproximados desde a Colômbia; confirme o preço real com o detector de voos.",
   },
@@ -403,6 +406,7 @@ const T = {
     presupTeFalta: "Il vous manque",
     presupAlcanza: "assez pour",
     presupPlanear: "Planifier",
+    presupVerVuelos: "Vols",
     presupAviso:
       "Coûts moyens estimés pour un touriste de gamme moyenne (USD). Les vols sont approximatifs depuis la Colombie ; confirmez le prix réel avec le détecteur de vols.",
   },

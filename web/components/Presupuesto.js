@@ -174,12 +174,22 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                         💸 {t("presupTeFalta")} {fmtUsd(-d.sobra)}
                       </div>
                     )}
-                    <button
-                      onClick={() => onElegirCiudad?.(d)}
-                      style={btnPlanear}
-                    >
-                      🗺️ {t("presupPlanear")} {d.ciudad} →
-                    </button>
+                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                      <button
+                        onClick={() => onElegirCiudad?.(d)}
+                        style={{ ...btnPlanear, marginTop: 0, flex: 1 }}
+                      >
+                        🗺️ {t("presupPlanear")}
+                      </button>
+                      <a
+                        href={`https://www.google.com/travel/flights?q=vuelos%20a%20${encodeURIComponent(d.ciudad)}`}
+                        target="_blank"
+                        rel="noopener"
+                        style={btnVuelos}
+                      >
+                        ✈️ {t("presupVerVuelos")}
+                      </a>
+                    </div>
                   </div>
                 )}
               </div>
@@ -216,3 +226,4 @@ const card = { border: "1px solid var(--borde)", borderRadius: 12, padding: 12, 
 const badge = { marginLeft: 8, background: "var(--verde)", color: "#fff", fontSize: 11, padding: "1px 7px", borderRadius: 999, fontWeight: 700, verticalAlign: "middle" };
 const desglose = { marginTop: 10, paddingTop: 10, borderTop: "1px dashed var(--borde)" };
 const btnPlanear = { width: "100%", marginTop: 10, padding: "11px", borderRadius: 10, border: "none", background: "var(--azul)", color: "#fff", fontWeight: 700, fontSize: 14 };
+const btnVuelos = { flex: 1, padding: "11px", borderRadius: 10, border: "1px solid var(--azul)", background: "#fff", color: "var(--azul)", fontWeight: 700, fontSize: 14, textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" };
