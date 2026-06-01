@@ -3,7 +3,36 @@
 // - Overpass: traer lugares reales (atracciones, restaurantes, cafés...)
 
 const NOMINATIM = "https://nominatim.openstreetmap.org";
-const OVERPASS = "https://overpass-api.de/api/interpreter";
+
+// Varios espejos de Overpass: si uno falla (saturado o rechaza), probamos el
+// siguiente. Así la app no se cae por depender de un solo servidor.
+const OVERPASS_MIRRORS = [
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter",
+  "https://overpass.osm.ch/api/interpreter",
+];
+
+async function consultarOverpass(query) {
+  let ultimoError;
+  for (const url of OVERPASS_MIRRORS) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "data=" + encodeURIComponent(query),
+      });
+      if (!res.ok) {
+        ultimoError = new Error(`Overpass ${res.status}`);
+        continue;
+      }
+      return await res.json();
+    } catch (e) {
+      ultimoError = e;
+    }
+  }
+  throw ultimoError || new Error("No se pudieron cargar los lugares.");
+}
 
 // Categorías de lugares que sabemos pedir a Overpass.
 // Cada una mapea a filtros de OpenStreetMap.
@@ -89,12 +118,7 @@ export async function traerLugares(categoria, lat, lon, radio = 9000, limite = 4
     .join("\n");
   const query = `[out:json][timeout:25];(${cuerpoFiltros});out center ${limite * 3};`;
 
-  const res = await fetch(OVERPASS, {
-    method: "POST",
-    body: "data=" + encodeURIComponent(query),
-  });
-  if (!res.ok) throw new Error("No se pudieron cargar los lugares.");
-  const datos = await res.json();
+  const datos = await consultarOverpass(query);
 
   const vistos = new Set();
   const lugares = [];

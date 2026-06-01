@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "viajero360",
+      "runtimeExecutable": "C:\\Users\\USER\\AppData\\Local\\nodejs-portable\\node-v20.18.1-win-x64\\npm.cmd",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    }
+  ]
+}
