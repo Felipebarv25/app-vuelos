@@ -1,0 +1,17 @@
+{
+  "name": "Viajero 360",
+  "short_name": "Viajero360",
+  "description": "Planea tu viaje perfecto: itinerarios, mapas, transporte y los mejores lugares.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/icono.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

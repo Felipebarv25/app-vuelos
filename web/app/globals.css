@@ -1,0 +1,79 @@
+:root {
+  --azul: #2563eb;
+  --azul-osc: #1e3a8a;
+  --verde: #16a34a;
+  --naranja: #ea580c;
+  --gris: #f1f5f9;
+  --gris-med: #94a3b8;
+  --texto: #1e293b;
+  --borde: #e2e8f0;
+  --sombra: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --sombra-md: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: var(--texto);
+  background: #f8fafc;
+  overscroll-behavior-y: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+select {
+  font-family: inherit;
+}
+
+/* Animación de carga */
+.spin {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--borde);
+  border-top-color: var(--azul);
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
+  vertical-align: middle;
+}
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Scrollbars sutiles */
+::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--gris-med);
+  border-radius: 999px;
+}
+
+/* Leaflet popup */
+.leaflet-popup-content {
+  font-size: 14px;
+  margin: 10px 12px;
+}
+.leaflet-popup-content a {
+  color: var(--azul);
+  font-weight: 600;
+}

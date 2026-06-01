@@ -1,0 +1,14 @@
+# Dependencias
+/node_modules
+
+# Build de Next.js
+/.next
+/out
+
+# Vercel
+.vercel
+
+# Logs y entorno
+*.log
+.env*.local
+.DS_Store
