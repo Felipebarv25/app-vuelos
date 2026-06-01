@@ -475,6 +475,7 @@ export default function Home() {
                 numeroDia={diaVisible + 1}
                 alternativas={lugaresBase}
                 gps={gps}
+                ciudad={ciudad?.nombre}
                 t={t}
                 onCambiarParada={(idx) => cambiarParada(diaVisible, idx)}
                 onQuitarParada={(idx) => quitarParada(diaVisible, idx)}

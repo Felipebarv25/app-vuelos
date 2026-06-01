@@ -35,6 +35,10 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es" }) {
   function fmtUsd(v) {
     return "US$ " + Math.round(v).toLocaleString("en-US");
   }
+  // Aproximación a pesos colombianos (tasa orientativa ~4000 COP/USD).
+  function fmtCop(v) {
+    return "≈ $ " + Math.round(v * 4000).toLocaleString("es-CO") + " COP";
+  }
 
   return (
     <section className="mt-12">
@@ -96,6 +100,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es" }) {
               )}
             </div>
             <div className="text-[12px] text-slate-400">{t("ofertasIdaVuelta")}</div>
+            <div className="text-[12px] font-medium text-slate-500">{fmtCop(r.precio)}</div>
 
             <div className="mt-2 flex items-center gap-1.5 text-[12.5px] text-slate-500">
               📅 {fmtFecha(r.fecha_ida)} – {fmtFecha(r.fecha_vuelta)}

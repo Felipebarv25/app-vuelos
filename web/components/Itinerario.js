@@ -1,8 +1,40 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Boton } from "./ui";
+import { fotoDeLugar } from "@/lib/imagenes";
 import { fmtMin, resumenDia } from "@/lib/itinerario";
 import { estadoTiempo, textoEstado } from "@/lib/reloj";
+
+// Miniatura de la parada: carga la foto de forma perezosa (Wikipedia/Commons).
+function FotoMini({ nombre, ciudad, onClick }) {
+  const [url, setUrl] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  useEffect(() => {
+    let vivo = true;
+    setCargando(true);
+    fotoDeLugar(nombre, ciudad).then((f) => {
+      if (vivo) {
+        setUrl(f?.url || null);
+        setCargando(false);
+      }
+    });
+    return () => { vivo = false; };
+  }, [nombre, ciudad]);
+  return (
+    <button
+      onClick={onClick}
+      className="h-[60px] w-[60px] shrink-0 overflow-hidden rounded-xl bg-slate-100"
+    >
+      {url ? (
+        <img src={url} alt={nombre} loading="lazy" className="h-full w-full object-cover" />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-slate-300">
+          {cargando ? <span className="spin" /> : <span className="text-xl">🏞️</span>}
+        </div>
+      )}
+    </button>
+  );
+}
 
 // Emoji según el tipo de lugar (para identificar de un vistazo en la lista).
 function emojiCat(cat = "") {
@@ -29,6 +61,7 @@ export default function Itinerario({
   onQuitarParada,
   onVerLugar,
   gps,
+  ciudad,
   t = (k) => k,
 }) {
   const r = resumenDia(dia);
@@ -163,6 +196,8 @@ export default function Itinerario({
                   </button>
                 </div>
               </div>
+
+              <FotoMini nombre={p.nombre} ciudad={ciudad} onClick={() => onVerLugar?.(p)} />
             </div>
           </div>
         </div>

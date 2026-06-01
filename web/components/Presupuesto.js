@@ -202,6 +202,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                   fmtLocal={fmtLocal}
                   onOtra={() => setSemilla((s) => s + 1)}
                   onPlanear={() => onElegirCiudad?.(ruta.entrada)}
+                  onPlanearCiudad={(c) => onElegirCiudad?.(c)}
                 />
               )}
             </div>
@@ -316,7 +317,7 @@ function Fila({ nombre, valor }) {
 }
 
 // Tarjeta de la ruta multiciudad: línea de tiempo de ciudades + resumen + desglose.
-function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear }) {
+function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear, onPlanearCiudad }) {
   const { ciudades, desglose, total, cabe, sobra, diasTotales } = ruta;
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-suave">
@@ -353,12 +354,20 @@ function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear }) {
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
                 {i + 1}
               </div>
-              <div className="flex-1">
-                <div className="font-bold text-slate-800">
-                  {c.bandera} {c.ciudad}
+              <button
+                onClick={() => onPlanearCiudad?.(c)}
+                className="group flex flex-1 items-center gap-2 text-left"
+              >
+                <div className="flex-1">
+                  <div className="font-bold text-slate-800 group-hover:text-marca-600">
+                    {c.bandera} {c.ciudad}
+                  </div>
+                  <div className="text-xs text-slate-500">{c.pais}</div>
                 </div>
-                <div className="text-xs text-slate-500">{c.pais}</div>
-              </div>
+                <span className="text-[11px] font-bold text-marca-600 opacity-0 transition group-hover:opacity-100">
+                  🗺️ {t("presupPlanear")}
+                </span>
+              </button>
               <div className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
                 {c.diasAqui} {t("presupRutaDias")}
               </div>
