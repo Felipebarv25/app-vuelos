@@ -25,6 +25,17 @@
 
 _(Se irá llenando durante la noche…)_
 
+### ✅ QA #3 — Velocidad tope 8s + diseño detalle
+- VERIFICADO v5: Cartagena 13.7s→0.7s (cacheada). Pero Hanoi (nueva) aún 13.3s
+  porque Promise.all esperaba a Overpass lento.
+- ARREGLO: a Overpass le damos máx 8s extra (Promise.race con timeout); Photon
+  (rápido, 35-56 lugares) siempre se espera. Si Overpass tarda más, devolvemos ya.
+  Ninguna ciudad debería pasar de ~8-9s en su primera carga; instantánea si cacheada.
+- DISEÑO: detalle de lugar sin foto ahora muestra degradado azul + emoji según
+  categoría (🖼️ museo, 🍽️ restaurante, ☕ café, 🍸 bar, 🏰 castillo, ⛪ templo…)
+  en vez del 📷 genérico. Más atractivo.
+- Build OK. Push pendiente.
+
 ### ✅ QA #2 — Velocidad: fuentes en paralelo
 - VERIFICADO v4 en prod: Marrakech 21, Bali 28, Cartagena 38, Sydney 27 imperdibles. ¡Resuelto!
 - PERO como usuario noté: Cartagena tardó 13.7s (Overpass lento + Photon secuencial DESPUÉS).

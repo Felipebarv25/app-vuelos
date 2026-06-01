@@ -5,6 +5,21 @@ import { planTransporte, trazarRuta, perfilDeModo } from "@/lib/rutaReal";
 import { distanciaMetros } from "@/lib/rutas";
 import { fmtMin } from "@/lib/itinerario";
 
+// Emoji representativo según el tipo de lugar (para cuando no hay foto).
+function emojiCategoria(cat = "") {
+  const c = cat.toLowerCase();
+  if (c.includes("muse") || c.includes("galer")) return "🖼️";
+  if (c.includes("restaur")) return "🍽️";
+  if (c.includes("caf")) return "☕";
+  if (c.includes("bar") || c.includes("pub") || c.includes("disco")) return "🍸";
+  if (c.includes("mirad") || c.includes("viewpoint")) return "🌅";
+  if (c.includes("castil") || c.includes("castle") || c.includes("fort")) return "🏰";
+  if (c.includes("monu") || c.includes("memor")) return "🗿";
+  if (c.includes("igle") || c.includes("church") || c.includes("templ") || c.includes("mosq")) return "⛪";
+  if (c.includes("parq") || c.includes("park")) return "🌳";
+  return "📍";
+}
+
 // Panel/modal que muestra TODO sobre un lugar SIN salir de la app:
 // foto, descripción, y cómo llegar desde la ubicación del usuario
 // (transporte, tiempo, costo y ruta dibujada en nuestro mapa).
@@ -53,8 +68,8 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
           ) : foto?.url ? (
             <img src={foto.url} alt={lugar.nombre} style={fotoImg} />
           ) : (
-            <div style={fotoPlaceholder}>
-              <span style={{ fontSize: 46 }}>📷</span>
+            <div style={fotoSinImg}>
+              <span style={{ fontSize: 58 }}>{emojiCategoria(lugar.categoria)}</span>
             </div>
           )}
           <button style={cerrar} onClick={onCerrar}>
@@ -172,6 +187,15 @@ const fotoPlaceholder = {
   alignItems: "center",
   justifyContent: "center",
   color: "#94a3b8",
+};
+// Cuando no hay foto: degradado agradable + emoji de la categoría.
+const fotoSinImg = {
+  width: "100%",
+  height: "100%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "linear-gradient(135deg,#3b82f6,#1e3a8a)",
 };
 const fotoTexto = {
   position: "absolute",
