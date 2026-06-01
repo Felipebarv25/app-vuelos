@@ -89,30 +89,43 @@ const ETIQUETAS = {
   nightclub: "Discoteca",
 };
 
+import { cacheado } from "./cache";
+
+const TTL_CIUDAD = 1000 * 60 * 60 * 24 * 7; // 7 días
+const TTL_LUGARES = 1000 * 60 * 60 * 12; // 12 horas
+
 export async function geocodificar(consulta) {
-  const url = `${NOMINATIM}/search?format=json&limit=1&accept-language=es&q=${encodeURIComponent(
-    consulta
-  )}`;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!res.ok) throw new Error("No se pudo buscar la ciudad.");
-  const datos = await res.json();
-  if (!datos.length) throw new Error("No encontré esa ciudad. Revisa el nombre.");
-  const d = datos[0];
-  const partes = d.display_name.split(",").map((s) => s.trim());
-  return {
-    nombre: partes[0],
-    pais: partes[partes.length - 1],
-    etiquetaCompleta: d.display_name,
-    lat: parseFloat(d.lat),
-    lon: parseFloat(d.lon),
-  };
+  return cacheado(`geo:${consulta.toLowerCase()}`, TTL_CIUDAD, async () => {
+    const url = `${NOMINATIM}/search?format=json&limit=1&accept-language=es&q=${encodeURIComponent(
+      consulta
+    )}`;
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!res.ok) throw new Error("No se pudo buscar la ciudad.");
+    const datos = await res.json();
+    if (!datos.length) throw new Error("No encontré esa ciudad. Revisa el nombre.");
+    const d = datos[0];
+    const partes = d.display_name.split(",").map((s) => s.trim());
+    return {
+      nombre: partes[0],
+      pais: partes[partes.length - 1],
+      etiquetaCompleta: d.display_name,
+      lat: parseFloat(d.lat),
+      lon: parseFloat(d.lon),
+    };
+  });
 }
 
-// Trae lugares de una categoría alrededor de un punto.
+// Trae lugares de una categoría alrededor de un punto (con caché).
 export async function traerLugares(categoria, lat, lon, radio = 9000, limite = 40) {
   const cat = CATEGORIAS[categoria];
   if (!cat) throw new Error("Categoría desconocida");
+  const clave = `lug:${categoria}:${lat.toFixed(3)},${lon.toFixed(3)}`;
+  return cacheado(clave, TTL_LUGARES, () =>
+    traerLugaresRed(cat, categoria, lat, lon, radio, limite)
+  );
+}
 
+async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
   const cuerpoFiltros = cat.filtros
     .map((f) => `${f}(around:${radio},${lat},${lon});`)
     .join("\n");

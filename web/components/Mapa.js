@@ -3,10 +3,17 @@ import { useEffect, useRef } from "react";
 
 // Mapa Leaflet (OpenStreetMap). Recibe lugares con {coord, nombre} y dibuja
 // marcadores numerados + una línea que une la ruta del día.
-export default function Mapa({ centro, lugares = [], ubicacionUsuario = null }) {
+export default function Mapa({
+  centro,
+  lugares = [],
+  ubicacionUsuario = null,
+  rutaTrazada = null,
+  onClicLugar = null,
+}) {
   const ref = useRef(null);
   const mapaRef = useRef(null);
   const capaRef = useRef([]);
+  const rutaRef = useRef(null);
 
   useEffect(() => {
     let L;
@@ -40,7 +47,11 @@ export default function Mapa({ centro, lugares = [], ubicacionUsuario = null }) 
           iconAnchor: [14, 14],
         });
         const m = L.marker(l.coord, { icon }).addTo(mapa);
-        m.bindPopup(`<b>${i + 1}. ${l.nombre}</b><br>${l.categoria || ""}`);
+        m.bindPopup(
+          `<b>${i + 1}. ${l.nombre}</b><br>${l.categoria || ""}<br>
+           <span style="color:#2563eb;font-weight:600">Toca el pin para ver detalles →</span>`
+        );
+        if (onClicLugar) m.on("click", () => onClicLugar(l));
         capaRef.current.push(m);
         puntos.push(l.coord);
       });
@@ -72,13 +83,29 @@ export default function Mapa({ centro, lugares = [], ubicacionUsuario = null }) 
       } else if (centro) {
         mapa.setView(centro, 13);
       }
+
+      // Ruta trazada (camino real entre el usuario y un lugar)
+      if (rutaRef.current) {
+        mapa.removeLayer(rutaRef.current);
+        rutaRef.current = null;
+      }
+      if (rutaTrazada?.coords?.length > 1) {
+        rutaRef.current = L.polyline(rutaTrazada.coords, {
+          color: "#ea580c",
+          weight: 5,
+          opacity: 0.85,
+        }).addTo(mapa);
+        try {
+          mapa.fitBounds(L.latLngBounds(rutaTrazada.coords).pad(0.25));
+        } catch {}
+      }
     }
 
     init();
     return () => {
       cancelado = true;
     };
-  }, [centro, lugares, ubicacionUsuario]);
+  }, [centro, lugares, ubicacionUsuario, rutaTrazada]);
 
   return (
     <div

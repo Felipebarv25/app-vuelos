@@ -1,16 +1,20 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { geocodificar, traerLugares, CATEGORIAS } from "@/lib/osm";
 import { construirItinerario } from "@/lib/itinerario";
+import { sugerirCiudades } from "@/lib/autocompletar";
 import { useGeo } from "@/lib/useGeo";
 import { Chip, Boton, Tarjeta } from "@/components/ui";
 import Itinerario from "@/components/Itinerario";
+import DetalleLugar from "@/components/DetalleLugar";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
 
 export default function Home() {
   const [consulta, setConsulta] = useState("");
+  const [sugerencias, setSugerencias] = useState([]);
+  const [mostrarSug, setMostrarSug] = useState(false);
   const [ciudad, setCiudad] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
@@ -18,23 +22,67 @@ export default function Home() {
   // Configuración del viaje
   const [dias, setDias] = useState(3);
   const [horas, setHoras] = useState(8);
-  const [momento, setMomento] = useState("diurno"); // diurno | nocturno
+  const [momento, setMomento] = useState("diurno");
   const [categoria, setCategoria] = useState("imperdibles");
 
   // Datos
-  const [lugaresBase, setLugaresBase] = useState([]); // todos los traídos
-  const [seleccion, setSeleccion] = useState([]); // los que entran al plan
+  const [lugaresBase, setLugaresBase] = useState([]);
+  const [seleccion, setSeleccion] = useState([]);
   const [plan, setPlan] = useState([]);
   const [diaVisible, setDiaVisible] = useState(0);
+
+  // Lugar abierto en detalle + ruta trazada en el mapa
+  const [detalle, setDetalle] = useState(null);
+  const [rutaTrazada, setRutaTrazada] = useState(null);
 
   // GPS
   const [gpsOn, setGpsOn] = useState(false);
   const { pos: gps } = useGeo(gpsOn);
 
-  async function buscar(e) {
+  const debounce = useRef(null);
+
+  // Autocompletado con debounce (rápido, sin saturar la red)
+  useEffect(() => {
+    if (consulta.trim().length < 2) {
+      setSugerencias([]);
+      return;
+    }
+    clearTimeout(debounce.current);
+    debounce.current = setTimeout(async () => {
+      const s = await sugerirCiudades(consulta);
+      setSugerencias(s);
+      setMostrarSug(true);
+    }, 250);
+    return () => clearTimeout(debounce.current);
+  }, [consulta]);
+
+  async function elegirCiudad(sug) {
+    setConsulta(sug.etiqueta);
+    setMostrarSug(false);
+    setSugerencias([]);
+    setCargando(true);
+    setError(null);
+    try {
+      const c = {
+        nombre: sug.ciudad,
+        pais: sug.pais,
+        lat: sug.lat,
+        lon: sug.lon,
+      };
+      setCiudad(c);
+      await cargarCategoria("imperdibles", c);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  async function buscarTexto(e) {
     e?.preventDefault();
     const q = consulta.trim();
     if (!q) return;
+    setMostrarSug(false);
     setCargando(true);
     setError(null);
     try {
@@ -49,19 +97,15 @@ export default function Home() {
     }
   }
 
-  async function cargarCategoria(cat, c = ciudad) {
+  async function cargarCategoria(cat, c = ciudad, mom = momento) {
     if (!c) return;
     setCargando(true);
     setError(null);
     setCategoria(cat);
-    // En modo nocturno, priorizar bares para "imperdibles"
-    const catReal =
-      momento === "nocturno" && cat === "imperdibles" ? "bares" : cat;
+    const catReal = mom === "nocturno" && cat === "imperdibles" ? "bares" : cat;
     try {
       const lugares = await traerLugares(catReal, c.lat, c.lon);
       setLugaresBase(lugares);
-      // Selección por defecto: para construir el itinerario tomamos
-      // los primeros (más notables) según cuántos quepan (dias*~4).
       const cupo = Math.max(dias * 4, 6);
       const sel = lugares.slice(0, cupo);
       setSeleccion(sel);
@@ -87,7 +131,6 @@ export default function Home() {
     setDiaVisible(0);
   }
 
-  // Cambiar una parada por una alternativa no usada
   function cambiarParada(diaIdx, paradaIdx) {
     const usados = new Set();
     plan.forEach((d) => d.paradas.forEach((p) => usados.add(p.id)));
@@ -106,57 +149,51 @@ export default function Home() {
     reconstruir(nuevaSel);
   }
 
+  function cambiarMomento(mom) {
+    setMomento(mom);
+    cargarCategoria("imperdibles", ciudad, mom);
+  }
+
   const lugaresDelDia = plan[diaVisible]?.paradas || [];
 
   return (
     <div style={{ maxWidth: 720, margin: "0 auto", paddingBottom: 40 }}>
       {/* Cabecera */}
-      <header
-        style={{
-          background: "linear-gradient(135deg,#2563eb,#1e3a8a)",
-          color: "#fff",
-          padding: "18px 18px 16px",
-          position: "sticky",
-          top: 0,
-          zIndex: 1000,
-          boxShadow: "0 2px 12px rgba(0,0,0,.2)",
-        }}
-      >
-        <div style={{ fontSize: 21, fontWeight: 800, display: "flex", alignItems: "center", gap: 8 }}>
+      <header style={cab}>
+        <div style={{ fontSize: 22, fontWeight: 800, display: "flex", alignItems: "center", gap: 8 }}>
           🌍 Viajero 360
         </div>
-        <div style={{ fontSize: 13, opacity: 0.9 }}>
+        <div style={{ fontSize: 13, opacity: 0.92 }}>
           Tu itinerario perfecto en cualquier ciudad del mundo
         </div>
-        <form onSubmit={buscar} style={{ display: "flex", gap: 8, marginTop: 12 }}>
-          <input
-            value={consulta}
-            onChange={(e) => setConsulta(e.target.value)}
-            placeholder="¿A qué ciudad viajas? (ej. Madrid, Tokio, Cusco…)"
-            style={{
-              flex: 1,
-              padding: "12px 14px",
-              borderRadius: 10,
-              border: "none",
-              fontSize: 16,
-              outline: "none",
-            }}
-          />
-          <button
-            type="submit"
-            style={{
-              background: "#fff",
-              color: "var(--azul)",
-              border: "none",
-              padding: "0 18px",
-              borderRadius: 10,
-              fontWeight: 700,
-              fontSize: 16,
-            }}
-          >
-            Buscar
-          </button>
-        </form>
+
+        {/* Buscador con autocompletado */}
+        <div style={{ position: "relative", marginTop: 12 }}>
+          <form onSubmit={buscarTexto} style={{ display: "flex", gap: 8 }}>
+            <input
+              value={consulta}
+              onChange={(e) => setConsulta(e.target.value)}
+              onFocus={() => sugerencias.length && setMostrarSug(true)}
+              placeholder="Ciudad, País (ej. Madrid, España)"
+              style={input}
+            />
+            <button type="submit" style={btnBuscar}>🔎</button>
+          </form>
+
+          {mostrarSug && sugerencias.length > 0 && (
+            <div style={lista} className="animar-subir">
+              {sugerencias.map((s, i) => (
+                <div key={i} style={item} onClick={() => elegirCiudad(s)}>
+                  <span style={{ fontSize: 18 }}>📍</span>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 15 }}>{s.ciudad}</div>
+                    <div style={{ fontSize: 12, color: "#64748b" }}>{s.pais}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </header>
 
       {error && (
@@ -166,12 +203,20 @@ export default function Home() {
       )}
 
       {!ciudad && !cargando && (
-        <div style={{ padding: 28, textAlign: "center", color: "#64748b" }}>
-          <div style={{ fontSize: 54 }}>🗺️</div>
-          <p style={{ marginTop: 8, fontSize: 15 }}>
+        <div style={{ padding: 28, textAlign: "center", color: "#64748b" }} className="animar-subir">
+          <div style={{ fontSize: 56 }}>🗺️</div>
+          <p style={{ marginTop: 8, fontSize: 15, lineHeight: 1.5 }}>
             Escribe una ciudad y te armo un itinerario día a día con los mejores
-            lugares, restaurantes y cómo moverte entre ellos.
+            lugares, fotos, restaurantes y cómo moverte entre ellos —{" "}
+            <b>todo aquí, sin salir de la app</b>.
           </p>
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginTop: 14 }}>
+            {["Madrid, España", "Tokio, Japón", "Cusco, Perú", "Roma, Italia"].map((c) => (
+              <Chip key={c} onClick={() => { setConsulta(c); setTimeout(() => buscarTexto(), 0); }}>
+                {c}
+              </Chip>
+            ))}
+          </div>
         </div>
       )}
 
@@ -183,12 +228,13 @@ export default function Home() {
 
       {ciudad && (
         <>
-          {/* Mapa */}
           <div style={{ height: "40vh", minHeight: 260 }}>
             <Mapa
               centro={[ciudad.lat, ciudad.lon]}
               lugares={lugaresDelDia}
               ubicacionUsuario={gps}
+              rutaTrazada={rutaTrazada}
+              onClicLugar={(l) => { setRutaTrazada(null); setDetalle(l); }}
             />
           </div>
 
@@ -196,9 +242,7 @@ export default function Home() {
             <div style={{ fontSize: 22, fontWeight: 800, color: "var(--azul-osc)" }}>
               {ciudad.nombre}
             </div>
-            <div style={{ fontSize: 13, color: "#64748b", marginBottom: 14 }}>
-              {ciudad.pais}
-            </div>
+            <div style={{ fontSize: 13, color: "#64748b", marginBottom: 14 }}>{ciudad.pais}</div>
 
             {/* Configuración del viaje */}
             <Tarjeta style={{ marginBottom: 14 }}>
@@ -206,39 +250,29 @@ export default function Home() {
                 <label style={lbl}>
                   📅 Días
                   <select value={dias} onChange={(e) => setDias(+e.target.value)} style={sel}>
-                    {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-                      <option key={n} value={n}>{n}</option>
-                    ))}
+                    {[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </label>
                 <label style={lbl}>
                   ⏰ Horas/día
                   <select value={horas} onChange={(e) => setHoras(+e.target.value)} style={sel}>
-                    {[4, 5, 6, 7, 8, 9, 10, 12].map((n) => (
-                      <option key={n} value={n}>{n}h</option>
-                    ))}
+                    {[4, 5, 6, 7, 8, 9, 10, 12].map((n) => <option key={n} value={n}>{n}h</option>)}
                   </select>
                 </label>
                 <Boton onClick={() => reconstruir()} variante="sec" style={{ marginLeft: "auto" }}>
                   🔄 Recalcular
                 </Boton>
               </div>
-
-              {/* Día / Noche */}
-              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                <Chip activo={momento === "diurno"} onClick={() => { setMomento("diurno"); }}>
-                  ☀️ Diurno
-                </Chip>
-                <Chip activo={momento === "nocturno"} onClick={() => { setMomento("nocturno"); }}>
-                  🌙 Nocturno
-                </Chip>
+              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                <Chip activo={momento === "diurno"} onClick={() => cambiarMomento("diurno")}>☀️ Diurno</Chip>
+                <Chip activo={momento === "nocturno"} onClick={() => cambiarMomento("nocturno")}>🌙 Nocturno</Chip>
                 <span style={{ fontSize: 12, color: "#64748b", alignSelf: "center" }}>
                   {momento === "nocturno" ? "Bares, miradores y vida nocturna" : "Monumentos, museos y paseos"}
                 </span>
               </div>
             </Tarjeta>
 
-            {/* Categorías de lugares */}
+            {/* Categorías */}
             <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 8 }}>
               {Object.entries(CATEGORIAS).map(([k, c]) => (
                 <Chip key={k} activo={categoria === k} onClick={() => cargarCategoria(k)}>
@@ -251,14 +285,11 @@ export default function Home() {
             {plan.length > 0 && (
               <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 14 }}>
                 {plan.map((d, i) => (
-                  <Chip key={i} activo={diaVisible === i} onClick={() => setDiaVisible(i)}>
-                    Día {i + 1}
-                  </Chip>
+                  <Chip key={i} activo={diaVisible === i} onClick={() => setDiaVisible(i)}>Día {i + 1}</Chip>
                 ))}
               </div>
             )}
 
-            {/* Itinerario del día visible */}
             {plan[diaVisible] && (
               <Itinerario
                 dia={plan[diaVisible]}
@@ -267,6 +298,7 @@ export default function Home() {
                 gps={gps}
                 onCambiarParada={(idx) => cambiarParada(diaVisible, idx)}
                 onQuitarParada={(idx) => quitarParada(diaVisible, idx)}
+                onVerLugar={(p) => { setRutaTrazada(null); setDetalle(p); }}
               />
             )}
 
@@ -276,7 +308,7 @@ export default function Home() {
                 <input type="checkbox" checked={gpsOn} onChange={(e) => setGpsOn(e.target.checked)} />
                 <span style={{ fontSize: 14 }}>
                   📍 Activar GPS para verme en el mapa y calcular tiempos en vivo
-                  {gpsOn && gps && <span style={{ color: "var(--verde)", fontWeight: 600 }}> · ubicación activa</span>}
+                  {gpsOn && gps && <span style={{ color: "var(--verde)", fontWeight: 600 }}> · activo</span>}
                 </span>
               </label>
             </Tarjeta>
@@ -284,12 +316,36 @@ export default function Home() {
         </>
       )}
 
+      {/* Detalle del lugar (dentro de la app) */}
+      {detalle && (
+        <DetalleLugar
+          lugar={detalle}
+          ciudad={ciudad}
+          origen={gps}
+          onCerrar={() => setDetalle(null)}
+          onTrazarRuta={(r) => { setRutaTrazada(r); setDetalle(null); }}
+        />
+      )}
+
       <footer style={{ textAlign: "center", color: "#94a3b8", fontSize: 12, padding: 20 }}>
-        Datos de OpenStreetMap · Rutas vía Google Maps · Viajero 360
+        Datos de OpenStreetMap y Wikipedia · Viajero 360
       </footer>
     </div>
   );
 }
 
+const cab = {
+  background: "linear-gradient(135deg,#2563eb,#1e3a8a)",
+  color: "#fff",
+  padding: "18px 18px 16px",
+  position: "sticky",
+  top: 0,
+  zIndex: 1000,
+  boxShadow: "0 2px 12px rgba(0,0,0,.2)",
+};
+const input = { flex: 1, padding: "12px 14px", borderRadius: 10, border: "none", fontSize: 16, outline: "none" };
+const btnBuscar = { background: "#fff", color: "var(--azul)", border: "none", padding: "0 16px", borderRadius: 10, fontWeight: 700, fontSize: 18 };
+const lista = { position: "absolute", top: "100%", left: 0, right: 0, marginTop: 6, background: "#fff", borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,.18)", overflow: "hidden", zIndex: 1100 };
+const item = { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", cursor: "pointer", color: "var(--texto)", borderBottom: "1px solid var(--borde)" };
 const lbl = { display: "flex", flexDirection: "column", gap: 4, fontSize: 13, color: "#475569", fontWeight: 600 };
 const sel = { padding: "8px 10px", borderRadius: 8, border: "1px solid var(--borde)", fontSize: 15, background: "#fff" };

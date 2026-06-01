@@ -1,7 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
 import { Boton, Tarjeta } from "./ui";
-import { linkComoLlegar, linkLugar } from "@/lib/rutas";
 import { fmtMin, resumenDia } from "@/lib/itinerario";
 import { estadoTiempo, textoEstado } from "@/lib/reloj";
 
@@ -13,6 +12,7 @@ export default function Itinerario({
   alternativas,
   onCambiarParada,
   onQuitarParada,
+  onVerLugar,
   gps,
 }) {
   const r = resumenDia(dia);
@@ -90,14 +90,6 @@ export default function Itinerario({
                 {p.transporte.texto} · {fmtMin(p.traslado)} ·{" "}
                 {p.metros < 1000 ? `${p.metros} m` : `${(p.metros / 1000).toFixed(1)} km`}
               </span>
-              <a
-                href={linkComoLlegar(dia.paradas[i - 1].coord, p.coord, p.transporte.modo)}
-                target="_blank"
-                rel="noopener"
-                style={{ color: "var(--azul)", fontWeight: 600 }}
-              >
-                Cómo llegar →
-              </a>
             </div>
           )}
 
@@ -110,6 +102,7 @@ export default function Itinerario({
           >
             <div style={{ display: "flex", gap: 10 }}>
               <div
+                onClick={() => onVerLugar?.(p)}
                 style={{
                   background: "var(--azul)",
                   color: "#fff",
@@ -122,20 +115,26 @@ export default function Itinerario({
                   fontWeight: 700,
                   fontSize: 14,
                   flexShrink: 0,
+                  cursor: "pointer",
                 }}
               >
                 {i + 1}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>{p.nombre}</div>
+                <div
+                  onClick={() => onVerLugar?.(p)}
+                  style={{ fontWeight: 700, fontSize: 16, cursor: "pointer" }}
+                >
+                  {p.nombre}
+                </div>
                 <div style={{ fontSize: 12, color: "#64748b" }}>
                   {p.categoria}
                   {p.cocina ? ` · ${p.cocina}` : ""} · ⏱️ {fmtMin(p.minutos)}
                   {p.notable ? " · ⭐ destacado" : ""}
                 </div>
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-                  <a href={linkLugar(p.coord, p.nombre)} target="_blank" rel="noopener"
-                    style={mini}>📍 Ver</a>
+                  <button style={{ ...mini, background: "#eff6ff", color: "var(--azul)" }}
+                    onClick={() => onVerLugar?.(p)}>📷 Ver foto y cómo llegar</button>
                   {alternativas?.length > 0 && (
                     <button style={mini} onClick={() => onCambiarParada(i)}>🔄 Cambiar</button>
                   )}
