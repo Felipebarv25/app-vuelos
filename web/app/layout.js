@@ -5,6 +5,16 @@ export const metadata = {
   description:
     "Itinerarios día a día con mapa, GPS, transporte y los mejores lugares y restaurantes de cualquier ciudad del mundo.",
   manifest: "/manifest.json",
+  applicationName: "Viajero 360",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Viajero 360",
+  },
+  icons: {
+    icon: "/icono-192.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export const viewport = {
@@ -25,8 +35,23 @@ export default function RootLayout({ children }) {
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
           crossOrigin=""
         />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Registra el service worker para que la app sea instalable y rápida */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js').catch(function(){});
+              });
+            }`,
+          }}
+        />
+      </body>
     </html>
   );
 }
