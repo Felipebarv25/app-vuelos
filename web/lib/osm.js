@@ -7,10 +7,9 @@ const NOMINATIM = "https://nominatim.openstreetmap.org";
 // Varios espejos de Overpass: si uno falla (saturado o rechaza), probamos el
 // siguiente. Así la app no se cae por depender de un solo servidor.
 const OVERPASS_MIRRORS = [
-  "https://overpass.kumi.systems/api/interpreter",
-  "https://overpass-api.de/api/interpreter",
   "https://overpass.private.coffee/api/interpreter",
-  "https://overpass.osm.ch/api/interpreter",
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
 ];
 
 // Consulta TODOS los espejos en paralelo y usa el PRIMERO que responde bien.
@@ -21,7 +20,7 @@ async function consultarOverpass(query) {
 
   const intentos = OVERPASS_MIRRORS.map((url) => {
     const ctrl = new AbortController();
-    const id = setTimeout(() => ctrl.abort(), 6000);
+    const id = setTimeout(() => ctrl.abort(), 12000);
     return fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -39,16 +38,28 @@ async function consultarOverpass(query) {
       });
   });
 
-  // "promesa que gana el primero en cumplir; ignora los que fallan"
+  // Gana la PRIMERA respuesta con datos reales; si todas vienen vacías,
+  // devolvemos la vacía en vez de fallar.
   return new Promise((resolve, reject) => {
     let pendientes = intentos.length;
     let ultimoError;
+    let vacio = null;
     intentos.forEach((p) =>
-      p.then(resolve).catch((e) => {
-        ultimoError = e;
-        if (--pendientes === 0)
-          reject(ultimoError || new Error("No se pudieron cargar los lugares."));
-      })
+      p
+        .then((data) => {
+          if ((data?.elements?.length || 0) > 0) resolve(data);
+          else {
+            vacio = data;
+            if (--pendientes === 0) resolve(vacio || { elements: [] });
+          }
+        })
+        .catch((e) => {
+          ultimoError = e;
+          if (--pendientes === 0) {
+            if (vacio) resolve(vacio);
+            else reject(ultimoError || new Error("No se pudieron cargar los lugares."));
+          }
+        })
     );
   });
 }
@@ -152,7 +163,7 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
     const r = await fetchRapido(
       `/api/lugares?cat=${categoria}&lat=${lat}&lon=${lon}&radio=${radio}`,
       {},
-      7000
+      14000
     );
     if (r.ok) datos = await r.json();
   } catch {}

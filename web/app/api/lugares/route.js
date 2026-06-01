@@ -5,10 +5,9 @@
 //  - La respuesta se sirve desde el edge de Vercel con cache HTTP.
 
 const MIRRORS = [
-  "https://overpass.kumi.systems/api/interpreter",
-  "https://overpass-api.de/api/interpreter",
   "https://overpass.private.coffee/api/interpreter",
-  "https://overpass.osm.ch/api/interpreter",
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
 ];
 
 const FILTROS = {
@@ -22,11 +21,14 @@ const FILTROS = {
   miradores: ['node["tourism"="viewpoint"]["name"]'],
 };
 
+// Lanza la consulta a todos los espejos en paralelo y se queda con la PRIMERA
+// respuesta que trae datos reales (elements no vacío). Si todas las que llegan
+// vienen vacías, devuelve la última (vacía) en vez de fallar.
 function carrera(query) {
   const cuerpo = "data=" + encodeURIComponent(query);
   const intentos = MIRRORS.map((url) => {
     const ctrl = new AbortController();
-    const id = setTimeout(() => ctrl.abort(), 6000);
+    const id = setTimeout(() => ctrl.abort(), 12000);
     return fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -38,12 +40,27 @@ function carrera(query) {
       return r.json();
     });
   });
+
   return new Promise((resolve, reject) => {
     let pend = intentos.length;
+    let vacio = null; // guardamos una respuesta vacía por si todas lo son
     intentos.forEach((p) =>
-      p.then(resolve).catch(() => {
-        if (--pend === 0) reject(new Error("overpass"));
-      })
+      p
+        .then((data) => {
+          const n = data?.elements?.length || 0;
+          if (n > 0) {
+            resolve(data); // ¡con datos! ganadora
+          } else {
+            vacio = data;
+            if (--pend === 0) resolve(vacio || { elements: [] });
+          }
+        })
+        .catch(() => {
+          if (--pend === 0) {
+            if (vacio) resolve(vacio);
+            else reject(new Error("overpass"));
+          }
+        })
     );
   });
 }
@@ -66,14 +83,18 @@ export async function GET(req) {
 
   try {
     const datos = await carrera(query);
+    const tieneDatos = (datos?.elements?.length || 0) > 0;
     return new Response(JSON.stringify(datos), {
       headers: {
         "Content-Type": "application/json",
-        // Cache en el edge de Vercel: 1 día, y sirve mientras revalida.
-        "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
+        // Solo cacheamos respuestas CON datos. Las vacías no se cachean
+        // (así un fallo temporal no deja la categoría vacía 24h).
+        "Cache-Control": tieneDatos
+          ? "public, s-maxage=86400, stale-while-revalidate=604800"
+          : "no-store",
       },
     });
   } catch {
-    return Response.json({ error: "overpass" }, { status: 502 });
+    return Response.json({ error: "overpass", elements: [] }, { status: 502 });
   }
 }
