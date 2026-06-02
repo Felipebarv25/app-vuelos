@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-02T10:22:26",
+  "generado": "2026-06-02T16:22:59",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -131,24 +131,6 @@
       "descuento": 6,
       "esGanga": true,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Mil%C3%A1n%202026-11-10%202026-11-25"
-    },
-    {
-      "origen": "BOG",
-      "destino": "PAR",
-      "ciudad": "París",
-      "pais": "Francia",
-      "bandera": "🇫🇷",
-      "q": "París, Francia",
-      "precio": 838,
-      "moneda": "USD",
-      "fecha_ida": "2026-11-03",
-      "fecha_vuelta": "2026-11-08",
-      "aerolinea": "AC",
-      "umbral": 800,
-      "mediana": 1015,
-      "descuento": 17,
-      "esGanga": true,
-      "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Par%C3%ADs%202026-11-03%202026-11-08"
     },
     {
       "origen": "MDE",
@@ -307,7 +289,7 @@
       "fecha_vuelta": "2026-09-21",
       "aerolinea": "LA",
       "umbral": 450,
-      "mediana": 596,
+      "mediana": 593,
       "descuento": 12,
       "esGanga": false,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Buenos%20Aires%202026-09-07%202026-09-21"
@@ -383,6 +365,24 @@
       "descuento": 14,
       "esGanga": false,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Barcelona%202026-10-08%202026-10-28"
+    },
+    {
+      "origen": "BOG",
+      "destino": "PAR",
+      "ciudad": "París",
+      "pais": "Francia",
+      "bandera": "🇫🇷",
+      "q": "París, Francia",
+      "precio": 838,
+      "moneda": "USD",
+      "fecha_ida": "2026-11-03",
+      "fecha_vuelta": "2026-11-08",
+      "aerolinea": "AC",
+      "umbral": 800,
+      "mediana": 941,
+      "descuento": 11,
+      "esGanga": false,
+      "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Par%C3%ADs%202026-11-03%202026-11-08"
     },
     {
       "origen": "MDE",
