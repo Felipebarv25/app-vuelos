@@ -10,17 +10,25 @@ const TTL = 1000 * 60 * 60 * 24 * 30; // 30 días
 //  1) Wikipedia (artículo con imagen) — lugares famosos, además trae descripción.
 //  2) Wikimedia Commons — fotos de muchos más lugares (sin necesidad de artículo).
 export async function fotoDeLugar(nombre, ciudad = "") {
-  const clave = `img:${nombre}|${ciudad}`.toLowerCase();
-  return cacheado(clave, TTL, async () => {
-    // 1) Wikipedia
-    const wiki = await fotoWikipedia(nombre, ciudad);
-    if (wiki?.url) return wiki;
-    // 2) Wikimedia Commons (respaldo: muchas más fotos)
-    const commons = await fotoCommons(nombre, ciudad);
-    if (commons?.url) return { ...commons, extracto: wiki?.extracto || null };
-    // 3) Sin foto: devolvemos la descripción si la había
-    return wiki || null;
-  });
+  // img2: clave nueva (la anterior cacheaba "sin foto" 30 días y dejaba tarjetas
+  // grises para siempre). Ahora solo se cachea cuando SÍ hay foto.
+  const clave = `img2:${nombre}|${ciudad}`.toLowerCase();
+  return cacheado(
+    clave,
+    TTL,
+    async () => {
+      // 1) Wikipedia
+      const wiki = await fotoWikipedia(nombre, ciudad);
+      if (wiki?.url) return wiki;
+      // 2) Wikimedia Commons (respaldo: muchas más fotos)
+      const commons = await fotoCommons(nombre, ciudad);
+      if (commons?.url) return { ...commons, extracto: wiki?.extracto || null };
+      // 3) Sin foto: devolvemos la descripción si la había
+      return wiki || null;
+    },
+    // Solo cachear si conseguimos una URL de foto; si no, reintentar luego.
+    (d) => !!(d && d.url)
+  );
 }
 
 async function fotoWikipedia(nombre, ciudad) {

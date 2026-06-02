@@ -147,10 +147,9 @@ export async function geocodificar(consulta) {
 }
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
-// v17: regla anti-zigzag (cercanos siempre; lejanos solo si famosos y máx 2) +
-// días cortados por saltos grandes para itinerarios compactos.
-// Subir la versión invalida cachés viejas (cliente y edge).
-const API_VER = "17";
+// v18: filtra nombres basura/genéricos y prefiere lugares notables (calidad);
+// regla anti-zigzag + días compactos. Subir la versión invalida cachés viejas.
+const API_VER = "18";
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.
@@ -198,7 +197,7 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
   for (const el of datos.elements || []) {
     const t = el.tags || {};
     const nombre = t.name;
-    if (!nombre || vistos.has(nombre)) continue;
+    if (!nombre || vistos.has(nombre) || nombreBasura(nombre)) continue;
     vistos.add(nombre);
 
     const coord = el.lat
@@ -267,7 +266,40 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
       lejanos++;
     }
   }
-  return filtrados.slice(0, limite);
+
+  // Para atracciones, prefiere lugares NOTABLES (con señales de calidad:
+  // wikipedia/wikidata, museo, castillo…) y descarta el relleno de baja calidad
+  // cuando ya hay suficientes buenos. Así el itinerario no se llena de sitios
+  // genéricos ("Park", "Casa Eli", etc.).
+  let resultado = filtrados;
+  if (categoria === "imperdibles" || categoria === "miradores") {
+    const notables = filtrados.filter((l) => l.score > 0);
+    if (notables.length >= 6) resultado = notables;
+  }
+  return resultado.slice(0, limite);
+}
+
+// Nombres genéricos/sin valor (solo el tipo, sin nombre propio) que no aportan.
+const NOMBRES_GENERICOS = new Set([
+  "park", "palace", "square", "plaza", "square plaza", "garden", "museum",
+  "monument", "memorial", "building", "tower", "church", "castle", "fountain",
+  "parque", "plaza mayor", "iglesia", "museo", "mirador", "monumento",
+  "catedral", "fuente", "capilla", "templo", "rooftop", "bar", "café", "cafe",
+]);
+const TIPOS_OSM = [
+  "museum", "attraction", "viewpoint", "monument", "memorial", "artwork",
+  "park", "square", "garden", "theme_park", "zoo", "aquarium", "castle",
+];
+// ¿El nombre es basura? (genérico, demasiado corto o artefacto de Photon como
+// "museum Pablo Escobar" —tipo OSM en minúscula al inicio—).
+function nombreBasura(nombre) {
+  const n = (nombre || "").trim();
+  if (n.length < 3) return true;
+  const low = n.toLowerCase();
+  if (NOMBRES_GENERICOS.has(low)) return true;
+  const prim = n.split(/\s+/)[0];
+  if (prim === prim.toLowerCase() && TIPOS_OSM.includes(prim)) return true;
+  return false;
 }
 
 function sugerirMinutos(categoria, tipo) {

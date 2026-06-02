@@ -4,7 +4,10 @@
 const memoria = new Map();
 
 // Lee de caché (memoria o localStorage) o ejecuta la función y guarda.
-export async function cacheado(clave, ttlMs, fn) {
+// debeGuardar(d): predicado opcional; si devuelve false NO se cachea el
+// resultado (útil para no "envenenar" la caché con respuestas vacías/fallidas
+// que deberían reintentarse, p. ej. una foto que no cargó por un timeout).
+export async function cacheado(clave, ttlMs, fn, debeGuardar = () => true) {
   // 1) memoria (lo más rápido)
   if (memoria.has(clave)) {
     const v = memoria.get(clave);
@@ -23,8 +26,9 @@ export async function cacheado(clave, ttlMs, fn) {
       }
     } catch {}
   }
-  // 3) calcular y guardar
+  // 3) calcular y guardar (solo si el resultado merece cachearse)
   const d = await fn();
+  if (!debeGuardar(d)) return d;
   const v = { t: Date.now(), d };
   memoria.set(clave, v);
   if (typeof window !== "undefined") {
