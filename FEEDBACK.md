@@ -30,6 +30,18 @@ a 360px"). Prioriza impacto. No repitas lo ya resuelto. Felicita lo que sí qued
 
 ## 📋 Hallazgos
 
+### 2026-06-01 — Ronda 5 (EVALUACIÓN FINAL del crítico) — Nota 8.5/10 ✅
+
+Veredicto del agente crítico: **8.5/10** (subió de 7) y **"¿Listo para usuarios
+reales? SÍ"**. Su TOP 1 imprescindible + el focus, aplicados:
+- ✅ 🔴 **Módulo Presupuesto recoloreado a indigo** (cabecera, conmutador, chips de
+  región, círculos de la timeline, "Otra ruta"). El verde queda SOLO en cifras:
+  Total, "te sobra/te falta", badge ✓ y panel de "destinos a tu alcance".
+- ✅ 🟡 **`:focus-visible` global** (anillo indigo) para navegación por teclado.
+
+**Quedan como "delight" (no bloqueantes):** compartir/exportar itinerario (PDF/
+copiar) y un estado vacío "aún no buscas" más guiado.
+
 ### 2026-06-01 — Ronda 3 (AGENTE CRÍTICO ↔ DESARROLLADOR)
 
 El agente crítico revisó la app en vivo + el código y entregó 10 solicitudes

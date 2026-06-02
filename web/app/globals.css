@@ -69,6 +69,17 @@ select:focus {
   background: rgba(99, 102, 241, 0.2);
 }
 
+/* Foco accesible al navegar con teclado (botones, links, tarjetas, chips). */
+:focus-visible {
+  outline: 2px solid var(--azul-claro);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* Animaciones de entrada (sensación "viva" y divertida) */
 @keyframes aparece {
   from {

@@ -66,10 +66,10 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
     <div className="fixed inset-0 z-[4000] flex items-end justify-center bg-slate-900/60 backdrop-blur-sm">
       <div className="animar-subir flex max-h-[94vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-slate-50 shadow-[0_-12px_40px_rgba(0,0,0,.35)]">
         {/* Cabecera */}
-        <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 px-5 pb-4 pt-5 text-white">
+        <div className="bg-gradient-to-br from-marca-600 via-marca-700 to-marca-900 px-5 pb-4 pt-5 text-white">
           <div className="flex items-start justify-between">
             <div>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/80">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">
                 Viajero 360
               </div>
               <div className="mt-0.5 text-xl font-extrabold tracking-tight">{t("presupTitulo")}</div>
@@ -92,7 +92,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                 key={k}
                 onClick={() => setModo(k)}
                 className={`rounded-xl py-2 text-sm font-bold transition ${
-                  modo === k ? "bg-white text-emerald-700 shadow" : "text-white/85"
+                  modo === k ? "bg-white text-marca-700 shadow" : "text-white/85"
                 }`}
               >
                 {label}
@@ -112,7 +112,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                   type="number"
                   value={monto}
                   onChange={(e) => setMonto(Math.max(0, +e.target.value))}
-                  className="flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-[15px] outline-none focus:border-emerald-400"
+                  className="flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-[15px] outline-none focus:border-marca-400"
                 />
                 <select
                   value={moneda}
@@ -163,8 +163,8 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                     onClick={() => { setRegion(k); setInicio(""); setSemilla(0); setExcluidos([]); }}
                     className={`rounded-full px-3.5 py-2 text-[13px] font-semibold transition ${
                       region === k
-                        ? "bg-emerald-600 text-white shadow"
-                        : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-emerald-300"
+                        ? "bg-marca-600 text-white shadow"
+                        : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-marca-300"
                     }`}
                   >
                     {nombre}
@@ -255,7 +255,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                 value={buscarDestino}
                 onChange={(e) => setBuscarDestino(e.target.value)}
                 placeholder={t("presupBuscarCiudad")}
-                className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[14px] outline-none focus:border-emerald-400"
+                className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[14px] outline-none focus:border-marca-400"
               />
 
               <div className="mt-3 space-y-2.5">
@@ -354,7 +354,7 @@ function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear, onPlanearCiuda
       <div className="border-b border-slate-100 px-4 pb-3 pt-4">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-600">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-marca-500">
               {t("presupRutaTitulo")}
             </div>
             <div className="mt-0.5 text-[15px] font-bold text-slate-800">
@@ -380,7 +380,7 @@ function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear, onPlanearCiuda
               </div>
             )}
             <div className="flex items-center gap-3">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-marca-600 text-xs font-bold text-white">
                 {i + 1}
               </div>
               <button
@@ -446,7 +446,7 @@ function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear, onPlanearCiuda
       <div className="flex gap-2 border-t border-slate-100 p-3">
         <button
           onClick={onOtra}
-          className="flex-1 rounded-xl border-[1.5px] border-emerald-200 bg-white py-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-50"
+          className="flex-1 rounded-xl border-[1.5px] border-marca-100 bg-white py-3 text-sm font-bold text-marca-700 transition hover:bg-marca-50"
         >
           🔄 {t("presupOtraRuta")}
         </button>
