@@ -178,6 +178,10 @@ const T = {
     verMas: "Ver más",
     verMenos: "Ver menos",
     ajustarViaje: "Ajustar viaje",
+    compartir: "Compartir",
+    copiado: "¡Copiado!",
+    miViajeA: "Mi viaje a",
+    hechoCon: "Hecho con",
   },
 
   en: {
@@ -332,6 +336,10 @@ const T = {
     verMas: "See more",
     verMenos: "See less",
     ajustarViaje: "Adjust trip",
+    compartir: "Share",
+    copiado: "Copied!",
+    miViajeA: "My trip to",
+    hechoCon: "Made with",
   },
 
   pt: {
@@ -486,6 +494,10 @@ const T = {
     verMas: "Ver mais",
     verMenos: "Ver menos",
     ajustarViaje: "Ajustar viagem",
+    compartir: "Compartilhar",
+    copiado: "Copiado!",
+    miViajeA: "Minha viagem a",
+    hechoCon: "Feito com",
   },
 
   fr: {
@@ -641,6 +653,10 @@ const T = {
     verMas: "Voir plus",
     verMenos: "Voir moins",
     ajustarViaje: "Ajuster le voyage",
+    compartir: "Partager",
+    copiado: "Copié !",
+    miViajeA: "Mon voyage à",
+    hechoCon: "Fait avec",
   },
 };
 

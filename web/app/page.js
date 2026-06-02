@@ -2,7 +2,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { geocodificar, traerLugares, CATEGORIAS } from "@/lib/osm";
-import { construirItinerario, agregarLugarADia } from "@/lib/itinerario";
+import { construirItinerario, agregarLugarADia, fmtMin } from "@/lib/itinerario";
 import { CIUDADES_POPULARES } from "@/lib/ciudadesPopulares";
 import { sugerirCiudades } from "@/lib/autocompletar";
 import { useGeo } from "@/lib/useGeo";
@@ -83,6 +83,7 @@ export default function Home() {
   const [rutaTrazada, setRutaTrazada] = useState(null);
   const [mostrarPresupuesto, setMostrarPresupuesto] = useState(false);
   const [mostrarTodos, setMostrarTodos] = useState(false);
+  const [copiado, setCopiado] = useState(false);
 
   // GPS
   const [gpsOn, setGpsOn] = useState(false);
@@ -242,6 +243,31 @@ export default function Home() {
     setError(null);
     if (ciudad) cargarCategoria(categoria);
     else if (consulta.trim()) buscarTexto();
+  }
+
+  // Compartir/copiar el plan completo (texto plano para WhatsApp/notas).
+  async function compartirPlan() {
+    if (!ciudad) return;
+    let txt = `🗺️ ${t("miViajeA")} ${ciudad.nombre}, ${ciudad.pais} — Viajero 360\n`;
+    let n = 0;
+    plan.forEach((d) => {
+      if (!d.paradas.length) return;
+      n += 1;
+      txt += `\n${t("dia")} ${n}\n`;
+      d.paradas.forEach((p, i) => {
+        txt += `  ${i + 1}. ${p.nombre} (${fmtMin(p.minutos)})\n`;
+      });
+    });
+    txt += `\n${t("hechoCon")} Viajero 360 · https://app-vuelos-mfos.vercel.app/`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Viajero 360", text: txt });
+      } else {
+        await navigator.clipboard.writeText(txt);
+        setCopiado(true);
+        setTimeout(() => setCopiado(false), 2500);
+      }
+    } catch {}
   }
 
   const lugaresDelDia = plan[diaVisible]?.paradas || [];
@@ -454,17 +480,27 @@ export default function Home() {
         <div className="mx-auto max-w-7xl lg:flex lg:gap-6 lg:px-8 lg:py-6">
           {/* Panel izquierdo: planeación */}
           <div className="order-2 px-4 py-5 lg:order-1 lg:flex-1 lg:min-w-0 lg:px-0 lg:py-0">
-            <div className="mb-4 flex items-end justify-between">
+            <div className="mb-4 flex items-end justify-between gap-3">
               <div>
                 <h1 className="text-2xl font-extrabold tracking-tight text-marca-900 lg:text-3xl">{ciudad.nombre}</h1>
                 <div className="text-[13px] text-slate-500">{ciudad.pais}</div>
               </div>
-              {lugaresBase.length > 0 && (
-                <div className="text-right">
-                  <div className="text-xl font-extrabold text-marca-600">{lugaresBase.length}</div>
-                  <div className="text-xs text-slate-500">{t("lugares")}</div>
-                </div>
-              )}
+              <div className="flex items-center gap-3">
+                {plan.some((d) => d.paradas.length > 0) && (
+                  <button
+                    onClick={compartirPlan}
+                    className="rounded-xl border-[1.5px] border-marca-100 bg-white px-3 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-marca-50"
+                  >
+                    {copiado ? "✓ " + t("copiado") : "📤 " + t("compartir")}
+                  </button>
+                )}
+                {lugaresBase.length > 0 && (
+                  <div className="text-right">
+                    <div className="text-xl font-extrabold text-marca-600">{lugaresBase.length}</div>
+                    <div className="text-xs text-slate-500">{t("lugares")}</div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Configuración del viaje (colapsable: deja el itinerario más arriba) */}
@@ -520,9 +556,15 @@ export default function Home() {
             )}
 
             {!cargandoLugares && lugaresBase.length === 0 && (
-              <div className="rounded-2xl border border-slate-100 bg-white p-4 text-center text-slate-500 shadow-suave">
+              <div className="rounded-2xl border border-slate-100 bg-white p-5 text-center text-slate-500 shadow-suave">
                 <div className="text-3xl">🔍</div>
-                <p className="mt-1.5 text-sm">{t("sinResultados")}</p>
+                <p className="mx-auto mt-1.5 max-w-xs text-sm">{t("sinResultados")}</p>
+                <button
+                  onClick={() => cargarCategoria("imperdibles")}
+                  className="mt-3 rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-4 py-2 text-sm font-bold text-white shadow-marca transition hover:brightness-105"
+                >
+                  🔄 {t("recalcular")}
+                </button>
               </div>
             )}
 
