@@ -68,7 +68,7 @@ function carrera(query) {
   const cuerpo = "data=" + encodeURIComponent(query);
   const intentos = MIRRORS.map((url) => {
     const ctrl = new AbortController();
-    const id = setTimeout(() => ctrl.abort(), 16000);
+    const id = setTimeout(() => ctrl.abort(), 14000);
     return fetch(url, {
       method: "POST",
       headers: {
@@ -214,41 +214,49 @@ export async function GET(req) {
     return Response.json({ error: "parámetros", elements: [] }, { status: 400 });
   }
 
-  // Lanzamos AMBAS fuentes EN PARALELO (no secuencial). Overpass suele traer
-  // más cantidad; Photon es rápido y estable. Así una ciudad lenta en Overpass
-  // no nos hace esperar 13s: Photon ya viene en camino y unimos lo que llegue.
-  const radioAmplio = Math.min(radio + 5000, 100000);
-  // En radio amplio usamos la consulta LIVIANA (notables con wikidata) para que
-  // Overpass responda rápido en un área grande; en radio normal, la completa.
-  const ampliar = radio >= 30000;
-  const filtroSet = (ampliar && FILTROS_AMPLIO[cat]) || FILTROS[cat];
-  const filtros = filtroSet
-    .map((f) => `${f}(around:${radioAmplio},${lat},${lon});`)
-    .join("");
-  const query = `[out:json][timeout:18];(${filtros});out center 80;`;
+  const deadline = (ms, val) => new Promise((res) => setTimeout(() => res(val), ms));
+  const construir = (filtros, r, lim) =>
+    `[out:json][timeout:15];(${filtros
+      .map((f) => `${f}(around:${r},${lat},${lon});`)
+      .join("")});out center ${lim};`;
 
-  const pOverpass = carrera(query)
-    .then((d) => desdeOverpass(d))
+  // DOS consultas a Overpass EN PARALELO (la lección clave de rendimiento):
+  //  · CERCANA: área pequeña (≤25 km). Es la crítica y la RÁPIDA (~5s). En áreas
+  //    amplias usamos la versión liviana (solo nodos con wikidata, SIN "way"):
+  //    el "way" y los radios enormes eran justo lo que disparaba el tiempo a 20s+
+  //    y hacía fallar ciudades grandes como Madrid.
+  //  · LEJANA: radio amplio pero best-effort (no bloquea). Trae las pocas
+  //    excursiones icónicas (p. ej. Guatapé); si tarda, seguimos con lo cercano.
+  // Photon (Komoot) va también en paralelo como respaldo rápido y estable.
+  const esAmplio = radio >= 30000;
+  const filtroNear = (esAmplio && FILTROS_AMPLIO[cat]) || FILTROS[cat];
+  const radioNear = esAmplio ? 25000 : radio;
+  const pNear = carrera(construir(filtroNear, radioNear, 80))
+    .then(desdeOverpass)
     .catch(() => []);
+
+  let pFar = Promise.resolve([]);
+  if (esAmplio && FILTROS_AMPLIO[cat]) {
+    pFar = carrera(construir(FILTROS_AMPLIO[cat], Math.min(radio + 5000, 100000), 40))
+      .then(desdeOverpass)
+      .catch(() => []);
+  }
+
   const pPhoton = desdePhoton(cat, lat, lon, radio).catch(() => []);
 
-  // Overpass es la fuente de CALIDAD (filtra por wikidata, museos, castillos) y
-  // la que encuentra atractivos LEJANOS (p. ej. Guatapé a ~50 km de Medellín).
-  // Le damos PRIORIDAD con un tope alto (mayor si el radio es amplio); Photon va
-  // en paralelo como respaldo rápido. Antes el margen corto cortaba Overpass y
-  // dejaba solo resultados pobres de Photon.
-  const deadline = (ms, val) => new Promise((res) => setTimeout(() => res(val), ms));
-  const topeOverpass = ampliar ? 15000 : 8000;
-  const [overpRaw, phot] = await Promise.all([
-    Promise.race([pOverpass, deadline(topeOverpass, null)]),
-    Promise.race([pPhoton, deadline(7000, [])]),
+  // La CERCANA manda el ritmo (tope 13s); la lejana y Photon son best-effort con
+  // topes más cortos para no estirar la respuesta. Todo cabe en maxDuration=20s
+  // y el cliente espera 16s, así el resultado SÍ alcanza a guardarse en caché.
+  const [near, far, phot] = await Promise.all([
+    Promise.race([pNear, deadline(13000, [])]),
+    Promise.race([pFar, deadline(11000, [])]),
+    Promise.race([pPhoton, deadline(8000, [])]),
   ]);
-  const overp = overpRaw || [];
 
-  // Unir sin duplicar nombres.
+  // Unir sin duplicar nombres (cercanos primero, luego lejanos, luego Photon).
   const vistos = new Set();
   let elementos = [];
-  for (const e of [...overp, ...phot]) {
+  for (const e of [...near, ...far, ...phot]) {
     const n = e.tags?.name;
     if (!n || vistos.has(n)) continue;
     vistos.add(n);
