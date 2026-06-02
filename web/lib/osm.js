@@ -147,9 +147,9 @@ export async function geocodificar(consulta) {
 }
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
-// v18: filtra nombres basura/genéricos y prefiere lugares notables (calidad);
-// regla anti-zigzag + días compactos. Subir la versión invalida cachés viejas.
-const API_VER = "18";
+// v19: filtra solo nombres basura/genéricos (sin starve de lugares) + regla
+// anti-zigzag + días compactos. Subir la versión invalida cachés viejas.
+const API_VER = "19";
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.
@@ -267,16 +267,11 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
     }
   }
 
-  // Para atracciones, prefiere lugares NOTABLES (con señales de calidad:
-  // wikipedia/wikidata, museo, castillo…) y descarta el relleno de baja calidad
-  // cuando ya hay suficientes buenos. Así el itinerario no se llena de sitios
-  // genéricos ("Park", "Casa Eli", etc.).
-  let resultado = filtrados;
-  if (categoria === "imperdibles" || categoria === "miradores") {
-    const notables = filtrados.filter((l) => l.score > 0);
-    if (notables.length >= 6) resultado = notables;
-  }
-  return resultado.slice(0, limite);
+  // Nota: NO descartamos los lugares de menor puntaje (eso dejaba ciudades con
+  // muy pocos lugares). Ya quitamos los nombres basura (nombreBasura) y el orden
+  // por calidad pone los notables arriba; el relleno válido queda disponible para
+  // tener variedad suficiente.
+  return filtrados.slice(0, limite);
 }
 
 // Nombres genéricos/sin valor (solo el tipo, sin nombre propio) que no aportan.
