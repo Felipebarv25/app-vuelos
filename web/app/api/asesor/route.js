@@ -9,8 +9,9 @@ import { DESTINOS_PRESUPUESTO, REGIONES } from "@/lib/presupuesto";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-// Modelo: el más capaz. Para bajar costo ~5x puedes cambiarlo a "claude-sonnet-4-6".
-const MODELO = "claude-opus-4-8";
+// Modelo: Sonnet 4.6 = gran calidad para asesoría de viajes a ~1/5 del costo de
+// Opus. Si quieres máxima capacidad, cámbialo a "claude-opus-4-8".
+const MODELO = "claude-sonnet-4-6";
 
 // Construye un catálogo compacto para que el asesor conozca NUESTRA oferta real.
 function catalogoTexto() {
@@ -61,9 +62,12 @@ export async function POST(req) {
   // Saneamos: solo role+content de texto, máximo de historial razonable.
   const limpios = mensajes
     .slice(-20)
-    .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+    .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim())
     .map((m) => ({ role: m.role, content: m.content.slice(0, 4000) }));
-  if (!limpios.length || limpios[0].role !== "user") {
+  // La API exige que el PRIMER mensaje sea del usuario: descartamos los mensajes
+  // del asistente al inicio (p. ej. el saludo de bienvenida de la UI).
+  while (limpios.length && limpios[0].role !== "user") limpios.shift();
+  if (!limpios.length) {
     return Response.json({ error: "formato" }, { status: 400 });
   }
 
