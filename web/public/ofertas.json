@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-01T21:32:25",
+  "generado": "2026-06-02T03:53:53",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -157,16 +157,16 @@
       "pais": "España",
       "bandera": "🇪🇸",
       "q": "Madrid, España",
-      "precio": 967,
+      "precio": 940,
       "moneda": "USD",
-      "fecha_ida": "2026-09-16",
-      "fecha_vuelta": "2026-09-20",
-      "aerolinea": "JA",
+      "fecha_ida": "2026-10-21",
+      "fecha_vuelta": "2026-10-31",
+      "aerolinea": "AV",
       "umbral": 750,
       "mediana": 1181,
-      "descuento": 18,
+      "descuento": 20,
       "esGanga": true,
-      "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Madrid%202026-09-16%202026-09-20"
+      "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Madrid%202026-10-21%202026-10-31"
     },
     {
       "origen": "BOG",
@@ -397,8 +397,8 @@
       "fecha_vuelta": "2027-02-20",
       "aerolinea": "UX",
       "umbral": 750,
-      "mediana": 1038,
-      "descuento": 6,
+      "mediana": 977,
+      "descuento": 0,
       "esGanga": false,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Barcelona%202027-02-06%202027-02-20"
     },
