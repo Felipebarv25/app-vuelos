@@ -5,14 +5,25 @@ import { cacheado, fetchRapido } from "./cache";
 
 const TTL = 1000 * 60 * 60 * 24 * 30; // 30 días
 
+// Rechaza imágenes que NO son fotos del lugar: mapas de localización, banderas,
+// escudos, logos y diagramas. En Wikipedia el "pageimage" de muchos artículos
+// geográficos es justo el mapita del infobox (un municipio resaltado en rojo),
+// que se veía feo en las tarjetas. Los SVG casi siempre son mapas/escudos/logos.
+function esImagenMala(url) {
+  if (!url) return true;
+  const u = decodeURIComponent(url).toLowerCase();
+  if (/\.svg/.test(u)) return true; // mapas, banderas, escudos, logos
+  return /locator|location[_ ]?map|locali[zs]a|\bmapa\b|\bmap\b|boundary|escudo|coat[_ ]of[_ ]arms|flag[_ ]of|bandera|\.ogg|\.ogv/.test(u);
+}
+
 // Busca la mejor foto para "nombre" (en una ciudad para desambiguar).
 // Estrategia en cascada para maximizar cobertura de fotos:
 //  1) Wikipedia (artículo con imagen) — lugares famosos, además trae descripción.
 //  2) Wikimedia Commons — fotos de muchos más lugares (sin necesidad de artículo).
 export async function fotoDeLugar(nombre, ciudad = "") {
-  // img2: clave nueva (la anterior cacheaba "sin foto" 30 días y dejaba tarjetas
-  // grises para siempre). Ahora solo se cachea cuando SÍ hay foto.
-  const clave = `img2:${nombre}|${ciudad}`.toLowerCase();
+  // img3: clave nueva (la anterior podía haber cacheado mapas de localización /
+  // escudos. Ahora descartamos esas imágenes y solo cacheamos fotos reales).
+  const clave = `img3:${nombre}|${ciudad}`.toLowerCase();
   return cacheado(
     clave,
     TTL,
@@ -52,10 +63,16 @@ async function fotoWikipedia(nombre, ciudad) {
     // verdad al lugar. Si no, Wikipedia trae artículos no relacionados (ej.
     // "77 Towers" devolvía el de Nueva York). Mejor sin foto que con foto errada.
     if (!tituloCoincide(nombre, pagina.title)) return null;
+    // Las páginas de desambiguación no son un lugar: ni su foto ni su extracto sirven.
+    const esDesambiguacion =
+      /\(desambiguaci/i.test(pagina.title || "") ||
+      /puede referirse a/i.test(pagina.extract || "");
+    const fuente = pagina.thumbnail?.source;
+    const url = !esImagenMala(fuente) ? fuente : null;
     return {
-      url: pagina.thumbnail?.source || null,
-      ancho: pagina.thumbnail?.width || null,
-      extracto: pagina.extract || null,
+      url: url || null,
+      ancho: url ? pagina.thumbnail?.width || null : null,
+      extracto: esDesambiguacion ? null : pagina.extract || null,
       link: `https://es.wikipedia.org/wiki/${encodeURIComponent(pagina.title)}`,
     };
   } catch {
@@ -93,9 +110,10 @@ function tituloCoincide(nombreLugar, titulo) {
 async function fotoCommons(nombre, ciudad) {
   try {
     const q = ciudad ? `${nombre} ${ciudad}` : nombre;
-    // Buscar archivos de imagen en Commons por texto.
+    // Buscamos varios candidatos (no solo el primero) para poder descartar mapas/
+    // escudos/SVG y quedarnos con la primera foto real cuyo título coincida.
     const r = await fetchRapido(
-      `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrlimit=1&gsrsearch=${encodeURIComponent(
+      `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrlimit=8&gsrsearch=${encodeURIComponent(
         q
       )}&prop=imageinfo&iiprop=url&iiurlwidth=800&format=json&origin=*`
     );
@@ -103,15 +121,20 @@ async function fotoCommons(nombre, ciudad) {
     const d = await r.json();
     const paginas = d.query?.pages;
     if (!paginas) return null;
-    const primera = Object.values(paginas)[0];
-    const info = primera?.imageinfo?.[0];
-    const url = info?.thumburl || info?.url || null;
-    if (!url) return null;
-    // Verificar que el archivo de Commons corresponda al lugar (el título del
-    // archivo debe mencionar el nombre). Evita fotos de otra ciudad.
-    const tituloArchivo = (primera?.title || "").replace(/^File:|\.[a-z]+$/gi, "");
-    if (!tituloCoincide(nombre, tituloArchivo)) return null;
-    return { url, ancho: info?.thumbwidth || 800, link: info?.descriptionurl || null };
+    // Orden estable por el ranking de búsqueda (index) en vez del orden del objeto.
+    const candidatos = Object.values(paginas).sort(
+      (a, b) => (a.index || 0) - (b.index || 0)
+    );
+    for (const pag of candidatos) {
+      const info = pag?.imageinfo?.[0];
+      const url = info?.thumburl || info?.url || null;
+      if (!url || esImagenMala(url)) continue;
+      // El título del archivo debe mencionar el lugar (evita fotos de otra ciudad).
+      const tituloArchivo = (pag?.title || "").replace(/^File:|\.[a-z]+$/gi, "");
+      if (!tituloCoincide(nombre, tituloArchivo)) continue;
+      return { url, ancho: info?.thumbwidth || 800, link: info?.descriptionurl || null };
+    }
+    return null;
   } catch {
     return null;
   }
