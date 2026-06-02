@@ -14,6 +14,7 @@ import SelectorIdioma from "@/components/SelectorIdioma";
 import Presupuesto from "@/components/Presupuesto";
 import CardDestino from "@/components/CardDestino";
 import Ofertas from "@/components/Ofertas";
+import Asesor from "@/components/Asesor";
 import { useApp } from "@/lib/AppContext";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
@@ -568,6 +569,9 @@ export default function Home() {
           onTrazarRuta={(r) => { setRutaTrazada(r); setDetalle(null); }}
         />
       )}
+
+      {/* Asesor de viajes con IA (chat flotante) */}
+      <Asesor t={t} usuario={usuario} />
 
       <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-slate-400 lg:px-8">
         {t("footer")} · Viajero 360

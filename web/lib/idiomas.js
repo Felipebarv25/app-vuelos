@@ -153,6 +153,14 @@ const T = {
     presupBuscarCiudad: "Buscar ciudad o país…",
     presupExcluidas: "Excluidas",
     presupExcluir: "Quitar esta ciudad de la ruta",
+    // Asesor de viajes (chat IA)
+    asesorBoton: "Asesor de viajes",
+    asesorTitulo: "Brújula · Asesor de viajes",
+    asesorSubtitulo: "Tu guía con IA",
+    asesorSaludo: "¡Hola{nombre}! Soy Brújula 🧭, tu asesora de viajes. Cuéntame tu presupuesto, fechas o qué te gustaría conocer y te armo opciones.",
+    asesorPlaceholder: "Pregúntame a dónde viajar…",
+    asesorError: "Tuve un problema para responder. Intenta de nuevo.",
+    asesorSinClave: "El asesor con IA aún no está activado. Para encenderlo, agrega tu clave ANTHROPIC_API_KEY en Vercel (Settings → Environment Variables) y vuelve a desplegar.",
   },
 
   en: {
@@ -283,6 +291,13 @@ const T = {
     presupBuscarCiudad: "Search city or country…",
     presupExcluidas: "Excluded",
     presupExcluir: "Remove this city from the route",
+    asesorBoton: "Travel advisor",
+    asesorTitulo: "Compass · Travel advisor",
+    asesorSubtitulo: "Your AI guide",
+    asesorSaludo: "Hi{nombre}! I'm Compass 🧭, your travel advisor. Tell me your budget, dates or what you'd like to see and I'll put together options.",
+    asesorPlaceholder: "Ask me where to travel…",
+    asesorError: "I had a problem responding. Try again.",
+    asesorSinClave: "The AI advisor isn't enabled yet. To turn it on, add your ANTHROPIC_API_KEY in Vercel (Settings → Environment Variables) and redeploy.",
   },
 
   pt: {
@@ -413,6 +428,13 @@ const T = {
     presupBuscarCiudad: "Buscar cidade ou país…",
     presupExcluidas: "Excluídas",
     presupExcluir: "Remover esta cidade da rota",
+    asesorBoton: "Consultor de viagens",
+    asesorTitulo: "Bússola · Consultor de viagens",
+    asesorSubtitulo: "Seu guia com IA",
+    asesorSaludo: "Olá{nombre}! Sou a Bússola 🧭, sua consultora de viagens. Conte seu orçamento, datas ou o que gostaria de conhecer e eu monto opções.",
+    asesorPlaceholder: "Pergunte para onde viajar…",
+    asesorError: "Tive um problema para responder. Tente de novo.",
+    asesorSinClave: "O consultor com IA ainda não está ativado. Para ligá-lo, adicione sua ANTHROPIC_API_KEY no Vercel (Settings → Environment Variables) e publique de novo.",
   },
 
   fr: {
@@ -544,6 +566,13 @@ const T = {
     presupBuscarCiudad: "Rechercher ville ou pays…",
     presupExcluidas: "Exclues",
     presupExcluir: "Retirer cette ville de l'itinéraire",
+    asesorBoton: "Conseiller voyage",
+    asesorTitulo: "Boussole · Conseiller voyage",
+    asesorSubtitulo: "Votre guide IA",
+    asesorSaludo: "Bonjour{nombre} ! Je suis Boussole 🧭, votre conseillère voyage. Dites-moi votre budget, vos dates ou ce que vous aimeriez découvrir et je vous prépare des options.",
+    asesorPlaceholder: "Demandez-moi où voyager…",
+    asesorError: "J'ai eu un problème pour répondre. Réessayez.",
+    asesorSinClave: "Le conseiller IA n'est pas encore activé. Pour l'activer, ajoutez votre ANTHROPIC_API_KEY dans Vercel (Settings → Environment Variables) et redéployez.",
   },
 };
 
