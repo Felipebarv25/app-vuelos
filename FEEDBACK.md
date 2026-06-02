@@ -44,10 +44,15 @@ priorizadas. **Aplicadas por el desarrollador en esta ronda (TOP 3 + extras):**
 - ✅ 🟡 **Banner presupuesto:** quitado el badge "NUEVO" (caduca) por un subtítulo
   de valor real.
 
-**Pendientes del crítico (para próximas rondas):** estados vacíos/error con
-icono+acción (🟡), offsets mágicos del mapa fijo (🟡), sugerencias iniciales en
-el chat IA (🟡), estandarizar radios y escala tipográfica (🟢), "cambiar parada"
-con misma categoría + feedback (🟢).
+**Aplicado también en ronda 3b:**
+- ✅ 🟡 **Error con acción:** tarjeta con icono + botón "Reintentar" (antes era un
+  bloque rojo plano de solo texto).
+- ✅ 🟡 **Chat IA con sugerencias iniciales** (chips de ejemplo) + aviso descartable.
+- ✅ 🟢 **"Cambiar parada" más inteligente:** prefiere un lugar de la misma
+  categoría (luego notable, luego el primero libre).
+
+**Pendientes (próximas rondas):** offsets del mapa fijo más robustos (🟡),
+estandarizar radios y escala tipográfica (🟢), estado vacío "aún no buscas".
 
 ### 2026-06-01 — Ronda 2 (intento móvil)
 

@@ -228,7 +228,9 @@ function ChatIA({ t, usuario, finRef }) {
   const [texto, setTexto] = useState("");
   const [cargando, setCargando] = useState(false);
   const [sinClave, setSinClave] = useState(false);
+  const [avisoVisible, setAvisoVisible] = useState(true);
   const init = useRef(false);
+  const ejemplos = [t("asesorEj1"), t("asesorEj2"), t("asesorEj3")];
 
   useEffect(() => {
     if (!init.current) {
@@ -238,9 +240,9 @@ function ChatIA({ t, usuario, finRef }) {
     }
   }, [usuario, t]);
 
-  async function enviar(e) {
+  async function enviar(e, preset) {
     e?.preventDefault();
-    const pregunta = texto.trim();
+    const pregunta = (preset ?? texto).trim();
     if (!pregunta || cargando) return;
     setTexto(""); setSinClave(false);
     const historial = [...mensajes, { role: "user", content: pregunta }];
@@ -271,14 +273,26 @@ function ChatIA({ t, usuario, finRef }) {
   return (
     <>
       <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4">
-        <div className="rounded-2xl border border-marca-100 bg-marca-50 p-2.5 text-[12px] text-marca-700">
-          ✨ {t("asesorAvisoIA")}
-        </div>
+        {avisoVisible && (
+          <div className="flex items-start gap-2 rounded-2xl border border-marca-100 bg-marca-50 p-2.5 text-[12px] text-marca-700">
+            <span className="flex-1">✨ {t("asesorAvisoIA")}</span>
+            <button onClick={() => setAvisoVisible(false)} aria-label="Cerrar aviso" className="text-marca-400 hover:text-marca-600">✕</button>
+          </div>
+        )}
         {mensajes.map((m, i) => (
           <Burbuja key={i} role={m.role === "user" ? "user" : "bot"}>
             {cargando && i === mensajes.length - 1 && !m.content ? <span className="spin" /> : m.content}
           </Burbuja>
         ))}
+        {mensajes.length <= 1 && !cargando && (
+          <div className="flex flex-wrap gap-2">
+            {ejemplos.map((ej, i) => (
+              <button key={i} onClick={() => enviar(null, ej)} className="rounded-full border border-marca-200 bg-white px-3 py-1.5 text-[12.5px] font-medium text-marca-700 transition hover:bg-marca-50">
+                {ej}
+              </button>
+            ))}
+          </div>
+        )}
         {sinClave && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-[13px] leading-relaxed text-amber-800">
             {t("asesorSinClave")}

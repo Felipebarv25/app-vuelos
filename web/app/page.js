@@ -194,10 +194,15 @@ export default function Home() {
   function cambiarParada(diaIdx, paradaIdx) {
     const usados = new Set();
     plan.forEach((d) => d.paradas.forEach((p) => usados.add(p.id)));
-    const alt = lugaresBase.find((l) => !usados.has(l.id));
+    const vieja = plan[diaIdx].paradas[paradaIdx];
+    // Preferir un reemplazo de la MISMA categoría; si no, uno notable; si no, el primero libre.
+    const libres = lugaresBase.filter((l) => !usados.has(l.id));
+    const alt =
+      libres.find((l) => l.categoria === vieja.categoria) ||
+      libres.find((l) => l.notable) ||
+      libres[0];
     if (!alt) return;
 
-    const vieja = plan[diaIdx].paradas[paradaIdx];
     // Copia profunda mínima del plan, reemplazando solo esa parada.
     const nuevoPlan = plan.map((d) => ({ ...d, paradas: d.paradas.slice() }));
     nuevoPlan[diaIdx].paradas[paradaIdx] = {
@@ -230,6 +235,13 @@ export default function Home() {
     if (!plan[diaVisible]) return;
     setPlan((p) => agregarLugarADia(p, diaVisible, lugar));
     setSeleccion((s) => (s.some((x) => x.id === lugar.id) ? s : [...s, lugar]));
+  }
+
+  // Reintentar tras un error (geocodificación o carga de lugares).
+  function reintentar() {
+    setError(null);
+    if (ciudad) cargarCategoria(categoria);
+    else if (consulta.trim()) buscarTexto();
   }
 
   const lugaresDelDia = plan[diaVisible]?.paradas || [];
@@ -352,7 +364,15 @@ export default function Home() {
       </header>
 
       {error && (
-        <div className="mx-auto mt-3.5 max-w-7xl rounded-xl bg-red-100 px-4 py-3.5 text-sm text-red-800 lg:px-8">{error}</div>
+        <div className="mx-auto mt-3.5 max-w-7xl px-4 lg:px-8">
+          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-red-100 bg-red-50 p-4 text-red-800 shadow-suave">
+            <span className="text-2xl">😕</span>
+            <p className="flex-1 text-sm">{error}</p>
+            <button onClick={reintentar} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:brightness-110">
+              🔄 {t("recalcular")}
+            </button>
+          </div>
+        </div>
       )}
 
       {!ciudad && !cargando && (

@@ -172,6 +172,9 @@ const T = {
     guiaSinRuta: "Con esos datos no encontré una ruta dentro del presupuesto. Prueba subir el presupuesto o los días, o elige otra región.",
     guiaVerPresupuesto: "Ver presupuesto completo",
     guiaReiniciar: "Empezar de nuevo",
+    asesorEj1: "¿3 días en Lisboa?",
+    asesorEj2: "¿Playa barata en diciembre?",
+    asesorEj3: "¿Qué hago en Roma?",
   },
 
   en: {
@@ -320,6 +323,9 @@ const T = {
     guiaSinRuta: "With that I couldn't find a route within budget. Try raising the budget or days, or pick another region.",
     guiaVerPresupuesto: "See full budget",
     guiaReiniciar: "Start over",
+    asesorEj1: "3 days in Lisbon?",
+    asesorEj2: "Cheap beach in December?",
+    asesorEj3: "What to do in Rome?",
   },
 
   pt: {
@@ -468,6 +474,9 @@ const T = {
     guiaSinRuta: "Com isso não encontrei uma rota dentro do orçamento. Tente aumentar o orçamento ou os dias, ou escolha outra região.",
     guiaVerPresupuesto: "Ver orçamento completo",
     guiaReiniciar: "Começar de novo",
+    asesorEj1: "3 dias em Lisboa?",
+    asesorEj2: "Praia barata em dezembro?",
+    asesorEj3: "O que fazer em Roma?",
   },
 
   fr: {
@@ -617,6 +626,9 @@ const T = {
     guiaSinRuta: "Avec ça je n'ai pas trouvé d'itinéraire dans le budget. Augmente le budget ou les jours, ou choisis une autre région.",
     guiaVerPresupuesto: "Voir le budget complet",
     guiaReiniciar: "Recommencer",
+    asesorEj1: "3 jours à Lisbonne ?",
+    asesorEj2: "Plage pas chère en décembre ?",
+    asesorEj3: "Que faire à Rome ?",
   },
 };
 
