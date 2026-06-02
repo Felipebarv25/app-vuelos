@@ -10,11 +10,19 @@ export default function CardDestino({ nombre, pais, consulta, hint, onClick }) {
   useEffect(() => {
     let vivo = true;
     // hint = término de búsqueda de foto más icónico que el nombre de ciudad.
-    fotoDeLugar(hint || nombre, pais).then((f) => {
-      if (vivo && f?.url) setImg(f.url);
-    });
+    // Escalonamos la ráfaga (12 tarjetas a la vez saturaban Wikipedia y algunas
+    // quedaban grises) y reintentamos una vez si la primera no trajo foto.
+    function cargar(intento = 0) {
+      fotoDeLugar(hint || nombre, pais).then((f) => {
+        if (!vivo) return;
+        if (f?.url) setImg(f.url);
+        else if (intento < 1) setTimeout(() => cargar(intento + 1), 1500 + Math.random() * 1500);
+      });
+    }
+    const t = setTimeout(() => cargar(), Math.random() * 1200);
     return () => {
       vivo = false;
+      clearTimeout(t);
     };
   }, [nombre, pais, hint]);
 

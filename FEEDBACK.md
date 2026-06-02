@@ -30,6 +30,24 @@ a 360px"). Prioriza impacto. No repitas lo ya resuelto. Felicita lo que sí qued
 
 ## 📋 Hallazgos
 
+### 2026-06-01 — Ronda 1 (agente crítico, navegador real)
+
+**👏 Lo que quedó muy bien:**
+- Landing limpio y profesional (hero, etiquetas eyebrow, grid de destinos).
+- **Ruta multiciudad impecable:** con 10M COP / Europa generó Lisboa → Oporto →
+  Valencia → Niza → Zúrich (5 ciudades, 10 días), **Total US$2,225, sobra US$275**,
+  con desglose claro (vuelo, transporte entre ciudades, hospedaje, comida, etc.).
+- Asesor IA "Brújula" visible y funcionando.
+
+**🔎 A mejorar:**
+- 🟡 **Fotos de destinos en gris** (ej. París en el landing) cuando cargan 12 a la
+  vez → probable rate-limit de Wikipedia en ráfaga. *Propuesta:* escalonar las
+  peticiones de foto + un reintento. → **APLICADO en esta ronda.**
+- 🟢 **Ruta: 2 días por ciudad** en rutas de 5 ciudades se siente apretado. *Idea:*
+  ofrecer un control "menos ciudades, más días" o priorizar 3-4 ciudades.
+- 🟢 **Móvil sin verificar** en esta ronda (modal de presupuesto y línea de tiempo);
+  revisar a 360–390px en una próxima pasada.
+
 ### 2026-06-01 — Ronda inicial (sembrada por el desarrollador)
 
 - 🟢 **Lugares de relleno menores** en el itinerario ("Mosquito Rooftop", "Casa Eli",
