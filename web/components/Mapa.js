@@ -6,6 +6,20 @@ function lejos(a, b) {
   return Math.hypot(a[0] - b[0], a[1] - b[1]) > 0.6; // ~60 km
 }
 
+// Carga el CSS de Leaflet SOLO cuando se necesita un mapa (no en cada página).
+// Antes estaba en el <head> y bloqueaba el render del inicio aunque ahí no haya mapa.
+function asegurarCssLeaflet() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById("leaflet-css")) return;
+  const link = document.createElement("link");
+  link.id = "leaflet-css";
+  link.rel = "stylesheet";
+  link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+  link.integrity = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
+  link.crossOrigin = "";
+  document.head.appendChild(link);
+}
+
 // Mapa Leaflet (OpenStreetMap). Recibe lugares con {coord, nombre} y dibuja
 // marcadores numerados + una línea que une la ruta del día.
 export default function Mapa({
@@ -26,6 +40,7 @@ export default function Mapa({
     let cancelado = false;
 
     async function init() {
+      asegurarCssLeaflet();
       L = (await import("leaflet")).default;
       if (cancelado || !ref.current) return;
 

@@ -6,7 +6,7 @@ import { construirItinerario, agregarLugarADia, fmtMin } from "@/lib/itinerario"
 import { CIUDADES_POPULARES } from "@/lib/ciudadesPopulares";
 import { sugerirCiudades } from "@/lib/autocompletar";
 import { useGeo } from "@/lib/useGeo";
-import { Chip, Boton, Tarjeta } from "@/components/ui";
+import { Chip } from "@/components/ui";
 import Itinerario from "@/components/Itinerario";
 import DetalleLugar from "@/components/DetalleLugar";
 import Bienvenida from "@/components/Bienvenida";

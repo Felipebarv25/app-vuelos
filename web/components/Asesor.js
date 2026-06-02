@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { construirRuta, REGIONES, MONEDAS, llaveCiudad } from "@/lib/presupuesto";
+import { construirRuta, REGIONES, MONEDAS } from "@/lib/presupuesto";
 
 // Asesor de viajes con DOS modos:
 //  - "guia" (GRATIS, por defecto): chat guiado por botones que usa NUESTRO motor

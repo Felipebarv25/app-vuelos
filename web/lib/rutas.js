@@ -1,8 +1,5 @@
-// Cálculo de rutas e itinerarios — todo gratis.
-// - Distancia/tiempo a pie con OSRM público (caminar).
-// - Deep-links a Google Maps para transporte público real (estaciones, transbordos).
-
-const OSRM = "https://router.project-osrm.org";
+// Cálculo de distancias y orden de visita para los itinerarios — todo local,
+// sin red: Haversine + vecino más cercano + recomendación de transporte.
 
 // Distancia en línea recta (Haversine) en metros — respaldo instantáneo.
 export function distanciaMetros(a, b) {
@@ -21,26 +18,6 @@ export function distanciaMetros(a, b) {
 // Estima minutos de caminata (velocidad media 4.8 km/h).
 export function minutosCaminando(metros) {
   return Math.round((metros / 80)); // 80 m/min ≈ 4.8 km/h
-}
-
-// Pide a OSRM la duración real caminando entre dos puntos (más preciso que recta).
-export async function rutaCaminando(a, b) {
-  try {
-    const url = `${OSRM}/route/v1/foot/${a[1]},${a[0]};${b[1]},${b[0]}?overview=false`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error();
-    const d = await res.json();
-    const r = d.routes?.[0];
-    if (!r) throw new Error();
-    return {
-      metros: Math.round(r.distance),
-      minutos: Math.round(r.duration / 60),
-      modo: "walking",
-    };
-  } catch {
-    const m = distanciaMetros(a, b);
-    return { metros: Math.round(m), minutos: minutosCaminando(m), modo: "walking" };
-  }
 }
 
 // Ordena lugares por vecino más cercano (ruta razonable a pie).
@@ -65,19 +42,6 @@ export function ordenarPorCercania(lugares, inicio) {
     actual = sig.coord;
   }
   return ruta;
-}
-
-// Deep-links a Google Maps (datos reales de transporte público).
-export function linkComoLlegar(a, b, modo = "transit") {
-  const o = `${a[0]},${a[1]}`;
-  const d = `${b[0]},${b[1]}`;
-  return `https://www.google.com/maps/dir/?api=1&origin=${o}&destination=${d}&travelmode=${modo}`;
-}
-
-export function linkLugar(coord, nombre) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    nombre
-  )}&center=${coord[0]},${coord[1]}`;
 }
 
 // Recomienda el medio de transporte según la distancia.

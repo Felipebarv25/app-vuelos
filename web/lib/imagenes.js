@@ -31,26 +31,32 @@ export async function fotoDeLugar(nombre, ciudad = "") {
   );
 }
 
+// UNA sola llamada a Wikipedia: busca el artículo y, de paso, trae su miniatura
+// y un extracto. Antes eran 2 peticiones secuenciales (buscar título + resumen);
+// con `generator=search` + `prop=pageimages|extracts` obtenemos todo de una,
+// lo que reduce a la mitad la red al cargar muchas fotos (landing/itinerario).
 async function fotoWikipedia(nombre, ciudad) {
-  const titulo = await buscarTitulo(nombre, ciudad);
-  if (!titulo) return null;
-  // VERIFICACIÓN DE RELEVANCIA: el título encontrado debe corresponder de verdad
-  // al lugar. Si no, Wikipedia trae artículos no relacionados (ej. "77 Towers"
-  // devolvía el artículo de Nueva York). Mejor sin foto que con foto equivocada.
-  if (!tituloCoincide(nombre, titulo)) return null;
   try {
+    const q = ciudad ? `${nombre} ${ciudad}` : nombre;
     const r = await fetchRapido(
-      `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(titulo)}`
+      `https://es.wikipedia.org/w/api.php?action=query&format=json&origin=*` +
+        `&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrlimit=1` +
+        `&prop=pageimages|extracts&piprop=thumbnail&pithumbsize=800` +
+        `&exintro=1&explaintext=1&exsentences=2`
     );
     if (!r.ok) return null;
     const d = await r.json();
-    // Preferimos el thumbnail (liviano) sobre originalimage (puede pesar varios MB).
-    const url = d.thumbnail?.source || d.originalimage?.source || null;
+    const pagina = Object.values(d.query?.pages || {})[0];
+    if (!pagina) return null;
+    // VERIFICACIÓN DE RELEVANCIA: el artículo encontrado debe corresponder de
+    // verdad al lugar. Si no, Wikipedia trae artículos no relacionados (ej.
+    // "77 Towers" devolvía el de Nueva York). Mejor sin foto que con foto errada.
+    if (!tituloCoincide(nombre, pagina.title)) return null;
     return {
-      url,
-      ancho: d.thumbnail?.width || d.originalimage?.width || null,
-      extracto: d.extract || null,
-      link: d.content_urls?.desktop?.page || null,
+      url: pagina.thumbnail?.source || null,
+      ancho: pagina.thumbnail?.width || null,
+      extracto: pagina.extract || null,
+      link: `https://es.wikipedia.org/wiki/${encodeURIComponent(pagina.title)}`,
     };
   } catch {
     return null;
@@ -106,22 +112,6 @@ async function fotoCommons(nombre, ciudad) {
     const tituloArchivo = (primera?.title || "").replace(/^File:|\.[a-z]+$/gi, "");
     if (!tituloCoincide(nombre, tituloArchivo)) return null;
     return { url, ancho: info?.thumbwidth || 800, link: info?.descriptionurl || null };
-  } catch {
-    return null;
-  }
-}
-
-async function buscarTitulo(nombre, ciudad) {
-  try {
-    const q = ciudad ? `${nombre} ${ciudad}` : nombre;
-    const r = await fetchRapido(
-      `https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
-        q
-      )}&srlimit=1&format=json&origin=*`
-    );
-    if (!r.ok) return null;
-    const d = await r.json();
-    return d.query?.search?.[0]?.title || null;
   } catch {
     return null;
   }

@@ -18,6 +18,7 @@ const DESC =
   "Itinerarios día a día con mapa, GPS, transporte y los mejores lugares y restaurantes de cualquier ciudad del mundo. Rutas por presupuesto y ofertas de vuelos desde Colombia.";
 
 export const metadata = {
+  metadataBase: new URL("https://app-vuelos-mfos.vercel.app"),
   title: "Viajero 360 · Planea tu viaje perfecto",
   description: DESC,
   manifest: "/manifest.json",
@@ -57,12 +58,8 @@ export default function RootLayout({ children }) {
         <link rel="dns-prefetch" href="https://commons.wikimedia.org" />
         {/* Preload del hero (imagen LCP de la portada) */}
         <link rel="preload" as="image" href={HERO_IMG} fetchPriority="high" />
-        <link
-          rel="stylesheet"
-          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-          crossOrigin=""
-        />
+        {/* El CSS de Leaflet ya NO se carga aquí: lo inyecta el componente Mapa
+            solo cuando hace falta (no bloquea el render del inicio). */}
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
