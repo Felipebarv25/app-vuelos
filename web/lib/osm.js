@@ -147,9 +147,9 @@ export async function geocodificar(consulta) {
 }
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
-// v19: filtra solo nombres basura/genéricos (sin starve de lugares) + regla
-// anti-zigzag + días compactos. Subir la versión invalida cachés viejas.
-const API_VER = "19";
+// v20: filtra alojamientos (hoteles) y monumentos menores sin wikidata, además
+// de nombres basura; regla anti-zigzag + días compactos. Invalida cachés viejas.
+const API_VER = "20";
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.
@@ -198,6 +198,7 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
     const t = el.tags || {};
     const nombre = t.name;
     if (!nombre || vistos.has(nombre) || nombreBasura(nombre)) continue;
+    if (esRuido(nombre, !!(t.wikidata || t.wikipedia))) continue;
     vistos.add(nombre);
 
     const coord = el.lat
@@ -294,6 +295,18 @@ function nombreBasura(nombre) {
   if (NOMBRES_GENERICOS.has(low)) return true;
   const prim = n.split(/\s+/)[0];
   if (prim === prim.toLowerCase() && TIPOS_OSM.includes(prim)) return true;
+  return false;
+}
+
+// Ruido que NO es atractivo turístico: alojamientos (hoteles/hostales),
+// hoteles tipo "Park 10", y monumentos MENORES (sin ficha en Wikidata/Wikipedia,
+// que en OSM abundan: "Monumento a la X"). Los monumentos famosos (con wikidata)
+// se conservan.
+function esRuido(nombre, notable) {
+  const n = nombre || "";
+  if (/\b(hotel|hostal|hostel|motel|lodge|inn|hospedaje|apartament|aparta|suites?|s\.?a\.?s)\b/i.test(n)) return true;
+  if (/^park\s*\d/i.test(n)) return true;
+  if (/^monumento\s+(a|al|a la|a los|a las)\s+/i.test(n) && !notable) return true;
   return false;
 }
 
