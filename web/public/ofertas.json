@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-02T16:22:59",
+  "generado": "2026-06-02T20:48:15",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -343,7 +343,7 @@
       "fecha_vuelta": "2026-11-22",
       "aerolinea": "LH",
       "umbral": 750,
-      "mediana": 828,
+      "mediana": 827,
       "descuento": 2,
       "esGanga": false,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Madrid%202026-11-05%202026-11-22"
@@ -379,8 +379,8 @@
       "fecha_vuelta": "2026-11-08",
       "aerolinea": "AC",
       "umbral": 800,
-      "mediana": 941,
-      "descuento": 11,
+      "mediana": 867,
+      "descuento": 3,
       "esGanga": false,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Par%C3%ADs%202026-11-03%202026-11-08"
     },
