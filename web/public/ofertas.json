@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-02T03:53:53",
+  "generado": "2026-06-02T10:22:26",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -307,7 +307,7 @@
       "fecha_vuelta": "2026-09-21",
       "aerolinea": "LA",
       "umbral": 450,
-      "mediana": 598,
+      "mediana": 596,
       "descuento": 12,
       "esGanga": false,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Buenos%20Aires%202026-09-07%202026-09-21"
