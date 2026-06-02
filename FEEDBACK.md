@@ -30,6 +30,25 @@ a 360px"). Prioriza impacto. No repitas lo ya resuelto. Felicita lo que sí qued
 
 ## 📋 Hallazgos
 
+### 2026-06-01 — Ronda 3 (AGENTE CRÍTICO ↔ DESARROLLADOR)
+
+El agente crítico revisó la app en vivo + el código y entregó 10 solicitudes
+priorizadas. **Aplicadas por el desarrollador en esta ronda (TOP 3 + extras):**
+- ✅ 🔴 **Unificación de color:** indigo de marca como primario; verde esmeralda
+  solo como semántico de dinero/éxito. Quitado el verde del contador de lugares
+  y del eyebrow de Ofertas (→ marca).
+- ✅ 🔴 **"Tres azules" eliminados:** `Chip`/`Botón` migrados al tema `marca` de
+  Tailwind; pines y línea del mapa de `#2563eb` → `#4f46e5` (marca).
+- ✅ 🔴 **Accesibilidad:** `aria-label` en botones solo-emoji (buscar, vuelos) y
+  texto "Buscar" visible en el hero (desktop).
+- ✅ 🟡 **Banner presupuesto:** quitado el badge "NUEVO" (caduca) por un subtítulo
+  de valor real.
+
+**Pendientes del crítico (para próximas rondas):** estados vacíos/error con
+icono+acción (🟡), offsets mágicos del mapa fijo (🟡), sugerencias iniciales en
+el chat IA (🟡), estandarizar radios y escala tipográfica (🟢), "cambiar parada"
+con misma categoría + feedback (🟢).
+
 ### 2026-06-01 — Ronda 2 (intento móvil)
 
 - ⚠️ **Tooling:** el emulador de ancho del navegador no cambió el viewport real

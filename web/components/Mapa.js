@@ -58,7 +58,7 @@ export default function Mapa({
       lugares.forEach((l, i) => {
         const icon = L.divIcon({
           className: "",
-          html: `<div style="background:#2563eb;color:#fff;width:28px;height:28px;border-radius:50%;
+          html: `<div style="background:#4f46e5;color:#fff;width:28px;height:28px;border-radius:50%;
             display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;
             border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)">${i + 1}</div>`,
           iconSize: [28, 28],
@@ -67,7 +67,7 @@ export default function Mapa({
         const m = L.marker(l.coord, { icon }).addTo(mapa);
         m.bindPopup(
           `<b>${i + 1}. ${l.nombre}</b><br>${l.categoria || ""}<br>
-           <span style="color:#2563eb;font-weight:600">Toca el pin para ver detalles →</span>`
+           <span style="color:#4f46e5;font-weight:600">Toca el pin para ver detalles →</span>`
         );
         if (onClicLugar) m.on("click", () => onClicLugar(l));
         capaRef.current.push(m);
@@ -96,7 +96,7 @@ export default function Mapa({
       if (puntos.length > 1) {
         const linea = L.polyline(
           lugares.map((l) => l.coord),
-          { color: "#2563eb", weight: 3, opacity: 0.5, dashArray: "6,8" }
+          { color: "#4f46e5", weight: 3, opacity: 0.5, dashArray: "6,8" }
         ).addTo(mapa);
         capaRef.current.push(linea);
         try {

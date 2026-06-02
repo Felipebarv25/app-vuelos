@@ -44,7 +44,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es" }) {
     <section className="mt-12">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-600">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-marca-500">
             {t("ofertasEyebrow")}
           </div>
           <h2 className="mt-1 text-[20px] font-extrabold tracking-tight text-marca-900 lg:text-[26px]">
@@ -121,6 +121,8 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es" }) {
                 href={r.link}
                 target="_blank"
                 rel="noopener"
+                aria-label={t("ofertasVerVuelos") || "Ver vuelos"}
+                title={t("ofertasVerVuelos") || "Ver vuelos"}
                 className="flex items-center justify-center rounded-xl border-[1.5px] border-slate-200 px-3 text-[13px] font-bold text-marca-600 transition hover:bg-slate-50"
               >
                 ✈️

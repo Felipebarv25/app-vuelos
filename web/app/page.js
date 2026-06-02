@@ -304,8 +304,8 @@ export default function Home() {
                     list="ciudades-pop"
                     className="flex-1 rounded-xl border-0 bg-transparent px-4 py-3 text-base text-slate-800 outline-none placeholder:text-slate-400"
                   />
-                  <button type="submit" className="rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-6 text-lg font-bold text-white shadow-md transition hover:brightness-110">
-                    🔎
+                  <button type="submit" aria-label={t("buscar")} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-5 text-base font-bold text-white shadow-md transition hover:brightness-110">
+                    🔎 <span className="hidden sm:inline">{t("buscar")}</span>
                   </button>
                 </form>
                 {mostrarSug && sugerencias.length > 0 && (
@@ -332,7 +332,7 @@ export default function Home() {
                   list="ciudades-pop"
                   className="flex-1 rounded-2xl border-0 px-5 py-3.5 text-base text-slate-800 shadow-md outline-none"
                 />
-                <button type="submit" className="rounded-2xl bg-white px-5 text-lg font-bold text-marca-600 shadow-md transition hover:bg-marca-50">
+                <button type="submit" aria-label={t("buscar")} className="rounded-2xl bg-white px-5 text-lg font-bold text-marca-600 shadow-md transition hover:bg-marca-50">
                   🔎
                 </button>
               </form>
@@ -362,8 +362,8 @@ export default function Home() {
           <button onClick={() => setMostrarPresupuesto(true)}
             className="animar-pop mt-6 flex w-full items-center justify-between rounded-2xl border-0 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 px-5 py-4 text-white shadow-[0_8px_22px_rgba(5,150,105,.35)] transition hover:brightness-105 lg:max-w-2xl lg:py-5">
             <div className="text-left">
-              <div className="text-xs font-semibold opacity-90">💰 NUEVO</div>
-              <div className="mt-0.5 text-[17px] font-extrabold lg:text-xl">{t("presupBoton")}</div>
+              <div className="text-[17px] font-extrabold lg:text-xl">💰 {t("presupBoton")}</div>
+              <div className="mt-0.5 text-[13px] text-white/90">{t("presupSub")}</div>
             </div>
             <span className="text-2xl">→</span>
           </button>
@@ -441,7 +441,7 @@ export default function Home() {
               </div>
               {lugaresBase.length > 0 && (
                 <div className="text-right">
-                  <div className="text-xl font-extrabold text-emerald-600">{lugaresBase.length}</div>
+                  <div className="text-xl font-extrabold text-marca-600">{lugaresBase.length}</div>
                   <div className="text-xs text-slate-500">{t("lugares")}</div>
                 </div>
               )}
