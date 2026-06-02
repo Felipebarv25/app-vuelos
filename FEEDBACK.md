@@ -30,6 +30,18 @@ a 360px"). Prioriza impacto. No repitas lo ya resuelto. Felicita lo que sí qued
 
 ## 📋 Hallazgos
 
+### 2026-06-01 — Ronda 2 (intento móvil)
+
+- ⚠️ **Tooling:** el emulador de ancho del navegador no cambió el viewport real
+  (se quedó en ~1536px), así que NO se pudo verificar móvil visualmente esta vez.
+- ✅ **Audit estático responsive:** los componentes usan clases Tailwind responsive
+  (grids 2/3/4 col, vista de ciudad apilada en móvil, modal de presupuesto como
+  hoja inferior, chat a pantalla completa en móvil). No se ven errores evidentes.
+- 🟢 **Endurecimiento aplicado:** nombres de parada con `break-words` para que
+  títulos largos no desborden en pantallas angostas.
+- 📱 **Mejor input para móvil:** un screenshot desde un teléfono real (360–390px)
+  daría la verificación visual que el tooling no permite.
+
 ### 2026-06-01 — Ronda 1 (agente crítico, navegador real)
 
 **👏 Lo que quedó muy bien:**

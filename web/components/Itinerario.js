@@ -157,7 +157,7 @@ export default function Itinerario({
               <div className="min-w-0 flex-1">
                 <div
                   onClick={() => onVerLugar?.(p)}
-                  className="cursor-pointer text-[16.5px] font-bold tracking-tight"
+                  className="cursor-pointer break-words text-[16.5px] font-bold tracking-tight"
                 >
                   {p.nombre}
                 </div>
