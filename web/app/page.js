@@ -570,8 +570,13 @@ export default function Home() {
         />
       )}
 
-      {/* Asesor de viajes con IA (chat flotante) */}
-      <Asesor t={t} usuario={usuario} />
+      {/* Asesor de viajes (guía gratis + IA opcional, chat flotante) */}
+      <Asesor
+        t={t}
+        usuario={usuario}
+        onPlanear={(q) => { setConsulta(q); setTimeout(() => buscarTexto(), 0); }}
+        onAbrirPresupuesto={() => setMostrarPresupuesto(true)}
+      />
 
       <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-slate-400 lg:px-8">
         {t("footer")} · Viajero 360
