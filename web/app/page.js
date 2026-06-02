@@ -467,8 +467,13 @@ export default function Home() {
               )}
             </div>
 
-            {/* Configuración del viaje */}
-            <div className="mb-3.5 rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
+            {/* Configuración del viaje (colapsable: deja el itinerario más arriba) */}
+            <details open className="mb-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave">
+              <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-bold text-marca-900">
+                <span>⚙️ {t("ajustarViaje")}</span>
+                <span className="text-slate-400">▾</span>
+              </summary>
+              <div className="px-4 pb-4">
               <div className="flex flex-wrap items-end gap-3">
                 <label className="flex flex-col gap-1 text-[13px] font-semibold text-slate-600">
                   📅 {t("dias")}
@@ -496,7 +501,8 @@ export default function Home() {
                   {momento === "nocturno" ? t("nocturnoDesc") : t("diurnoDesc")}
                 </span>
               </div>
-            </div>
+              </div>
+            </details>
 
             {/* Categorías */}
             <div className="mb-2 flex gap-2 overflow-x-auto pb-2">
@@ -626,6 +632,7 @@ export default function Home() {
           t={t}
           onCerrar={() => setDetalle(null)}
           onTrazarRuta={(r) => { setRutaTrazada(r); setDetalle(null); }}
+          onAgregar={plan[diaVisible] ? (l) => { agregarParada(l); setDetalle(null); } : undefined}
         />
       )}
 

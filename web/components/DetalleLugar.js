@@ -23,10 +23,11 @@ function emojiCategoria(cat = "") {
 // Panel/modal que muestra TODO sobre un lugar SIN salir de la app:
 // foto, descripción, y cómo llegar desde la ubicación del usuario
 // (transporte, tiempo, costo y ruta dibujada en nuestro mapa).
-export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazarRuta, t = (k) => k }) {
+export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazarRuta, onAgregar, t = (k) => k }) {
   const [foto, setFoto] = useState(null);
   const [cargandoFoto, setCargandoFoto] = useState(true);
   const [modoSel, setModoSel] = useState(null);
+  const [verMas, setVerMas] = useState(false);
 
   const metros = origen ? distanciaMetros(origen, lugar.coord) : null;
   const transportes = metros != null ? planTransporte(metros) : [];
@@ -95,12 +96,37 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
         </div>
 
         <div className="p-4">
-          {/* Descripción (de Wikipedia) */}
+          {/* Acciones rápidas */}
+          <div className="mb-3.5 flex flex-wrap gap-2">
+            {onAgregar && (
+              <button
+                onClick={() => onAgregar(lugar)}
+                className="rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-3.5 py-2 text-[13px] font-bold text-white shadow-marca transition hover:brightness-105"
+              >
+                ＋ {t("agregar")}
+              </button>
+            )}
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${lugar.coord[0]},${lugar.coord[1]}`}
+              target="_blank"
+              rel="noopener"
+              className="rounded-xl border-[1.5px] border-slate-200 px-3.5 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-slate-50"
+            >
+              🗺️ Google Maps
+            </a>
+          </div>
+
+          {/* Descripción (de Wikipedia), expandible */}
           {foto?.extracto && (
             <p className="mb-3.5 text-sm leading-relaxed text-slate-700">
-              {foto.extracto.length > 240
-                ? foto.extracto.slice(0, 240) + "…"
-                : foto.extracto}
+              {verMas || foto.extracto.length <= 240
+                ? foto.extracto
+                : foto.extracto.slice(0, 240) + "… "}
+              {foto.extracto.length > 240 && (
+                <button onClick={() => setVerMas((v) => !v)} className="font-semibold text-marca-600">
+                  {verMas ? t("verMenos") : t("verMas")}
+                </button>
+              )}
             </p>
           )}
 

@@ -175,6 +175,9 @@ const T = {
     asesorEj1: "¿3 días en Lisboa?",
     asesorEj2: "¿Playa barata en diciembre?",
     asesorEj3: "¿Qué hago en Roma?",
+    verMas: "Ver más",
+    verMenos: "Ver menos",
+    ajustarViaje: "Ajustar viaje",
   },
 
   en: {
@@ -326,6 +329,9 @@ const T = {
     asesorEj1: "3 days in Lisbon?",
     asesorEj2: "Cheap beach in December?",
     asesorEj3: "What to do in Rome?",
+    verMas: "See more",
+    verMenos: "See less",
+    ajustarViaje: "Adjust trip",
   },
 
   pt: {
@@ -477,6 +483,9 @@ const T = {
     asesorEj1: "3 dias em Lisboa?",
     asesorEj2: "Praia barata em dezembro?",
     asesorEj3: "O que fazer em Roma?",
+    verMas: "Ver mais",
+    verMenos: "Ver menos",
+    ajustarViaje: "Ajustar viagem",
   },
 
   fr: {
@@ -629,6 +638,9 @@ const T = {
     asesorEj1: "3 jours à Lisbonne ?",
     asesorEj2: "Plage pas chère en décembre ?",
     asesorEj3: "Que faire à Rome ?",
+    verMas: "Voir plus",
+    verMenos: "Voir moins",
+    ajustarViaje: "Ajuster le voyage",
   },
 };
 
