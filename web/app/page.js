@@ -35,6 +35,11 @@ const DESTINOS_DESTACADOS = [
   { nombre: "Buenos Aires", pais: "Argentina", q: "Buenos Aires, Argentina", hint: "Obelisco Buenos Aires" },
 ];
 
+// Imagen del hero del inicio (foto de viaje, CDN de Unsplash). Si fallara, queda
+// el degradado de marca debajo como respaldo.
+const HERO_IMG =
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=70";
+
 // Saludo según la hora del día (cálido y personalizado).
 function saludoClave() {
   const h = new Date().getHours();
@@ -236,18 +241,30 @@ export default function Home() {
 
   return (
     <div className="min-h-screen pb-10">
-      {/* Cabecera full-width */}
-      <header className="sticky top-0 z-[1000] bg-gradient-to-br from-marca-600 via-marca-700 to-marca-900 text-white shadow-marca">
-        <div className="mx-auto max-w-7xl px-4 pt-4 pb-5 lg:px-8">
+      {/* Cabecera: HERO con foto de viaje en el inicio; barra fina en la ciudad */}
+      <header className={`relative z-[1000] text-white ${(!ciudad && !cargando) ? "" : "sticky top-0 bg-gradient-to-br from-marca-600 via-marca-700 to-marca-900 shadow-marca"}`}>
+        {!ciudad && !cargando && (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-br from-marca-700 to-marca-900" />
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${HERO_IMG})` }} />
+            <div className="absolute inset-0 bg-gradient-to-b from-marca-900/35 via-marca-900/55 to-marca-900/90" />
+          </>
+        )}
+
+        {/* Lista de ciudades compartida por ambos buscadores */}
+        <datalist id="ciudades-pop">
+          {CIUDADES_POPULARES.map((c) => (<option key={c} value={c} />))}
+        </datalist>
+
+        <div className={`relative mx-auto max-w-7xl px-4 lg:px-8 ${(!ciudad && !cargando) ? "pt-5 pb-16 lg:pb-24" : "pt-4 pb-5"}`}>
+          {/* Barra de navegación superior */}
           <div className="flex items-center justify-between gap-4">
             <div onClick={irAlInicio} className="cursor-pointer">
-              <div className="flex items-center gap-2 text-[22px] font-extrabold tracking-tight lg:text-2xl">
+              <div className="flex items-center gap-2 text-[22px] font-extrabold tracking-tight drop-shadow lg:text-2xl">
                 🌍 Viajero 360
               </div>
               <div className="hidden text-[13px] text-white/85 sm:block">{t("tagline")}</div>
             </div>
-
-            {/* Acciones + idioma (barra de navegación) */}
             <div className="flex items-center gap-3 lg:gap-5">
               <span className="hidden text-sm text-white/90 md:inline">
                 👋 {t("hola")}, <b>{usuario.nombre}</b>
@@ -264,42 +281,73 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Buscador */}
-          <div className="relative mt-4 max-w-2xl">
-            <form onSubmit={buscarTexto} className="flex gap-2">
-              <input
-                value={consulta}
-                onChange={(e) => setConsulta(e.target.value)}
-                onFocus={() => sugerencias.length && setMostrarSug(true)}
-                placeholder={t("buscarPlaceholder")}
-                list="ciudades-pop"
-                className="flex-1 rounded-2xl border-0 px-5 py-3.5 text-base text-slate-800 shadow-md outline-none"
-              />
-              <datalist id="ciudades-pop">
-                {CIUDADES_POPULARES.map((c) => (
-                  <option key={c} value={c} />
-                ))}
-              </datalist>
-              <button type="submit" className="rounded-2xl bg-white px-5 text-lg font-bold text-marca-600 shadow-md transition hover:bg-marca-50">
-                🔎
-              </button>
-            </form>
-
-            {mostrarSug && sugerencias.length > 0 && (
-              <div className="animar-subir absolute inset-x-0 top-full z-[1100] mt-1.5 overflow-hidden rounded-2xl bg-white shadow-xl">
-                {sugerencias.map((s, i) => (
-                  <div key={i} className="flex cursor-pointer items-center gap-2.5 border-b border-slate-100 px-4 py-3 text-slate-800 hover:bg-marca-50"
-                    onClick={() => elegirCiudad(s)}>
-                    <span className="text-lg">📍</span>
-                    <div>
-                      <div className="text-[15px] font-semibold">{s.ciudad}</div>
-                      <div className="text-xs text-slate-500">{s.pais}</div>
-                    </div>
-                  </div>
-                ))}
+          {!ciudad && !cargando ? (
+            /* HERO de inicio */
+            <div className="mx-auto mt-12 max-w-2xl text-center lg:mt-20">
+              <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">
+                {t("heroEyebrow")}
               </div>
-            )}
-          </div>
+              <h1 className="text-[34px] font-extrabold leading-[1.05] tracking-tight drop-shadow-md lg:text-[58px]">
+                {t(saludoClave())}, {usuario.nombre}
+              </h1>
+              <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-white/90 lg:text-[19px]">
+                {t("heroTexto")}
+              </p>
+
+              <div className="relative mx-auto mt-7 max-w-xl">
+                <form onSubmit={buscarTexto} className="flex gap-2 rounded-2xl bg-white/95 p-1.5 shadow-2xl ring-1 ring-white/40 backdrop-blur">
+                  <input
+                    value={consulta}
+                    onChange={(e) => setConsulta(e.target.value)}
+                    onFocus={() => sugerencias.length && setMostrarSug(true)}
+                    placeholder={t("buscarPlaceholder")}
+                    list="ciudades-pop"
+                    className="flex-1 rounded-xl border-0 bg-transparent px-4 py-3 text-base text-slate-800 outline-none placeholder:text-slate-400"
+                  />
+                  <button type="submit" className="rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-6 text-lg font-bold text-white shadow-md transition hover:brightness-110">
+                    🔎
+                  </button>
+                </form>
+                {mostrarSug && sugerencias.length > 0 && (
+                  <div className="animar-subir absolute inset-x-0 top-full z-[1100] mt-1.5 overflow-hidden rounded-2xl bg-white text-left shadow-xl">
+                    {sugerencias.map((s, i) => (
+                      <div key={i} className="flex cursor-pointer items-center gap-2.5 border-b border-slate-100 px-4 py-3 text-slate-800 hover:bg-marca-50" onClick={() => elegirCiudad(s)}>
+                        <span className="text-lg">📍</span>
+                        <div><div className="text-[15px] font-semibold">{s.ciudad}</div><div className="text-xs text-slate-500">{s.pais}</div></div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Barra fina (vista de ciudad) */
+            <div className="relative mt-4 max-w-2xl">
+              <form onSubmit={buscarTexto} className="flex gap-2">
+                <input
+                  value={consulta}
+                  onChange={(e) => setConsulta(e.target.value)}
+                  onFocus={() => sugerencias.length && setMostrarSug(true)}
+                  placeholder={t("buscarPlaceholder")}
+                  list="ciudades-pop"
+                  className="flex-1 rounded-2xl border-0 px-5 py-3.5 text-base text-slate-800 shadow-md outline-none"
+                />
+                <button type="submit" className="rounded-2xl bg-white px-5 text-lg font-bold text-marca-600 shadow-md transition hover:bg-marca-50">
+                  🔎
+                </button>
+              </form>
+              {mostrarSug && sugerencias.length > 0 && (
+                <div className="animar-subir absolute inset-x-0 top-full z-[1100] mt-1.5 overflow-hidden rounded-2xl bg-white shadow-xl">
+                  {sugerencias.map((s, i) => (
+                    <div key={i} className="flex cursor-pointer items-center gap-2.5 border-b border-slate-100 px-4 py-3 text-slate-800 hover:bg-marca-50" onClick={() => elegirCiudad(s)}>
+                      <span className="text-lg">📍</span>
+                      <div><div className="text-[15px] font-semibold">{s.ciudad}</div><div className="text-xs text-slate-500">{s.pais}</div></div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </header>
 
@@ -308,18 +356,8 @@ export default function Home() {
       )}
 
       {!ciudad && !cargando && (
-        <div className="animar-subir mx-auto max-w-7xl px-4 pb-4 pt-6 lg:px-8 lg:pt-8">
-          {/* Saludo (hero) */}
-          <div className="max-w-3xl">
-            <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-marca-500">
-              {t("heroEyebrow")}
-            </div>
-            <h1 className="text-[28px] font-extrabold leading-[1.1] tracking-tight text-marca-900 lg:text-[44px]">
-              {t(saludoClave())}, {usuario.nombre} {saludoEmoji()}
-            </h1>
-            <p className="mt-3 text-[15px] leading-relaxed text-slate-500 lg:text-lg">{t("heroTexto")}</p>
-          </div>
-
+        <div className="relative z-10 -mt-8 rounded-t-[32px] bg-[#f6f7fb] pt-2 lg:-mt-12">
+        <div className="animar-subir mx-auto max-w-7xl px-4 pb-4 pt-7 lg:px-8">
           {/* Banner presupuesto */}
           <button onClick={() => setMostrarPresupuesto(true)}
             className="animar-pop mt-6 flex w-full items-center justify-between rounded-2xl border-0 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 px-5 py-4 text-white shadow-[0_8px_22px_rgba(5,150,105,.35)] transition hover:brightness-105 lg:max-w-2xl lg:py-5">
@@ -367,6 +405,7 @@ export default function Home() {
             lang={lang}
             onPlanear={(q) => { setConsulta(q); setTimeout(() => buscarTexto(), 0); }}
           />
+        </div>
         </div>
       )}
 
