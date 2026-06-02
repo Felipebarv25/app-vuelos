@@ -66,9 +66,9 @@ export async function POST(req) {
 
   // Saneamos: solo role+content de texto, máximo de historial razonable.
   const limpios = mensajes
-    .slice(-20)
+    .slice(-10) // menos historial = menos tokens de entrada (mismo modelo)
     .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim())
-    .map((m) => ({ role: m.role, content: m.content.slice(0, 4000) }));
+    .map((m) => ({ role: m.role, content: m.content.slice(0, 2500) }));
   // La API exige que el PRIMER mensaje sea del usuario: descartamos los mensajes
   // del asistente al inicio (p. ej. el saludo de bienvenida de la UI).
   while (limpios.length && limpios[0].role !== "user") limpios.shift();
@@ -80,7 +80,7 @@ export async function POST(req) {
 
   const stream = client.messages.stream({
     model: MODELO,
-    max_tokens: 1024,
+    max_tokens: 800, // respuestas concisas = menor costo de salida (lo más caro)
     system: [
       { type: "text", text: systemPrompt(), cache_control: { type: "ephemeral" } },
     ],
