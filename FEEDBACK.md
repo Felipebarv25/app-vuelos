@@ -30,7 +30,24 @@ a 360px"). Prioriza impacto. No repitas lo ya resuelto. Felicita lo que sí qued
 
 ## 📋 Hallazgos
 
-### 2026-06-01 — Ronda 5 (EVALUACIÓN FINAL del crítico) — Nota 8.5/10 ✅
+### 2026-06-01 — Ronda 6 (OPTIMIZACIÓN técnica) — del 7/10 al ~9/10
+
+El agente crítico auditó rendimiento/robustez. Aplicado:
+- ✅ 🔴 **Fuente con `next/font`** (Plus Jakarta Sans auto-hospedada); quitado el
+  `@import` bloqueante de globals.css → menos render-blocking y CLS.
+- ✅ 🔴 **Hero más liviano** (Unsplash w=2000 → w=1600) + `<link rel=preload
+  as=image fetchpriority=high>` en layout → mejor LCP.
+- ✅ 🔴 **Service Worker:** `ofertas.json` ya NO se sirve caché-primero (precios
+  siempre frescos); caché subida a `viajero360-v2`.
+- ✅ 🟡 **preconnect/dns-prefetch** a Unsplash/Wikimedia/Wikipedia (1ª foto más rápida).
+- ✅ 🟡 **Fotos livianas:** se usa el thumbnail de Wikipedia en vez de la imagen
+  original (que puede pesar varios MB).
+- ✅ 🟡 **SEO/social:** Open Graph + Twitter Card; `viewport` sin `maximumScale`/
+  `userScalable` (accesibilidad: permite zoom). themeColor → indigo de marca.
+- ✅ 🟢 **Robustez/a11y:** `onError` en miniaturas (vuelven al placeholder) y logo
+  del header como `<button>` (navegable por teclado).
+
+
 
 Veredicto del agente crítico: **8.5/10** (subió de 7) y **"¿Listo para usuarios
 reales? SÍ"**. Su TOP 1 imprescindible + el focus, aplicados:

@@ -38,7 +38,7 @@ const DESTINOS_DESTACADOS = [
 // Imagen del hero del inicio (foto de viaje, CDN de Unsplash). Si fallara, queda
 // el degradado de marca debajo como respaldo.
 const HERO_IMG =
-  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=70";
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70";
 
 // Saludo según la hora del día (cálido y personalizado).
 function saludoClave() {
@@ -297,12 +297,12 @@ export default function Home() {
         <div className={`relative mx-auto max-w-7xl px-4 lg:px-8 ${(!ciudad && !cargando) ? "pt-5 pb-16 lg:pb-24" : "pt-4 pb-5"}`}>
           {/* Barra de navegación superior */}
           <div className="flex items-center justify-between gap-4">
-            <div onClick={irAlInicio} className="cursor-pointer">
+            <button type="button" onClick={irAlInicio} aria-label="Viajero 360 — inicio" className="cursor-pointer text-left">
               <div className="flex items-center gap-2 text-[22px] font-extrabold tracking-tight drop-shadow lg:text-2xl">
                 🌍 Viajero 360
               </div>
               <div className="hidden text-[13px] text-white/85 sm:block">{t("tagline")}</div>
-            </div>
+            </button>
             <div className="flex items-center gap-3 lg:gap-5">
               <span className="hidden text-sm text-white/90 md:inline">
                 👋 {t("hola")}, <b>{usuario.nombre}</b>

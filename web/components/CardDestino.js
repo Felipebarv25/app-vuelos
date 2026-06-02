@@ -36,6 +36,7 @@ export default function CardDestino({ nombre, pais, consulta, hint, onClick }) {
           src={img}
           alt={nombre}
           loading="lazy"
+          onError={() => setImg(null)}
           className="block h-full w-full object-cover"
         />
       ) : (

@@ -44,10 +44,11 @@ async function fotoWikipedia(nombre, ciudad) {
     );
     if (!r.ok) return null;
     const d = await r.json();
-    const url = d.originalimage?.source || d.thumbnail?.source || null;
+    // Preferimos el thumbnail (liviano) sobre originalimage (puede pesar varios MB).
+    const url = d.thumbnail?.source || d.originalimage?.source || null;
     return {
       url,
-      ancho: d.originalimage?.width || d.thumbnail?.width || null,
+      ancho: d.thumbnail?.width || d.originalimage?.width || null,
       extracto: d.extract || null,
       link: d.content_urls?.desktop?.page || null,
     };

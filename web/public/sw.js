@@ -1,7 +1,7 @@
 // Service Worker mínimo: hace que la app abra rápido y funcione como app
 // instalada. Estrategia "network-first" para HTML (siempre lo más nuevo) y
 // caché para los recursos estáticos (mapa, iconos, etc.).
-const CACHE = "viajero360-v1";
+const CACHE = "viajero360-v2";
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();
@@ -21,8 +21,12 @@ self.addEventListener("fetch", (e) => {
   // Solo GET; nunca cacheamos las APIs de datos (siempre frescas).
   if (req.method !== "GET" || req.url.includes("/api/")) return;
 
+  const ruta = new URL(req.url).pathname;
+  // ofertas.json son datos vivos (vuelos): NUNCA caché-primero (iría a la rama
+  // red-primero de abajo para mostrar siempre precios frescos).
+  const esDatoVivo = ruta.endsWith("/ofertas.json");
   // Recursos estáticos: caché primero (rápido).
-  if (/\.(png|svg|css|js|woff2?|json)$/.test(new URL(req.url).pathname)) {
+  if (!esDatoVivo && /\.(png|svg|css|js|woff2?|json)$/.test(ruta)) {
     e.respondWith(
       caches.match(req).then(
         (hit) =>
