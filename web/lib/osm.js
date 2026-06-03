@@ -147,9 +147,9 @@ export async function geocodificar(consulta) {
 }
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
-// v21: consulta cercana rápida + lejana best-effort en el servidor (arregla los
-// timeouts en ciudades grandes como Madrid). Invalida cachés viejas/vacías.
-const API_VER = "21";
+// v22: + lugares ICÓNICOS garantizados (Wikidata→OSM) y popularidad en el score.
+// Invalida cachés viejas para que entren los nuevos lugares (Torre Eiffel, etc.).
+const API_VER = "22";
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.
