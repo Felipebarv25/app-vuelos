@@ -40,37 +40,58 @@ function slug(ciudad, pais) {
 //        puentes, plazas, estadios, teatros, sitios arqueológicos) vía P31/P279*.
 const UA = "Viajero360/1.0 (https://app-vuelos-mfos.vercel.app)";
 
+// Lista AMPLIA de tipos de POI (P31 directo, sin subclases para que sea rápido:
+// P279* tardaba ~60s; esto ~15s). Cubre museos, templos, monumentos, castillos/
+// palacios, torres, plazas, parques, fuentes, sitios arqueológicos, estadios,
+// teatros, etc. — incluyendo subtipos comunes que de otro modo se perdían.
 const TIPOS_POI = [
-  "Q570116",   // atracción turística
-  "Q33506",    // museo
-  "Q24398318", // edificio religioso (iglesia, catedral, mezquita, basílica...)
-  "Q4989906",  // monumento
-  "Q5003624",  // memorial
-  "Q23413",    // castillo
-  "Q16560",    // palacio
-  "Q839954",   // sitio arqueológico
-  "Q22698",    // parque
-  "Q1107656",  // jardín
-  "Q12518",    // torre
-  "Q12280",    // puente
-  "Q174782",   // plaza
-  "Q483110",   // estadio
-  "Q24354",    // teatro
+  // Museos y galerías
+  "Q33506", "Q207694", "Q3327872", "Q5505137", "Q588140", "Q1568346", "Q1007870",
+  // Templos / edificios religiosos
+  "Q16970", "Q2977", "Q163687", "Q120560", "Q108325", "Q32815", "Q34627", "Q44539", "Q44613", "Q160742",
+  // Monumentos, memoriales, obeliscos, arcos, estatuas
+  "Q4989906", "Q575759", "Q5003624", "Q170980", "Q190928", "Q179700", "Q860861",
+  // Castillos, palacios, fortalezas, puertas/murallas
+  "Q23413", "Q751876", "Q16560", "Q57821", "Q14452", "Q82117",
+  // Torres
+  "Q12518", "Q200334", "Q1440476",
+  // Plazas, parques, jardines
+  "Q174782", "Q22698", "Q22746", "Q46169", "Q1107656", "Q167346",
+  // Puentes, fuentes, escalinatas
+  "Q12280", "Q483453", "Q12511",
+  // Sitios arqueológicos / patrimonio
+  "Q839954", "Q2087181", "Q358",
+  // Estadios, teatros, salas
+  "Q483110", "Q641226", "Q24354", "Q153562",
+  // Atracciones, miradores, naturaleza, ocio
+  "Q570116", "Q2319498", "Q1442406", "Q194195", "Q43501", "Q1244442", "Q39715", "Q34038", "Q35509",
 ];
 
 const dormir = (ms) => new Promise((res) => setTimeout(res, ms));
 
-function consultaWDQS(lat, lon, slMin) {
-  const allow = TIPOS_POI.map((q) => "wd:" + q).join(" ");
-  return `SELECT ?item ?itemLabel ?lat ?lon ?sl WHERE {
+const ALLOW = new Set(TIPOS_POI);
+
+// NO usamos VALUES dentro de la consulta (forzar el match contra ~58 tipos sobre
+// el enorme "around" de ciudades densas como París la hacía caer por timeout).
+// En su lugar traemos los P31 con GROUP_CONCAT (rápido) y filtramos en JS.
+function consultaWDQS(lat, lon, slMin, radio = 20) {
+  return `SELECT ?item ?itemLabel ?lat ?lon ?sl (GROUP_CONCAT(DISTINCT ?t;separator=",") AS ?types) WHERE {
   SERVICE wikibase:around { ?item wdt:P625 ?coord .
     bd:serviceParam wikibase:center "Point(${lon} ${lat})"^^geo:wktLiteral .
-    bd:serviceParam wikibase:radius "20" . }
+    bd:serviceParam wikibase:radius "${radio}" . }
   ?item wikibase:sitelinks ?sl . FILTER(?sl >= ${slMin})
-  ?item wdt:P31/wdt:P279* ?type . VALUES ?type { ${allow} }
+  OPTIONAL { ?item wdt:P31 ?t }
   BIND(geof:latitude(?coord) AS ?lat) BIND(geof:longitude(?coord) AS ?lon)
   SERVICE wikibase:label { bd:serviceParam wikibase:language "es,en,fr". ?item rdfs:label ?itemLabel. }
-} ORDER BY DESC(?sl) LIMIT 90`;
+} GROUP BY ?item ?itemLabel ?lat ?lon ?sl ORDER BY DESC(?sl) LIMIT 200`;
+}
+
+// Conserva solo las filas cuyo P31 sea un tipo de POI visitable (allowlist).
+function soloPOIs(bindings) {
+  return bindings.filter((x) => {
+    const tipos = (x.types?.value || "").split(",").map((u) => u.split("/").pop());
+    return tipos.some((t) => ALLOW.has(t));
+  });
 }
 
 async function wdqs(query) {
@@ -111,16 +132,21 @@ function tagPorNombre(n) {
 }
 
 async function ciudadElementos(c) {
-  // Umbral adaptativo: pedimos fama alta; si la ciudad trae poco, bajamos.
-  let b = await wdqs(consultaWDQS(c.lat, c.lon, 12));
-  if (b.length < 12) {
-    await dormir(1500);
-    const b2 = await wdqs(consultaWDQS(c.lat, c.lon, 6));
-    if (b2.length > b.length) b = b2;
+  // Cascada (radio, umbral) de menos a más permisivo. Para ciudades densas el
+  // radio grande puede caer por timeout: si pasa, el siguiente intento usa un
+  // radio menor (más rápido). Para ciudades pequeñas, baja el umbral de fama
+  // hasta juntar ~25. Nos quedamos con el intento que más lugares devuelva.
+  let b = [];
+  for (const [radio, sl] of [[20, 10], [14, 5], [9, 2]]) {
+    const f = soloPOIs(await wdqs(consultaWDQS(c.lat, c.lon, sl, radio)));
+    if (f.length > b.length) b = f;
+    if (b.length >= 25) break;
+    await dormir(1200);
   }
   const vistos = new Set();
   const out = [];
   for (const x of b) {
+    if (out.length >= 45) break; // top ~45 por fama (b va ordenado por sitelinks)
     const nombre = x.itemLabel?.value;
     if (!nombre || /^Q\d+$/.test(nombre)) continue; // sin etiqueta legible
     if (vistos.has(nombre)) continue;
