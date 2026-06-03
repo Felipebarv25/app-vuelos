@@ -71,6 +71,8 @@ export default function Home() {
   // Configuración del viaje
   const [dias, setDias] = useState(3);
   const [horas, setHoras] = useState(8);
+  const [fechaInicio, setFechaInicio] = useState(""); // YYYY-MM-DD (opcional)
+  const [fechaFin, setFechaFin] = useState("");
   const [momento, setMomento] = useState("diurno");
   const [categoria, setCategoria] = useState("imperdibles");
 
@@ -180,7 +182,7 @@ export default function Home() {
     }
   }
 
-  function reconstruir(sel = seleccion, c = ciudad) {
+  function reconstruir(sel = seleccion, c = ciudad, diasOverride) {
     if (!c || !sel.length) {
       setPlan([]);
       return;
@@ -195,9 +197,29 @@ export default function Home() {
         Math.hypot(gps[0] - c.lat, gps[1] - c.lon) < 0.6; // ~60 km
       if (cerca) inicio = gps;
     }
-    const p = construirItinerario(sel, { dias, horasPorDia: horas, inicio });
+    const nDias = diasOverride || dias;
+    const p = construirItinerario(sel, { dias: nDias, horasPorDia: horas, inicio });
     setPlan(p);
     setDiaVisible(0);
+  }
+
+  // Nº de días entre dos fechas YYYY-MM-DD (inclusive), acotado a 1–14.
+  function diasEntre(ini, fin) {
+    if (!ini || !fin) return null;
+    const d = Math.round((new Date(fin) - new Date(ini)) / 86400000) + 1;
+    return Math.max(1, Math.min(14, d));
+  }
+
+  // Aplica un rango de fechas: deriva los días y rearma el itinerario para ESAS
+  // fechas (de aquí salen el itinerario fechado, el presupuesto y los vuelos).
+  function aplicarFechas(ini, fin) {
+    setFechaInicio(ini);
+    setFechaFin(fin);
+    const n = diasEntre(ini, fin);
+    if (n) {
+      setDias(n);
+      if (ciudad && seleccion.length) reconstruir(seleccion, ciudad, n);
+    }
   }
 
   // Cambiar SOLO esa parada por una alternativa, SIN rearmar todo el itinerario.
@@ -479,10 +501,40 @@ export default function Home() {
             ))}
           </div>
 
+          {/* ¿Cuándo viajas? Rango de fechas que alimenta vuelos + itinerario. */}
+          <div className="mt-10 rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="mr-auto">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-marca-500">
+                  {t("cuandoEyebrow")}
+                </div>
+                <div className="mt-0.5 text-[15px] font-extrabold text-marca-900">{t("cuandoTitulo")}</div>
+              </div>
+              <label className="flex flex-col gap-1 text-[12.5px] font-semibold text-slate-600">
+                🛫 {t("fechaIda")}
+                <input type="date" value={fechaInicio} min={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => aplicarFechas(e.target.value, fechaFin)}
+                  className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[14px]" />
+              </label>
+              <label className="flex flex-col gap-1 text-[12.5px] font-semibold text-slate-600">
+                🛬 {t("fechaVuelta")}
+                <input type="date" value={fechaFin} min={fechaInicio || new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => aplicarFechas(fechaInicio, e.target.value)}
+                  className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[14px]" />
+              </label>
+              {fechaInicio && fechaFin && (
+                <span className="pb-2 text-[12.5px] font-semibold text-emerald-600">
+                  ✓ {diasEntre(fechaInicio, fechaFin)} {t("dias").toLowerCase()}
+                </span>
+              )}
+            </div>
+          </div>
+
           {/* Vuelos baratos desde Colombia (detector de precios) */}
           <Ofertas
             t={t}
             lang={lang}
+            rango={fechaInicio && fechaFin ? { inicio: fechaInicio, fin: fechaFin } : null}
             onPlanear={(q) => { setConsulta(q); setTimeout(() => buscarTexto(), 0); }}
           />
         </div>
@@ -544,12 +596,37 @@ export default function Home() {
                 <span className="text-slate-400">▾</span>
               </summary>
               <div className="px-4 pb-4">
+              {/* Rango de fechas del viaje (opcional): de aquí salen los días, el
+                  itinerario fechado y la búsqueda de vuelos para esas fechas. */}
+              <div className="mb-3 flex flex-wrap items-end gap-3 rounded-xl bg-marca-50/60 p-3">
+                <label className="flex flex-col gap-1 text-[13px] font-semibold text-slate-600">
+                  🛫 {t("fechaIda")}
+                  <input type="date" value={fechaInicio} min={new Date().toISOString().slice(0, 10)}
+                    onChange={(e) => aplicarFechas(e.target.value, fechaFin)}
+                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[14px]" />
+                </label>
+                <label className="flex flex-col gap-1 text-[13px] font-semibold text-slate-600">
+                  🛬 {t("fechaVuelta")}
+                  <input type="date" value={fechaFin} min={fechaInicio || new Date().toISOString().slice(0, 10)}
+                    onChange={(e) => aplicarFechas(fechaInicio, e.target.value)}
+                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[14px]" />
+                </label>
+                {fechaInicio && fechaFin && (
+                  <span className="pb-2 text-[12.5px] font-semibold text-marca-600">
+                    {diasEntre(fechaInicio, fechaFin)} {t("dias").toLowerCase()}
+                  </span>
+                )}
+                {(fechaInicio || fechaFin) && (
+                  <button onClick={() => { setFechaInicio(""); setFechaFin(""); }}
+                    className="pb-2 text-[12px] text-slate-400 hover:text-slate-600">✕ {t("limpiar")}</button>
+                )}
+              </div>
               <div className="flex flex-wrap items-end gap-3">
                 <label className="flex flex-col gap-1 text-[13px] font-semibold text-slate-600">
                   📅 {t("dias")}
-                  <select value={dias} onChange={(e) => setDias(+e.target.value)}
-                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[15px]">
-                    {[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{n}</option>)}
+                  <select value={dias} onChange={(e) => setDias(+e.target.value)} disabled={!!(fechaInicio && fechaFin)}
+                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[15px] disabled:bg-slate-100 disabled:text-slate-400">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </label>
                 <label className="flex flex-col gap-1 text-[13px] font-semibold text-slate-600">
@@ -618,7 +695,9 @@ export default function Home() {
                 alternativas={lugaresBase}
                 gps={gps}
                 ciudad={ciudad?.nombre}
+                fechaInicio={fechaInicio}
                 t={t}
+                lang={lang}
                 onCambiarParada={(idx) => cambiarParada(diaVisible, idx)}
                 onQuitarParada={(idx) => quitarParada(diaVisible, idx)}
                 onVerLugar={(p) => { setRutaTrazada(null); setDetalle(p); }}

@@ -62,8 +62,17 @@ export default function Itinerario({
   onVerLugar,
   gps,
   ciudad,
+  fechaInicio,
+  lang = "es",
   t = (k) => k,
 }) {
+  // Fecha real de ESTE día (si el usuario eligió fechas de viaje).
+  let fechaDia = "";
+  if (fechaInicio) {
+    const d = new Date(fechaInicio + "T00:00:00");
+    d.setDate(d.getDate() + (numeroDia - 1));
+    fechaDia = d.toLocaleDateString(lang, { weekday: "short", day: "numeric", month: "short" });
+  }
   const r = resumenDia(dia);
   const [seguimiento, setSeguimiento] = useState(false);
   const [inicioMs, setInicioMs] = useState(null);
@@ -88,6 +97,7 @@ export default function Itinerario({
           <div>
             <div className="text-[19px] font-extrabold tracking-tight text-marca-900">
               {t("dia")} {numeroDia}
+              {fechaDia && <span className="ml-2 text-[13px] font-semibold capitalize text-marca-500">{fechaDia}</span>}
             </div>
             <div className="mt-0.5 text-[13px] text-slate-500">
               {r.paradas} {t("paradas")} · {r.totalTexto} {t("enTotal")}

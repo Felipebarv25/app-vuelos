@@ -4,7 +4,24 @@ import { useEffect, useMemo, useState } from "react";
 // Tablero de "vuelos baratos desde Colombia": lee web/public/ofertas.json
 // (generado por el detector de precios) y muestra las mejores ofertas
 // vigentes desde Bogotá y Medellín, con opción de planear el viaje.
-export default function Ofertas({ onPlanear, t = (k) => k, lang = "es" }) {
+// Construye un deep-link de Aviasales para las fechas que eligió el usuario,
+// reutilizando el marker de afiliado que ya viene en el enlace de la oferta.
+function ddmm(iso) {
+  return iso && iso.length >= 10 ? iso.slice(8, 10) + iso.slice(5, 7) : "";
+}
+function markerDe(link) {
+  const m = (link || "").match(/[?&]marker=([^&]+)/);
+  return m ? m[1] : "";
+}
+function linkMisFechas(r, rango) {
+  const di = ddmm(rango.inicio);
+  if (!di) return "";
+  const code = `${r.origen}${di}${r.destino}${ddmm(rango.fin)}1`;
+  const mk = markerDe(r.link);
+  return `https://www.aviasales.com/search/${code}` + (mk ? `?marker=${mk}` : "");
+}
+
+export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = null }) {
   const [data, setData] = useState(null);
   const [filtro, setFiltro] = useState("todos"); // todos | BOG | MDE
 
@@ -146,6 +163,18 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es" }) {
                 ✈️
               </a>
             </div>
+
+            {/* Si el usuario eligió fechas: buscar vuelos para ESAS fechas. */}
+            {rango && (
+              <a
+                href={linkMisFechas(r, rango)}
+                target="_blank"
+                rel="sponsored noopener"
+                className="mt-2 block rounded-xl border border-marca-200 bg-marca-50 py-2 text-center text-[12.5px] font-bold text-marca-700 transition hover:bg-marca-100"
+              >
+                🔎 {t("ofertasMisFechas")}
+              </a>
+            )}
 
             {/* Verificación honesta: comparar el precio en Google Vuelos */}
             <div className="mt-2 flex items-center justify-between text-[11px]">
