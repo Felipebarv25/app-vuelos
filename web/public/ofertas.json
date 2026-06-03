@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-03T10:58:02",
+  "generado": "2026-06-03T16:47:10",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -37,8 +37,8 @@
       "fecha_vuelta": "2026-07-09",
       "aerolinea": "JA",
       "umbral": 300,
-      "mediana": 397,
-      "descuento": 16,
+      "mediana": 414,
+      "descuento": 20,
       "esGanga": true,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Lima%202026-07-07%202026-07-09"
     },
@@ -127,7 +127,7 @@
       "fecha_vuelta": "2026-11-24",
       "aerolinea": "AM",
       "umbral": 800,
-      "mediana": 1241,
+      "mediana": 1249,
       "descuento": 46,
       "esGanga": true,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Mil%C3%A1n%202026-11-10%202026-11-24"
@@ -149,6 +149,24 @@
       "descuento": 6,
       "esGanga": true,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Mil%C3%A1n%202026-11-10%202026-11-25"
+    },
+    {
+      "origen": "BOG",
+      "destino": "ROM",
+      "ciudad": "Roma",
+      "pais": "Italia",
+      "bandera": "🇮🇹",
+      "q": "Roma, Italia",
+      "precio": 793,
+      "moneda": "USD",
+      "fecha_ida": "2026-11-11",
+      "fecha_vuelta": "2026-11-26",
+      "aerolinea": "AC",
+      "umbral": 800,
+      "mediana": 823,
+      "descuento": 4,
+      "esGanga": true,
+      "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Roma%202026-11-11%202026-11-26"
     },
     {
       "origen": "MDE",
@@ -311,24 +329,6 @@
       "descuento": 5,
       "esGanga": false,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Buenos%20Aires%202026-09-17%202026-09-24"
-    },
-    {
-      "origen": "BOG",
-      "destino": "ROM",
-      "ciudad": "Roma",
-      "pais": "Italia",
-      "bandera": "🇮🇹",
-      "q": "Roma, Italia",
-      "precio": 801,
-      "moneda": "USD",
-      "fecha_ida": "2027-01-10",
-      "fecha_vuelta": "2027-01-21",
-      "aerolinea": "AC",
-      "umbral": 800,
-      "mediana": 823,
-      "descuento": 3,
-      "esGanga": false,
-      "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Roma%202027-01-10%202027-01-21"
     },
     {
       "origen": "BOG",
