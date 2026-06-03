@@ -2,7 +2,11 @@
 //  1) Overpass (OpenStreetMap) — trae todo lo de la zona por categoría.
 //  2) Photon (Komoot) como RESPALDO — rápido y estable, busca por palabras.
 // Si una falla o viene vacía, usamos la otra. Así la categoría NUNCA queda vacía.
+// POPULARIDAD: además se enriquece el puntaje con Amadeus POI (visitas reales) y
+// con los sitelinks de Wikidata (fama editorial), sin reemplazar la heurística.
 // Cachea en el edge de Vercel solo cuando hay datos.
+
+import { poisAmadeus } from "@/lib/amadeus";
 
 // Permite a la función de Vercel correr hasta 20s (Overpass puede tardar varios
 // segundos en zonas amplias). El resultado se cachea, así solo la 1ª vez es lenta.
@@ -120,6 +124,67 @@ function puntuar(t = {}) {
   if (/^\s*(monumento a|estatua de|busto de|monument |monumento di|statue of|memorial)\b/i.test(nombre)) s -= 20;
   if (t.historic === "memorial" || t.tourism === "artwork") s -= 15;
   return s;
+}
+
+// --- POPULARIDAD ---------------------------------------------------------
+// Bonus por aparecer en la lista curada de Amadeus (atracciones más visitadas).
+// rank menor = más popular; estar presente ya es buena señal.
+function bonusAmadeus(lat, lon, pois) {
+  let mejor = null;
+  let md = Infinity;
+  for (const p of pois) {
+    const d = Math.hypot(p.lat - lat, p.lon - lon);
+    if (d < md) {
+      md = d;
+      mejor = p;
+    }
+  }
+  if (!mejor || md > 0.0025) return 0; // ~250 m de tolerancia
+  return Number.isFinite(mejor.rank) ? Math.max(8, 35 - Math.min(mejor.rank, 27)) : 15;
+}
+
+// Nº de Wikipedias (sitelinks) por entidad de Wikidata = fama global. Una sola
+// llamada en lote (hasta 50 IDs). Si falla, no pasa nada (devuelve {}).
+async function sitelinksWikidata(ids) {
+  if (!ids.length) return {};
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch(
+      `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${ids.join(
+        "|"
+      )}&props=sitelinks&format=json&origin=*`,
+      { headers: { "User-Agent": UA }, signal: ctrl.signal }
+    );
+    clearTimeout(t);
+    if (!r.ok) return {};
+    const d = await r.json();
+    const out = {};
+    for (const [qid, ent] of Object.entries(d.entities || {})) {
+      out[qid] = Object.keys(ent.sitelinks || {}).length;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+// Aplica ambas señales como campo `pop` en cada elemento (popularidad extra que
+// se suma al puntaje, tanto aquí como en el cliente).
+async function aplicarPopularidad(elementos, pois) {
+  for (const e of elementos) e.pop = bonusAmadeus(e.lat, e.lon, pois);
+  // sitelinks solo para los 50 más prometedores que tengan wikidata.
+  const conQ = elementos
+    .filter((e) => /^Q\d+$/.test(e.tags?.wikidata || ""))
+    .sort((a, b) => puntuar(b.tags) + (b.pop || 0) - (puntuar(a.tags) + (a.pop || 0)))
+    .slice(0, 50);
+  if (conQ.length) {
+    const sl = await sitelinksWikidata(conQ.map((e) => e.tags.wikidata));
+    for (const e of elementos) {
+      const n = e.tags?.wikidata ? sl[e.tags.wikidata] : 0;
+      if (n) e.pop = (e.pop || 0) + Math.min(22, Math.floor(n / 7));
+    }
+  }
 }
 
 // Convierte la respuesta de Overpass al formato unificado {elements:[...]}.
@@ -243,14 +308,20 @@ export async function GET(req) {
   }
 
   const pPhoton = desdePhoton(cat, lat, lon, radio).catch(() => []);
+  // Popularidad (Amadeus POI): solo para imperdibles/miradores y en paralelo.
+  const pPop =
+    cat === "imperdibles" || cat === "miradores"
+      ? poisAmadeus(lat, lon, 20).catch(() => [])
+      : Promise.resolve([]);
 
   // La CERCANA manda el ritmo (tope 13s); la lejana y Photon son best-effort con
   // topes más cortos para no estirar la respuesta. Todo cabe en maxDuration=20s
   // y el cliente espera 16s, así el resultado SÍ alcanza a guardarse en caché.
-  const [near, far, phot] = await Promise.all([
+  const [near, far, phot, pop] = await Promise.all([
     Promise.race([pNear, deadline(13000, [])]),
     Promise.race([pFar, deadline(11000, [])]),
     Promise.race([pPhoton, deadline(8000, [])]),
+    Promise.race([pPop, deadline(7000, [])]),
   ]);
 
   // Unir sin duplicar nombres (cercanos primero, luego lejanos, luego Photon).
@@ -263,10 +334,12 @@ export async function GET(req) {
     elementos.push(e);
   }
 
-  // Ordenar por CALIDAD en el servidor: los lugares icónicos (Wikipedia, museos,
-  // castillos) primero; las estatuas/monumentos menores al final. Así el cliente
-  // recibe ya los mejores arriba aunque luego corte la lista.
-  elementos.sort((a, b) => puntuar(b.tags) - puntuar(a.tags));
+  // Enriquecer con POPULARIDAD (Amadeus + sitelinks de Wikidata) → campo `pop`.
+  await aplicarPopularidad(elementos, pop || []);
+
+  // Ordenar por CALIDAD + POPULARIDAD: los lugares icónicos y más visitados
+  // primero. Así el cliente recibe ya los mejores arriba aunque corte la lista.
+  elementos.sort((a, b) => puntuar(b.tags) + (b.pop || 0) - (puntuar(a.tags) + (a.pop || 0)));
 
   const tieneDatos = elementos.length > 0;
   return new Response(JSON.stringify({ elements: elementos }), {

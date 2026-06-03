@@ -178,18 +178,21 @@ export async function traerLugares(categoria, lat, lon, radio, limite = 60) {
 
 async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
   let datos;
-  // 1) Intentar nuestra API cacheada en el edge de Vercel (muy rápida en repeticiones).
-  try {
-    // 16s: el servidor responde en ~13s como mucho; esperamos un poco más para
-    // que el resultado SÍ alcance a llegar y guardarse en caché (antes 14s
-    // abortaba antes de tiempo y la ciudad fallaba sin cachear nada).
-    const r = await fetchRapido(
-      `/api/lugares?cat=${categoria}&lat=${lat}&lon=${lon}&radio=${radio}&v=${API_VER}`,
-      {},
-      16000
-    );
-    if (r.ok) datos = await r.json();
-  } catch {}
+
+  // 1) Pedir a nuestra API (cacheada en el edge de Vercel).
+  if (!datos) {
+    try {
+      // 16s: el servidor responde en ~13s como mucho; esperamos un poco más para
+      // que el resultado SÍ alcance a llegar y guardarse en caché (antes 14s
+      // abortaba antes de tiempo y la ciudad fallaba sin cachear nada).
+      const r = await fetchRapido(
+        `/api/lugares?cat=${categoria}&lat=${lat}&lon=${lon}&radio=${radio}&v=${API_VER}`,
+        {},
+        16000
+      );
+      if (r.ok) datos = await r.json();
+    } catch {}
+  }
 
   // 2) Respaldo: ir directo a los espejos de Overpass.
   if (!datos || datos.error || !datos.elements) {
@@ -240,6 +243,8 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
     if (/^\s*(monumento a|estatua de|busto de|monument |monumento di|statue of|memorial)\b/i.test(nombre)) score -= 20;
     if (t.historic === "memorial" || t.tourism === "artwork") score -= 15;
     if (/^\s*(pizza|burger|pollo|comida|tienda|bar el|cafe el)\b/i.test(nombre)) score -= 4;
+    // POPULARIDAD real que añade el servidor (Amadeus POI + sitelinks Wikidata).
+    if (el.pop) score += el.pop;
 
     lugares.push({
       id: `${el.type}/${el.id}`,

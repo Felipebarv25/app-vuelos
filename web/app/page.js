@@ -687,7 +687,22 @@ export default function Home() {
       />
 
       <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-slate-400 lg:px-8">
-        {t("footer")} · Viajero 360
+        <div>{t("footer")} · Viajero 360</div>
+        <div className="mt-1 text-[11px] text-slate-400">
+          Datos de lugares: ©{" "}
+          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" className="underline hover:text-marca-600">
+            OpenStreetMap
+          </a>{" "}
+          (ODbL) ·{" "}
+          <a href="https://es.wikivoyage.org/" target="_blank" rel="noopener" className="underline hover:text-marca-600">
+            Wikivoyage
+          </a>
+          /{" "}
+          <a href="https://www.wikidata.org/" target="_blank" rel="noopener" className="underline hover:text-marca-600">
+            Wikidata
+          </a>{" "}
+          (CC BY-SA) · Popularidad: Amadeus
+        </div>
       </footer>
     </div>
   );
