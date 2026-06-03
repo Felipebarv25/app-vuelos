@@ -169,18 +169,24 @@ async function sitelinksWikidata(ids) {
   }
 }
 
-// Aplica ambas señales como campo `pop` en cada elemento (popularidad extra que
-// se suma al puntaje, tanto aquí como en el cliente).
+// Aplica las señales de popularidad como campo `pop` (se suma al puntaje, aquí
+// y en el cliente). Fuentes: Amadeus (cercanía) + sitelinks de Wikidata. Los
+// elementos icónicos ya traen su fama (`slWiki`) gratis desde la consulta WDQS.
 async function aplicarPopularidad(elementos, pois) {
-  for (const e of elementos) e.pop = bonusAmadeus(e.lat, e.lon, pois);
-  // sitelinks solo para los 50 más prometedores que tengan wikidata.
+  for (const e of elementos) {
+    let p = bonusAmadeus(e.lat, e.lon, pois);
+    if (e.slWiki) p += Math.min(28, Math.floor(e.slWiki / 6)); // íconos: muy famosos
+    e.pop = p;
+  }
+  // sitelinks para los NO-íconos con wikidata (1 sola llamada en lote).
   const conQ = elementos
-    .filter((e) => /^Q\d+$/.test(e.tags?.wikidata || ""))
+    .filter((e) => !e.slWiki && /^Q\d+$/.test(e.tags?.wikidata || ""))
     .sort((a, b) => puntuar(b.tags) + (b.pop || 0) - (puntuar(a.tags) + (a.pop || 0)))
     .slice(0, 50);
   if (conQ.length) {
     const sl = await sitelinksWikidata(conQ.map((e) => e.tags.wikidata));
     for (const e of elementos) {
+      if (e.slWiki) continue;
       const n = e.tags?.wikidata ? sl[e.tags.wikidata] : 0;
       if (n) e.pop = (e.pop || 0) + Math.min(22, Math.floor(n / 7));
     }
@@ -199,6 +205,62 @@ function desdeOverpass(datos) {
       tags: e.tags,
     }))
     .filter((e) => e.lat && e.lon);
+}
+
+// --- ICÓNICOS (Wikidata → OSM) -------------------------------------------
+// Garantiza que SIEMPRE entren los lugares más famosos de una ciudad (la Torre
+// Eiffel, el Coliseo, etc.). Wikidata da los puntos más célebres por nº de
+// Wikipedias (sitelinks); luego los buscamos en OSM POR su id de wikidata
+// (indexado → rápido). Lo que no es un lugar físico (eventos, tratados, idiomas)
+// no existe como POI en OSM y queda descartado automáticamente.
+async function wikidataFamosos(lat, lon, intentos = 1) {
+  const q = `SELECT ?item ?sl WHERE {
+    SERVICE wikibase:around {
+      ?item wdt:P625 ?c .
+      bd:serviceParam wikibase:center "Point(${lon} ${lat})"^^geo:wktLiteral .
+      bd:serviceParam wikibase:radius "15" .
+    }
+    ?item wikibase:sitelinks ?sl . FILTER(?sl >= 18)
+  } ORDER BY DESC(?sl) LIMIT 45`;
+  for (let i = 0; i <= intentos; i++) {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 6000);
+      const r = await fetch(
+        `https://query.wikidata.org/sparql?format=json&query=${encodeURIComponent(q)}`,
+        { headers: { Accept: "application/sparql-results+json", "User-Agent": UA }, signal: ctrl.signal }
+      );
+      clearTimeout(t);
+      if (r.ok) {
+        const d = await r.json();
+        const filas = d.results?.bindings || [];
+        if (filas.length)
+          return filas.map((b) => ({
+            qid: b.item.value.split("/").pop(),
+            sl: Number(b.sl.value) || 0,
+          }));
+      }
+    } catch {}
+    // WDQS a veces responde 200 vacío bajo carga: reintentamos una vez.
+  }
+  return [];
+}
+
+async function iconosCiudad(lat, lon) {
+  const fam = await wikidataFamosos(lat, lon);
+  if (!fam.length) return [];
+  const slPorQid = Object.fromEntries(fam.map((f) => [f.qid, f.sl]));
+  const filtros = fam.map((f) => `nwr["wikidata"="${f.qid}"];`).join("");
+  let datos;
+  try {
+    datos = await carrera(`[out:json][timeout:20];(${filtros});out center tags;`);
+  } catch {
+    return [];
+  }
+  // Solo lo que en OSM es realmente turístico/histórico (descarta barrios, etc.).
+  return desdeOverpass(datos)
+    .filter((e) => e.tags && (e.tags.tourism || e.tags.historic))
+    .map((e) => ({ ...e, slWiki: slPorQid[e.tags.wikidata] || 0 }));
 }
 
 // RESPALDO: Photon buscando por TÉRMINOS descriptivos cerca del punto.
@@ -308,26 +370,29 @@ export async function GET(req) {
   }
 
   const pPhoton = desdePhoton(cat, lat, lon, radio).catch(() => []);
-  // Popularidad (Amadeus POI): solo para imperdibles/miradores y en paralelo.
-  const pPop =
-    cat === "imperdibles" || cat === "miradores"
-      ? poisAmadeus(lat, lon, 20).catch(() => [])
-      : Promise.resolve([]);
+  // Solo para "imperdibles"/"miradores" y en paralelo:
+  //  · ICÓNICOS: los lugares más famosos (Wikidata → OSM). GARANTIZA la Eiffel.
+  //  · Amadeus POI: popularidad por visitas reales (si hay credenciales).
+  const conIconos = cat === "imperdibles" || cat === "miradores";
+  const pIconos = conIconos ? iconosCiudad(lat, lon).catch(() => []) : Promise.resolve([]);
+  const pPop = conIconos ? poisAmadeus(lat, lon, 20).catch(() => []) : Promise.resolve([]);
 
-  // La CERCANA manda el ritmo (tope 13s); la lejana y Photon son best-effort con
-  // topes más cortos para no estirar la respuesta. Todo cabe en maxDuration=20s
-  // y el cliente espera 16s, así el resultado SÍ alcanza a guardarse en caché.
-  const [near, far, phot, pop] = await Promise.all([
+  // La CERCANA manda el ritmo (tope 13s); las demás son best-effort con topes
+  // más cortos para no estirar la respuesta. Todo cabe en maxDuration=20s y el
+  // cliente espera 16s, así el resultado SÍ alcanza a guardarse en caché.
+  const [iconos, near, far, phot, pop] = await Promise.all([
+    Promise.race([pIconos, deadline(11000, [])]),
     Promise.race([pNear, deadline(13000, [])]),
     Promise.race([pFar, deadline(11000, [])]),
     Promise.race([pPhoton, deadline(8000, [])]),
     Promise.race([pPop, deadline(7000, [])]),
   ]);
 
-  // Unir sin duplicar nombres (cercanos primero, luego lejanos, luego Photon).
+  // Unir sin duplicar nombres. ICÓNICOS primero (prioridad), luego cercanos,
+  // lejanos y Photon.
   const vistos = new Set();
   let elementos = [];
-  for (const e of [...near, ...far, ...phot]) {
+  for (const e of [...iconos, ...near, ...far, ...phot]) {
     const n = e.tags?.name;
     if (!n || vistos.has(n)) continue;
     vistos.add(n);
