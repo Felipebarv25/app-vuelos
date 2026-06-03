@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-02T23:02:04",
+  "generado": "2026-06-03T03:59:50",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -37,8 +37,8 @@
       "fecha_vuelta": "2026-08-25",
       "aerolinea": "LA",
       "umbral": 400,
-      "mediana": 374,
-      "descuento": 8,
+      "mediana": 381,
+      "descuento": 9,
       "esGanga": true,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Miami%202026-08-18%202026-08-25"
     },
@@ -55,8 +55,8 @@
       "fecha_vuelta": "2026-08-23",
       "aerolinea": "AV",
       "umbral": 400,
-      "mediana": 373,
-      "descuento": 5,
+      "mediana": 380,
+      "descuento": 7,
       "esGanga": true,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Miami%202026-08-20%202026-08-23"
     },
@@ -253,8 +253,8 @@
       "fecha_vuelta": "2026-09-28",
       "aerolinea": "DM",
       "umbral": 450,
-      "mediana": 515,
-      "descuento": 12,
+      "mediana": 513,
+      "descuento": 11,
       "esGanga": false,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Nueva%20York%202026-09-16%202026-09-28"
     },
@@ -445,14 +445,14 @@
       "pais": "Reino Unido",
       "bandera": "🇬🇧",
       "q": "Londres, Reino Unido",
-      "precio": 1408,
+      "precio": 1391,
       "moneda": "USD",
       "fecha_ida": "2026-08-03",
       "fecha_vuelta": "2026-08-16",
       "aerolinea": "AV",
       "umbral": 800,
       "mediana": 1408,
-      "descuento": 0,
+      "descuento": 1,
       "esGanga": false,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Londres%202026-08-03%202026-08-16"
     },
