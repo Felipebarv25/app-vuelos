@@ -16,6 +16,7 @@ import CardDestino from "@/components/CardDestino";
 import Ofertas from "@/components/Ofertas";
 import Asesor from "@/components/Asesor";
 import { AfiliadosCiudad } from "@/components/Afiliados";
+import RequisitosViaje from "@/components/RequisitosViaje";
 import { useApp } from "@/lib/AppContext";
 import { track, trackVisita } from "@/lib/track";
 
@@ -73,6 +74,7 @@ export default function Home() {
   const [horas, setHoras] = useState(8);
   const [fechaInicio, setFechaInicio] = useState(""); // YYYY-MM-DD (opcional)
   const [fechaFin, setFechaFin] = useState("");
+  const [nacionalidad, setNacionalidad] = useState("CO"); // pasaporte para requisitos
   const [momento, setMomento] = useState("diurno");
   const [categoria, setCategoria] = useState("imperdibles");
 
@@ -99,6 +101,18 @@ export default function Home() {
   useEffect(() => {
     trackVisita(lang);
   }, [lang]);
+
+  // Nacionalidad (pasaporte) para los requisitos de entrada: recordar la elección.
+  useEffect(() => {
+    try {
+      const g = localStorage.getItem("v360_nac");
+      if (g) setNacionalidad(g);
+    } catch {}
+  }, []);
+  function cambiarNacionalidad(cc) {
+    setNacionalidad(cc);
+    try { localStorage.setItem("v360_nac", cc); } catch {}
+  }
 
   // Volver al menú principal (sin cerrar sesión): limpia la ciudad y resultados.
   function irAlInicio() {
@@ -589,6 +603,14 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Requisitos de entrada al país destino (visa, pasaporte, salud) */}
+            <RequisitosViaje
+              ciudad={ciudad}
+              nacionalidad={nacionalidad}
+              onNacionalidad={cambiarNacionalidad}
+              t={t}
+            />
+
             {/* Configuración del viaje (colapsable: deja el itinerario más arriba) */}
             <details open className="mb-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave">
               <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-bold text-marca-900">
@@ -818,6 +840,17 @@ export default function Home() {
             Wikidata
           </a>{" "}
           (CC BY-SA) · Popularidad: Amadeus
+        </div>
+        <div className="mt-1 text-[11px] text-slate-400">
+          Requisitos de visa:{" "}
+          <a href="https://github.com/ilyankou/passport-index-dataset" target="_blank" rel="noopener" className="underline hover:text-marca-600">
+            Passport Index
+          </a>{" "}
+          · Países:{" "}
+          <a href="https://restcountries.com/" target="_blank" rel="noopener" className="underline hover:text-marca-600">
+            REST Countries
+          </a>
+          {" "}· Información referencial, verifica en fuentes oficiales.
         </div>
       </footer>
     </div>
