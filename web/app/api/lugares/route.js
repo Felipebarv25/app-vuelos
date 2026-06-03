@@ -64,22 +64,15 @@ const FILTROS = {
 };
 
 // Para RADIO AMPLIO (>=30 km): consulta LIVIANA = solo nodos NOTABLES (con
-// wikidata) y sin "way" (que es lo pesado). Así Overpass responde en pocos
-// segundos en un área grande y trae solo lugares que valen la pena, incluidas
-// excursiones cercanas a la ciudad (p. ej. Guatapé/Piedra del Peñol).
+// wikidata) y SIN "way" (que es lo pesado y disparaba el tiempo a 90s+). Así
+// Overpass responde rápido en áreas grandes. Las ciudades TOP ya no dependen de
+// esto (usan el precálculo estático con WDQS); esta consulta es solo el respaldo
+// en vivo para ciudades no precalculadas, donde la prioridad es que abra rápido.
 const FILTROS_AMPLIO = {
-  // Todo va GATEADO por ["wikidata"] = solo lugares notables. Así, aunque
-  // incluyamos "way" (templos icónicos, palacios, museos grandes mapeados como
-  // polígono), la consulta sigue siendo liviana y rápida (no como el "way" sin
-  // filtro que disparaba el tiempo en Madrid). Esto garantiza que entren la
-  // Sacré-Cœur, el Panteón, Sainte-Chapelle, Pompidou, Invalides, etc.
   imperdibles: [
     'node["tourism"~"attraction|museum|theme_park|zoo|aquarium|viewpoint"]["name"]["wikidata"]',
-    'way["tourism"~"attraction|museum|theme_park"]["name"]["wikidata"]',
     'node["historic"~"castle|fort|monastery|archaeological_site|palace|monument"]["name"]["wikidata"]',
-    'way["historic"~"castle|fort|monastery|palace|monument"]["name"]["wikidata"]',
     'node["amenity"="place_of_worship"]["name"]["wikidata"]',
-    'way["amenity"="place_of_worship"]["name"]["wikidata"]',
     'node["natural"~"peak|volcano|waterfall"]["name"]["wikidata"]',
   ],
   miradores: ['node["tourism"="viewpoint"]["name"]["wikidata"]'],

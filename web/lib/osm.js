@@ -163,6 +163,23 @@ const ETIQUETAS = {
 
 import { cacheado, fetchRapido } from "./cache";
 import { distanciaMetros } from "./rutas";
+import { PRECALC } from "./precalcIndex";
+
+// ¿La ciudad (lat/lon) tiene lugares precalculados? Devuelve el slug del JSON
+// estático si hay una ciudad precalculada a menos de ~25 km. Así las ciudades
+// top abren al instante y con calidad fija (sin depender de APIs en vivo).
+function ciudadPrecalc(lat, lon) {
+  let mejor = null;
+  let md = Infinity;
+  for (const c of PRECALC) {
+    const d = Math.hypot(c.lat - lat, c.lon - lon);
+    if (d < md) {
+      md = d;
+      mejor = c;
+    }
+  }
+  return mejor && md < 0.25 ? mejor : null; // ~25 km
+}
 
 const TTL_CIUDAD = 1000 * 60 * 60 * 24 * 7; // 7 días
 const TTL_LUGARES = 1000 * 60 * 60 * 12; // 12 horas
@@ -189,10 +206,10 @@ export async function geocodificar(consulta) {
 }
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
-// v24: la consulta cercana en radio amplio ahora incluye templos/ways notables
-// (gateados por wikidata) para que SÍ entren Sacré-Cœur, Panteón, Sainte-Chapelle,
-// Pompidou, Invalides… (antes solo nodos tourism). Invalida cachés viejas.
-const API_VER = "24";
+// v25: ciudades TOP servidas desde precálculo estático (WDQS) → instantáneo y con
+// los íconos garantizados (Eiffel, Sagrada Familia, Coliseo…). El motor en vivo
+// queda como respaldo liviano para ciudades no precalculadas. Invalida cachés.
+const API_VER = "25";
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.
@@ -216,7 +233,25 @@ export async function traerLugares(categoria, lat, lon, radio, limite = 60) {
   return cacheado(
     clave,
     TTL_LUGARES,
-    () => traerLugaresRed(cat, categoria, lat, lon, r, limite),
+    async () => {
+      // ATAJO: ciudades top precalculadas (solo "imperdibles", la vista por
+      // defecto) → JSON estático del CDN: instantáneo y con calidad garantizada
+      // (Torre Eiffel, Sacré-Cœur, etc. siempre). El resto sigue en vivo.
+      if (categoria === "imperdibles") {
+        const pc = ciudadPrecalc(lat, lon);
+        if (pc) {
+          try {
+            const res = await fetchRapido(`/lugares/${pc.s}.json`, {}, 6000);
+            if (res.ok) {
+              const datos = await res.json();
+              const lista = procesarElementos(datos, categoria, lat, lon, limite, cat.nombre, true);
+              if (lista.length > 0) return lista;
+            }
+          } catch {}
+        }
+      }
+      return traerLugaresRed(cat, categoria, lat, lon, r, limite);
+    },
     // No cachear resultados vacíos: si una vez no llegó nada (red lenta), que
     // se reintente la próxima en vez de quedar la ciudad vacía 12 horas.
     (d) => Array.isArray(d) && d.length > 0
@@ -250,6 +285,13 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
     datos = await consultarOverpass(query);
   }
 
+  return procesarElementos(datos, categoria, lat, lon, limite, cat.nombre);
+}
+
+// Convierte los elementos crudos (de la API/Overpass en vivo O del JSON
+// precalculado) en la lista final de lugares: descarta basura, puntúa, ordena y
+// aplica la regla anti-zigzag. Compartido por ambos modos.
+function procesarElementos(datos, categoria, lat, lon, limite, catNombre, precalc = false) {
   const vistos = new Set();
   const lugares = [];
   for (const el of datos.elements || []) {
@@ -296,7 +338,7 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
     lugares.push({
       id: `${el.type}/${el.id}`,
       nombre,
-      categoria: ETIQUETAS[tipoRaw] || cat.nombre,
+      categoria: ETIQUETAS[tipoRaw] || catNombre,
       coord,
       notable: !!(t.wikidata || t.wikipedia),
       wiki: !!t.wikipedia,
@@ -308,6 +350,11 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
 
   // Ordenar por calidad (score), los mejores primero.
   lugares.sort((a, b) => b.score - a.score);
+
+  // Datos precalculados: ya están curados (famosos y dentro del radio de la
+  // ciudad), así que NO les aplicamos la regla anti-zigzag (evita descartar por
+  // error íconos algo alejados, p. ej. Versalles).
+  if (precalc) return lugares.slice(0, limite);
 
   // REGLA ANTI-ZIGZAG: los lugares cercanos al centro siempre entran; las
   // excursiones lejanas (>25 km) SOLO si son famosas (Wikipedia) y como máximo
