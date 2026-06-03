@@ -58,6 +58,9 @@ export async function GET(req) {
     ["ZREVRANGE", "m:lang", "0", "9", "WITHSCORES"],
     ["ZREVRANGE", "m:disp", "0", "9", "WITHSCORES"],
     ["MGET", ...horasKeys],
+    ["GET", "m:afil:total"],
+    ["ZREVRANGE", "m:afil:tipo", "0", "9", "WITHSCORES"],
+    ["MGET", ...dias.map((d) => `m:afil:${d}`)],
   ]);
 
   const visArr = (res[0] || []).map((x) => Number(x) || 0);
@@ -65,6 +68,8 @@ export async function GET(req) {
   const busqArr = (res[10] || []).map((x) => Number(x) || 0);
   const serieBusq = dias.map((d, i) => ({ dia: d, visitas: busqArr[i] || 0 }));
   const horas = (res[15] || []).map((x, h) => ({ nombre: `${h}h`, valor: Number(x) || 0 }));
+  const afilArr = (res[18] || []).map((x) => Number(x) || 0);
+  const serieAfil = dias.map((d, i) => ({ dia: d, visitas: afilArr[i] || 0 }));
 
   return Response.json({
     serie,
@@ -83,5 +88,8 @@ export async function GET(req) {
     idiomas: pares(res[13]),
     dispositivos: pares(res[14]),
     horas,
+    afilTotal: Number(res[16]) || 0,
+    afilTipo: pares(res[17]),
+    serieAfil,
   });
 }

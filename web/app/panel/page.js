@@ -102,13 +102,14 @@ function BarrasVert({ titulo, datos }) {
   );
 }
 
-// Embudo de conversión: visitas → búsquedas → presupuestos.
-function Embudo({ visitas, busquedas, presupuestos }) {
+// Embudo de conversión: visitas → búsquedas → presupuestos → clics de reserva.
+function Embudo({ visitas, busquedas, presupuestos, reservas }) {
   const pct = (n) => (visitas > 0 ? Math.round((n / visitas) * 100) : 0);
   const filas = [
     { et: "Visitas", n: visitas, p: 100, c: "bg-marca-500" },
     { et: "Hicieron una búsqueda", n: busquedas, p: pct(busquedas), c: "bg-violet-500" },
     { et: "Usaron el presupuesto", n: presupuestos, p: pct(presupuestos), c: "bg-emerald-500" },
+    { et: "Clic en reservar (afiliado)", n: reservas, p: pct(reservas), c: "bg-amber-500" },
   ];
   return (
     <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
@@ -235,7 +236,7 @@ export default function Panel() {
           <Kpi etiqueta="Últimos 30 días" valor={suma(30)} />
           <Kpi etiqueta="Visitas totales" valor={datos.visitasTotal} color="text-emerald-600" />
           <Kpi etiqueta="Búsquedas" valor={datos.busquedasTotal} />
-          <Kpi etiqueta="Presupuestos" valor={datos.presTotal} color="text-emerald-600" />
+          <Kpi etiqueta="Clics de reserva" valor={datos.afilTotal || 0} color="text-amber-600" />
         </div>
 
         {/* Embudo de conversión */}
@@ -244,6 +245,7 @@ export default function Panel() {
             visitas={datos.visitasTotal}
             busquedas={datos.busquedasTotal}
             presupuestos={datos.presTotal}
+            reservas={datos.afilTotal || 0}
           />
         </div>
 
@@ -288,6 +290,12 @@ export default function Panel() {
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <Barras titulo="💰 Presupuestos por rango" datos={datos.presRango} color="bg-emerald-500" />
           <Barras titulo="💰 Regiones más consultadas" datos={datos.presRegion} color="bg-emerald-500" />
+        </div>
+
+        {/* Reservas (afiliados) */}
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <PorDia titulo="🧳 Clics de reserva por día (últimos 30)" serie={datos.serieAfil || []} color="from-amber-400 to-orange-500" />
+          <Barras titulo="🧳 Reservas por tipo" datos={datos.afilTipo || []} color="bg-amber-500" vacio="Aún no hay clics en botones de reserva" />
         </div>
 
         <div className="mt-6 text-center text-[11px] text-slate-400">

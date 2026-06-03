@@ -57,6 +57,10 @@ export async function POST(req) {
   } else if (b.tipo === "busqueda_fallida" && b.q) {
     cmds.push(["INCR", "m:busqfail:total"]);
     cmds.push(["ZINCRBY", "m:busc:fallida", "1", String(b.q).slice(0, 60)]);
+  } else if (b.tipo === "afiliado_clic") {
+    cmds.push(["INCR", "m:afil:total"]);
+    cmds.push(["INCR", `m:afil:${d}`]);
+    if (b.cat) cmds.push(["ZINCRBY", "m:afil:tipo", "1", String(b.cat)]);
   } else if (b.tipo === "presupuesto") {
     cmds.push(["INCR", "m:pres:total"]);
     const r = rangoPresupuesto(b.usd);

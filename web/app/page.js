@@ -15,6 +15,7 @@ import Presupuesto from "@/components/Presupuesto";
 import CardDestino from "@/components/CardDestino";
 import Ofertas from "@/components/Ofertas";
 import Asesor from "@/components/Asesor";
+import { AfiliadosCiudad } from "@/components/Afiliados";
 import { useApp } from "@/lib/AppContext";
 import { track, trackVisita } from "@/lib/track";
 
@@ -620,6 +621,9 @@ export default function Home() {
                 onVerLugar={(p) => { setRutaTrazada(null); setDetalle(p); }}
               />
             )}
+
+            {/* Reserva tu viaje (experiencias, hoteles y vuelos) */}
+            <AfiliadosCiudad ciudad={ciudad} t={t} />
 
             {/* Lista completa de lugares encontrados (radio amplio ~100 km) */}
             {lugaresBase.length > 0 && (

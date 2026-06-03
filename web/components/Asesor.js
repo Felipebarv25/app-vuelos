@@ -2,13 +2,14 @@
 import { useEffect, useRef, useState } from "react";
 import { construirRuta, REGIONES, MONEDAS } from "@/lib/presupuesto";
 
-// Asesor de viajes con DOS modos:
-//  - "guia" (GRATIS, por defecto): chat guiado por botones que usa NUESTRO motor
-//    de rutas/presupuesto. Cero costo, todo en el código (sin IA).
-//  - "ia": chat libre con Claude (/api/asesor). Solo gasta si el usuario lo usa.
+// Asesor de viajes (modo GRATIS): chat guiado por botones que usa NUESTRO motor
+// de rutas/presupuesto. Cero costo, todo en el código (sin IA).
 export default function Asesor({ t = (k) => k, usuario, onPlanear, onAbrirPresupuesto }) {
   const [abierto, setAbierto] = useState(false);
-  const [modo, setModo] = useState("guia"); // "guia" | "ia"
+  // El modo IA (ChatIA) está desactivado por ahora: solo mostramos la guía
+  // gratis (sin costo). Para reactivarlo: recuperar el componente ChatIA del
+  // historial de git, restaurar el conmutador de modo aquí y configurar
+  // ANTHROPIC_API_KEY en Vercel.
   const finRef = useRef(null);
 
   useEffect(() => {
@@ -30,38 +31,21 @@ export default function Asesor({ t = (k) => k, usuario, onPlanear, onAbrirPresup
       {abierto && (
         <div className="fixed inset-x-0 bottom-0 z-[3500] flex justify-center sm:inset-auto sm:bottom-5 sm:right-5">
           <div className="animar-subir flex h-[78vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-white shadow-[0_-12px_40px_rgba(0,0,0,.3)] sm:h-[580px] sm:rounded-3xl sm:shadow-[0_20px_50px_rgba(0,0,0,.3)]">
-            {/* Cabecera con conmutador de modo */}
-            <div className="bg-gradient-to-br from-marca-600 to-marca-800 px-4 py-3 text-white">
+            {/* Cabecera */}
+            <div className="bg-gradient-to-br from-marca-600 to-marca-800 px-4 py-3.5 text-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-lg">🧭</span>
                   <div>
                     <div className="text-[15px] font-bold leading-tight">{t("asesorTitulo")}</div>
-                    <div className="text-[11px] text-white/80">
-                      {modo === "guia" ? t("asesorModoGuia") : t("asesorSubtitulo")}
-                    </div>
+                    <div className="text-[11px] text-white/80">{t("asesorModoGuia")}</div>
                   </div>
                 </div>
                 <button onClick={() => setAbierto(false)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-base">✕</button>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-1 rounded-2xl bg-black/15 p-1">
-                {[["guia", "🧭 " + t("asesorTabGuia")], ["ia", "✨ " + t("asesorTabIA")]].map(([k, label]) => (
-                  <button
-                    key={k}
-                    onClick={() => setModo(k)}
-                    className={`rounded-xl py-2 text-[13px] font-bold transition ${modo === k ? "bg-white text-marca-700 shadow" : "text-white/85"}`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
             </div>
 
-            {modo === "guia" ? (
-              <GuiaGratis t={t} usuario={usuario} onPlanear={onPlanear} onAbrirPresupuesto={onAbrirPresupuesto} cerrar={() => setAbierto(false)} finRef={finRef} />
-            ) : (
-              <ChatIA t={t} usuario={usuario} finRef={finRef} />
-            )}
+            <GuiaGratis t={t} usuario={usuario} onPlanear={onPlanear} onAbrirPresupuesto={onAbrirPresupuesto} cerrar={() => setAbierto(false)} finRef={finRef} />
           </div>
         </div>
       )}
@@ -219,98 +203,5 @@ function Boton({ onClick, children, sec }) {
     >
       {children}
     </button>
-  );
-}
-
-// ---------- MODO IA: chat libre con Claude ----------
-function ChatIA({ t, usuario, finRef }) {
-  const [mensajes, setMensajes] = useState([]);
-  const [texto, setTexto] = useState("");
-  const [cargando, setCargando] = useState(false);
-  const [sinClave, setSinClave] = useState(false);
-  const [avisoVisible, setAvisoVisible] = useState(true);
-  const init = useRef(false);
-  const ejemplos = [t("asesorEj1"), t("asesorEj2"), t("asesorEj3")];
-
-  useEffect(() => {
-    if (!init.current) {
-      init.current = true;
-      const nombre = usuario?.nombre ? `, ${usuario.nombre}` : "";
-      setMensajes([{ role: "assistant", content: t("asesorSaludo").replace("{nombre}", nombre) }]);
-    }
-  }, [usuario, t]);
-
-  async function enviar(e, preset) {
-    e?.preventDefault();
-    const pregunta = (preset ?? texto).trim();
-    if (!pregunta || cargando) return;
-    setTexto(""); setSinClave(false);
-    const historial = [...mensajes, { role: "user", content: pregunta }];
-    setMensajes([...historial, { role: "assistant", content: "" }]);
-    setCargando(true);
-    try {
-      const r = await fetch("/api/asesor", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mensajes: historial }),
-      });
-      if (r.status === 503) { setSinClave(true); setMensajes((m) => m.slice(0, -1)); setCargando(false); return; }
-      if (!r.ok || !r.body) throw new Error();
-      const reader = r.body.getReader();
-      const dec = new TextDecoder();
-      let acc = "";
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        acc += dec.decode(value, { stream: true });
-        setMensajes((m) => { const c = m.slice(); c[c.length - 1] = { role: "assistant", content: acc }; return c; });
-      }
-    } catch {
-      setMensajes((m) => { const c = m.slice(); c[c.length - 1] = { role: "assistant", content: "⚠️ " + t("asesorError") }; return c; });
-    } finally { setCargando(false); }
-  }
-
-  return (
-    <>
-      <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4">
-        {avisoVisible && (
-          <div className="flex items-start gap-2 rounded-2xl border border-marca-100 bg-marca-50 p-2.5 text-[12px] text-marca-700">
-            <span className="flex-1">✨ {t("asesorAvisoIA")}</span>
-            <button onClick={() => setAvisoVisible(false)} aria-label="Cerrar aviso" className="text-marca-400 hover:text-marca-600">✕</button>
-          </div>
-        )}
-        {mensajes.map((m, i) => (
-          <Burbuja key={i} role={m.role === "user" ? "user" : "bot"}>
-            {cargando && i === mensajes.length - 1 && !m.content ? <span className="spin" /> : m.content}
-          </Burbuja>
-        ))}
-        {mensajes.length <= 1 && !cargando && (
-          <div className="flex flex-wrap gap-2">
-            {ejemplos.map((ej, i) => (
-              <button key={i} onClick={() => enviar(null, ej)} className="rounded-full border border-marca-200 bg-white px-3 py-1.5 text-[12.5px] font-medium text-marca-700 transition hover:bg-marca-50">
-                {ej}
-              </button>
-            ))}
-          </div>
-        )}
-        {sinClave && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-[13px] leading-relaxed text-amber-800">
-            {t("asesorSinClave")}
-          </div>
-        )}
-        <div ref={finRef} />
-      </div>
-      <form onSubmit={enviar} className="flex items-center gap-2 border-t border-slate-100 bg-white p-3">
-        <input
-          value={texto}
-          onChange={(e) => setTexto(e.target.value)}
-          placeholder={t("asesorPlaceholder")}
-          className="flex-1 rounded-full border border-slate-200 px-4 py-2.5 text-[14px] outline-none focus:border-marca-400"
-        />
-        <button type="submit" disabled={cargando || !texto.trim()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-marca-500 to-marca-600 text-white shadow-marca transition disabled:opacity-40">
-          {cargando ? <span className="spin" /> : "➤"}
-        </button>
-      </form>
-    </>
   );
 }

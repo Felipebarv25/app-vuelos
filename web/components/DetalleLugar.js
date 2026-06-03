@@ -5,6 +5,7 @@ import { planTransporte, trazarRuta, perfilDeModo } from "@/lib/rutaReal";
 import { distanciaMetros } from "@/lib/rutas";
 import { fmtMin } from "@/lib/itinerario";
 import { monedaDePais, costoLocal, costoUsd } from "@/lib/monedasPais";
+import { BotonTourLugar } from "./Afiliados";
 
 // Distancia legible (m / km).
 function fmtDist(m) {
@@ -39,6 +40,7 @@ function emojiCategoria(cat = "") {
 export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazarRuta, onAgregar, t = (k) => k }) {
   const [foto, setFoto] = useState(null);
   const [cargandoFoto, setCargandoFoto] = useState(true);
+  const [errorFoto, setErrorFoto] = useState(false);
   const [modoSel, setModoSel] = useState(null);
   const [verMas, setVerMas] = useState(false);
 
@@ -52,6 +54,7 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
   useEffect(() => {
     let vivo = true;
     setCargandoFoto(true);
+    setErrorFoto(false);
     setFoto(null);
     fotoDeLugar(lugar.nombre, ciudad?.nombre).then((f) => {
       if (vivo) {
@@ -89,8 +92,14 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
             <div className="flex h-full w-full items-center justify-center text-slate-400">
               <span className="spin" />
             </div>
-          ) : foto?.url ? (
-            <img src={foto.url} alt={lugar.nombre} className="h-full w-full object-cover" />
+          ) : foto?.url && !errorFoto ? (
+            <img
+              src={foto.url}
+              alt={lugar.nombre}
+              loading="lazy"
+              onError={() => setErrorFoto(true)}
+              className="h-full w-full object-cover"
+            />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-marca-400 to-marca-900">
               <span className="text-[58px]">{emojiCategoria(lugar.categoria)}</span>
@@ -131,6 +140,7 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
             >
               🗺️ Google Maps
             </a>
+            <BotonTourLugar lugar={lugar} ciudad={ciudad} t={t} />
           </div>
 
           {/* Descripción (de Wikipedia), expandible */}
