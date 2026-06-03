@@ -404,33 +404,33 @@ export default function Home() {
       {!ciudad && !cargando && (
         <div className="relative z-10 -mt-8 rounded-t-[32px] bg-[#f6f7fb] pt-2 lg:-mt-12">
         <div className="animar-subir mx-auto max-w-7xl px-4 pb-4 pt-7 lg:px-8">
-          {/* Banner presupuesto */}
+          {/* Banner presupuesto: tarjeta blanca con acento verde (a juego con el
+              resto de tarjetas de la página; el verde es el acento de "dinero"). */}
           <button
             onClick={() => setMostrarPresupuesto(true)}
-            className="group animar-pop relative mt-6 flex w-full items-center gap-4 overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 px-5 py-5 text-left text-white shadow-[0_10px_30px_-6px_rgba(5,150,105,.45)] ring-1 ring-white/15 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_-8px_rgba(5,150,105,.6)] lg:max-w-2xl lg:px-7 lg:py-6"
+            className="group animar-pop relative mt-6 flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-slate-100 bg-white px-4 py-4 text-left shadow-suave transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-media lg:max-w-2xl lg:px-5 lg:py-5"
           >
-            {/* Destellos decorativos para dar profundidad */}
-            <span className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-white/15 blur-2xl" />
-            <span className="pointer-events-none absolute -bottom-14 left-12 h-28 w-28 rounded-full bg-teal-200/20 blur-2xl" />
+            {/* Acento de color a la izquierda */}
+            <span className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-emerald-400 to-emerald-600" />
 
-            {/* Badge con icono */}
-            <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-2xl shadow-inner ring-1 ring-white/25 backdrop-blur-sm transition-transform duration-300 group-hover:scale-105 lg:h-14 lg:w-14">
+            {/* Tile con icono */}
+            <span className="relative ml-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-2xl text-white shadow-[0_6px_16px_-4px_rgba(5,150,105,.55)] transition-transform duration-300 group-hover:scale-105 lg:h-14 lg:w-14">
               💰
             </span>
 
             {/* Texto */}
-            <div className="relative min-w-0 flex-1">
-              <div className="mb-0.5 text-[10.5px] font-semibold uppercase tracking-[0.2em] text-white/75">
+            <div className="min-w-0 flex-1">
+              <div className="mb-0.5 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-emerald-600">
                 {t("presupEyebrow")}
               </div>
-              <div className="text-[17px] font-extrabold leading-tight tracking-tight lg:text-[21px]">
+              <div className="text-[16.5px] font-extrabold leading-tight tracking-tight text-marca-900 lg:text-[20px]">
                 {t("presupBoton")}
               </div>
-              <div className="mt-0.5 text-[13px] text-white/90">{t("presupSub")}</div>
+              <div className="mt-0.5 text-[13px] text-slate-500">{t("presupSub")}</div>
             </div>
 
-            {/* Flecha en pastilla */}
-            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 text-lg font-bold ring-1 ring-white/30 transition-all duration-300 group-hover:translate-x-0.5 group-hover:bg-white group-hover:text-emerald-700">
+            {/* Flecha */}
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-lg font-bold text-emerald-600 transition-all duration-300 group-hover:translate-x-0.5 group-hover:bg-emerald-600 group-hover:text-white">
               →
             </span>
           </button>
