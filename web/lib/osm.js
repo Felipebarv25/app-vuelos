@@ -189,10 +189,10 @@ export async function geocodificar(consulta) {
 }
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
-// v23: cobertura de fama ampliada (radio 22 km + templos/parques/torres icónicos),
-// para que entren más imperdibles (Sacré-Cœur, Versalles, Panteón…) y los días
-// 3-5 no caigan en museos menores. Invalida cachés viejas.
-const API_VER = "23";
+// v24: la consulta cercana en radio amplio ahora incluye templos/ways notables
+// (gateados por wikidata) para que SÍ entren Sacré-Cœur, Panteón, Sainte-Chapelle,
+// Pompidou, Invalides… (antes solo nodos tourism). Invalida cachés viejas.
+const API_VER = "24";
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.
