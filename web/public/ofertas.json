@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-03T20:54:47",
+  "generado": "2026-06-03T23:05:49",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -413,18 +413,18 @@
       "pais": "Reino Unido",
       "bandera": "🇬🇧",
       "q": "Londres, Reino Unido",
-      "precio": 1051,
+      "precio": 978,
       "moneda": "USD",
-      "fecha_ida": "2026-08-04",
-      "fecha_vuelta": "2026-08-26",
-      "aerolinea": "CM",
+      "fecha_ida": "2026-11-14",
+      "fecha_vuelta": "2026-11-27",
+      "aerolinea": "AC",
       "umbral": 800,
       "mediana": 1051,
-      "descuento": 0,
+      "descuento": 7,
       "esGanga": false,
-      "visto": "2026-06-03T03:59:37",
-      "link": "https://www.aviasales.com/search/BOG0408LON26081",
-      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Londres%202026-08-04%202026-08-26"
+      "visto": "2026-06-03T23:05:35",
+      "link": "https://www.aviasales.com/search/BOG1411LON27111",
+      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Londres%202026-11-14%202026-11-27"
     },
     {
       "origen": "MDE",
