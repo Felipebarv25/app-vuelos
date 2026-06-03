@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-03T03:59:50",
+  "generado": "2026-06-03T10:58:02",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -23,6 +23,24 @@
       "descuento": 5,
       "esGanga": true,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Ciudad%20de%20M%C3%A9xico%202026-07-06%202026-07-19"
+    },
+    {
+      "origen": "BOG",
+      "destino": "LIM",
+      "ciudad": "Lima",
+      "pais": "Perú",
+      "bandera": "🇵🇪",
+      "q": "Lima, Perú",
+      "precio": 332,
+      "moneda": "USD",
+      "fecha_ida": "2026-07-07",
+      "fecha_vuelta": "2026-07-09",
+      "aerolinea": "JA",
+      "umbral": 300,
+      "mediana": 397,
+      "descuento": 16,
+      "esGanga": true,
+      "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Lima%202026-07-07%202026-07-09"
     },
     {
       "origen": "BOG",
@@ -55,8 +73,8 @@
       "fecha_vuelta": "2026-08-23",
       "aerolinea": "AV",
       "umbral": 400,
-      "mediana": 380,
-      "descuento": 7,
+      "mediana": 387,
+      "descuento": 9,
       "esGanga": true,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Miami%202026-08-20%202026-08-23"
     },
@@ -85,14 +103,14 @@
       "pais": "Brasil",
       "bandera": "🇧🇷",
       "q": "São Paulo, Brasil",
-      "precio": 553,
+      "precio": 552,
       "moneda": "USD",
       "fecha_ida": "2026-11-14",
       "fecha_vuelta": "2026-11-27",
       "aerolinea": "DM",
       "umbral": 450,
       "mediana": 654,
-      "descuento": 15,
+      "descuento": 16,
       "esGanga": true,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20S%C3%A3o%20Paulo%202026-11-14%202026-11-27"
     },
@@ -109,7 +127,7 @@
       "fecha_vuelta": "2026-11-24",
       "aerolinea": "AM",
       "umbral": 800,
-      "mediana": 1233,
+      "mediana": 1241,
       "descuento": 46,
       "esGanga": true,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Mil%C3%A1n%202026-11-10%202026-11-24"
@@ -185,24 +203,6 @@
       "descuento": 11,
       "esGanga": true,
       "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Tokio%202026-08-04%202026-08-26"
-    },
-    {
-      "origen": "BOG",
-      "destino": "LIM",
-      "ciudad": "Lima",
-      "pais": "Perú",
-      "bandera": "🇵🇪",
-      "q": "Lima, Perú",
-      "precio": 332,
-      "moneda": "USD",
-      "fecha_ida": "2026-07-07",
-      "fecha_vuelta": "2026-07-09",
-      "aerolinea": "JA",
-      "umbral": 300,
-      "mediana": 380,
-      "descuento": 13,
-      "esGanga": false,
-      "link": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Lima%202026-07-07%202026-07-09"
     },
     {
       "origen": "MDE",
