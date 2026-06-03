@@ -8,9 +8,22 @@ import {
   isoDesdeNombre,
   interpretarVisa,
   exigeFiebreAmarilla,
-  linkOficial,
-  linkSalud,
+  infoPais,
+  idiomasEs,
 } from "@/lib/requisitos";
+
+// Celda de dato del país.
+function Dato({ icono, etiqueta, valor }) {
+  if (!valor) return null;
+  return (
+    <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5">
+      <div className="text-[10.5px] font-bold uppercase tracking-wide text-slate-400">
+        {icono} {etiqueta}
+      </div>
+      <div className="mt-0.5 text-[13px] font-semibold text-slate-700">{valor}</div>
+    </div>
+  );
+}
 
 const TONO = {
   emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -38,8 +51,12 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
   const info = interpretarVisa(req);
   const yf = exigeFiebreAmarilla(destinoIso);
   const paisNombre = nombrePais(destinoIso);
-  const naciNombre = nombrePais(nacionalidad);
   const paises = listaPaises();
+  const dp = infoPais(destinoIso) || {};
+  const conduccion = dp.conduccion === "left" ? t("reqIzquierda") : dp.conduccion === "right" ? t("reqDerecha") : "";
+  const moneda = dp.moneda ? `${dp.moneda.nombre}${dp.moneda.sim ? ` (${dp.moneda.sim})` : ""}` : "";
+  const idiomas = idiomasEs(dp.idiomas).join(", ");
+  const huso = dp.husos?.length ? dp.husos[0] + (dp.husos.length > 1 ? ` (+${dp.husos.length - 1})` : "") : "";
 
   return (
     <div className="mb-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave">
@@ -102,25 +119,21 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
             </div>
           </div>
 
-          {/* Enlaces oficiales + aviso */}
-          <div className="flex flex-wrap gap-2">
-            <a
-              href={linkOficial(paisNombre, naciNombre)}
-              target="_blank"
-              rel="noopener"
-              className="rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-3.5 py-2 text-[12.5px] font-bold text-white shadow-marca transition hover:brightness-105"
-            >
-              ✅ {t("reqVerOficial")}
-            </a>
-            <a
-              href={linkSalud(paisNombre)}
-              target="_blank"
-              rel="noopener"
-              className="rounded-xl border-[1.5px] border-slate-200 px-3.5 py-2 text-[12.5px] font-bold text-marca-600 transition hover:bg-slate-50"
-            >
-              💉 {t("reqVerSalud")}
-            </a>
+          {/* Datos útiles del país (depositados aquí, sin salir de la app) */}
+          <div>
+            <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+              {t("reqDatosPais")}
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <Dato icono="💰" etiqueta={t("reqMoneda")} valor={moneda} />
+              <Dato icono="🗣️" etiqueta={t("reqIdioma")} valor={idiomas} />
+              <Dato icono="🏛️" etiqueta={t("reqCapital")} valor={dp.capital} />
+              <Dato icono="🕐" etiqueta={t("reqHuso")} valor={huso} />
+              <Dato icono="🚗" etiqueta={t("reqConduccion")} valor={conduccion} />
+              <Dato icono="📞" etiqueta={t("reqTelefono")} valor={dp.tel} />
+            </div>
           </div>
+
           <div className="rounded-lg bg-amber-50 p-2.5 text-[11.5px] leading-snug text-amber-700">
             ⚠️ {t("reqDisclaimer")}
           </div>

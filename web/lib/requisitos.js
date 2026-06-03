@@ -116,12 +116,23 @@ export function exigeFiebreAmarilla(iso) {
   return FIEBRE_AMARILLA.has(iso);
 }
 
-// --- Enlaces a fuentes oficiales (verificación) ---
-export function linkOficial(paisNombre, nacionalidadNombre) {
-  const q = `requisitos de entrada a ${paisNombre} pasaporte ${nacionalidadNombre} sitio oficial embajada`;
-  return "https://www.google.com/search?q=" + encodeURIComponent(q);
+// --- Datos útiles del país (depositados en la web, sin enlaces externos) ---
+export function infoPais(iso) {
+  return PAISES_ISO[iso] || null;
 }
-export function linkSalud(paisNombre) {
-  const q = `vacunas y requisitos de salud para viajar a ${paisNombre} OMS`;
-  return "https://www.google.com/search?q=" + encodeURIComponent(q);
+
+// Nombres de idioma en inglés (REST Countries) -> español (los más comunes).
+const IDIOMAS_ES = {
+  Spanish: "Español", English: "Inglés", French: "Francés", Portuguese: "Portugués",
+  Italian: "Italiano", German: "Alemán", Dutch: "Neerlandés", Japanese: "Japonés",
+  "Mandarin Chinese": "Chino mandarín", Chinese: "Chino", Korean: "Coreano",
+  Arabic: "Árabe", Russian: "Ruso", Turkish: "Turco", Greek: "Griego", Thai: "Tailandés",
+  Hindi: "Hindi", Hebrew: "Hebreo", Polish: "Polaco", Czech: "Checo", Hungarian: "Húngaro",
+  Swedish: "Sueco", Danish: "Danés", Norwegian: "Noruego", Finnish: "Finés",
+  Vietnamese: "Vietnamita", Indonesian: "Indonesio", Malay: "Malayo", Croatian: "Croata",
+  Romanian: "Rumano", Bulgarian: "Búlgaro", Ukrainian: "Ucraniano", Catalan: "Catalán",
+  Persian: "Persa", Swahili: "Suajili", Filipino: "Filipino", Tagalog: "Tagalo",
+};
+export function idiomasEs(arr) {
+  return (arr || []).map((x) => IDIOMAS_ES[x] || x);
 }

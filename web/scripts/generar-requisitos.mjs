@@ -50,19 +50,37 @@ async function main() {
   writeFileSync(join(dir, "visas.json"), JSON.stringify(visas));
   console.log(`Visas: ${Object.keys(visas).length} pasaportes -> visas.json`);
 
-  // --- 2) PAÍSES (nombre español + bandera) ---
+  // --- 2) PAÍSES (datos útiles depositados en la web, sin enlaces externos) ---
   console.log("Bajando países (REST Countries)…");
   let paises = {};
   try {
     const data = await bajar(
-      "https://restcountries.com/v3.1/all?fields=cca2,translations,name",
+      "https://restcountries.com/v3.1/all?fields=cca2,translations,name,capital,currencies,languages,timezones,car,idd",
       true
     );
     for (const c of data) {
       const cc = c.cca2;
       if (!cc) continue;
       const nombre = c.translations?.spa?.common || c.name?.common || cc;
-      paises[cc] = { nombre, bandera: bandera(cc) };
+      // Moneda principal
+      let moneda = null;
+      const mk = Object.keys(c.currencies || {})[0];
+      if (mk) {
+        const m = c.currencies[mk];
+        moneda = { cod: mk, nombre: m?.name || "", sim: m?.symbol || "" };
+      }
+      // Código telefónico (+57…)
+      const tel = (c.idd?.root || "") + (c.idd?.suffixes?.length === 1 ? c.idd.suffixes[0] : "");
+      paises[cc] = {
+        nombre,
+        bandera: bandera(cc),
+        capital: c.capital?.[0] || "",
+        moneda,
+        idiomas: Object.values(c.languages || {}).slice(0, 3),
+        husos: c.timezones || [],
+        conduccion: c.car?.side || "",
+        tel,
+      };
     }
   } catch (e) {
     console.log("! REST Countries falló (" + e.message + "); usando solo ISO del dataset.");
