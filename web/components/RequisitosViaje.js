@@ -10,6 +10,8 @@ import {
   exigeFiebreAmarilla,
   infoPais,
   idiomasEs,
+  enchufe,
+  estacionesClave,
 } from "@/lib/requisitos";
 
 // Celda de dato del país.
@@ -57,6 +59,9 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
   const moneda = dp.moneda ? `${dp.moneda.nombre}${dp.moneda.sim ? ` (${dp.moneda.sim})` : ""}` : "";
   const idiomas = idiomasEs(dp.idiomas).join(", ");
   const huso = dp.husos?.length ? dp.husos[0] + (dp.husos.length > 1 ? ` (+${dp.husos.length - 1})` : "") : "";
+  const tomacorriente = enchufe(destinoIso);
+  const ecl = estacionesClave(dp.lat);
+  const estaciones = ecl ? t("estac_" + ecl) : "";
 
   return (
     <div className="mb-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave">
@@ -131,6 +136,8 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
               <Dato icono="🕐" etiqueta={t("reqHuso")} valor={huso} />
               <Dato icono="🚗" etiqueta={t("reqConduccion")} valor={conduccion} />
               <Dato icono="📞" etiqueta={t("reqTelefono")} valor={dp.tel} />
+              <Dato icono="🔌" etiqueta={t("reqEnchufe")} valor={tomacorriente} />
+              <Dato icono="🌤️" etiqueta={t("reqEstaciones")} valor={estaciones} />
             </div>
           </div>
 

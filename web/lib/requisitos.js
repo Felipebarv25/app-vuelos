@@ -136,3 +136,37 @@ const IDIOMAS_ES = {
 export function idiomasEs(arr) {
   return (arr || []).map((x) => IDIOMAS_ES[x] || x);
 }
+
+// --- Enchufe / voltaje (datos estables, formato neutro: "V · Hz · tipos") ---
+const ENCHUFES = {
+  // Europa (230 V / 50 Hz)
+  ES: "230 V · 50 Hz · C/F", FR: "230 V · 50 Hz · C/E", IT: "230 V · 50 Hz · C/F/L",
+  GB: "230 V · 50 Hz · G", DE: "230 V · 50 Hz · C/F", NL: "230 V · 50 Hz · C/F",
+  PT: "230 V · 50 Hz · C/F", CZ: "230 V · 50 Hz · C/E", AT: "230 V · 50 Hz · C/F",
+  HU: "230 V · 50 Hz · C/F", GR: "230 V · 50 Hz · C/F", PL: "230 V · 50 Hz · C/E",
+  CH: "230 V · 50 Hz · C/J", BE: "230 V · 50 Hz · C/E", IE: "230 V · 50 Hz · G",
+  HR: "230 V · 50 Hz · C/F",
+  // América
+  US: "120 V · 60 Hz · A/B", CA: "120 V · 60 Hz · A/B", MX: "127 V · 60 Hz · A/B",
+  CO: "110 V · 60 Hz · A/B", PE: "220 V · 60 Hz · A/C", EC: "120 V · 60 Hz · A/B",
+  CL: "220 V · 50 Hz · C/L", AR: "220 V · 50 Hz · C/I", BR: "127/220 V · 60 Hz · C/N",
+  UY: "230 V · 50 Hz · C/F/L", BO: "230 V · 50 Hz · A/C", PY: "220 V · 50 Hz · C",
+  VE: "120 V · 60 Hz · A/B", PA: "110 V · 60 Hz · A/B", CR: "120 V · 60 Hz · A/B",
+  GT: "120 V · 60 Hz · A/B", CU: "110/220 V · 60 Hz · A/B/C", DO: "120 V · 60 Hz · A/B",
+  // Asia / Oceanía / África / Medio Oriente
+  JP: "100 V · 50/60 Hz · A/B", TH: "230 V · 50 Hz · A/B/C", AE: "230 V · 50 Hz · G",
+  IN: "230 V · 50 Hz · C/D/M", CN: "220 V · 50 Hz · A/C/I", KR: "220 V · 60 Hz · C/F",
+  ID: "230 V · 50 Hz · C/F", SG: "230 V · 50 Hz · G", TR: "230 V · 50 Hz · C/F",
+  MA: "220 V · 50 Hz · C/E", EG: "220 V · 50 Hz · C/F", ZA: "230 V · 50 Hz · D/M/N",
+  AU: "230 V · 50 Hz · I", NZ: "230 V · 50 Hz · I",
+};
+export function enchufe(iso) {
+  return ENCHUFES[iso] || null;
+}
+
+// --- Estaciones según la latitud (dato factual del hemisferio) ---
+export function estacionesClave(lat) {
+  if (lat == null) return null;
+  if (Math.abs(lat) <= 23.5) return "tropical";
+  return lat > 0 ? "norte" : "sur";
+}

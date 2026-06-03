@@ -55,7 +55,7 @@ async function main() {
   let paises = {};
   try {
     const data = await bajar(
-      "https://restcountries.com/v3.1/all?fields=cca2,translations,name,capital,currencies,languages,timezones,car,idd",
+      "https://restcountries.com/v3.1/all?fields=cca2,translations,name,capital,currencies,languages,timezones,car,idd,latlng",
       true
     );
     for (const c of data) {
@@ -80,6 +80,7 @@ async function main() {
         husos: c.timezones || [],
         conduccion: c.car?.side || "",
         tel,
+        lat: Array.isArray(c.latlng) ? c.latlng[0] : null, // hemisferio/estaciones
       };
     }
   } catch (e) {
