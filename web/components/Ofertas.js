@@ -35,6 +35,18 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es" }) {
   function fmtUsd(v) {
     return "US$ " + Math.round(v).toLocaleString("en-US");
   }
+  // "visto hace X" (frescura del precio) a partir del timestamp del último escaneo.
+  function fmtHace(iso) {
+    if (!iso) return "";
+    const ms = Date.now() - new Date(iso).getTime();
+    if (Number.isNaN(ms)) return "";
+    const min = Math.round(ms / 60000);
+    if (min < 60) return t("ofertasHaceMin").replace("{n}", Math.max(1, min));
+    const h = Math.round(min / 60);
+    if (h < 24) return t("ofertasHaceHoras").replace("{n}", h);
+    const d = Math.round(h / 24);
+    return t("ofertasHaceDias").replace("{n}", d);
+  }
   // Aproximación a pesos colombianos (tasa orientativa ~4000 COP/USD).
   function fmtCop(v) {
     return "≈ $ " + Math.round(v * 4000).toLocaleString("es-CO") + " COP";
@@ -102,12 +114,18 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es" }) {
             <div className="text-[12px] text-slate-400">{t("ofertasIdaVuelta")}</div>
             <div className="text-[12px] font-medium text-slate-500">{fmtCop(r.precio)}</div>
 
-            <div className="mt-2 flex items-center gap-1.5 text-[12.5px] text-slate-500">
+            <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[12.5px] text-slate-500">
               📅 {fmtFecha(r.fecha_ida)} – {fmtFecha(r.fecha_vuelta)}
               <span className="text-slate-300">·</span>
               <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500">
                 {r.aerolinea}
               </span>
+              {r.visto && (
+                <>
+                  <span className="text-slate-300">·</span>
+                  <span className="text-[11px] text-slate-400">🕒 {fmtHace(r.visto)}</span>
+                </>
+              )}
             </div>
 
             <div className="mt-3 flex gap-2">
@@ -120,13 +138,23 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es" }) {
               <a
                 href={r.link}
                 target="_blank"
-                rel="noopener"
+                rel="sponsored noopener"
                 aria-label={t("ofertasVerVuelos") || "Ver vuelos"}
                 title={t("ofertasVerVuelos") || "Ver vuelos"}
                 className="flex items-center justify-center rounded-xl border-[1.5px] border-slate-200 px-3 text-[13px] font-bold text-marca-600 transition hover:bg-slate-50"
               >
                 ✈️
               </a>
+            </div>
+
+            {/* Verificación honesta: comparar el precio en Google Vuelos */}
+            <div className="mt-2 flex items-center justify-between text-[11px]">
+              <span className="text-slate-400">{t("ofertasAprox")}</span>
+              {r.link_google && (
+                <a href={r.link_google} target="_blank" rel="noopener" className="font-semibold text-marca-500 hover:underline">
+                  {t("ofertasComparar")} ↗
+                </a>
+              )}
             </div>
           </div>
         ))}

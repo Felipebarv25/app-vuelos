@@ -14,9 +14,13 @@ import json
 import os
 import statistics
 import urllib.parse
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+
+from dotenv import load_dotenv
 
 import config
+
+load_dotenv()  # marker de afiliado, etc. (en GitHub Actions van como variables)
 
 RAIZ = os.path.dirname(__file__)
 HISTORIAL = os.path.join(RAIZ, "datos", "historial.csv")
@@ -44,9 +48,29 @@ META = {
 }
 
 DESCUENTO_GANGA = 0.15  # 15% bajo la mediana = oferta destacada
+MAX_DIAS_FRESCO = 30    # no mostrar rutas cuyo último dato sea más viejo que esto
 
 
-def link_vuelos(origen, ciudad, fecha_ida, fecha_vuelta):
+def _ddmm(iso):
+    """'YYYY-MM-DD' -> 'DDMM' (formato de fecha de los deep-links de Aviasales)."""
+    return (iso[8:10] + iso[5:7]) if iso and len(iso) >= 10 else ""
+
+
+def link_aviasales(origen, destino, fecha_ida, fecha_vuelta):
+    """Deep-link al BUSCADOR real de Aviasales para esas fechas exactas (con tu
+    marker de afiliado). Lleva a un precio reservable de verdad, no a un número
+    viejo. Formato: ORIGEN+DDMM(ida)+DESTINO+DDMM(vuelta)+pasajeros."""
+    di = _ddmm(fecha_ida)
+    if not di:
+        return ""
+    code = f"{origen}{di}{destino}{_ddmm(fecha_vuelta)}1"
+    url = "https://www.aviasales.com/search/" + code
+    marker = os.environ.get("TRAVELPAYOUTS_MARKER", "")
+    return url + (f"?marker={marker}" if marker else "")
+
+
+def link_google(origen, ciudad, fecha_ida, fecha_vuelta):
+    """Enlace a Google Vuelos (para comparar/verificar el precio)."""
     q = f"vuelos desde {origen} a {ciudad} {fecha_ida} {fecha_vuelta}"
     return "https://www.google.com/travel/flights?q=" + urllib.parse.quote(q)
 
@@ -73,17 +97,31 @@ def main():
             clave = (fila["origen"], fila["destino"])
             rutas.setdefault(clave, []).append({**fila, "precio": precio})
 
+    limite_fresco = (date.today() - timedelta(days=MAX_DIAS_FRESCO)).isoformat()
     salida = []
     for (origen, destino), filas in rutas.items():
         if origen not in ORIGENES or destino not in META:
             continue
+        # La mediana (línea base para el % de descuento) se calcula sobre TODO el
+        # historial de la ruta: refleja "lo que suele costar".
         precios = [r["precio"] for r in filas]
-        mejor = min(filas, key=lambda r: r["precio"])
         mediana = statistics.median(precios)
+
+        # PRECIO ACTUAL = el más barato del ÚLTIMO escaneo, NO el mínimo histórico
+        # (ese ya no existe y por eso no cuadraba con Google). Así el número es el
+        # más reciente que vimos de verdad.
+        ultima = max((r.get("timestamp") or "")[:10] for r in filas)
+        if ultima and ultima < limite_fresco:
+            continue  # datos viejos: mejor no mostrar un precio que ya no aplica
+        recientes = [r for r in filas if (r.get("timestamp") or "")[:10] == ultima] or filas
+        mejor = min(recientes, key=lambda r: r["precio"])
         precio = mejor["precio"]
+
         descuento = round((1 - precio / mediana) * 100) if mediana else 0
         umbral = config.DESTINOS.get(destino, ("", 0))[1]
-        es_ganga = precio <= umbral or (mediana and precio <= mediana * (1 - DESCUENTO_GANGA))
+        # "Ganga" = descuento REAL y notable: 15%+ bajo lo habitual, o bien
+        # claramente por debajo de tu umbral objetivo (no apenas rozándolo).
+        es_ganga = (mediana and precio <= mediana * (1 - DESCUENTO_GANGA)) or (umbral and precio <= umbral * 0.85)
         ciudad, pais, bandera = META[destino]
 
         salida.append({
@@ -102,7 +140,9 @@ def main():
             "mediana": round(mediana),
             "descuento": max(0, descuento),
             "esGanga": bool(es_ganga),
-            "link": link_vuelos(origen, ciudad, mejor.get("fecha_ida", ""), mejor.get("fecha_vuelta", "")),
+            "visto": mejor.get("timestamp", ""),  # cuándo se vio este precio
+            "link": link_aviasales(origen, destino, mejor.get("fecha_ida", ""), mejor.get("fecha_vuelta", "")),
+            "link_google": link_google(origen, ciudad, mejor.get("fecha_ida", ""), mejor.get("fecha_vuelta", "")),
         })
 
     # Ordenar: primero gangas, luego por precio ascendente.
