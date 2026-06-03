@@ -37,8 +37,8 @@ export async function trazarRuta(a, b, perfil = "foot") {
 }
 
 // Recomienda transporte con tiempo y COSTO aproximado, según distancia.
-// Costos en USD (orientativos, mundiales). El usuario ve algo accionable
-// sin salir de la app.
+// El costo se da como rango en USD [min,max] (numérico) para poder mostrarlo
+// también en la moneda local del lugar. Caminar = [0,0] (gratis).
 export function planTransporte(metros) {
   const km = metros / 1000;
   const opciones = [];
@@ -49,19 +49,40 @@ export function planTransporte(metros) {
     icono: "🚶",
     nombre: "Caminar",
     minutos: Math.round(metros / 80),
-    costo: "Gratis",
+    usd: [0, 0],
     recomendado: metros < 1200,
   });
 
-  // Transporte público (metro/bus)
+  // Bus urbano
   if (km > 0.6) {
     opciones.push({
       modo: "transit",
+      icono: "🚌",
+      nombre: "Bus",
+      minutos: Math.round(km * 4.5 + 8),
+      usd: [0.5, 2],
+      recomendado: km >= 1.2 && km <= 10,
+    });
+    // Metro
+    opciones.push({
+      modo: "subway",
       icono: "🚇",
-      nombre: "Metro / Bus",
-      minutos: Math.round(km * 4 + 8), // velocidad media puerta a puerta
-      costo: "≈ US$ 1–3",
-      recomendado: km >= 1.2 && km <= 12,
+      nombre: "Metro",
+      minutos: Math.round(km * 3.5 + 7),
+      usd: [0.6, 2.5],
+      recomendado: false,
+    });
+  }
+
+  // Tren (distancias mayores: cercanías / regional)
+  if (km > 8) {
+    opciones.push({
+      modo: "train",
+      icono: "🚆",
+      nombre: "Tren",
+      minutos: Math.round(km * 1.6 + 10),
+      usd: [Math.max(2, Math.round(1 + km * 0.2)), Math.max(4, Math.round(2 + km * 0.4))],
+      recomendado: km > 30,
     });
   }
 
@@ -72,18 +93,19 @@ export function planTransporte(metros) {
       icono: "🚲",
       nombre: "Bici",
       minutos: Math.round(km * 4),
-      costo: "≈ US$ 1–4",
+      usd: [1, 4],
       recomendado: false,
     });
   }
 
   // Taxi / app
+  const taxi = Math.max(4, Math.round(2.5 + km * 1.4));
   opciones.push({
     modo: "driving",
     icono: "🚕",
     nombre: "Taxi / App",
     minutos: Math.round(km * 2.2 + 4),
-    costo: `≈ US$ ${Math.max(4, Math.round(2.5 + km * 1.4))}`,
+    usd: [taxi, Math.round(taxi * 1.4)],
     recomendado: km > 12,
   });
 
@@ -93,7 +115,7 @@ export function planTransporte(metros) {
 }
 
 export function perfilDeModo(modo) {
-  if (modo === "driving" || modo === "transit") return "driving";
+  if (["driving", "transit", "subway", "train"].includes(modo)) return "driving";
   if (modo === "cycling") return "bike";
   return "foot";
 }

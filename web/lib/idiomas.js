@@ -70,6 +70,7 @@ const T = {
       "Activa el GPS (abajo en la app) para ver el transporte y el tiempo exactos desde donde estás.",
     estasA: "Estás a",
     deAqui: "de aquí. Elige cómo llegar:",
+    desdeCentro: "del centro de",
     verRuta: "Ver ruta",
     recomendado: "recomendado",
     aproxAviso:
@@ -237,6 +238,7 @@ const T = {
       "Turn on GPS (below in the app) to see exact transport and time from where you are.",
     estasA: "You're",
     deAqui: "away. Choose how to get there:",
+    desdeCentro: "from the center of",
     verRuta: "See route",
     recomendado: "recommended",
     aproxAviso:
@@ -395,6 +397,7 @@ const T = {
       "Ative o GPS (abaixo no app) para ver o transporte e o tempo exatos de onde você está.",
     estasA: "Você está a",
     deAqui: "daqui. Escolha como chegar:",
+    desdeCentro: "do centro de",
     verRuta: "Ver rota",
     recomendado: "recomendado",
     aproxAviso:
@@ -553,6 +556,7 @@ const T = {
       "Activez le GPS (en bas de l'app) pour voir le transport et le temps exacts depuis votre position.",
     estasA: "Vous êtes à",
     deAqui: "d'ici. Choisissez comment y aller :",
+    desdeCentro: "du centre de",
     verRuta: "Voir l'itinéraire",
     recomendado: "recommandé",
     aproxAviso:

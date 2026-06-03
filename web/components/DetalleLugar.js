@@ -4,6 +4,19 @@ import { fotoDeLugar } from "@/lib/imagenes";
 import { planTransporte, trazarRuta, perfilDeModo } from "@/lib/rutaReal";
 import { distanciaMetros } from "@/lib/rutas";
 import { fmtMin } from "@/lib/itinerario";
+import { monedaDePais, costoLocal, costoUsd } from "@/lib/monedasPais";
+
+// Distancia legible (m / km).
+function fmtDist(m) {
+  return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`;
+}
+// Modo de viaje para los enlaces de Google Maps.
+function gmapsModo(modo) {
+  if (modo === "walking") return "walking";
+  if (modo === "cycling") return "bicycling";
+  if (modo === "driving") return "driving";
+  return "transit"; // bus, metro, tren
+}
 
 // Emoji representativo según el tipo de lugar (para cuando no hay foto).
 function emojiCategoria(cat = "") {
@@ -29,8 +42,12 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
   const [modoSel, setModoSel] = useState(null);
   const [verMas, setVerMas] = useState(false);
 
-  const metros = origen ? distanciaMetros(origen, lugar.coord) : null;
+  // Punto de referencia: tu ubicación (GPS) si la hay; si no, el centro de la
+  // ciudad, para poder mostrar SIEMPRE las opciones de cómo llegar.
+  const refOrigen = origen || (ciudad?.lat != null ? [ciudad.lat, ciudad.lon] : null);
+  const metros = refOrigen ? distanciaMetros(refOrigen, lugar.coord) : null;
   const transportes = metros != null ? planTransporte(metros) : [];
+  const moneda = monedaDePais(ciudad?.pais);
 
   useEffect(() => {
     let vivo = true;
@@ -130,65 +147,89 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
             </p>
           )}
 
-          {/* Cómo llegar desde tu ubicación */}
-          <div className="mb-2 font-bold text-marca-900">
-            🧭 {t("comoLlegar")} {origen ? t("desdeTuUbicacion") : ""}
-          </div>
+          {/* Cómo llegar: tiempos y costos por medio de transporte (USD + local) */}
+          <div className="mb-2 font-bold text-marca-900">🧭 {t("comoLlegar")}</div>
 
-          {!origen && (
+          {transportes.length > 0 ? (
+            <>
+              <div className="mb-2.5 text-[13px] text-slate-500">
+                {origen ? (
+                  <>
+                    {t("estasA")} <b>{fmtDist(metros)}</b> {t("deAqui")}
+                  </>
+                ) : (
+                  <>
+                    ≈ <b>{fmtDist(metros)}</b> {t("desdeCentro")}
+                    {ciudad?.nombre ? ` ${ciudad.nombre}` : ""}
+                  </>
+                )}
+              </div>
+
+              <div className="grid gap-2">
+                {transportes.map((tr) => {
+                  const gratis = tr.usd[0] === 0 && tr.usd[1] === 0;
+                  const loc = gratis ? null : costoLocal(tr.usd[0], tr.usd[1], moneda);
+                  const claseBase = `flex items-center gap-3 rounded-xl border p-3 transition ${
+                    modoSel === tr.modo
+                      ? "border-marca-500 bg-marca-50"
+                      : tr.recomendado
+                      ? "border-emerald-200 bg-emerald-50"
+                      : "border-slate-100 bg-white"
+                  }`;
+                  const cuerpo = (
+                    <>
+                      <span className="text-[22px]">{tr.icono}</span>
+                      <div className="flex-1 text-left">
+                        <div className="text-[15px] font-bold">
+                          {tr.nombre}
+                          {tr.recomendado && (
+                            <span className="ml-2 rounded-full bg-emerald-600 px-1.5 py-0.5 align-middle text-[10px] font-bold text-white">
+                              {t("recomendado")}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          ⏱️ {fmtMin(tr.minutos)} · 💵{" "}
+                          {gratis ? t("gratis") : costoUsd(tr.usd[0], tr.usd[1])}
+                          {loc && <span className="text-slate-400"> · {loc}</span>}
+                        </div>
+                      </div>
+                      <span className="whitespace-nowrap text-[13px] font-bold text-marca-600">
+                        {origen ? `${t("verRuta")} →` : "🗺️ →"}
+                      </span>
+                    </>
+                  );
+                  // Con GPS: dibuja la ruta dentro de la app. Sin GPS: abre la
+                  // ruta en Google Maps (usa tu ubicación actual del teléfono).
+                  return origen ? (
+                    <button key={tr.modo} onClick={() => elegirTransporte(tr)} className={claseBase}>
+                      {cuerpo}
+                    </button>
+                  ) : (
+                    <a
+                      key={tr.modo}
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${lugar.coord[0]},${lugar.coord[1]}&travelmode=${gmapsModo(tr.modo)}`}
+                      target="_blank"
+                      rel="noopener"
+                      className={claseBase}
+                    >
+                      {cuerpo}
+                    </a>
+                  );
+                })}
+              </div>
+
+              <div className="mt-2 text-[11px] text-slate-400">{t("aproxAviso")}</div>
+              {!origen && (
+                <div className="mt-2 rounded-[10px] bg-amber-50 p-2.5 text-[12px] leading-snug text-amber-700">
+                  📍 {t("activaGps")}
+                </div>
+              )}
+            </>
+          ) : (
             <div className="rounded-[10px] bg-amber-100 p-3 text-[13px] leading-snug text-amber-800">
               📍 {t("activaGps")}
             </div>
-          )}
-
-          {origen && (
-            <>
-              <div className="mb-2.5 text-[13px] text-slate-500">
-                {t("estasA")}{" "}
-                <b>
-                  {metros < 1000
-                    ? `${Math.round(metros)} m`
-                    : `${(metros / 1000).toFixed(1)} km`}
-                </b>{" "}
-                {t("deAqui")}
-              </div>
-              <div className="grid gap-2">
-                {transportes.map((tr) => (
-                  <button
-                    key={tr.modo}
-                    onClick={() => elegirTransporte(tr)}
-                    className={`flex items-center gap-3 rounded-xl border p-3 transition ${
-                      modoSel === tr.modo
-                        ? "border-marca-500 bg-marca-50"
-                        : tr.recomendado
-                        ? "border-slate-100 bg-emerald-50"
-                        : "border-slate-100 bg-white"
-                    }`}
-                  >
-                    <span className="text-[22px]">{tr.icono}</span>
-                    <div className="flex-1 text-left">
-                      <div className="text-[15px] font-bold">
-                        {tr.nombre}
-                        {tr.recomendado && (
-                          <span className="ml-2 rounded-full bg-emerald-600 px-1.5 py-0.5 align-middle text-[10px] font-bold text-white">
-                            {t("recomendado")}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        ⏱️ {fmtMin(tr.minutos)} · 💵 {tr.costo}
-                      </div>
-                    </div>
-                    <span className="text-[13px] font-bold text-marca-600">
-                      {t("verRuta")} →
-                    </span>
-                  </button>
-                ))}
-              </div>
-              <div className="mt-2 text-[11px] text-slate-400">
-                {t("aproxAviso")}
-              </div>
-            </>
           )}
         </div>
       </div>
