@@ -76,6 +76,42 @@ export const CATEGORIAS = {
       'way["tourism"~"attraction|museum"]["name"]',
     ],
   },
+  museos: {
+    nombre: "Museos",
+    icono: "🖼️",
+    filtros: [
+      'node["tourism"~"museum|gallery"]["name"]',
+      'way["tourism"~"museum|gallery"]["name"]',
+    ],
+  },
+  monumentos: {
+    nombre: "Monumentos",
+    icono: "🏛️",
+    filtros: [
+      'node["tourism"="attraction"]["name"]',
+      'node["historic"~"monument|memorial|castle|ruins|monastery|archaeological_site|palace|fort"]["name"]',
+      'way["historic"~"castle|palace|fort|monastery|monument"]["name"]',
+    ],
+  },
+  parques: {
+    nombre: "Parques",
+    icono: "🌳",
+    filtros: [
+      'node["leisure"~"park|garden"]["name"]',
+      'way["leisure"~"park|garden"]["name"]',
+      'node["tourism"="theme_park"]["name"]',
+      'way["tourism"="theme_park"]["name"]',
+    ],
+  },
+  estadios: {
+    nombre: "Estadios",
+    icono: "🏟️",
+    filtros: [
+      'node["leisure"="stadium"]["name"]',
+      'way["leisure"="stadium"]["name"]',
+      'way["building"="stadium"]["name"]',
+    ],
+  },
   restaurantes: {
     nombre: "Restaurantes",
     icono: "🍽️",
@@ -111,6 +147,12 @@ const ETIQUETAS = {
   ruins: "Ruinas",
   monastery: "Monasterio",
   archaeological_site: "Sitio arqueológico",
+  palace: "Palacio",
+  fort: "Fortaleza",
+  place_of_worship: "Templo",
+  theme_park: "Parque temático",
+  zoo: "Zoológico",
+  aquarium: "Acuario",
   restaurant: "Restaurante",
   cafe: "Café",
   coffee_shop: "Café",
@@ -147,15 +189,20 @@ export async function geocodificar(consulta) {
 }
 
 // Trae lugares de una categoría alrededor de un punto (con caché).
-// v22: + lugares ICÓNICOS garantizados (Wikidata→OSM) y popularidad en el score.
-// Invalida cachés viejas para que entren los nuevos lugares (Torre Eiffel, etc.).
-const API_VER = "22";
+// v23: cobertura de fama ampliada (radio 22 km + templos/parques/torres icónicos),
+// para que entren más imperdibles (Sacré-Cœur, Versalles, Panteón…) y los días
+// 3-5 no caigan en museos menores. Invalida cachés viejas.
+const API_VER = "23";
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.
 const RADIO_POR_CAT = {
   imperdibles: 90000,
   miradores: 90000,
+  museos: 25000,
+  monumentos: 25000,
+  parques: 25000,
+  estadios: 25000,
   restaurantes: 15000,
   cafes: 12000,
   bares: 15000,
@@ -327,6 +374,10 @@ function sugerirMinutos(categoria, tipo) {
   if (categoria === "restaurantes") return 75;
   if (categoria === "cafes") return 30;
   if (categoria === "bares") return 90;
+  if (categoria === "museos") return 120;
+  if (categoria === "parques") return 45;
+  if (categoria === "estadios") return 75;
+  if (categoria === "monumentos") return 45;
   if (tipo === "museum" || tipo === "gallery") return 120;
   if (tipo === "viewpoint") return 30;
   if (tipo === "castle" || tipo === "archaeological_site") return 90;

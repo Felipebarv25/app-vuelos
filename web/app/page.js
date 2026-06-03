@@ -287,11 +287,14 @@ export default function Home() {
   // Primera vez: pantalla de bienvenida (idioma + nombre).
   if (!usuario) return <Bienvenida />;
 
+  // Inicio = HERO con foto; tras buscar una ciudad = cinta blanca tipo tarjeta.
+  const esHero = !ciudad && !cargando;
+
   return (
     <div className="min-h-screen pb-10">
-      {/* Cabecera: HERO con foto de viaje en el inicio; barra fina en la ciudad */}
-      <header className={`relative z-[1000] text-white ${(!ciudad && !cargando) ? "" : "sticky top-0 bg-gradient-to-br from-marca-600 via-marca-700 to-marca-900 shadow-marca"}`}>
-        {!ciudad && !cargando && (
+      {/* Cabecera: HERO con foto de viaje en el inicio; cinta blanca en la ciudad */}
+      <header className={`relative z-[1000] ${esHero ? "text-white" : "sticky top-0 border-b border-slate-200 bg-white/95 text-slate-700 shadow-suave backdrop-blur"}`}>
+        {esHero && (
           <>
             <div className="absolute inset-0 bg-gradient-to-br from-marca-700 to-marca-900" />
             <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${HERO_IMG})` }} />
@@ -304,32 +307,32 @@ export default function Home() {
           {CIUDADES_POPULARES.map((c) => (<option key={c} value={c} />))}
         </datalist>
 
-        <div className={`relative mx-auto max-w-7xl px-4 lg:px-8 ${(!ciudad && !cargando) ? "pt-5 pb-16 lg:pb-24" : "pt-4 pb-5"}`}>
+        <div className={`relative mx-auto max-w-7xl px-4 lg:px-8 ${esHero ? "pt-5 pb-16 lg:pb-24" : "pt-3 pb-3"}`}>
           {/* Barra de navegación superior */}
           <div className="flex items-center justify-between gap-4">
             <button type="button" onClick={irAlInicio} aria-label="Viajero 360 — inicio" className="cursor-pointer text-left">
-              <div className="flex items-center gap-2 text-[22px] font-extrabold tracking-tight drop-shadow lg:text-2xl">
+              <div className={`flex items-center gap-2 text-[20px] font-extrabold tracking-tight lg:text-2xl ${esHero ? "text-white drop-shadow" : "text-marca-700"}`}>
                 🌍 Viajero 360
               </div>
-              <div className="hidden text-[13px] text-white/85 sm:block">{t("tagline")}</div>
+              <div className={`hidden text-[13px] sm:block ${esHero ? "text-white/85" : "text-slate-400"}`}>{t("tagline")}</div>
             </button>
             <div className="flex items-center gap-3 lg:gap-5">
-              <span className="hidden text-sm text-white/90 md:inline">
-                👋 {t("hola")}, <b>{usuario.nombre}</b>
+              <span className={`hidden text-sm md:inline ${esHero ? "text-white/90" : "text-slate-500"}`}>
+                👋 {t("hola")}, <b className={esHero ? "" : "text-marca-700"}>{usuario.nombre}</b>
               </span>
               {ciudad && (
-                <button onClick={irAlInicio} className="text-[13px] text-white/90 underline-offset-2 hover:underline">
+                <button onClick={irAlInicio} className={`text-[13px] underline-offset-2 hover:underline ${esHero ? "text-white/90" : "text-slate-500"}`}>
                   🏠 {t("inicio")}
                 </button>
               )}
-              <button onClick={salir} className="text-[13px] text-white/90 underline-offset-2 hover:underline">
+              <button onClick={salir} className={`text-[13px] underline-offset-2 hover:underline ${esHero ? "text-white/90" : "text-slate-500"}`}>
                 {t("salir")}
               </button>
-              <SelectorIdioma />
+              <SelectorIdioma oscuro={esHero} />
             </div>
           </div>
 
-          {!ciudad && !cargando ? (
+          {esHero ? (
             /* HERO de inicio */
             <div className="mx-auto mt-12 max-w-2xl text-center lg:mt-20">
               <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">
@@ -369,8 +372,8 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            /* Barra fina (vista de ciudad) */
-            <div className="relative mt-4 max-w-2xl">
+            /* Cinta de ciudad: buscador compacto sobre fondo blanco */
+            <div className="relative mt-3 max-w-2xl">
               <form onSubmit={buscarTexto} className="flex gap-2">
                 <input
                   value={consulta}
@@ -378,9 +381,9 @@ export default function Home() {
                   onFocus={() => sugerencias.length && setMostrarSug(true)}
                   placeholder={t("buscarPlaceholder")}
                   list="ciudades-pop"
-                  className="flex-1 rounded-2xl border-0 px-5 py-3.5 text-base text-slate-800 shadow-md outline-none"
+                  className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-base text-slate-800 outline-none transition focus:border-marca-400 focus:bg-white"
                 />
-                <button type="submit" aria-label={t("buscar")} className="rounded-2xl bg-white px-5 text-lg font-bold text-marca-600 shadow-md transition hover:bg-marca-50">
+                <button type="submit" aria-label={t("buscar")} className="rounded-2xl bg-gradient-to-r from-marca-500 to-marca-600 px-5 text-lg font-bold text-white shadow-marca transition hover:brightness-110">
                   🔎
                 </button>
               </form>

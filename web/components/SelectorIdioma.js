@@ -4,13 +4,13 @@ import { useApp } from "@/lib/AppContext";
 import { IDIOMAS } from "@/lib/idiomas";
 
 // Botoncito de idioma + menú, para cambiar el idioma desde la cabecera.
-export default function SelectorIdioma() {
+export default function SelectorIdioma({ oscuro = true }) {
   const { lang, cambiarIdioma } = useApp();
   const [abierto, setAbierto] = useState(false);
 
   return (
     <div style={{ position: "relative" }}>
-      <button onClick={() => setAbierto((v) => !v)} style={btn}>
+      <button onClick={() => setAbierto((v) => !v)} style={oscuro ? btn : btnClaro}>
         {IDIOMAS[lang]?.bandera} ▾
       </button>
       {abierto && (
@@ -44,6 +44,15 @@ const btn = {
   background: "rgba(255,255,255,.2)",
   color: "#fff",
   border: "none",
+  borderRadius: 8,
+  padding: "6px 10px",
+  fontSize: 15,
+};
+// Variante para fondo claro (cinta blanca tipo tarjeta).
+const btnClaro = {
+  background: "#f1f5f9",
+  color: "#4f46e5",
+  border: "1px solid #e2e8f0",
   borderRadius: 8,
   padding: "6px 10px",
   fontSize: 15,

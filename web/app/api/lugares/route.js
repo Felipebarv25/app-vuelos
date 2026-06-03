@@ -34,6 +34,29 @@ const FILTROS = {
     'node["amenity"="place_of_worship"]["name"]["wikidata"]',
     'way["amenity"="place_of_worship"]["name"]["wikidata"]',
   ],
+  // Filtros opcionales por TIPO (chips además de "Imperdibles").
+  museos: [
+    'node["tourism"~"museum|gallery"]["name"]',
+    'way["tourism"~"museum|gallery"]["name"]',
+  ],
+  monumentos: [
+    'node["tourism"="attraction"]["name"]',
+    'node["historic"~"castle|fort|monastery|archaeological_site|palace"]["name"]',
+    'node["historic"~"monument|memorial"]["name"]["wikidata"]',
+    'way["historic"~"castle|fort|monastery|palace"]["name"]',
+    'node["man_made"="tower"]["name"]["wikidata"]',
+  ],
+  parques: [
+    'node["leisure"~"park|garden"]["name"]["wikidata"]',
+    'way["leisure"~"park|garden"]["name"]["wikidata"]',
+    'node["tourism"="theme_park"]["name"]',
+    'way["tourism"="theme_park"]["name"]',
+  ],
+  estadios: [
+    'node["leisure"="stadium"]["name"]',
+    'way["leisure"="stadium"]["name"]',
+    'way["building"="stadium"]["name"]',
+  ],
   restaurantes: ['node["amenity"="restaurant"]["name"]'],
   cafes: ['node["amenity"~"cafe|coffee_shop"]["name"]'],
   bares: ['node["amenity"~"bar|pub|nightclub"]["name"]'],
@@ -218,10 +241,10 @@ async function wikidataFamosos(lat, lon, intentos = 1) {
     SERVICE wikibase:around {
       ?item wdt:P625 ?c .
       bd:serviceParam wikibase:center "Point(${lon} ${lat})"^^geo:wktLiteral .
-      bd:serviceParam wikibase:radius "15" .
+      bd:serviceParam wikibase:radius "22" .
     }
     ?item wikibase:sitelinks ?sl . FILTER(?sl >= 18)
-  } ORDER BY DESC(?sl) LIMIT 45`;
+  } ORDER BY DESC(?sl) LIMIT 60`;
   for (let i = 0; i <= intentos; i++) {
     try {
       const ctrl = new AbortController();
@@ -257,9 +280,24 @@ async function iconosCiudad(lat, lon) {
   } catch {
     return [];
   }
-  // Solo lo que en OSM es realmente turístico/histórico (descarta barrios, etc.).
+  // Estos POIs ya son FAMOSOS (vienen de la lista por sitelinks de Wikidata).
+  // Aceptamos los tipos físicos visitables (incluidos templos icónicos, parques,
+  // torres y puentes célebres) y descartamos barrios y límites administrativos.
   return desdeOverpass(datos)
-    .filter((e) => e.tags && (e.tags.tourism || e.tags.historic))
+    .filter((e) => {
+      const t = e.tags || {};
+      if (t.place || t.boundary || t.admin_level) return false;
+      return (
+        t.tourism ||
+        t.historic ||
+        t.amenity === "place_of_worship" ||
+        t.leisure === "park" ||
+        t.leisure === "garden" ||
+        t.man_made === "tower" ||
+        t.man_made === "bridge" ||
+        /church|cathedral|basilica|chapel|temple|mosque|synagogue/i.test(t.building || "")
+      );
+    })
     .map((e) => ({ ...e, slWiki: slPorQid[e.tags.wikidata] || 0 }));
 }
 
