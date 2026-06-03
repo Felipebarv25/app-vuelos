@@ -1,5 +1,6 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { track } from "@/lib/track";
 import {
   calcularDestinos,
   construirRuta,
@@ -35,6 +36,17 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
   const [excluidos, setExcluidos] = useState([]);
 
   const presupuestoUsd = monto * MONEDAS[moneda].aUsd;
+
+  // Métrica: registra el presupuesto + región usados (2s tras dejar de cambiar,
+  // para no contar cada tecla). Alimenta el panel privado.
+  useEffect(() => {
+    if (!presupuestoUsd) return;
+    const id = setTimeout(
+      () => track("presupuesto", { usd: Math.round(presupuestoUsd), region }),
+      2000
+    );
+    return () => clearTimeout(id);
+  }, [presupuestoUsd, region]);
 
   const resultados = useMemo(
     () => calcularDestinos({ presupuestoUsd, dias, personas, region }),

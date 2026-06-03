@@ -16,6 +16,7 @@ import CardDestino from "@/components/CardDestino";
 import Ofertas from "@/components/Ofertas";
 import Asesor from "@/components/Asesor";
 import { useApp } from "@/lib/AppContext";
+import { track, trackVisita } from "@/lib/track";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
 
@@ -91,6 +92,11 @@ export default function Home() {
 
   const debounce = useRef(null);
 
+  // Métrica: cuenta una visita por sesión (para el panel privado).
+  useEffect(() => {
+    trackVisita();
+  }, []);
+
   // Volver al menú principal (sin cerrar sesión): limpia la ciudad y resultados.
   function irAlInicio() {
     setCiudad(null);
@@ -126,6 +132,7 @@ export default function Home() {
     // Mostramos el mapa y la ciudad de INMEDIATO (ya tenemos coords del autocompletado).
     const c = { nombre: sug.ciudad, pais: sug.pais, lat: sug.lat, lon: sug.lon };
     setCiudad(c);
+    track("busqueda", { ciudad: sug.ciudad, pais: sug.pais });
     cargarCategoria("imperdibles", c); // los lugares cargan en segundo plano
   }
 
@@ -140,6 +147,7 @@ export default function Home() {
       const c = await geocodificar(q);
       setCiudad(c); // mapa visible ya
       setCargando(false);
+      track("busqueda", { ciudad: c.nombre, pais: c.pais });
       cargarCategoria("imperdibles", c); // lugares en segundo plano
     } catch (err) {
       setError(err.message);
