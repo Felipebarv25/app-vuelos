@@ -12,14 +12,16 @@ export function track(tipo, datos = {}) {
   } catch {}
 }
 
-// Cuenta UNA visita por sesión de navegador (no por recarga).
-export function trackVisita() {
+// Cuenta UNA visita por sesión de navegador (no por recarga). Envía además el
+// idioma y la hora local del visitante (para métricas de mercado y hora pico).
+export function trackVisita(lang) {
+  const extra = { lang: lang || null, hora: new Date().getHours() };
   try {
-    if (typeof sessionStorage === "undefined") return;
+    if (typeof sessionStorage === "undefined") return track("visita", extra);
     if (sessionStorage.getItem("v360_visita")) return;
     sessionStorage.setItem("v360_visita", "1");
-    track("visita");
+    track("visita", extra);
   } catch {
-    track("visita");
+    track("visita", extra);
   }
 }

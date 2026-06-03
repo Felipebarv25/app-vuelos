@@ -94,8 +94,8 @@ export default function Home() {
 
   // Métrica: cuenta una visita por sesión (para el panel privado).
   useEffect(() => {
-    trackVisita();
-  }, []);
+    trackVisita(lang);
+  }, [lang]);
 
   // Volver al menú principal (sin cerrar sesión): limpia la ciudad y resultados.
   function irAlInicio() {
@@ -153,6 +153,7 @@ export default function Home() {
       setError(err.message);
       setCiudad(null);
       setCargando(false);
+      track("busqueda_fallida", { q }); // demanda no resuelta (para el panel)
     }
   }
 

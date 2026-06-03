@@ -55,17 +55,17 @@ function Barras({ titulo, datos, formato = (n) => n, color = "bg-marca-500", vac
   );
 }
 
-// Gráfica de barras verticales (visitas por día).
-function PorDia({ serie }) {
+// Gráfica de barras verticales por día.
+function PorDia({ titulo, serie, color = "from-marca-400 to-marca-600" }) {
   const max = Math.max(1, ...serie.map((d) => d.visitas));
   return (
     <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
-      <div className="mb-3 text-sm font-bold text-marca-900">Visitas por día (últimos 30)</div>
+      <div className="mb-3 text-sm font-bold text-marca-900">{titulo}</div>
       <div className="flex h-40 items-end gap-[3px]">
         {serie.map((d, i) => (
           <div key={i} className="group relative flex-1" title={`${d.dia}: ${d.visitas}`}>
             <div
-              className="w-full rounded-t bg-gradient-to-t from-marca-400 to-marca-600 transition-all hover:from-marca-500 hover:to-marca-700"
+              className={`w-full rounded-t bg-gradient-to-t ${color} transition-all`}
               style={{ height: `${Math.max(2, (d.visitas / max) * 100)}%` }}
             />
           </div>
@@ -78,6 +78,60 @@ function PorDia({ serie }) {
     </div>
   );
 }
+
+// Barras verticales genéricas (p. ej. actividad por hora del día).
+function BarrasVert({ titulo, datos }) {
+  const max = Math.max(1, ...datos.map((d) => d.valor));
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
+      <div className="mb-3 text-sm font-bold text-marca-900">{titulo}</div>
+      <div className="flex h-32 items-end gap-[2px]">
+        {datos.map((d, i) => (
+          <div key={i} className="group relative flex-1" title={`${d.nombre}: ${d.valor}`}>
+            <div
+              className="w-full rounded-t bg-gradient-to-t from-amber-300 to-amber-500"
+              style={{ height: `${Math.max(2, (d.valor / max) * 100)}%` }}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="mt-1.5 flex justify-between text-[10px] text-slate-400">
+        <span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span>
+      </div>
+    </div>
+  );
+}
+
+// Embudo de conversión: visitas → búsquedas → presupuestos.
+function Embudo({ visitas, busquedas, presupuestos }) {
+  const pct = (n) => (visitas > 0 ? Math.round((n / visitas) * 100) : 0);
+  const filas = [
+    { et: "Visitas", n: visitas, p: 100, c: "bg-marca-500" },
+    { et: "Hicieron una búsqueda", n: busquedas, p: pct(busquedas), c: "bg-violet-500" },
+    { et: "Usaron el presupuesto", n: presupuestos, p: pct(presupuestos), c: "bg-emerald-500" },
+  ];
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
+      <div className="mb-3 text-sm font-bold text-marca-900">🔻 Embudo de conversión (histórico)</div>
+      <div className="flex flex-col gap-3">
+        {filas.map((f, i) => (
+          <div key={i}>
+            <div className="mb-0.5 flex items-center justify-between text-[12.5px]">
+              <span className="text-slate-700">{f.et}</span>
+              <span className="font-bold text-slate-500">{f.n} · {f.p}%</span>
+            </div>
+            <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+              <div className={`h-full rounded-full ${f.c}`} style={{ width: `${f.p}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const IDIOMAS = { es: "🇪🇸 Español", en: "🇬🇧 English", pt: "🇧🇷 Português", fr: "🇫🇷 Français" };
+const nombreIdioma = (c) => IDIOMAS[c] || c;
 
 export default function Panel() {
   const [clave, setClave] = useState("");
@@ -184,9 +238,19 @@ export default function Panel() {
           <Kpi etiqueta="Presupuestos" valor={datos.presTotal} color="text-emerald-600" />
         </div>
 
-        {/* Visitas por día */}
+        {/* Embudo de conversión */}
         <div className="mt-4">
-          <PorDia serie={serie} />
+          <Embudo
+            visitas={datos.visitasTotal}
+            busquedas={datos.busquedasTotal}
+            presupuestos={datos.presTotal}
+          />
+        </div>
+
+        {/* Visitas y búsquedas por día */}
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <PorDia titulo="Visitas por día (últimos 30)" serie={serie} />
+          <PorDia titulo="Búsquedas por día (últimos 30)" serie={datos.serieBusq || []} color="from-violet-400 to-violet-600" />
         </div>
 
         {/* Geografía de visitantes */}
@@ -199,6 +263,25 @@ export default function Panel() {
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <Barras titulo="🔎 Ciudades más buscadas" datos={datos.buscCiudad} color="bg-violet-500" />
           <Barras titulo="🔎 Países más buscados" datos={datos.buscPais} color="bg-violet-500" />
+        </div>
+
+        {/* Búsquedas sin resultado (demanda no resuelta) */}
+        <div className="mt-4">
+          <Barras
+            titulo={`🚫 Búsquedas sin resultado${datos.busqFailTotal ? ` (${datos.busqFailTotal})` : ""}`}
+            datos={datos.buscFallida || []}
+            color="bg-rose-500"
+            vacio="Nada por aquí: todas las búsquedas encontraron ciudad 🎉"
+          />
+        </div>
+
+        {/* Audiencia: idioma, dispositivo, hora */}
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <Barras titulo="🗣️ Idioma de los usuarios" datos={datos.idiomas || []} formato={nombreIdioma} color="bg-sky-500" />
+          <Barras titulo="📱 Dispositivo" datos={datos.dispositivos || []} color="bg-sky-500" />
+        </div>
+        <div className="mt-4">
+          <BarrasVert titulo="🕐 Actividad por hora del día (hora del visitante)" datos={datos.horas || []} />
         </div>
 
         {/* Presupuestos */}

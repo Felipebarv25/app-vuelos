@@ -40,6 +40,7 @@ export async function GET(req) {
   }
 
   const dias = ultimosDias(30);
+  const horasKeys = Array.from({ length: 24 }, (_, h) => `m:hora:${h}`);
   const res = await pipeline([
     ["MGET", ...dias.map((d) => `m:vis:${d}`)],
     ["GET", "m:vis:total"],
@@ -51,10 +52,19 @@ export async function GET(req) {
     ["ZREVRANGE", "m:pres:rango", "0", "9", "WITHSCORES"],
     ["ZREVRANGE", "m:pres:region", "0", "9", "WITHSCORES"],
     ["GET", "m:pres:total"],
+    ["MGET", ...dias.map((d) => `m:busq:${d}`)],
+    ["ZREVRANGE", "m:busc:fallida", "0", "14", "WITHSCORES"],
+    ["GET", "m:busqfail:total"],
+    ["ZREVRANGE", "m:lang", "0", "9", "WITHSCORES"],
+    ["ZREVRANGE", "m:disp", "0", "9", "WITHSCORES"],
+    ["MGET", ...horasKeys],
   ]);
 
   const visArr = (res[0] || []).map((x) => Number(x) || 0);
   const serie = dias.map((d, i) => ({ dia: d, visitas: visArr[i] || 0 }));
+  const busqArr = (res[10] || []).map((x) => Number(x) || 0);
+  const serieBusq = dias.map((d, i) => ({ dia: d, visitas: busqArr[i] || 0 }));
+  const horas = (res[15] || []).map((x, h) => ({ nombre: `${h}h`, valor: Number(x) || 0 }));
 
   return Response.json({
     serie,
@@ -67,5 +77,11 @@ export async function GET(req) {
     presRango: pares(res[7]),
     presRegion: pares(res[8]),
     presTotal: Number(res[9]) || 0,
+    serieBusq,
+    buscFallida: pares(res[11]),
+    busqFailTotal: Number(res[12]) || 0,
+    idiomas: pares(res[13]),
+    dispositivos: pares(res[14]),
+    horas,
   });
 }

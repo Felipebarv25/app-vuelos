@@ -40,10 +40,23 @@ export async function POST(req) {
     cmds.push(["INCR", "m:vis:total"]);
     if (pais) cmds.push(["ZINCRBY", "m:geo:pais", "1", pais]);
     if (ciudad) cmds.push(["ZINCRBY", "m:geo:ciudad", "1", pais ? `${ciudad} (${pais})` : ciudad]);
+    // Idioma del visitante (es/en/pt/fr).
+    if (b.lang) cmds.push(["ZINCRBY", "m:lang", "1", String(b.lang)]);
+    // Dispositivo (por user-agent).
+    const ua = h.get("user-agent") || "";
+    const movil = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(ua);
+    cmds.push(["ZINCRBY", "m:disp", "1", movil ? "Móvil" : "Escritorio"]);
+    // Hora local del visitante (0–23) para ver el pico de actividad.
+    const hora = Number.isInteger(b.hora) && b.hora >= 0 && b.hora <= 23 ? b.hora : null;
+    if (hora != null) cmds.push(["INCR", `m:hora:${hora}`]);
   } else if (b.tipo === "busqueda" && b.ciudad) {
     cmds.push(["INCR", "m:busq:total"]);
+    cmds.push(["INCR", `m:busq:${d}`]);
     cmds.push(["ZINCRBY", "m:busc:ciudad", "1", b.pais ? `${b.ciudad}, ${b.pais}` : b.ciudad]);
     if (b.pais) cmds.push(["ZINCRBY", "m:busc:pais", "1", b.pais]);
+  } else if (b.tipo === "busqueda_fallida" && b.q) {
+    cmds.push(["INCR", "m:busqfail:total"]);
+    cmds.push(["ZINCRBY", "m:busc:fallida", "1", String(b.q).slice(0, 60)]);
   } else if (b.tipo === "presupuesto") {
     cmds.push(["INCR", "m:pres:total"]);
     const r = rangoPresupuesto(b.usd);
