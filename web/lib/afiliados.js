@@ -32,16 +32,25 @@ export function linkTours({ q = "", lat, lon } = {}) {
   return `https://www.getyourguide.com/s/${qs ? `?${qs}` : ""}`;
 }
 
-// Hoteles (Booking.com) cerca de una ciudad / punto.
+// Hoteles. Si hay AID propio de Booking, va directo a Booking; si no, usa
+// Hotellook (Travelpayouts) con tu marker — compara Booking y otros y genera
+// comisión SIN necesidad de un programa de afiliados aparte de Booking.
 export function linkHoteles({ ciudad = "", lat, lon } = {}) {
-  const p = new URLSearchParams();
-  if (ciudad) p.set("ss", ciudad);
-  if (lat != null && lon != null) {
-    p.set("latitude", String(lat));
-    p.set("longitude", String(lon));
+  if (AFILIADOS.bookingAid) {
+    const p = new URLSearchParams();
+    if (ciudad) p.set("ss", ciudad);
+    if (lat != null && lon != null) {
+      p.set("latitude", String(lat));
+      p.set("longitude", String(lon));
+    }
+    p.set("aid", AFILIADOS.bookingAid);
+    return `https://www.booking.com/searchresults.html?${p.toString()}`;
   }
-  if (AFILIADOS.bookingAid) p.set("aid", AFILIADOS.bookingAid);
-  return `https://www.booking.com/searchresults.html?${p.toString()}`;
+  // Hotellook (Travelpayouts) con tu marker.
+  const p = new URLSearchParams();
+  if (ciudad) p.set("destination", ciudad);
+  if (AFILIADOS.travelpayouts) p.set("marker", AFILIADOS.travelpayouts);
+  return `https://search.hotellook.com/?${p.toString()}`;
 }
 
 // Vuelos (Aviasales / Travelpayouts) hacia un destino (por texto: ciudad/país).
