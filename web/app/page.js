@@ -404,11 +404,11 @@ export default function Home() {
             </button>
             <div className="flex items-center gap-3 lg:gap-5">
               <span className={`hidden text-sm md:inline ${esHero ? "text-white/90" : "text-slate-500"}`}>
-                👋 {t("hola")}, <b className={esHero ? "" : "text-marca-700"}>{usuario.nombre}</b>
+                {t("hola")}, <b className={esHero ? "" : "text-marca-700"}>{usuario.nombre}</b>
               </span>
               {ciudad && (
                 <button onClick={irAlInicio} className={`text-[13px] underline-offset-2 hover:underline ${esHero ? "text-white/90" : "text-slate-500"}`}>
-                  🏠 {t("inicio")}
+                  <span className="inline-flex items-center gap-1"><Icono nombre="home" size={14} /> {t("inicio")}</span>
                 </button>
               )}
               <button onClick={salir} className={`text-[13px] underline-offset-2 hover:underline ${esHero ? "text-white/90" : "text-slate-500"}`}>
@@ -442,14 +442,14 @@ export default function Home() {
                     className="flex-1 rounded-xl border-0 bg-transparent px-4 py-3 text-base text-slate-800 outline-none placeholder:text-slate-400"
                   />
                   <button type="submit" aria-label={t("buscar")} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-5 text-base font-bold text-white shadow-md transition hover:brightness-110">
-                    🔎 <span className="hidden sm:inline">{t("buscar")}</span>
+                    <Icono nombre="search" size={18} /> <span className="hidden sm:inline">{t("buscar")}</span>
                   </button>
                 </form>
                 {mostrarSug && sugerencias.length > 0 && (
                   <div className="animar-subir absolute inset-x-0 top-full z-[1100] mt-1.5 overflow-hidden rounded-2xl bg-white text-left shadow-xl">
                     {sugerencias.map((s, i) => (
                       <div key={i} className="flex cursor-pointer items-center gap-2.5 border-b border-slate-100 px-4 py-3 text-slate-800 hover:bg-marca-50" onClick={() => elegirCiudad(s)}>
-                        <span className="text-lg">📍</span>
+                        <Icono nombre="pin" size={18} className="text-marca-500" />
                         <div><div className="text-[15px] font-semibold">{s.ciudad}</div><div className="text-xs text-slate-500">{s.pais}</div></div>
                       </div>
                     ))}
@@ -469,15 +469,15 @@ export default function Home() {
                   list="ciudades-pop"
                   className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-base text-slate-800 outline-none transition focus:border-marca-400 focus:bg-white"
                 />
-                <button type="submit" aria-label={t("buscar")} className="rounded-2xl bg-gradient-to-r from-marca-500 to-marca-600 px-5 text-lg font-bold text-white shadow-marca transition hover:brightness-110">
-                  🔎
+                <button type="submit" aria-label={t("buscar")} className="flex items-center justify-center rounded-2xl bg-gradient-to-r from-marca-500 to-marca-600 px-5 font-bold text-white shadow-marca transition hover:brightness-110">
+                  <Icono nombre="search" size={20} />
                 </button>
               </form>
               {mostrarSug && sugerencias.length > 0 && (
                 <div className="animar-subir absolute inset-x-0 top-full z-[1100] mt-1.5 overflow-hidden rounded-2xl bg-white shadow-xl">
                   {sugerencias.map((s, i) => (
                     <div key={i} className="flex cursor-pointer items-center gap-2.5 border-b border-slate-100 px-4 py-3 text-slate-800 hover:bg-marca-50" onClick={() => elegirCiudad(s)}>
-                      <span className="text-lg">📍</span>
+                      <Icono nombre="pin" size={18} className="text-marca-500" />
                       <div><div className="text-[15px] font-semibold">{s.ciudad}</div><div className="text-xs text-slate-500">{s.pais}</div></div>
                     </div>
                   ))}
@@ -494,7 +494,7 @@ export default function Home() {
             <span className="text-2xl">😕</span>
             <p className="flex-1 text-sm">{error}</p>
             <button onClick={reintentar} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:brightness-110">
-              🔄 {t("recalcular")}
+              <span className="inline-flex items-center gap-1.5"><Icono nombre="refresh" size={15} /> {t("recalcular")}</span>
             </button>
           </div>
         </div>
@@ -565,9 +565,9 @@ export default function Home() {
                       onClick={() => eliminarViaje(v.id)}
                       aria-label={t("misViajesEliminar")}
                       title={t("misViajesEliminar")}
-                      className="shrink-0 rounded-lg px-2 py-2 text-[13px] text-slate-300 transition hover:bg-red-50 hover:text-red-500"
+                      className="flex shrink-0 items-center rounded-lg px-2 py-2 text-slate-300 transition hover:bg-red-50 hover:text-red-500"
                     >
-                      ✕
+                      <Icono nombre="x" size={15} />
                     </button>
                   </div>
                 ))}
@@ -594,13 +594,13 @@ export default function Home() {
           {/* Beneficios */}
           <div className="mt-9 flex flex-wrap gap-2.5">
             {[
-              ["📅", t("benDiaTitulo")],
-              ["📍", t("benGpsTitulo")],
-              ["🍽️", t("benComerTitulo")],
-              ["🚇", t("benLlegarTitulo")],
+              ["calendar", t("benDiaTitulo")],
+              ["pin", t("benGpsTitulo")],
+              ["utensils", t("benComerTitulo")],
+              ["route", t("benLlegarTitulo")],
             ].map(([ic, tit]) => (
               <div key={tit} className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-100 bg-white px-3.5 py-2 shadow-suave">
-                <span className="text-base">{ic}</span>
+                <span className="text-marca-600"><Icono nombre={ic} size={16} /></span>
                 <span className="text-[12.5px] font-semibold text-marca-900">{tit}</span>
               </div>
             ))}
@@ -616,13 +616,13 @@ export default function Home() {
                 <div className="mt-0.5 text-[15px] font-extrabold text-marca-900">{t("cuandoTitulo")}</div>
               </div>
               <label className="flex flex-col gap-1 text-[12.5px] font-semibold text-slate-600">
-                🛫 {t("fechaIda")}
+                <span className="inline-flex items-center gap-1.5"><Icono nombre="planeTakeoff" size={15} /> {t("fechaIda")}</span>
                 <input type="date" value={fechaInicio} min={new Date().toISOString().slice(0, 10)}
                   onChange={(e) => aplicarFechas(e.target.value, fechaFin)}
                   className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[14px]" />
               </label>
               <label className="flex flex-col gap-1 text-[12.5px] font-semibold text-slate-600">
-                🛬 {t("fechaVuelta")}
+                <span className="inline-flex items-center gap-1.5"><Icono nombre="planeLanding" size={15} /> {t("fechaVuelta")}</span>
                 <input type="date" value={fechaFin} min={fechaInicio || new Date().toISOString().slice(0, 10)}
                   onChange={(e) => aplicarFechas(fechaInicio, e.target.value)}
                   className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[14px]" />
@@ -682,7 +682,10 @@ export default function Home() {
                     onClick={guardarViajeActual}
                     className="rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-3 py-2 text-[13px] font-bold text-white shadow-marca transition hover:brightness-105"
                   >
-                    {guardado ? "✓ " + t("guardado") : "💾 " + t("guardarViaje")}
+                    <span className="inline-flex items-center gap-1.5">
+                      <Icono nombre={guardado ? "check" : "bookmark"} size={15} />
+                      {guardado ? t("guardado") : t("guardarViaje")}
+                    </span>
                   </button>
                 )}
                 {plan.some((d) => d.paradas.length > 0) && (
@@ -690,7 +693,10 @@ export default function Home() {
                     onClick={compartirPlan}
                     className="rounded-xl border-[1.5px] border-marca-100 bg-white px-3 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-marca-50"
                   >
-                    {copiado ? "✓ " + t("copiado") : "📤 " + t("compartir")}
+                    <span className="inline-flex items-center gap-1.5">
+                      <Icono nombre={copiado ? "check" : "share"} size={15} />
+                      {copiado ? t("copiado") : t("compartir")}
+                    </span>
                   </button>
                 )}
                 {lugaresBase.length > 0 && (
@@ -713,7 +719,7 @@ export default function Home() {
             {/* Configuración del viaje (colapsable: deja el itinerario más arriba) */}
             <details open className="mb-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave">
               <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-bold text-marca-900">
-                <span>⚙️ {t("ajustarViaje")}</span>
+                <span className="inline-flex items-center gap-1.5"><Icono nombre="sliders" size={16} /> {t("ajustarViaje")}</span>
                 <span className="text-slate-400">▾</span>
               </summary>
               <div className="px-4 pb-4">
@@ -721,13 +727,13 @@ export default function Home() {
                   itinerario fechado y la búsqueda de vuelos para esas fechas. */}
               <div className="mb-3 flex flex-wrap items-end gap-3 rounded-xl bg-marca-50/60 p-3">
                 <label className="flex flex-col gap-1 text-[13px] font-semibold text-slate-600">
-                  🛫 {t("fechaIda")}
+                  <span className="inline-flex items-center gap-1.5"><Icono nombre="planeTakeoff" size={15} /> {t("fechaIda")}</span>
                   <input type="date" value={fechaInicio} min={new Date().toISOString().slice(0, 10)}
                     onChange={(e) => aplicarFechas(e.target.value, fechaFin)}
                     className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[14px]" />
                 </label>
                 <label className="flex flex-col gap-1 text-[13px] font-semibold text-slate-600">
-                  🛬 {t("fechaVuelta")}
+                  <span className="inline-flex items-center gap-1.5"><Icono nombre="planeLanding" size={15} /> {t("fechaVuelta")}</span>
                   <input type="date" value={fechaFin} min={fechaInicio || new Date().toISOString().slice(0, 10)}
                     onChange={(e) => aplicarFechas(fechaInicio, e.target.value)}
                     className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[14px]" />
@@ -739,19 +745,19 @@ export default function Home() {
                 )}
                 {(fechaInicio || fechaFin) && (
                   <button onClick={() => { setFechaInicio(""); setFechaFin(""); }}
-                    className="pb-2 text-[12px] text-slate-400 hover:text-slate-600">✕ {t("limpiar")}</button>
+                    className="inline-flex items-center gap-1 pb-2 text-[12px] text-slate-400 hover:text-slate-600"><Icono nombre="x" size={13} /> {t("limpiar")}</button>
                 )}
               </div>
               <div className="flex flex-wrap items-end gap-3">
                 <label className="flex flex-col gap-1 text-[13px] font-semibold text-slate-600">
-                  📅 {t("dias")}
+                  <span className="inline-flex items-center gap-1.5"><Icono nombre="calendar" size={15} /> {t("dias")}</span>
                   <select value={dias} onChange={(e) => setDias(+e.target.value)} disabled={!!(fechaInicio && fechaFin)}
                     className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[15px] disabled:bg-slate-100 disabled:text-slate-400">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </label>
                 <label className="flex flex-col gap-1 text-[13px] font-semibold text-slate-600">
-                  ⏰ {t("horasDia")}
+                  <span className="inline-flex items-center gap-1.5"><Icono nombre="clock" size={15} /> {t("horasDia")}</span>
                   <select value={horas} onChange={(e) => setHoras(+e.target.value)}
                     className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[15px]">
                     {[4, 5, 6, 7, 8, 9, 10, 12].map((n) => <option key={n} value={n}>{n}h</option>)}
@@ -759,12 +765,12 @@ export default function Home() {
                 </label>
                 <button onClick={() => reconstruir()}
                   className="ml-auto rounded-xl border-[1.5px] border-marca-100 bg-white px-4 py-2.5 text-sm font-bold text-marca-600 transition hover:bg-marca-50">
-                  🔄 {t("recalcular")}
+                  <span className="inline-flex items-center gap-1.5"><Icono nombre="refresh" size={15} /> {t("recalcular")}</span>
                 </button>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <Chip activo={momento === "diurno"} onClick={() => cambiarMomento("diurno")}>☀️ {t("diurno")}</Chip>
-                <Chip activo={momento === "nocturno"} onClick={() => cambiarMomento("nocturno")}>🌙 {t("nocturno")}</Chip>
+                <Chip activo={momento === "diurno"} onClick={() => cambiarMomento("diurno")}><span className="inline-flex items-center gap-1.5"><Icono nombre="sun" size={15} /> {t("diurno")}</span></Chip>
+                <Chip activo={momento === "nocturno"} onClick={() => cambiarMomento("nocturno")}><span className="inline-flex items-center gap-1.5"><Icono nombre="moon" size={15} /> {t("nocturno")}</span></Chip>
                 <span className="self-center text-xs text-slate-500">
                   {momento === "nocturno" ? t("nocturnoDesc") : t("diurnoDesc")}
                 </span>
@@ -776,7 +782,9 @@ export default function Home() {
             <div className="mb-2 flex gap-2 overflow-x-auto pb-2">
               {Object.entries(CATEGORIAS).map(([k, c]) => (
                 <Chip key={k} activo={categoria === k} onClick={() => cargarCategoria(k)}>
-                  {c.icono} {t("cat_" + k)}
+                  <span className="inline-flex items-center gap-1.5">
+                    <Icono nombre={c.icono} size={15} /> {t("cat_" + k)}
+                  </span>
                 </Chip>
               ))}
             </div>
@@ -789,13 +797,13 @@ export default function Home() {
 
             {!cargandoLugares && lugaresBase.length === 0 && (
               <div className="rounded-2xl border border-slate-100 bg-white p-5 text-center text-slate-500 shadow-suave">
-                <div className="text-3xl">🔍</div>
+                <div className="flex justify-center text-slate-300"><Icono nombre="search" size={30} /></div>
                 <p className="mx-auto mt-1.5 max-w-xs text-sm">{t("sinResultados")}</p>
                 <button
                   onClick={() => cargarCategoria("imperdibles")}
                   className="mt-3 rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-4 py-2 text-sm font-bold text-white shadow-marca transition hover:brightness-105"
                 >
-                  🔄 {t("recalcular")}
+                  <span className="inline-flex items-center gap-1.5"><Icono nombre="refresh" size={15} /> {t("recalcular")}</span>
                 </button>
               </div>
             )}
@@ -836,7 +844,7 @@ export default function Home() {
                   className="flex w-full items-center justify-between px-4 py-3 text-left"
                 >
                   <span className="text-sm font-bold text-marca-900">
-                    📍 {t("todosLugares")} ({lugaresBase.length})
+                    <span className="inline-flex items-center gap-1.5"><Icono nombre="pin" size={15} /> {t("todosLugares")} ({lugaresBase.length})</span>
                   </span>
                   <span className="text-slate-400">{mostrarTodos ? "▲" : "▼"}</span>
                 </button>
@@ -851,7 +859,7 @@ export default function Home() {
                             className="min-w-0 flex-1 text-left"
                           >
                             <div className="flex items-center gap-1.5 truncate text-[14px] font-semibold text-slate-800">
-                              {l.notable && <span className="text-[11px]">⭐</span>}
+                              {l.notable && <span className="text-amber-500"><Icono nombre="star" size={12} /></span>}
                               <span className="truncate">{l.nombre}</span>
                             </div>
                             <div className="truncate text-[12px] text-slate-500">{l.categoria}</div>
@@ -865,7 +873,7 @@ export default function Home() {
                                 : "bg-marca-50 text-marca-600 hover:bg-marca-100"
                             }`}
                           >
-                            {enPlan ? "✓" : "＋ " + t("agregar")}
+                            {enPlan ? <Icono nombre="check" size={14} /> : <span className="inline-flex items-center gap-1"><Icono nombre="plus" size={13} /> {t("agregar")}</span>}
                           </button>
                         </div>
                       );
@@ -878,8 +886,8 @@ export default function Home() {
             {/* GPS toggle */}
             <label className={`mt-3.5 flex cursor-pointer items-center gap-2.5 rounded-2xl border border-slate-100 p-4 shadow-suave transition ${gpsOn ? "bg-emerald-50" : "bg-white"}`}>
               <input type="checkbox" checked={gpsOn} onChange={(e) => setGpsOn(e.target.checked)} />
-              <span className="text-sm">
-                📍 {t("activarGps")}
+              <span className="inline-flex items-center gap-1.5 text-sm">
+                <Icono nombre="pin" size={15} className="text-marca-600" /> {t("activarGps")}
                 {gpsOn && gps && <span className="font-semibold text-emerald-600"> · {t("activo")}</span>}
               </span>
             </label>

@@ -69,7 +69,7 @@ async function consultarOverpass(query) {
 export const CATEGORIAS = {
   imperdibles: {
     nombre: "Imperdibles",
-    icono: "⭐",
+    icono: "star",
     filtros: [
       'node["tourism"~"attraction|museum|viewpoint|gallery|artwork"]["name"]',
       'node["historic"~"monument|memorial|castle|ruins|monastery|archaeological_site"]["name"]',
@@ -78,7 +78,7 @@ export const CATEGORIAS = {
   },
   museos: {
     nombre: "Museos",
-    icono: "🖼️",
+    icono: "image",
     filtros: [
       'node["tourism"~"museum|gallery"]["name"]',
       'way["tourism"~"museum|gallery"]["name"]',
@@ -86,7 +86,7 @@ export const CATEGORIAS = {
   },
   monumentos: {
     nombre: "Monumentos",
-    icono: "🏛️",
+    icono: "landmark",
     filtros: [
       'node["tourism"="attraction"]["name"]',
       'node["historic"~"monument|memorial|castle|ruins|monastery|archaeological_site|palace|fort"]["name"]',
@@ -95,7 +95,7 @@ export const CATEGORIAS = {
   },
   parques: {
     nombre: "Parques",
-    icono: "🌳",
+    icono: "trees",
     filtros: [
       'node["leisure"~"park|garden"]["name"]',
       'way["leisure"~"park|garden"]["name"]',
@@ -105,7 +105,7 @@ export const CATEGORIAS = {
   },
   estadios: {
     nombre: "Estadios",
-    icono: "🏟️",
+    icono: "trophy",
     filtros: [
       'node["leisure"="stadium"]["name"]',
       'way["leisure"="stadium"]["name"]',
@@ -114,22 +114,22 @@ export const CATEGORIAS = {
   },
   restaurantes: {
     nombre: "Restaurantes",
-    icono: "🍽️",
+    icono: "utensils",
     filtros: ['node["amenity"="restaurant"]["name"]'],
   },
   cafes: {
     nombre: "Cafés",
-    icono: "☕",
+    icono: "coffee",
     filtros: ['node["amenity"~"cafe|coffee_shop"]["name"]'],
   },
   bares: {
     nombre: "Bares / Noche",
-    icono: "🍸",
+    icono: "wine",
     filtros: ['node["amenity"~"bar|pub|nightclub"]["name"]'],
   },
   miradores: {
     nombre: "Miradores",
-    icono: "🌅",
+    icono: "mountain",
     filtros: ['node["tourism"="viewpoint"]["name"]'],
   },
 };

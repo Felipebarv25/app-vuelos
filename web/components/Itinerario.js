@@ -4,6 +4,7 @@ import { Boton } from "./ui";
 import { fotoDeLugar } from "@/lib/imagenes";
 import { fmtMin, resumenDia } from "@/lib/itinerario";
 import { estadoTiempo, textoEstado } from "@/lib/reloj";
+import { Icono, iconoCategoria } from "./Icono";
 
 // Miniatura de la parada: carga la foto de forma perezosa (Wikipedia/Commons).
 function FotoMini({ nombre, ciudad, onClick }) {
@@ -29,26 +30,11 @@ function FotoMini({ nombre, ciudad, onClick }) {
         <img src={url} alt={nombre} loading="lazy" onError={() => setUrl(null)} className="h-full w-full object-cover" />
       ) : (
         <div className="flex h-full w-full items-center justify-center text-slate-300">
-          {cargando ? <span className="spin" /> : <span className="text-xl">🏞️</span>}
+          {cargando ? <span className="spin" /> : <Icono nombre="image" size={20} />}
         </div>
       )}
     </button>
   );
-}
-
-// Emoji según el tipo de lugar (para identificar de un vistazo en la lista).
-function emojiCat(cat = "") {
-  const c = cat.toLowerCase();
-  if (c.includes("muse") || c.includes("galer")) return "🖼️";
-  if (c.includes("restaur")) return "🍽️";
-  if (c.includes("caf")) return "☕";
-  if (c.includes("bar") || c.includes("pub") || c.includes("disco")) return "🍸";
-  if (c.includes("mirad") || c.includes("viewpoint")) return "🌅";
-  if (c.includes("castil") || c.includes("castle") || c.includes("fort")) return "🏰";
-  if (c.includes("monu") || c.includes("memor")) return "🗿";
-  if (c.includes("igle") || c.includes("church") || c.includes("templ") || c.includes("mosq")) return "⛪";
-  if (c.includes("parq") || c.includes("park")) return "🌳";
-  return "📍";
 }
 
 // Muestra el itinerario de UN día: paradas, traslados, transporte, tiempos,
@@ -104,8 +90,8 @@ export default function Itinerario({
             </div>
           </div>
           <div className="flex gap-2">
-            <Stat num={r.visitaTexto} lbl={`👣 ${t("visitas")}`} />
-            <Stat num={r.trasladoTexto} lbl={`🚇 ${t("traslados")}`} />
+            <Stat num={r.visitaTexto} ico="footprints" lbl={t("visitas")} />
+            <Stat num={r.trasladoTexto} ico="route" lbl={t("traslados")} />
           </div>
         </div>
 
@@ -114,7 +100,7 @@ export default function Itinerario({
           <div className="mt-3">
             {!seguimiento ? (
               <Boton variante="verde" onClick={iniciar} style={{ width: "100%" }}>
-                ▶️ {t("empezarGps")}
+                <span className="inline-flex items-center justify-center gap-1.5"><Icono nombre="play" size={15} /> {t("empezarGps")}</span>
               </Boton>
             ) : (
               <PanelTiempo
@@ -172,14 +158,14 @@ export default function Itinerario({
                   {p.nombre}
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[12.5px] text-slate-500">
-                  <span>{emojiCat(p.categoria)} {p.categoria}</span>
+                  <span className="inline-flex items-center gap-1"><Icono nombre={iconoCategoria(p.categoria)} size={13} /> {p.categoria}</span>
                   {p.cocina && <span>· {p.cocina}</span>}
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11.5px] font-semibold text-slate-500">
-                    ⏱️ {fmtMin(p.minutos)}
+                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11.5px] font-semibold text-slate-500">
+                    <Icono nombre="clock" size={11} /> {fmtMin(p.minutos)}
                   </span>
                   {p.notable && (
-                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11.5px] font-semibold text-amber-800">
-                      ⭐ Top
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11.5px] font-semibold text-amber-800">
+                      <Icono nombre="star" size={11} /> Top
                     </span>
                   )}
                 </div>
@@ -188,21 +174,21 @@ export default function Itinerario({
                     className="rounded-[10px] bg-marca-50 px-3 py-2 text-[13px] font-semibold text-marca-600 transition hover:bg-marca-100"
                     onClick={() => onVerLugar?.(p)}
                   >
-                    📷 {t("verFoto")}
+                    <span className="inline-flex items-center gap-1.5"><Icono nombre="camera" size={14} /> {t("verFoto")}</span>
                   </button>
                   {alternativas?.length > 0 && (
                     <button
                       className="rounded-[10px] bg-slate-100 px-3 py-2 text-[13px] font-semibold text-marca-900 transition hover:bg-slate-200"
                       onClick={() => onCambiarParada(i)}
                     >
-                      🔄 {t("cambiar")}
+                      <span className="inline-flex items-center gap-1.5"><Icono nombre="refresh" size={14} /> {t("cambiar")}</span>
                     </button>
                   )}
                   <button
                     className="rounded-[10px] bg-red-50 px-3 py-2 text-[13px] font-semibold text-red-600 transition hover:bg-red-100"
                     onClick={() => onQuitarParada(i)}
                   >
-                    ✕ {t("quitar")}
+                    <span className="inline-flex items-center gap-1.5"><Icono nombre="x" size={14} /> {t("quitar")}</span>
                   </button>
                 </div>
               </div>
@@ -216,11 +202,13 @@ export default function Itinerario({
   );
 }
 
-function Stat({ num, lbl }) {
+function Stat({ num, lbl, ico }) {
   return (
     <div className="min-w-[64px] rounded-xl bg-white/70 px-3 py-2 text-center">
       <div className="text-sm font-extrabold text-marca-900">{num}</div>
-      <div className="mt-px text-[10.5px] text-slate-500">{lbl}</div>
+      <div className="mt-px inline-flex items-center gap-1 text-[10.5px] text-slate-500">
+        {ico && <Icono nombre={ico} size={11} />} {lbl}
+      </div>
     </div>
   );
 }
