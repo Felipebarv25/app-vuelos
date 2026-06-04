@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { construirRuta, REGIONES, MONEDAS } from "@/lib/presupuesto";
+import { Icono } from "./Icono";
 
 // Asesor de viajes (modo GRATIS): chat guiado por botones que usa NUESTRO motor
 // de rutas/presupuesto. Cero costo, todo en el código (sin IA).
@@ -21,9 +22,9 @@ export default function Asesor({ t = (k) => k, usuario, onPlanear, onAbrirPresup
       {!abierto && (
         <button
           onClick={() => setAbierto(true)}
-          className="fixed bottom-5 right-5 z-[3500] flex items-center gap-2 rounded-full bg-gradient-to-r from-marca-500 to-marca-700 px-5 py-3.5 text-white shadow-[0_10px_30px_rgba(79,70,229,.45)] transition hover:brightness-110"
+          className="fixed bottom-5 right-5 z-[3500] flex items-center gap-2 rounded-full bg-gradient-to-r from-marca-500 to-marca-700 px-5 py-3.5 text-white shadow-[0_10px_30px_rgba(15,118,110,.45)] transition hover:brightness-110"
         >
-          <span className="text-xl">🧭</span>
+          <Icono nombre="compass" size={20} />
           <span className="text-sm font-bold">{t("asesorBoton")}</span>
         </button>
       )}
@@ -35,13 +36,13 @@ export default function Asesor({ t = (k) => k, usuario, onPlanear, onAbrirPresup
             <div className="bg-gradient-to-br from-marca-600 to-marca-800 px-4 py-3.5 text-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-lg">🧭</span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15"><Icono nombre="compass" size={18} /></span>
                   <div>
                     <div className="text-[15px] font-bold leading-tight">{t("asesorTitulo")}</div>
                     <div className="text-[11px] text-white/80">{t("asesorModoGuia")}</div>
                   </div>
                 </div>
-                <button onClick={() => setAbierto(false)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-base">✕</button>
+                <button onClick={() => setAbierto(false)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15"><Icono nombre="x" size={16} /></button>
               </div>
             </div>
 

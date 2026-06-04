@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { track } from "@/lib/track";
+import { Icono } from "./Icono";
 import {
   calcularDestinos,
   construirRuta,
@@ -88,9 +89,9 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
             </div>
             <button
               onClick={onCerrar}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-base text-white transition hover:bg-white/25"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25"
             >
-              ✕
+              <Icono nombre="x" size={16} />
             </button>
           </div>
 
@@ -327,7 +328,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                           onClick={() => onElegirCiudad?.(d)}
                           className="mt-3 w-full rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 py-2.5 text-sm font-bold text-white shadow-marca"
                         >
-                          🗺️ {t("presupPlanear")}
+                          <span className="inline-flex items-center justify-center gap-1.5"><Icono nombre="map" size={15} /> {t("presupPlanear")}</span>
                         </button>
                       </div>
                     )}
@@ -406,7 +407,7 @@ function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear, onPlanearCiuda
                   <div className="text-xs text-slate-500">{c.pais}</div>
                 </div>
                 <span className="text-[11px] font-bold text-marca-600 opacity-0 transition group-hover:opacity-100">
-                  🗺️ {t("presupPlanear")}
+                  <span className="inline-flex items-center justify-center gap-1.5"><Icono nombre="map" size={15} /> {t("presupPlanear")}</span>
                 </span>
               </button>
               <div className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
@@ -418,7 +419,7 @@ function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear, onPlanearCiuda
                   title={t("presupExcluir")}
                   className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-slate-300 transition hover:bg-red-50 hover:text-red-500"
                 >
-                  ✕
+                  <Icono nombre="x" size={14} />
                 </button>
               )}
             </div>
@@ -460,13 +461,13 @@ function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear, onPlanearCiuda
           onClick={onOtra}
           className="flex-1 rounded-xl border-[1.5px] border-marca-100 bg-white py-3 text-sm font-bold text-marca-700 transition hover:bg-marca-50"
         >
-          🔄 {t("presupOtraRuta")}
+          <span className="inline-flex items-center justify-center gap-1.5"><Icono nombre="refresh" size={15} /> {t("presupOtraRuta")}</span>
         </button>
         <button
           onClick={onPlanear}
           className="flex-1 rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 py-3 text-sm font-bold text-white shadow-marca"
         >
-          🗺️ {t("presupPlanear")}
+          <span className="inline-flex items-center justify-center gap-1.5"><Icono nombre="map" size={15} /> {t("presupPlanear")}</span>
         </button>
       </div>
     </div>

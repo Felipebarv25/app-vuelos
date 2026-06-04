@@ -6,6 +6,7 @@ import { distanciaMetros } from "@/lib/rutas";
 import { fmtMin } from "@/lib/itinerario";
 import { monedaDePais, costoLocal, costoUsd } from "@/lib/monedasPais";
 import { BotonTourLugar } from "./Afiliados";
+import { Icono, iconoCategoria } from "./Icono";
 
 // Distancia legible (m / km).
 function fmtDist(m) {
@@ -17,21 +18,6 @@ function gmapsModo(modo) {
   if (modo === "cycling") return "bicycling";
   if (modo === "driving") return "driving";
   return "transit"; // bus, metro, tren
-}
-
-// Emoji representativo según el tipo de lugar (para cuando no hay foto).
-function emojiCategoria(cat = "") {
-  const c = cat.toLowerCase();
-  if (c.includes("muse") || c.includes("galer")) return "🖼️";
-  if (c.includes("restaur")) return "🍽️";
-  if (c.includes("caf")) return "☕";
-  if (c.includes("bar") || c.includes("pub") || c.includes("disco")) return "🍸";
-  if (c.includes("mirad") || c.includes("viewpoint")) return "🌅";
-  if (c.includes("castil") || c.includes("castle") || c.includes("fort")) return "🏰";
-  if (c.includes("monu") || c.includes("memor")) return "🗿";
-  if (c.includes("igle") || c.includes("church") || c.includes("templ") || c.includes("mosq")) return "⛪";
-  if (c.includes("parq") || c.includes("park")) return "🌳";
-  return "📍";
 }
 
 // Panel/modal que muestra TODO sobre un lugar SIN salir de la app:
@@ -102,21 +88,21 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-marca-400 to-marca-900">
-              <span className="text-[58px]">{emojiCategoria(lugar.categoria)}</span>
+              <Icono nombre={iconoCategoria(lugar.categoria)} size={54} strokeWidth={1.5} />
             </div>
           )}
           <button
-            className="absolute right-3 top-3 flex h-[34px] w-[34px] items-center justify-center rounded-full border-0 bg-black/50 text-base text-white"
+            className="absolute right-3 top-3 flex h-[34px] w-[34px] items-center justify-center rounded-full border-0 bg-black/50 text-white"
             onClick={onCerrar}
           >
-            ✕
+            <Icono nombre="x" size={17} />
           </button>
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-4 pb-3.5 pt-8 text-white">
             <div className="text-[22px] font-extrabold">{lugar.nombre}</div>
             <div className="text-[13px] opacity-95">
               {lugar.categoria}
               {lugar.cocina ? ` · ${lugar.cocina}` : ""}
-              {lugar.notable ? " · ⭐ Destacado" : ""}
+              {lugar.notable && <span className="ml-1 inline-flex items-center gap-0.5">· <Icono nombre="star" size={11} /> Destacado</span>}
             </div>
           </div>
         </div>
@@ -129,16 +115,16 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
                 onClick={() => onAgregar(lugar)}
                 className="rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-3.5 py-2 text-[13px] font-bold text-white shadow-marca transition hover:brightness-105"
               >
-                ＋ {t("agregar")}
+                <span className="inline-flex items-center gap-1"><Icono nombre="plus" size={14} /> {t("agregar")}</span>
               </button>
             )}
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${lugar.coord[0]},${lugar.coord[1]}`}
               target="_blank"
               rel="noopener"
-              className="rounded-xl border-[1.5px] border-slate-200 px-3.5 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-slate-50"
+              className="inline-flex items-center gap-1.5 rounded-xl border-[1.5px] border-slate-200 px-3.5 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-slate-50"
             >
-              🗺️ Google Maps
+              <Icono nombre="map" size={15} /> Google Maps
             </a>
             <BotonTourLugar lugar={lugar} ciudad={ciudad} t={t} />
           </div>
@@ -158,7 +144,7 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
           )}
 
           {/* Cómo llegar: tiempos y costos por medio de transporte (USD + local) */}
-          <div className="mb-2 font-bold text-marca-900">🧭 {t("comoLlegar")}</div>
+          <div className="mb-2 inline-flex items-center gap-1.5 font-bold text-marca-900"><Icono nombre="compass" size={16} /> {t("comoLlegar")}</div>
 
           {transportes.length > 0 ? (
             <>
@@ -198,14 +184,14 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-500">
-                          ⏱️ {fmtMin(tr.minutos)} · 💵{" "}
+                        <div className="inline-flex flex-wrap items-center gap-1 text-xs text-slate-500">
+                          <Icono nombre="clock" size={12} /> {fmtMin(tr.minutos)} · <Icono nombre="banknote" size={12} />{" "}
                           {gratis ? t("gratis") : costoUsd(tr.usd[0], tr.usd[1])}
                           {loc && <span className="text-slate-400"> · {loc}</span>}
                         </div>
                       </div>
-                      <span className="whitespace-nowrap text-[13px] font-bold text-marca-600">
-                        {origen ? `${t("verRuta")} →` : "🗺️ →"}
+                      <span className="inline-flex items-center gap-1 whitespace-nowrap text-[13px] font-bold text-marca-600">
+                        {origen ? <>{t("verRuta")} <Icono nombre="arrowRight" size={14} /></> : <Icono nombre="map" size={16} />}
                       </span>
                     </>
                   );
@@ -232,13 +218,13 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
               <div className="mt-2 text-[11px] text-slate-400">{t("aproxAviso")}</div>
               {!origen && (
                 <div className="mt-2 rounded-[10px] bg-amber-50 p-2.5 text-[12px] leading-snug text-amber-700">
-                  📍 {t("activaGps")}
+                  <span className="inline-flex items-start gap-1.5"><Icono nombre="pin" size={13} className="mt-0.5 shrink-0" /> {t("activaGps")}</span>
                 </div>
               )}
             </>
           ) : (
             <div className="rounded-[10px] bg-amber-100 p-3 text-[13px] leading-snug text-amber-800">
-              📍 {t("activaGps")}
+              <span className="inline-flex items-start gap-1.5"><Icono nombre="pin" size={13} className="mt-0.5 shrink-0" /> {t("activaGps")}</span>
             </div>
           )}
         </div>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { Icono } from "./Icono";
 
 // Tablero de "vuelos baratos desde Colombia": lee web/public/ofertas.json
 // (generado por el detector de precios) y muestra las mejores ofertas
@@ -107,8 +108,8 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
             className="group relative flex flex-col rounded-2xl border border-slate-100 bg-white p-4 shadow-suave transition hover:-translate-y-0.5 hover:shadow-media"
           >
             {r.esGanga && (
-              <span className="absolute right-3 top-3 rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-                🔥 {t("ofertasGanga")}
+              <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-acento-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                <Icono nombre="flame" size={11} /> {t("ofertasGanga")}
               </span>
             )}
 
@@ -132,7 +133,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
             <div className="text-[12px] font-medium text-slate-500">{fmtCop(r.precio)}</div>
 
             <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[12.5px] text-slate-500">
-              📅 {fmtFecha(r.fecha_ida)} – {fmtFecha(r.fecha_vuelta)}
+              <Icono nombre="calendar" size={13} /> {fmtFecha(r.fecha_ida)} – {fmtFecha(r.fecha_vuelta)}
               <span className="text-slate-300">·</span>
               <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500">
                 {r.aerolinea}
@@ -140,7 +141,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
               {r.visto && (
                 <>
                   <span className="text-slate-300">·</span>
-                  <span className="text-[11px] text-slate-400">🕒 {fmtHace(r.visto)}</span>
+                  <span className="inline-flex items-center gap-1 text-[11px] text-slate-400"><Icono nombre="clock" size={11} /> {fmtHace(r.visto)}</span>
                 </>
               )}
             </div>
@@ -150,7 +151,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
                 onClick={() => onPlanear?.(r.q)}
                 className="flex-1 rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 py-2.5 text-[13px] font-bold text-white shadow-marca transition hover:brightness-105"
               >
-                🗺️ {t("ofertasPlanear")}
+                <span className="inline-flex items-center justify-center gap-1.5"><Icono nombre="map" size={15} /> {t("ofertasPlanear")}</span>
               </button>
               <a
                 href={r.link}
@@ -158,9 +159,9 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
                 rel="sponsored noopener"
                 aria-label={t("ofertasVerVuelos") || "Ver vuelos"}
                 title={t("ofertasVerVuelos") || "Ver vuelos"}
-                className="flex items-center justify-center rounded-xl border-[1.5px] border-slate-200 px-3 text-[13px] font-bold text-marca-600 transition hover:bg-slate-50"
+                className="flex items-center justify-center rounded-xl border-[1.5px] border-slate-200 px-3 text-marca-600 transition hover:bg-slate-50"
               >
-                ✈️
+                <Icono nombre="plane" size={18} />
               </a>
             </div>
 
@@ -172,7 +173,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
                 rel="sponsored noopener"
                 className="mt-2 block rounded-xl border border-marca-200 bg-marca-50 py-2 text-center text-[12.5px] font-bold text-marca-700 transition hover:bg-marca-100"
               >
-                🔎 {t("ofertasMisFechas")}
+                <span className="inline-flex items-center justify-center gap-1.5"><Icono nombre="search" size={14} /> {t("ofertasMisFechas")}</span>
               </a>
             )}
 

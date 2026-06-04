@@ -15,14 +15,15 @@ import {
   aguaClave,
   propinaClave,
 } from "@/lib/requisitos";
+import { Icono } from "./Icono";
 
 // Celda de dato del país.
 function Dato({ icono, etiqueta, valor }) {
   if (!valor) return null;
   return (
     <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5">
-      <div className="text-[10.5px] font-bold uppercase tracking-wide text-slate-400">
-        {icono} {etiqueta}
+      <div className="inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide text-slate-400">
+        <Icono nombre={icono} size={12} /> {etiqueta}
       </div>
       <div className="mt-0.5 text-[13px] font-semibold text-slate-700">{valor}</div>
     </div>
@@ -76,7 +77,7 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
         className="flex w-full items-center justify-between px-4 py-3 text-left"
       >
         <span className="text-sm font-bold text-marca-900">
-          🛂 {t("reqTitulo")} {banderaPais(destinoIso)} {paisNombre}
+          <span className="inline-flex items-center gap-1.5"><Icono nombre="shield" size={16} /> {t("reqTitulo")} {banderaPais(destinoIso)} {paisNombre}</span>
         </span>
         <span className="text-slate-400">{abierto ? "▴" : "▾"}</span>
       </button>
@@ -136,21 +137,21 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
               {t("reqDatosPais")}
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              <Dato icono="💰" etiqueta={t("reqMoneda")} valor={moneda} />
-              <Dato icono="🗣️" etiqueta={t("reqIdioma")} valor={idiomas} />
-              <Dato icono="🏛️" etiqueta={t("reqCapital")} valor={dp.capital} />
-              <Dato icono="🕐" etiqueta={t("reqHuso")} valor={huso} />
-              <Dato icono="🚗" etiqueta={t("reqConduccion")} valor={conduccion} />
-              <Dato icono="📞" etiqueta={t("reqTelefono")} valor={dp.tel} />
-              <Dato icono="🔌" etiqueta={t("reqEnchufe")} valor={tomacorriente} />
-              <Dato icono="🌤️" etiqueta={t("reqEstaciones")} valor={estaciones} />
-              <Dato icono="🚰" etiqueta={t("reqAgua")} valor={agua} />
-              <Dato icono="💵" etiqueta={t("reqPropina")} valor={propina} />
+              <Dato icono="banknote" etiqueta={t("reqMoneda")} valor={moneda} />
+              <Dato icono="languages" etiqueta={t("reqIdioma")} valor={idiomas} />
+              <Dato icono="landmark" etiqueta={t("reqCapital")} valor={dp.capital} />
+              <Dato icono="clock" etiqueta={t("reqHuso")} valor={huso} />
+              <Dato icono="car" etiqueta={t("reqConduccion")} valor={conduccion} />
+              <Dato icono="phone" etiqueta={t("reqTelefono")} valor={dp.tel} />
+              <Dato icono="plug" etiqueta={t("reqEnchufe")} valor={tomacorriente} />
+              <Dato icono="cloudSun" etiqueta={t("reqEstaciones")} valor={estaciones} />
+              <Dato icono="droplet" etiqueta={t("reqAgua")} valor={agua} />
+              <Dato icono="wallet" etiqueta={t("reqPropina")} valor={propina} />
             </div>
           </div>
 
           <div className="rounded-lg bg-amber-50 p-2.5 text-[11.5px] leading-snug text-amber-700">
-            ⚠️ {t("reqDisclaimer")}
+            <span className="inline-flex items-start gap-1.5"><Icono nombre="alert" size={13} className="mt-0.5 shrink-0" /> {t("reqDisclaimer")}</span>
           </div>
         </div>
       )}
