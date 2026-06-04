@@ -1,0 +1,35 @@
+name: Actualizar requisitos de entrada
+
+# Regenera el dataset de visas/países (web/public/requisitos/visas.json y
+# web/lib/paisesISO.js) desde fuentes abiertas (Passport Index + REST Countries).
+# Mensual: los requisitos de visa cambian despacio y así somos amables con las
+# fuentes. También se puede lanzar a mano desde la pestaña Actions.
+on:
+  schedule:
+    - cron: "0 6 1 * *" # día 1 de cada mes, 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Regenerar datos de requisitos
+        run: node scripts/generar-requisitos.mjs
+        working-directory: web
+
+      - name: Guardar cambios (si los hay)
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add web/public/requisitos/visas.json web/lib/paisesISO.js
+          git commit -m "Actualizar dataset de requisitos de entrada (visas/paises)" || echo "Sin cambios"
+          git push
