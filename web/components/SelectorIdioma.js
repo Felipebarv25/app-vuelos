@@ -11,7 +11,7 @@ export default function SelectorIdioma({ oscuro = true }) {
   return (
     <div style={{ position: "relative" }}>
       <button onClick={() => setAbierto((v) => !v)} style={oscuro ? btn : btnClaro}>
-        {IDIOMAS[lang]?.bandera} ▾
+        {lang?.toUpperCase()} ▾
       </button>
       {abierto && (
         <>
@@ -30,7 +30,7 @@ export default function SelectorIdioma({ oscuro = true }) {
                   fontWeight: lang === cod ? 700 : 500,
                 }}
               >
-                <span style={{ fontSize: 18 }}>{info.bandera}</span> {info.nombre}
+                <span style={{ fontSize: 11, fontWeight: 700, background: "#f1f5f9", color: "#475569", borderRadius: 4, padding: "2px 5px" }}>{cod.toUpperCase()}</span> {info.nombre}
               </button>
             ))}
           </div>

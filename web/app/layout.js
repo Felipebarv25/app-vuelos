@@ -1,13 +1,21 @@
 import "./globals.css";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
 import { AppProvider } from "@/lib/AppContext";
 
-// Fuente auto-hospedada por Next (sin @import bloqueante en el CSS).
+// Cuerpo/UI: Plus Jakarta Sans (legible). Titulares: Fraunces (display editorial
+// con carácter). Ambas auto-hospedadas por Next (sin @import bloqueante).
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   display: "swap",
   variable: "--font-jakarta",
+});
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-fraunces",
 });
 
 // Debe coincidir EXACTO con HERO_IMG de page.js para que el preload sirva.
@@ -42,14 +50,14 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: "#4f46e5",
+  themeColor: "#0f766e",
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="es" className={jakarta.variable}>
+    <html lang="es" className={`${jakarta.variable} ${fraunces.variable}`}>
       <head>
         {/* Conexiones tempranas a los dominios de imágenes (acelera la 1ª foto) */}
         <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="" />

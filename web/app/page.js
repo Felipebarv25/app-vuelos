@@ -18,6 +18,7 @@ import Asesor from "@/components/Asesor";
 import { AfiliadosCiudad } from "@/components/Afiliados";
 import RequisitosViaje from "@/components/RequisitosViaje";
 import { listarViajes, guardarViaje, borrarViaje } from "@/lib/viajes";
+import { LogoMarca } from "@/components/Logo";
 import { useApp } from "@/lib/AppContext";
 import { track, trackVisita } from "@/lib/track";
 
@@ -397,10 +398,8 @@ export default function Home() {
           {/* Barra de navegación superior */}
           <div className="flex items-center justify-between gap-4">
             <button type="button" onClick={irAlInicio} aria-label="Viajero 360 — inicio" className="cursor-pointer text-left">
-              <div className={`flex items-center gap-2 text-[20px] font-extrabold tracking-tight lg:text-2xl ${esHero ? "text-white drop-shadow" : "text-marca-700"}`}>
-                🌍 Viajero 360
-              </div>
-              <div className={`hidden text-[13px] sm:block ${esHero ? "text-white/85" : "text-slate-400"}`}>{t("tagline")}</div>
+              <LogoMarca tono={esHero ? "claro" : "marca"} className={esHero ? "drop-shadow" : ""} />
+              <div className={`mt-0.5 hidden text-[13px] sm:block ${esHero ? "text-white/85" : "text-slate-400"}`}>{t("tagline")}</div>
             </button>
             <div className="flex items-center gap-3 lg:gap-5">
               <span className={`hidden text-sm md:inline ${esHero ? "text-white/90" : "text-slate-500"}`}>

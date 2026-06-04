@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useApp } from "@/lib/AppContext";
 import { IDIOMAS } from "@/lib/idiomas";
+import { Logo } from "@/components/Logo";
 
 // Pantalla de bienvenida: el usuario elige idioma y pone su nombre (login ligero).
 // Se muestra solo la primera vez (luego se recuerda en el dispositivo).
@@ -12,15 +13,15 @@ export default function Bienvenida() {
   return (
     <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4 bg-gradient-to-br from-marca-500 via-marca-600 to-marca-900">
       <div className="bg-white rounded-3xl p-7 w-full max-w-sm shadow-[0_24px_60px_rgba(49,46,129,.45)] animar-subir">
-        <div className="text-[52px] text-center leading-none">🌍</div>
-        <h1 className="text-2xl font-extrabold text-marca-900 text-center tracking-tight mt-1">
-          Viajero 360
+        <div className="flex justify-center text-marca-600"><Logo size={56} /></div>
+        <h1 className="text-[26px] font-bold text-marca-900 text-center tracking-tight mt-2">
+          Viajero <span className="text-acento-500">360</span>
         </h1>
         <p className="text-sm text-slate-500 text-center mt-1">{t("tagline")}</p>
 
-        {/* Selector de idioma */}
+        {/* Selector de idioma (código neutro, sin banderas de país) */}
         <div className="mt-6">
-          <div className="text-[13px] font-bold text-slate-600 mb-2">🌐 {t("idioma")}</div>
+          <div className="text-[13px] font-bold text-slate-600 mb-2">{t("idioma")}</div>
           <div className="grid grid-cols-2 gap-2">
             {Object.entries(IDIOMAS).map(([cod, info]) => (
               <button
@@ -32,7 +33,10 @@ export default function Bienvenida() {
                     : "border-slate-200 bg-white font-medium text-slate-700"
                 }`}
               >
-                <span className="text-xl">{info.bandera}</span> {info.nombre}
+                <span className={`flex h-6 w-7 shrink-0 items-center justify-center rounded text-[11px] font-bold ${
+                  lang === cod ? "bg-marca-600 text-white" : "bg-slate-100 text-slate-500"
+                }`}>{cod.toUpperCase()}</span>
+                {info.nombre}
               </button>
             ))}
           </div>
