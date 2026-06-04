@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-04T14:58:37",
+  "generado": "2026-06-04T17:49:05",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -85,26 +85,6 @@
       "visto": "2026-06-04T03:55:17",
       "link": "https://www.aviasales.com/search/BOG1411SAO27111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20S%C3%A3o%20Paulo%202026-11-14%202026-11-27"
-    },
-    {
-      "origen": "MDE",
-      "destino": "MAD",
-      "ciudad": "Madrid",
-      "pais": "España",
-      "bandera": "🇪🇸",
-      "q": "Madrid, España",
-      "precio": 940,
-      "moneda": "USD",
-      "fecha_ida": "2026-10-21",
-      "fecha_vuelta": "2026-10-31",
-      "aerolinea": "AV",
-      "umbral": 750,
-      "mediana": 1119,
-      "descuento": 16,
-      "esGanga": true,
-      "visto": "2026-06-04T03:55:20",
-      "link": "https://www.aviasales.com/search/MDE2110MAD31101",
-      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Madrid%202026-10-21%202026-10-31"
     },
     {
       "origen": "BOG",
@@ -219,8 +199,8 @@
       "fecha_vuelta": "2026-09-28",
       "aerolinea": "DM",
       "umbral": 450,
-      "mediana": 513,
-      "descuento": 11,
+      "mediana": 489,
+      "descuento": 6,
       "esGanga": false,
       "visto": "2026-06-04T03:55:11",
       "link": "https://www.aviasales.com/search/BOG1609NYC28091",
@@ -385,6 +365,26 @@
       "visto": "2026-06-04T03:55:05",
       "link": "https://www.aviasales.com/search/BOG0311PAR08111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Par%C3%ADs%202026-11-03%202026-11-08"
+    },
+    {
+      "origen": "MDE",
+      "destino": "MAD",
+      "ciudad": "Madrid",
+      "pais": "España",
+      "bandera": "🇪🇸",
+      "q": "Madrid, España",
+      "precio": 940,
+      "moneda": "USD",
+      "fecha_ida": "2026-10-21",
+      "fecha_vuelta": "2026-10-31",
+      "aerolinea": "AV",
+      "umbral": 750,
+      "mediana": 1057,
+      "descuento": 11,
+      "esGanga": false,
+      "visto": "2026-06-04T03:55:20",
+      "link": "https://www.aviasales.com/search/MDE2110MAD31101",
+      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Madrid%202026-10-21%202026-10-31"
     },
     {
       "origen": "MDE",
