@@ -17,6 +17,7 @@ import Ofertas from "@/components/Ofertas";
 import Asesor from "@/components/Asesor";
 import { AfiliadosCiudad } from "@/components/Afiliados";
 import RequisitosViaje from "@/components/RequisitosViaje";
+import { listarViajes, guardarViaje, borrarViaje } from "@/lib/viajes";
 import { useApp } from "@/lib/AppContext";
 import { track, trackVisita } from "@/lib/track";
 
@@ -90,6 +91,8 @@ export default function Home() {
   const [mostrarPresupuesto, setMostrarPresupuesto] = useState(false);
   const [mostrarTodos, setMostrarTodos] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [viajesGuardados, setViajesGuardados] = useState([]);
+  const [guardado, setGuardado] = useState(false);
 
   // GPS
   const [gpsOn, setGpsOn] = useState(false);
@@ -112,6 +115,53 @@ export default function Home() {
   function cambiarNacionalidad(cc) {
     setNacionalidad(cc);
     try { localStorage.setItem("v360_nac", cc); } catch {}
+  }
+
+  // --- Mis viajes (guardado local) ---
+  useEffect(() => {
+    setViajesGuardados(listarViajes());
+  }, []);
+
+  function guardarViajeActual() {
+    if (!ciudad || !seleccion.length) return;
+    const v = {
+      ciudad,
+      fechaInicio,
+      fechaFin,
+      dias,
+      horas,
+      momento,
+      categoria,
+      seleccion,
+    };
+    setViajesGuardados(guardarViaje(v));
+    setGuardado(true);
+    setTimeout(() => setGuardado(false), 2000);
+  }
+
+  function reabrirViaje(v) {
+    setCiudad(v.ciudad);
+    setFechaInicio(v.fechaInicio || "");
+    setFechaFin(v.fechaFin || "");
+    setDias(v.dias || 3);
+    setHoras(v.horas || 8);
+    setMomento(v.momento || "diurno");
+    setCategoria(v.categoria || "imperdibles");
+    setLugaresBase(v.seleccion || []);
+    setSeleccion(v.seleccion || []);
+    setError(null);
+    setDetalle(null);
+    setRutaTrazada(null);
+    reconstruir(v.seleccion || [], v.ciudad, v.dias);
+    // Refrescar alternativas en segundo plano (sin alterar el plan restaurado).
+    traerLugares(v.categoria || "imperdibles", v.ciudad.lat, v.ciudad.lon)
+      .then((l) => l?.length && setLugaresBase(l))
+      .catch(() => {});
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function eliminarViaje(id) {
+    setViajesGuardados(borrarViaje(id));
   }
 
   // Volver al menú principal (sin cerrar sesión): limpia la ciudad y resultados.
@@ -484,6 +534,47 @@ export default function Home() {
             </span>
           </button>
 
+          {/* Mis viajes guardados (en este dispositivo) */}
+          {viajesGuardados.length > 0 && (
+            <div className="mt-10">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-marca-500">
+                {t("misViajesEyebrow")}
+              </div>
+              <h2 className="mt-1 text-[20px] font-extrabold tracking-tight text-marca-900 lg:text-[26px]">
+                {t("misViajesTitulo")}
+              </h2>
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {viajesGuardados.map((v) => (
+                  <div key={v.id} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3.5 shadow-suave">
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[15px] font-extrabold text-marca-900">{v.ciudad?.nombre}</div>
+                      <div className="truncate text-[12.5px] text-slate-500">
+                        {v.ciudad?.pais}
+                        {v.fechaInicio && v.fechaFin
+                          ? ` · ${new Date(v.fechaInicio + "T00:00:00").toLocaleDateString(lang, { day: "numeric", month: "short" })}–${new Date(v.fechaFin + "T00:00:00").toLocaleDateString(lang, { day: "numeric", month: "short" })}`
+                          : ` · ${v.dias} ${t("dias").toLowerCase()}`}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => reabrirViaje(v)}
+                      className="shrink-0 rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-3 py-2 text-[12.5px] font-bold text-white shadow-marca transition hover:brightness-105"
+                    >
+                      {t("misViajesReabrir")}
+                    </button>
+                    <button
+                      onClick={() => eliminarViaje(v.id)}
+                      aria-label={t("misViajesEliminar")}
+                      title={t("misViajesEliminar")}
+                      className="shrink-0 rounded-lg px-2 py-2 text-[13px] text-slate-300 transition hover:bg-red-50 hover:text-red-500"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Destinos con foto */}
           <div className="mb-4 mt-10">
             <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-marca-500">
@@ -585,7 +676,15 @@ export default function Home() {
                 <h1 className="text-2xl font-extrabold tracking-tight text-marca-900 lg:text-3xl">{ciudad.nombre}</h1>
                 <div className="text-[13px] text-slate-500">{ciudad.pais}</div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
+                {plan.some((d) => d.paradas.length > 0) && (
+                  <button
+                    onClick={guardarViajeActual}
+                    className="rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-3 py-2 text-[13px] font-bold text-white shadow-marca transition hover:brightness-105"
+                  >
+                    {guardado ? "✓ " + t("guardado") : "💾 " + t("guardarViaje")}
+                  </button>
+                )}
                 {plan.some((d) => d.paradas.length > 0) && (
                   <button
                     onClick={compartirPlan}
