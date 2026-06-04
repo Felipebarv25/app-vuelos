@@ -193,6 +193,16 @@ export default function Home() {
     return () => clearTimeout(debounce.current);
   }, [consulta]);
 
+  // Limpia los resultados de la ciudad anterior para no mostrar marcadores ni
+  // itinerario viejos mientras carga la nueva (evita ver "París en Medellín").
+  function limpiarParaNuevaCiudad() {
+    setLugaresBase([]);
+    setSeleccion([]);
+    setPlan([]);
+    setRutaTrazada(null);
+    setDetalle(null);
+  }
+
   function elegirCiudad(sug) {
     setConsulta(sug.etiqueta);
     setMostrarSug(false);
@@ -201,6 +211,7 @@ export default function Home() {
     // Mostramos el mapa y la ciudad de INMEDIATO (ya tenemos coords del autocompletado).
     const c = { nombre: sug.ciudad, pais: sug.pais, lat: sug.lat, lon: sug.lon };
     setCiudad(c);
+    limpiarParaNuevaCiudad();
     track("busqueda", { ciudad: sug.ciudad, pais: sug.pais });
     cargarCategoria("imperdibles", c); // los lugares cargan en segundo plano
   }
@@ -215,6 +226,7 @@ export default function Home() {
     try {
       const c = await geocodificar(q);
       setCiudad(c); // mapa visible ya
+      limpiarParaNuevaCiudad();
       setCargando(false);
       track("busqueda", { ciudad: c.nombre, pais: c.pais });
       cargarCategoria("imperdibles", c); // lugares en segundo plano

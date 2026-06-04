@@ -11,6 +11,32 @@ import { dirname, join } from "node:path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const RAIZ = join(__dirname, "..");
 
+// Ciudades EXTRA a precalcular además de las de presupuesto: prioridad para el
+// público colombiano/latino + grandes destinos que faltaban. No afectan el
+// módulo de presupuesto (solo se precalculan sus lugares).
+const CIUDADES_EXTRA = [
+  // Colombia (nuestro público principal)
+  { ciudad: "Medellín", pais: "Colombia", lat: 6.2442, lon: -75.5812 },
+  { ciudad: "Bogotá", pais: "Colombia", lat: 4.711, lon: -74.0721 },
+  { ciudad: "Cartagena", pais: "Colombia", lat: 10.391, lon: -75.4794 },
+  { ciudad: "Cali", pais: "Colombia", lat: 3.4516, lon: -76.532 },
+  { ciudad: "Santa Marta", pais: "Colombia", lat: 11.2408, lon: -74.199 },
+  { ciudad: "Barranquilla", pais: "Colombia", lat: 10.9685, lon: -74.7813 },
+  { ciudad: "Pereira", pais: "Colombia", lat: 4.8133, lon: -75.6961 },
+  { ciudad: "Bucaramanga", pais: "Colombia", lat: 7.1193, lon: -73.1227 },
+  { ciudad: "Manizales", pais: "Colombia", lat: 5.0703, lon: -75.5138 },
+  { ciudad: "Villa de Leyva", pais: "Colombia", lat: 5.6325, lon: -73.5247 },
+  { ciudad: "San Andrés", pais: "Colombia", lat: 12.5847, lon: -81.7006 },
+  { ciudad: "Popayán", pais: "Colombia", lat: 2.4448, lon: -76.6147 },
+  // Grandes destinos del mundo que faltaban
+  { ciudad: "Estambul", pais: "Turquía", lat: 41.0082, lon: 28.9784 },
+  { ciudad: "El Cairo", pais: "Egipto", lat: 30.0444, lon: 31.2357 },
+  { ciudad: "Hong Kong", pais: "Hong Kong", lat: 22.3193, lon: 114.1694 },
+  { ciudad: "Seúl", pais: "Corea del Sur", lat: 37.5665, lon: 126.978 },
+  { ciudad: "Berlín", pais: "Alemania", lat: 52.52, lon: 13.405 },
+  { ciudad: "Praga", pais: "Chequia", lat: 50.0755, lon: 14.4378 },
+];
+
 // --- 1) Cargar la lista de ciudades desde lib/presupuesto.js (sin importar:
 //        el archivo usa sintaxis ESM y aquí lo leemos como texto y lo evaluamos).
 function cargarCiudades() {
@@ -21,7 +47,15 @@ function cargarCiudades() {
   const arrTxt = txt.slice(desde, hasta + 1);
   // eslint-disable-next-line no-eval
   const arr = eval(arrTxt);
-  return arr.filter((c) => c.lat != null && c.lon != null);
+  const todas = [...arr, ...CIUDADES_EXTRA].filter((c) => c.lat != null && c.lon != null);
+  // Quitar duplicados por slug (p. ej. Berlín/Praga estaban en ambas listas).
+  const vistos = new Set();
+  return todas.filter((c) => {
+    const s = slug(c.ciudad, c.pais);
+    if (vistos.has(s)) return false;
+    vistos.add(s);
+    return true;
+  });
 }
 
 function slug(ciudad, pais) {
