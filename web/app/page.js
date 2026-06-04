@@ -19,6 +19,7 @@ import { AfiliadosCiudad } from "@/components/Afiliados";
 import RequisitosViaje from "@/components/RequisitosViaje";
 import { listarViajes, guardarViaje, borrarViaje } from "@/lib/viajes";
 import { LogoMarca } from "@/components/Logo";
+import { Icono } from "@/components/Icono";
 import { useApp } from "@/lib/AppContext";
 import { track, trackVisita } from "@/lib/track";
 
@@ -512,8 +513,8 @@ export default function Home() {
             <span className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-emerald-400 to-emerald-600" />
 
             {/* Tile con icono */}
-            <span className="relative ml-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-2xl text-white shadow-[0_6px_16px_-4px_rgba(5,150,105,.55)] transition-transform duration-300 group-hover:scale-105 lg:h-14 lg:w-14">
-              💰
+            <span className="relative ml-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-[0_6px_16px_-4px_rgba(5,150,105,.55)] transition-transform duration-300 group-hover:scale-105 lg:h-14 lg:w-14">
+              <Icono nombre="wallet" size={26} strokeWidth={2.2} />
             </span>
 
             {/* Texto */}
@@ -528,8 +529,8 @@ export default function Home() {
             </div>
 
             {/* Flecha */}
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-lg font-bold text-emerald-600 transition-all duration-300 group-hover:translate-x-0.5 group-hover:bg-emerald-600 group-hover:text-white">
-              →
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 transition-all duration-300 group-hover:translate-x-0.5 group-hover:bg-emerald-600 group-hover:text-white">
+              <Icono nombre="arrowRight" size={18} />
             </span>
           </button>
 
