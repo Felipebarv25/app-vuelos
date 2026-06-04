@@ -12,6 +12,8 @@ import {
   idiomasEs,
   enchufe,
   estacionesClave,
+  aguaClave,
+  propinaClave,
 } from "@/lib/requisitos";
 
 // Celda de dato del país.
@@ -62,6 +64,10 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
   const tomacorriente = enchufe(destinoIso);
   const ecl = estacionesClave(dp.lat);
   const estaciones = ecl ? t("estac_" + ecl) : "";
+  const acl = aguaClave(destinoIso);
+  const agua = acl ? t("agua_" + acl) : "";
+  const pcl = propinaClave(destinoIso);
+  const propina = pcl ? t("prop_" + pcl) : "";
 
   return (
     <div className="mb-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave">
@@ -138,6 +144,8 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
               <Dato icono="📞" etiqueta={t("reqTelefono")} valor={dp.tel} />
               <Dato icono="🔌" etiqueta={t("reqEnchufe")} valor={tomacorriente} />
               <Dato icono="🌤️" etiqueta={t("reqEstaciones")} valor={estaciones} />
+              <Dato icono="🚰" etiqueta={t("reqAgua")} valor={agua} />
+              <Dato icono="💵" etiqueta={t("reqPropina")} valor={propina} />
             </div>
           </div>
 

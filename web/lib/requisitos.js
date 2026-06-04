@@ -170,3 +170,30 @@ export function estacionesClave(lat) {
   if (Math.abs(lat) <= 23.5) return "tropical";
   return lat > 0 ? "norte" : "sur";
 }
+
+// --- Agua del grifo (orientativo). potable | precaucion | no ---
+const AGUA = {
+  potable: ["US", "CA", "GB", "IE", "FR", "ES", "IT", "DE", "NL", "PT", "AT", "CH",
+    "BE", "GR", "PL", "CZ", "HU", "HR", "JP", "KR", "SG", "AU", "NZ", "CL", "UY", "CO", "CR"],
+  precaucion: ["BR", "AR", "PA", "ZA", "AE", "TR", "MA", "DO"],
+  no: ["MX", "PE", "EC", "BO", "PY", "VE", "GT", "CU", "TH", "IN", "CN", "ID", "EG"],
+};
+const _agua = {};
+for (const [k, arr] of Object.entries(AGUA)) for (const cc of arr) _agua[cc] = k;
+export function aguaClave(iso) {
+  return _agua[iso] || null;
+}
+
+// --- Propina habitual (orientativo). no | incluido | diez | veinte ---
+const PROPINA = {
+  no: ["JP", "KR", "CN", "SG", "TH"],
+  incluido: ["FR", "ES", "IT", "DE", "NL", "PT", "AT", "CH", "BE", "GR", "PL", "CZ", "HU", "HR"],
+  veinte: ["US", "CA"],
+  diez: ["CO", "MX", "PE", "AR", "BR", "CL", "EC", "UY", "BO", "PY", "VE", "PA", "CR",
+    "GT", "CU", "DO", "IN", "MA", "EG", "ZA", "AE", "TR", "ID", "GB", "IE"],
+};
+const _propina = {};
+for (const [k, arr] of Object.entries(PROPINA)) for (const cc of arr) _propina[cc] = k;
+export function propinaClave(iso) {
+  return _propina[iso] || null;
+}
