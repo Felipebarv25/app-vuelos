@@ -8,9 +8,9 @@
 //   • travelpayouts→ regístrate en https://www.travelpayouts.com → tu "marker"
 //                    (sirve para vuelos Aviasales, eSIM y seguros)
 export const AFILIADOS = {
-  getYourGuide: "",  // p.ej. "ABC123"
-  bookingAid: "",    // p.ej. "1234567"
-  travelpayouts: "", // p.ej. "123456"
+  getYourGuide: "RGTCZOH", // partner_id de GetYourGuide (tours/experiencias)
+  bookingAid: "",          // p.ej. "1234567" (Booking.com → afíliate para activarlo)
+  travelpayouts: "734652", // marker de Travelpayouts (vuelos) — ya activo
 };
 
 // ¿Hay al menos un programa configurado? (para decidir si mostrar la nota de afiliados)
