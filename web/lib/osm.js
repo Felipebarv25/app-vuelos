@@ -209,7 +209,7 @@ export async function geocodificar(consulta) {
 // v25: ciudades TOP servidas desde precálculo estático (WDQS) → instantáneo y con
 // los íconos garantizados (Eiffel, Sagrada Familia, Coliseo…). El motor en vivo
 // queda como respaldo liviano para ciudades no precalculadas. Invalida cachés.
-const API_VER = "25";
+const API_VER = "26";
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.

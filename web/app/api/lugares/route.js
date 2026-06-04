@@ -368,6 +368,77 @@ async function desdePhoton(cat, lat, lon, radio = 12000) {
   return out;
 }
 
+// --- POIs vía Wikidata BAJO DEMANDA (para CUALQUIER ciudad no precalculada) ---
+// Misma fuente de calidad que el precálculo, pero al vuelo: una consulta rápida
+// que da los lugares notables con coordenadas y fama. Corre en paralelo con
+// Overpass (si falla o tarda, Overpass cubre → sin regresión) y se cachea.
+const TIPOS_POI_WD = new Set([
+  "Q33506", "Q207694", "Q3327872", "Q5505137", "Q588140", "Q1568346", "Q1007870",
+  "Q16970", "Q2977", "Q163687", "Q120560", "Q108325", "Q32815", "Q34627", "Q44539", "Q44613", "Q160742",
+  "Q4989906", "Q575759", "Q5003624", "Q170980", "Q190928", "Q179700", "Q860861",
+  "Q23413", "Q751876", "Q16560", "Q57821", "Q14452", "Q82117",
+  "Q12518", "Q200334", "Q1440476", "Q174782", "Q22698", "Q22746", "Q46169", "Q1107656", "Q167346",
+  "Q12280", "Q483453", "Q12511", "Q839954", "Q2087181", "Q358",
+  "Q483110", "Q641226", "Q24354", "Q153562", "Q570116", "Q2319498", "Q1442406",
+  "Q194195", "Q43501", "Q1244442", "Q39715", "Q34038", "Q35509",
+]);
+
+function tagWD(n) {
+  const s = (n || "").toLowerCase();
+  if (/\b(museo|museu|museum|mus[ée]e|galer|gallery|pinacote)/.test(s)) return { tourism: "museum" };
+  if (/\b(bas[íi]lica|catedral|cathedral|iglesia|church|[ée]glise|temple|templo|capilla|chapelle|mezquita|mosque|sinagoga|sagrada|duomo|abad)/.test(s)) return { amenity: "place_of_worship" };
+  if (/\b(castillo|castle|ch[âa]teau|fortaleza|fort|alc[áa]zar|citadel|ciudadela)/.test(s)) return { historic: "castle" };
+  if (/\b(palacio|palau|palace|palais|palazzo)/.test(s)) return { historic: "palace" };
+  if (/\b(parque|park|parc|jard[íi]n|jardim|garden|bosque)/.test(s)) return { leisure: "park" };
+  if (/\b(estadio|stadium|stade|st[àa]dio|arena)/.test(s)) return { leisure: "stadium" };
+  return { tourism: "attraction" };
+}
+
+async function poisWikidata(lat, lon) {
+  const q = `SELECT ?item ?itemLabel ?lat ?lon ?sl (GROUP_CONCAT(DISTINCT ?t;separator=",") AS ?types) WHERE {
+  SERVICE wikibase:around { ?item wdt:P625 ?coord .
+    bd:serviceParam wikibase:center "Point(${lon} ${lat})"^^geo:wktLiteral .
+    bd:serviceParam wikibase:radius "20" . }
+  ?item wikibase:sitelinks ?sl . FILTER(?sl >= 4)
+  OPTIONAL { ?item wdt:P31 ?t }
+  BIND(geof:latitude(?coord) AS ?lat) BIND(geof:longitude(?coord) AS ?lon)
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "es,en". ?item rdfs:label ?itemLabel. }
+} GROUP BY ?item ?itemLabel ?lat ?lon ?sl ORDER BY DESC(?sl) LIMIT 150`;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 14000);
+    const r = await fetch(
+      "https://query.wikidata.org/sparql?format=json&query=" + encodeURIComponent(q),
+      { headers: { Accept: "application/sparql-results+json", "User-Agent": UA }, signal: ctrl.signal }
+    );
+    clearTimeout(t);
+    if (!r.ok) return [];
+    const d = await r.json();
+    const out = [];
+    const vistos = new Set();
+    for (const x of d.results?.bindings || []) {
+      if (out.length >= 60) break;
+      const nombre = x.itemLabel?.value;
+      if (!nombre || /^Q\d+$/.test(nombre) || vistos.has(nombre)) continue;
+      const tipos = (x.types?.value || "").split(",").map((u) => u.split("/").pop());
+      if (!tipos.some((tt) => TIPOS_POI_WD.has(tt))) continue;
+      vistos.add(nombre);
+      const qid = x.item.value.split("/").pop();
+      out.push({
+        type: "node",
+        id: qid,
+        lat: Number(x.lat.value),
+        lon: Number(x.lon.value),
+        tags: { name: nombre, wikidata: qid, wikipedia: "es:" + nombre, ...tagWD(nombre) },
+        slWiki: Number(x.sl.value) || 0, // fama → aplicarPopularidad la convierte en pop
+      });
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const cat = searchParams.get("cat") || "imperdibles";
@@ -416,11 +487,15 @@ export async function GET(req) {
   const conIconos = cat === "imperdibles" || cat === "miradores";
   const pIconos = conIconos ? iconosCiudad(lat, lon).catch(() => []) : Promise.resolve([]);
   const pPop = conIconos ? poisAmadeus(lat, lon, 20).catch(() => []) : Promise.resolve([]);
+  // Wikidata bajo demanda: POIs de calidad para CUALQUIER ciudad (no solo las
+  // precalculadas). Paralelo y best-effort; si tarda/falla, Overpass cubre.
+  const pWiki = conIconos ? poisWikidata(lat, lon).catch(() => []) : Promise.resolve([]);
 
   // La CERCANA manda el ritmo (tope 13s); las demás son best-effort con topes
   // más cortos para no estirar la respuesta. Todo cabe en maxDuration=20s y el
   // cliente espera 16s, así el resultado SÍ alcanza a guardarse en caché.
-  const [iconos, near, far, phot, pop] = await Promise.all([
+  const [wiki, iconos, near, far, phot, pop] = await Promise.all([
+    Promise.race([pWiki, deadline(14000, [])]),
     Promise.race([pIconos, deadline(11000, [])]),
     Promise.race([pNear, deadline(13000, [])]),
     Promise.race([pFar, deadline(11000, [])]),
@@ -428,11 +503,11 @@ export async function GET(req) {
     Promise.race([pPop, deadline(7000, [])]),
   ]);
 
-  // Unir sin duplicar nombres. ICÓNICOS primero (prioridad), luego cercanos,
-  // lejanos y Photon.
+  // Unir sin duplicar nombres. WIKIDATA primero (calidad + fama), luego ICÓNICOS,
+  // cercanos, lejanos y Photon.
   const vistos = new Set();
   let elementos = [];
-  for (const e of [...iconos, ...near, ...far, ...phot]) {
+  for (const e of [...wiki, ...iconos, ...near, ...far, ...phot]) {
     const n = e.tags?.name;
     if (!n || vistos.has(n)) continue;
     vistos.add(n);
