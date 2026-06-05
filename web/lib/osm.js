@@ -335,9 +335,25 @@ function procesarElementos(datos, categoria, lat, lon, limite, catNombre, precal
     // POPULARIDAD real que añade el servidor (Amadeus POI + sitelinks Wikidata).
     if (el.pop) score += el.pop;
 
+    // Variantes de nombre en otros idiomas (OSM trae name:es/en/pt/fr cuando
+    // existe). Mantener el original como `nombre` y exponer el dict para que la
+    // UI elija según el idioma activo. `wd` = QID para traducir bajo demanda.
+    const nombres = {};
+    if (t["name:es"]) nombres.es = t["name:es"];
+    if (t["name:en"]) nombres.en = t["name:en"];
+    if (t["name:pt"]) nombres.pt = t["name:pt"];
+    if (t["name:fr"]) nombres.fr = t["name:fr"];
+    // En precalc el `id` viene como "Qxxx" (de Wikidata); en vivo, `tags.wikidata`.
+    const wd =
+      (t.wikidata && /^Q\d+$/.test(t.wikidata) && t.wikidata) ||
+      (typeof el.id === "string" && /^Q\d+$/.test(el.id) && el.id) ||
+      null;
+
     lugares.push({
       id: `${el.type}/${el.id}`,
       nombre,
+      nombres,
+      wd,
       categoria: ETIQUETAS[tipoRaw] || catNombre,
       coord,
       notable: !!(t.wikidata || t.wikipedia),

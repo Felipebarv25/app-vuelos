@@ -395,15 +395,22 @@ function tagWD(n) {
 }
 
 async function poisWikidata(lat, lon) {
-  const q = `SELECT ?item ?itemLabel ?lat ?lon ?sl (GROUP_CONCAT(DISTINCT ?t;separator=",") AS ?types) WHERE {
+  // Traemos labels en los 4 idiomas soportados por la UI (es/en/pt/fr). El
+  // backend los inyecta como tags name:xx para que la UI use el correcto sin
+  // llamadas extra. `itemLabel` (con fallback "es,en") se usa como nombre base.
+  const q = `SELECT ?item ?itemLabel ?labEs ?labEn ?labPt ?labFr ?lat ?lon ?sl (GROUP_CONCAT(DISTINCT ?t;separator=",") AS ?types) WHERE {
   SERVICE wikibase:around { ?item wdt:P625 ?coord .
     bd:serviceParam wikibase:center "Point(${lon} ${lat})"^^geo:wktLiteral .
     bd:serviceParam wikibase:radius "20" . }
   ?item wikibase:sitelinks ?sl . FILTER(?sl >= 4)
   OPTIONAL { ?item wdt:P31 ?t }
+  OPTIONAL { ?item rdfs:label ?labEs . FILTER(LANG(?labEs)="es") }
+  OPTIONAL { ?item rdfs:label ?labEn . FILTER(LANG(?labEn)="en") }
+  OPTIONAL { ?item rdfs:label ?labPt . FILTER(LANG(?labPt)="pt") }
+  OPTIONAL { ?item rdfs:label ?labFr . FILTER(LANG(?labFr)="fr") }
   BIND(geof:latitude(?coord) AS ?lat) BIND(geof:longitude(?coord) AS ?lon)
   SERVICE wikibase:label { bd:serviceParam wikibase:language "es,en". ?item rdfs:label ?itemLabel. }
-} GROUP BY ?item ?itemLabel ?lat ?lon ?sl ORDER BY DESC(?sl) LIMIT 150`;
+} GROUP BY ?item ?itemLabel ?labEs ?labEn ?labPt ?labFr ?lat ?lon ?sl ORDER BY DESC(?sl) LIMIT 150`;
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 14000);
@@ -424,12 +431,17 @@ async function poisWikidata(lat, lon) {
       if (!tipos.some((tt) => TIPOS_POI_WD.has(tt))) continue;
       vistos.add(nombre);
       const qid = x.item.value.split("/").pop();
+      const tags = { name: nombre, wikidata: qid, wikipedia: "es:" + nombre, ...tagWD(nombre) };
+      if (x.labEs?.value) tags["name:es"] = x.labEs.value;
+      if (x.labEn?.value) tags["name:en"] = x.labEn.value;
+      if (x.labPt?.value) tags["name:pt"] = x.labPt.value;
+      if (x.labFr?.value) tags["name:fr"] = x.labFr.value;
       out.push({
         type: "node",
         id: qid,
         lat: Number(x.lat.value),
         lon: Number(x.lon.value),
-        tags: { name: nombre, wikidata: qid, wikipedia: "es:" + nombre, ...tagWD(nombre) },
+        tags,
         slWiki: Number(x.sl.value) || 0, // fama → aplicarPopularidad la convierte en pop
       });
     }

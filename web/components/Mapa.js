@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { nombreLocalizado } from "@/lib/nombres";
 
 // Distancia simple en grados (para decidir si el GPS está cerca de la ciudad).
 function lejos(a, b) {
@@ -28,6 +29,7 @@ export default function Mapa({
   ubicacionUsuario = null,
   rutaTrazada = null,
   onClicLugar = null,
+  lang = "es",
 }) {
   const ref = useRef(null);
   const mapaRef = useRef(null);
@@ -81,7 +83,7 @@ export default function Mapa({
         });
         const m = L.marker(l.coord, { icon }).addTo(mapa);
         m.bindPopup(
-          `<b>${i + 1}. ${l.nombre}</b><br>${l.categoria || ""}<br>
+          `<b>${i + 1}. ${nombreLocalizado(l, lang)}</b><br>${l.categoria || ""}<br>
            <span style="color:#4f46e5;font-weight:600">Toca el pin para ver detalles →</span>`
         );
         if (onClicLugar) m.on("click", () => onClicLugar(l));
@@ -150,7 +152,7 @@ export default function Mapa({
     return () => {
       cancelado = true;
     };
-  }, [centro, lugares, ubicacionUsuario, rutaTrazada]);
+  }, [centro, lugares, ubicacionUsuario, rutaTrazada, lang]);
 
   return (
     <div

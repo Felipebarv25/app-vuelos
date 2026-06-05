@@ -5,6 +5,7 @@ import { fotoDeLugar } from "@/lib/imagenes";
 import { fmtMin, resumenDia } from "@/lib/itinerario";
 import { estadoTiempo, textoEstado } from "@/lib/reloj";
 import { Icono, iconoCategoria } from "./Icono";
+import { nombreLocalizado } from "@/lib/nombres";
 
 // Miniatura de la parada: carga la foto de forma perezosa (Wikipedia/Commons).
 function FotoMini({ nombre, ciudad, onClick }) {
@@ -155,7 +156,7 @@ export default function Itinerario({
                   onClick={() => onVerLugar?.(p)}
                   className="cursor-pointer break-words text-[16.5px] font-bold tracking-tight"
                 >
-                  {p.nombre}
+                  {nombreLocalizado(p, lang)}
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[12.5px] text-slate-500">
                   <span className="inline-flex items-center gap-1"><Icono nombre={iconoCategoria(p.categoria)} size={13} /> {p.categoria}</span>
@@ -193,7 +194,7 @@ export default function Itinerario({
                 </div>
               </div>
 
-              <FotoMini nombre={p.nombre} ciudad={ciudad} onClick={() => onVerLugar?.(p)} />
+              <FotoMini nombre={nombreLocalizado(p, lang)} ciudad={ciudad} onClick={() => onVerLugar?.(p)} />
             </div>
           </div>
         </div>

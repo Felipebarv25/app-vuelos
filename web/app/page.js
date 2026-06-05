@@ -2,6 +2,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { geocodificar, traerLugares, CATEGORIAS } from "@/lib/osm";
+import { traducirLoteWD, nombreLocalizado } from "@/lib/nombres";
 import { construirItinerario, agregarLugarADia, fmtMin } from "@/lib/itinerario";
 import { CIUDADES_POPULARES } from "@/lib/ciudadesPopulares";
 import { sugerirCiudades } from "@/lib/autocompletar";
@@ -86,6 +87,9 @@ export default function Home() {
   const [seleccion, setSeleccion] = useState([]);
   const [plan, setPlan] = useState([]);
   const [diaVisible, setDiaVisible] = useState(0);
+  // Bump para forzar re-render cuando traducirLoteWD muta nombres en sitio.
+  const [revTraduccion, setRevTraduccion] = useState(0);
+  void revTraduccion;
 
   // Lugar abierto en detalle + ruta trazada en el mapa
   const [detalle, setDetalle] = useState(null);
@@ -106,6 +110,19 @@ export default function Home() {
   useEffect(() => {
     trackVisita(lang);
   }, [lang]);
+
+  // Traducir nombres de POIs cuando llegan datos nuevos o cambia el idioma.
+  // Best-effort: muta lugar.nombres[lang] en sitio y bumpea el state para
+  // forzar re-render. Si Wikidata no responde, la UI sigue con el nombre base.
+  useEffect(() => {
+    if (!lang || lugaresBase.length === 0) return;
+    let vivo = true;
+    const todos = [...lugaresBase, ...(seleccion || [])];
+    traducirLoteWD(todos, lang).then((cambio) => {
+      if (vivo && cambio) setRevTraduccion((n) => n + 1);
+    });
+    return () => { vivo = false; };
+  }, [lugaresBase, seleccion, lang]);
 
   // Nacionalidad (pasaporte) para los requisitos de entrada: recordar la elección.
   useEffect(() => {
@@ -365,7 +382,7 @@ export default function Home() {
       n += 1;
       txt += `\n${t("dia")} ${n}\n`;
       d.paradas.forEach((p, i) => {
-        txt += `  ${i + 1}. ${p.nombre} (${fmtMin(p.minutos)})\n`;
+        txt += `  ${i + 1}. ${nombreLocalizado(p, lang)} (${fmtMin(p.minutos)})\n`;
       });
     });
     txt += `\n${t("hechoCon")} Viajero 360 · https://app-vuelos-mfos.vercel.app/`;
@@ -872,7 +889,7 @@ export default function Home() {
                           >
                             <div className="flex items-center gap-1.5 truncate text-[14px] font-semibold text-slate-800">
                               {l.notable && <span className="text-amber-500"><Icono nombre="star" size={12} /></span>}
-                              <span className="truncate">{l.nombre}</span>
+                              <span className="truncate">{nombreLocalizado(l, lang)}</span>
                             </div>
                             <div className="truncate text-[12px] text-slate-500">{l.categoria}</div>
                           </button>
@@ -915,6 +932,7 @@ export default function Home() {
                   ubicacionUsuario={gps}
                   rutaTrazada={rutaTrazada}
                   onClicLugar={(l) => { setRutaTrazada(null); setDetalle(l); }}
+                  lang={lang}
                 />
               </div>
             </div>
@@ -929,6 +947,7 @@ export default function Home() {
           ciudad={ciudad}
           origen={gps}
           t={t}
+          lang={lang}
           onCerrar={() => setDetalle(null)}
           onTrazarRuta={(r) => { setRutaTrazada(r); setDetalle(null); }}
           onAgregar={plan[diaVisible] ? (l) => { agregarParada(l); setDetalle(null); } : undefined}

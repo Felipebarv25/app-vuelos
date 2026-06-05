@@ -7,6 +7,7 @@ import { fmtMin } from "@/lib/itinerario";
 import { monedaDePais, costoLocal, costoUsd } from "@/lib/monedasPais";
 import { BotonTourLugar } from "./Afiliados";
 import { Icono, iconoCategoria } from "./Icono";
+import { nombreLocalizado } from "@/lib/nombres";
 
 // Distancia legible (m / km).
 function fmtDist(m) {
@@ -23,7 +24,8 @@ function gmapsModo(modo) {
 // Panel/modal que muestra TODO sobre un lugar SIN salir de la app:
 // foto, descripción, y cómo llegar desde la ubicación del usuario
 // (transporte, tiempo, costo y ruta dibujada en nuestro mapa).
-export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazarRuta, onAgregar, t = (k) => k }) {
+export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazarRuta, onAgregar, t = (k) => k, lang = "es" }) {
+  const nombreLug = nombreLocalizado(lugar, lang);
   const [foto, setFoto] = useState(null);
   const [cargandoFoto, setCargandoFoto] = useState(true);
   const [errorFoto, setErrorFoto] = useState(false);
@@ -42,7 +44,7 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
     setCargandoFoto(true);
     setErrorFoto(false);
     setFoto(null);
-    fotoDeLugar(lugar.nombre, ciudad?.nombre).then((f) => {
+    fotoDeLugar(nombreLug, ciudad?.nombre).then((f) => {
       if (vivo) {
         setFoto(f);
         setCargandoFoto(false);
@@ -51,7 +53,7 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
     return () => {
       vivo = false;
     };
-  }, [lugar, ciudad]);
+  }, [lugar, ciudad, nombreLug]);
 
   async function elegirTransporte(tr) {
     setModoSel(tr.modo);
@@ -81,7 +83,7 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
           ) : foto?.url && !errorFoto ? (
             <img
               src={foto.url}
-              alt={lugar.nombre}
+              alt={nombreLug}
               loading="lazy"
               onError={() => setErrorFoto(true)}
               className="h-full w-full object-cover"
@@ -98,7 +100,7 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
             <Icono nombre="x" size={17} />
           </button>
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-4 pb-3.5 pt-8 text-white">
-            <div className="text-[22px] font-extrabold">{lugar.nombre}</div>
+            <div className="text-[22px] font-extrabold">{nombreLug}</div>
             <div className="text-[13px] opacity-95">
               {lugar.categoria}
               {lugar.cocina ? ` · ${lugar.cocina}` : ""}
