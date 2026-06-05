@@ -351,9 +351,13 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                           {fmtUsd(d.total)}
                         </div>
                         <div className="text-[11px] text-slate-400">{fmtLocal(d.total)}</div>
-                        {d.esReal && (
+                        {d.esReal ? (
                           <div className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-emerald-700">
                             <Icono nombre="flame" size={9} /> {t("presupPrecioReal")}
+                          </div>
+                        ) : (
+                          <div className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-500">
+                            {t("presupEstimado")}
                           </div>
                         )}
                       </div>
@@ -364,8 +368,10 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                         <Fila
                           nombre={t("presupVuelo")}
                           valor={fmtUsd(d.desglose.vuelo)}
-                          badge={d.esReal ? t("presupPrecioReal") : null}
+                          badge={d.esReal ? t("presupPrecioReal") : t("presupEstimado")}
+                          badgeReal={d.esReal}
                         />
+                        {d.esReal && <FechasOferta vueloReal={d.vueloReal} t={t} />}
                         <Fila nombre={t("presupHospedaje")} valor={fmtUsd(d.desglose.hospedaje)} />
                         <Fila nombre={t("presupComida")} valor={fmtUsd(d.desglose.comida)} />
                         <Fila nombre={t("presupTransporte")} valor={fmtUsd(d.desglose.transporte)} />
@@ -460,13 +466,37 @@ function Label({ children }) {
   return <div className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-slate-500">{children}</div>;
 }
 
-function Fila({ nombre, valor, badge = null }) {
+// Formatea "2026-03-12" → "12 mar" (sin dependencias, idioma por defecto es).
+const MESES_CORTOS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+function fmtFechaCorta(iso) {
+  if (!iso || iso.length < 10) return "";
+  const m = Number(iso.slice(5, 7)) - 1;
+  const d = Number(iso.slice(8, 10));
+  return `${d} ${MESES_CORTOS[m] || ""}`;
+}
+
+// Línea "Oferta para 12 mar – 20 mar" bajo el precio de vuelo cuando es real.
+function FechasOferta({ vueloReal, t }) {
+  if (!vueloReal || (!vueloReal.fecha_ida && !vueloReal.fecha_vuelta)) return null;
+  return (
+    <div className="-mt-0.5 mb-1 pl-0.5 text-[11px] font-medium text-emerald-700">
+      {t("presupOfertaPara")} {fmtFechaCorta(vueloReal.fecha_ida)}
+      {vueloReal.fecha_vuelta ? ` – ${fmtFechaCorta(vueloReal.fecha_vuelta)}` : ""}
+    </div>
+  );
+}
+
+function Fila({ nombre, valor, badge = null, badgeReal = false }) {
   return (
     <div className="flex items-center justify-between py-1 text-[13px] text-slate-600">
       <span className="flex items-center gap-1.5">
         {nombre}
         {badge && (
-          <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-emerald-700">
+          <span
+            className={`rounded-full px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide ${
+              badgeReal ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+            }`}
+          >
             {badge}
           </span>
         )}
@@ -550,8 +580,10 @@ function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear, onPlanearCiuda
         <Fila
           nombre={"✈️ " + t("presupVueloIntl")}
           valor={fmtUsd(desglose.vueloIntl)}
-          badge={ruta.esRealEntrada ? t("presupPrecioReal") : null}
+          badge={ruta.esRealEntrada ? t("presupPrecioReal") : t("presupEstimado")}
+          badgeReal={ruta.esRealEntrada}
         />
+        {ruta.esRealEntrada && <FechasOferta vueloReal={ruta.vueloRealEntrada} t={t} />}
         <Fila nombre={"🚄 " + t("presupEntreCiudades")} valor={fmtUsd(desglose.saltos)} />
         <Fila nombre={"🏨 " + t("presupHospedaje")} valor={fmtUsd(desglose.hospedaje)} />
         <Fila nombre={"🍽️ " + t("presupComida")} valor={fmtUsd(desglose.comida)} />
