@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-05T14:49:08",
+  "generado": "2026-06-05T17:14:50",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -39,8 +39,8 @@
       "fecha_vuelta": "2026-07-09",
       "aerolinea": "JA",
       "umbral": 300,
-      "mediana": 408,
-      "descuento": 19,
+      "mediana": 402,
+      "descuento": 17,
       "esGanga": true,
       "visto": "2026-06-05T03:39:09",
       "link": "https://www.aviasales.com/search/BOG0707LIM09071",
