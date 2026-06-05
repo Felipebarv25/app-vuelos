@@ -11,6 +11,7 @@ import {
   REGIONES,
   MONEDAS,
 } from "@/lib/presupuesto";
+import { obtenerPreciosReales } from "@/lib/preciosVuelos";
 
 // Módulo "¿Adónde puedo ir con mi presupuesto?".
 // Dos modos:
@@ -36,6 +37,14 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
   // Ruta: ciudades excluidas (las que el usuario no quiere en su ruta).
   const [excluidos, setExcluidos] = useState([]);
 
+  // Precios reales del detector de vuelos (ofertas.json). Se cargan una vez.
+  const [preciosReales, setPreciosReales] = useState({});
+  useEffect(() => {
+    let vivo = true;
+    obtenerPreciosReales().then((m) => vivo && setPreciosReales(m));
+    return () => { vivo = false; };
+  }, []);
+
   const presupuestoUsd = monto * MONEDAS[moneda].aUsd;
 
   // Métrica: registra el presupuesto + región usados (2s tras dejar de cambiar,
@@ -50,8 +59,8 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
   }, [presupuestoUsd, region]);
 
   const resultados = useMemo(
-    () => calcularDestinos({ presupuestoUsd, dias, personas, region }),
-    [presupuestoUsd, dias, personas, region]
+    () => calcularDestinos({ presupuestoUsd, dias, personas, region, preciosReales }),
+    [presupuestoUsd, dias, personas, region, preciosReales]
   );
   const caben = resultados.filter((r) => r.cabe);
 
@@ -59,8 +68,8 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
 
   const ruta = useMemo(
     () =>
-      construirRuta({ presupuestoUsd, dias, personas, region, inicio, semilla, excluir: excluidos }),
-    [presupuestoUsd, dias, personas, region, inicio, semilla, excluidos]
+      construirRuta({ presupuestoUsd, dias, personas, region, inicio, semilla, excluir: excluidos, preciosReales }),
+    [presupuestoUsd, dias, personas, region, inicio, semilla, excluidos, preciosReales]
   );
 
   // Nombre legible de una ciudad excluida (a partir de su llave).
@@ -304,12 +313,21 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                           {fmtUsd(d.total)}
                         </div>
                         <div className="text-[11px] text-slate-400">{fmtLocal(d.total)}</div>
+                        {d.esReal && (
+                          <div className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-emerald-700">
+                            <Icono nombre="flame" size={9} /> {t("presupPrecioReal")}
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {detalle === llaveCiudad(d) && (
                       <div className="animar-subir mt-3 border-t border-dashed border-slate-200 pt-3">
-                        <Fila nombre={t("presupVuelo")} valor={fmtUsd(d.desglose.vuelo)} />
+                        <Fila
+                          nombre={t("presupVuelo")}
+                          valor={fmtUsd(d.desglose.vuelo)}
+                          badge={d.esReal ? t("presupPrecioReal") : null}
+                        />
                         <Fila nombre={t("presupHospedaje")} valor={fmtUsd(d.desglose.hospedaje)} />
                         <Fila nombre={t("presupComida")} valor={fmtUsd(d.desglose.comida)} />
                         <Fila nombre={t("presupTransporte")} valor={fmtUsd(d.desglose.transporte)} />
@@ -349,10 +367,17 @@ function Label({ children }) {
   return <div className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-slate-500">{children}</div>;
 }
 
-function Fila({ nombre, valor }) {
+function Fila({ nombre, valor, badge = null }) {
   return (
-    <div className="flex justify-between py-1 text-[13px] text-slate-600">
-      <span>{nombre}</span>
+    <div className="flex items-center justify-between py-1 text-[13px] text-slate-600">
+      <span className="flex items-center gap-1.5">
+        {nombre}
+        {badge && (
+          <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-emerald-700">
+            {badge}
+          </span>
+        )}
+      </span>
       <b className="text-slate-800">{valor}</b>
     </div>
   );
@@ -429,7 +454,11 @@ function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear, onPlanearCiuda
 
       {/* Desglose de costos */}
       <div className="border-t border-slate-100 px-4 py-3">
-        <Fila nombre={"✈️ " + t("presupVueloIntl")} valor={fmtUsd(desglose.vueloIntl)} />
+        <Fila
+          nombre={"✈️ " + t("presupVueloIntl")}
+          valor={fmtUsd(desglose.vueloIntl)}
+          badge={ruta.esRealEntrada ? t("presupPrecioReal") : null}
+        />
         <Fila nombre={"🚄 " + t("presupEntreCiudades")} valor={fmtUsd(desglose.saltos)} />
         <Fila nombre={"🏨 " + t("presupHospedaje")} valor={fmtUsd(desglose.hospedaje)} />
         <Fila nombre={"🍽️ " + t("presupComida")} valor={fmtUsd(desglose.comida)} />

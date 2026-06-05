@@ -187,13 +187,18 @@ export function ciudadesDeRegion(region) {
 // ---------- Modo 1: un destino ----------
 
 // Calcula qué destinos caben en el presupuesto (en USD) para N días y M personas.
-export function calcularDestinos({ presupuestoUsd, dias, personas, region }) {
+// `preciosReales` (opcional): map { "Ciudad|País" → {precio, link, ...} } del
+// detector de vuelos. Cuando hay coincidencia, usa el precio REAL en vez del
+// estimado y marca esReal=true en el resultado.
+export function calcularDestinos({ presupuestoUsd, dias, personas, region, preciosReales = {} }) {
   const lista = DESTINOS_PRESUPUESTO.filter(
     (d) => region === "todas" || d.region === region
   );
 
   const resultados = lista.map((d) => {
-    const vuelos = d.vuelo * personas;
+    const real = preciosReales[llaveCiudad(d)];
+    const vueloUnit = real ? real.precio : d.vuelo;
+    const vuelos = vueloUnit * personas;
     const estadia = d.dia * dias * personas;
     const total = vuelos + estadia;
 
@@ -207,12 +212,15 @@ export function calcularDestinos({ presupuestoUsd, dias, personas, region }) {
 
     return {
       ...d,
+      vuelo: vueloUnit,
       vuelos,
       estadia,
       total,
       desglose,
       cabe: total <= presupuestoUsd,
       sobra: presupuestoUsd - total,
+      esReal: !!real,
+      vueloReal: real || null,
     };
   });
 
@@ -244,12 +252,20 @@ export function construirRuta({
   inicio,
   semilla = 0,
   excluir = [],
+  preciosReales = {},
 }) {
   const fuera = new Set(excluir);
+  // Aplicamos precio real (si existe) sobre cada candidato ANTES de elegir la
+  // entrada, así "la más barata" se basa en datos reales cuando los hay.
   const cands = DESTINOS_PRESUPUESTO.filter(
     (d) =>
       (region === "todas" || d.region === region) && !fuera.has(llaveCiudad(d))
-  );
+  ).map((d) => {
+    const real = preciosReales[llaveCiudad(d)];
+    return real
+      ? { ...d, vuelo: real.precio, esReal: true, vueloReal: real }
+      : { ...d, esReal: false, vueloReal: null };
+  });
   if (!cands.length) return null;
 
   // Ciudad de entrada/salida (define el vuelo internacional i/v).
@@ -347,5 +363,7 @@ export function construirRuta({
     total,
     cabe: total <= presupuestoUsd,
     sobra: presupuestoUsd - total,
+    esRealEntrada: !!entrada.esReal,
+    vueloRealEntrada: entrada.vueloReal || null,
   };
 }
