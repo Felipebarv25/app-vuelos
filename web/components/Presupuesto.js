@@ -13,6 +13,7 @@ import {
 } from "@/lib/presupuesto";
 import { obtenerPreciosReales, buscarVueloEnVivo } from "@/lib/preciosVuelos";
 import { linkVuelos, linkGoogleFlights } from "@/lib/afiliados";
+import { obtenerTasas, aUsdDe } from "@/lib/fx";
 
 // Módulo "¿Adónde puedo ir con mi presupuesto?".
 // Dos modos:
@@ -61,7 +62,20 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
     }
   }
 
-  const presupuestoUsd = monto * MONEDAS[moneda].aUsd;
+  // Tasas de cambio EN VIVO (antes COP estaba fijo en 4.000 → subestimaba el
+  // presupuesto ~10-12% según el dólar del día). Mientras cargan, se usan los
+  // valores estáticos de MONEDAS como respaldo.
+  const [tasas, setTasas] = useState(null); // { porUsd, fecha, enVivo }
+  useEffect(() => {
+    let vivo = true;
+    obtenerTasas().then((r) => vivo && setTasas(r));
+    return () => { vivo = false; };
+  }, []);
+
+  // USD que vale 1 unidad de la moneda elegida: tasa en vivo si la hay, si no el
+  // respaldo estático del catálogo MONEDAS.
+  const aUsdSel = aUsdDe(tasas?.porUsd, moneda) ?? MONEDAS[moneda].aUsd;
+  const presupuestoUsd = monto * aUsdSel;
 
   // Métrica: registra el presupuesto + región usados (2s tras dejar de cambiar,
   // para no contar cada tecla). Alimenta el panel privado.
@@ -96,7 +110,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
   }
   function fmtLocal(usd) {
     const m = MONEDAS[moneda];
-    const val = usd / m.aUsd;
+    const val = usd / aUsdSel;
     return m.simbolo + " " + Math.round(val).toLocaleString("es-CO");
   }
 
@@ -162,7 +176,15 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                   ))}
                 </select>
               </div>
-              <div className="mt-1 text-xs text-slate-500">≈ {fmtUsd(presupuestoUsd)}</div>
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
+                <span>≈ {fmtUsd(presupuestoUsd)}</span>
+                {moneda !== "USD" && tasas?.porUsd?.[moneda] && (
+                  <span className="text-slate-400">
+                    · 1 US$ ≈ {Math.round(tasas.porUsd[moneda]).toLocaleString("es-CO")} {moneda}{" "}
+                    {tasas.enVivo ? "(tasa de hoy)" : "(aprox.)"}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-3">
