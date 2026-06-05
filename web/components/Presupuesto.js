@@ -12,7 +12,7 @@ import {
   MONEDAS,
 } from "@/lib/presupuesto";
 import { obtenerPreciosReales, buscarVueloEnVivo } from "@/lib/preciosVuelos";
-import { linkVuelos } from "@/lib/afiliados";
+import { linkVuelos, linkGoogleFlights } from "@/lib/afiliados";
 
 // Módulo "¿Adónde puedo ir con mi presupuesto?".
 // Dos modos:
@@ -358,6 +358,20 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                             {t("presupTeFalta")} {fmtUsd(-d.sobra)}
                           </div>
                         )}
+                        {/* Comparador honesto: Google Vuelos a veces tiene precios mejores que Aviasales. */}
+                        <a
+                          href={linkGoogleFlights({
+                            ciudad: d.ciudad,
+                            pais: d.pais,
+                            fechaIda: d.vueloReal?.fecha_ida,
+                            fechaVuelta: d.vueloReal?.fecha_vuelta,
+                          })}
+                          target="_blank"
+                          rel="noopener"
+                          className="mt-2 inline-flex items-center gap-1 text-[11.5px] font-semibold text-marca-500 hover:underline"
+                        >
+                          {t("presupCompararGoogle")} ↗
+                        </a>
                         {/* "Buscar precio real" en vivo cuando no tenemos oferta vigente del detector. */}
                         {!d.esReal && (
                           <div className="mt-3">
@@ -367,16 +381,28 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                                 {t("presupBuscandoReal")}
                               </div>
                             ) : vivoEstado[llaveCiudad(d)] === "no" ? (
-                              <a
-                                href={linkVuelos({ ciudad: d.ciudad, pais: d.pais })}
-                                target="_blank"
-                                rel="sponsored noopener"
-                                className="block rounded-xl border-[1.5px] border-amber-200 bg-amber-50 py-2.5 text-center text-[12.5px] font-bold text-amber-800 transition hover:bg-amber-100"
-                              >
-                                <span className="inline-flex items-center justify-center gap-1.5">
-                                  <Icono nombre="plane" size={14} /> {t("presupVerAviasales")}
-                                </span>
-                              </a>
+                              <div className="flex gap-2">
+                                <a
+                                  href={linkVuelos({ ciudad: d.ciudad, pais: d.pais })}
+                                  target="_blank"
+                                  rel="sponsored noopener"
+                                  className="flex-1 rounded-xl border-[1.5px] border-amber-200 bg-amber-50 py-2.5 text-center text-[12.5px] font-bold text-amber-800 transition hover:bg-amber-100"
+                                >
+                                  <span className="inline-flex items-center justify-center gap-1.5">
+                                    <Icono nombre="plane" size={14} /> {t("presupVerAviasales")}
+                                  </span>
+                                </a>
+                                <a
+                                  href={linkGoogleFlights({ ciudad: d.ciudad, pais: d.pais })}
+                                  target="_blank"
+                                  rel="noopener"
+                                  className="flex-1 rounded-xl border-[1.5px] border-blue-200 bg-blue-50 py-2.5 text-center text-[12.5px] font-bold text-blue-800 transition hover:bg-blue-100"
+                                >
+                                  <span className="inline-flex items-center justify-center gap-1.5">
+                                    <Icono nombre="search" size={14} /> {t("presupVerGoogle")}
+                                  </span>
+                                </a>
+                              </div>
                             ) : (
                               <button
                                 onClick={() => pedirVivo(d)}

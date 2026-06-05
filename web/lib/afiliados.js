@@ -61,3 +61,19 @@ export function linkVuelos({ ciudad = "", pais = "" } = {}) {
   if (AFILIADOS.travelpayouts) p.set("marker", AFILIADOS.travelpayouts);
   return `https://www.aviasales.com/?${p.toString()}`;
 }
+
+// Comparar el mismo trayecto en Google Vuelos (sin API, abrimos la búsqueda
+// con texto libre — Google la entiende y prellena origen/destino/fechas).
+// Útil porque a veces Google encuentra ofertas que Aviasales/Travelpayouts no.
+export function linkGoogleFlights({
+  ciudad = "",
+  pais = "",
+  origen = "Bogotá",
+  fechaIda = "",
+  fechaVuelta = "",
+} = {}) {
+  const destino = [ciudad, pais].filter(Boolean).join(" ");
+  const fechas = [fechaIda, fechaVuelta].filter(Boolean).join(" ");
+  const q = `vuelos desde ${origen} a ${destino}${fechas ? " " + fechas : ""}`.trim();
+  return `https://www.google.com/travel/flights?q=${encodeURIComponent(q)}`;
+}
