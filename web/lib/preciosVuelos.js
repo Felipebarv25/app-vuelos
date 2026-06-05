@@ -5,8 +5,12 @@
 // Devuelve un mapa con la llave "Ciudad|País" (igual que llaveCiudad de
 // presupuesto.js). Cada entrada elige la MEJOR oferta entre BOG y MDE.
 
+import { iataDe } from "./iataCiudades";
+
 let cache = null;
 let promesaEnCurso = null;
+// Cache en memoria de búsquedas EN VIVO por (ciudad|pais) durante la sesión.
+const cacheVivo = new Map();
 
 function normalizar(s = "") {
   return s
@@ -81,4 +85,48 @@ export async function obtenerPreciosReales() {
   })();
 
   return promesaEnCurso;
+}
+
+// Busca el precio i/v EN VIVO desde Colombia (BOG/MDE) para un destino del
+// catálogo, llamando al endpoint /api/vuelo-vivo (Travelpayouts server-side).
+// Devuelve la oferta o null. Cachea por (ciudad|pais) durante la sesión.
+export async function buscarVueloEnVivo(ciudad, pais) {
+  const llave = `${ciudad}|${pais}`;
+  if (cacheVivo.has(llave)) return cacheVivo.get(llave);
+
+  const iata = iataDe(ciudad, pais);
+  if (!iata) {
+    cacheVivo.set(llave, null);
+    return null;
+  }
+
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 15000);
+    const r = await fetch(`/api/vuelo-vivo?iata=${iata}`, { signal: ctrl.signal });
+    clearTimeout(t);
+    if (!r.ok) {
+      cacheVivo.set(llave, null);
+      return null;
+    }
+    const data = await r.json();
+    if (!data.encontrado) {
+      cacheVivo.set(llave, null);
+      return null;
+    }
+    const oferta = {
+      precio: data.precio,
+      fecha_ida: data.fecha_ida,
+      fecha_vuelta: data.fecha_vuelta,
+      link: data.link,
+      origen: data.origen,
+      visto: data.visto,
+      vivo: true, // distinguir del precio estático del detector
+    };
+    cacheVivo.set(llave, oferta);
+    return oferta;
+  } catch {
+    cacheVivo.set(llave, null);
+    return null;
+  }
 }

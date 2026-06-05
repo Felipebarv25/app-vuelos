@@ -11,7 +11,7 @@ import {
   REGIONES,
   MONEDAS,
 } from "@/lib/presupuesto";
-import { obtenerPreciosReales } from "@/lib/preciosVuelos";
+import { obtenerPreciosReales, buscarVueloEnVivo } from "@/lib/preciosVuelos";
 
 // Módulo "¿Adónde puedo ir con mi presupuesto?".
 // Dos modos:
@@ -44,6 +44,21 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
     obtenerPreciosReales().then((m) => vivo && setPreciosReales(m));
     return () => { vivo = false; };
   }, []);
+
+  // Búsquedas en vivo (Travelpayouts) por destino: { "Ciudad|País": "buscando" | "no" }
+  const [vivoEstado, setVivoEstado] = useState({});
+  async function pedirVivo(d) {
+    const k = llaveCiudad(d);
+    if (vivoEstado[k] === "buscando") return;
+    setVivoEstado((s) => ({ ...s, [k]: "buscando" }));
+    const r = await buscarVueloEnVivo(d.ciudad, d.pais);
+    if (r) {
+      setPreciosReales((m) => ({ ...m, [k]: r }));
+      setVivoEstado((s) => ({ ...s, [k]: "ok" }));
+    } else {
+      setVivoEstado((s) => ({ ...s, [k]: "no" }));
+    }
+  }
 
   const presupuestoUsd = monto * MONEDAS[moneda].aUsd;
 
@@ -340,6 +355,28 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                         ) : (
                           <div className="mt-1.5 text-xs font-semibold text-red-600">
                             {t("presupTeFalta")} {fmtUsd(-d.sobra)}
+                          </div>
+                        )}
+                        {/* "Buscar precio real" en vivo cuando no tenemos oferta vigente del detector. */}
+                        {!d.esReal && (
+                          <div className="mt-3">
+                            {vivoEstado[llaveCiudad(d)] === "buscando" ? (
+                              <div className="flex items-center justify-center gap-2 rounded-xl bg-slate-100 py-2.5 text-[13px] font-semibold text-slate-500">
+                                <span className="spin h-4 w-4 rounded-full border-2 border-slate-300 border-t-marca-500" />
+                                {t("presupBuscandoReal")}
+                              </div>
+                            ) : vivoEstado[llaveCiudad(d)] === "no" ? (
+                              <div className="rounded-xl bg-amber-50 py-2 text-center text-[12px] font-semibold text-amber-700">
+                                {t("presupNoEncontrado")}
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => pedirVivo(d)}
+                                className="w-full rounded-xl border-[1.5px] border-emerald-200 bg-emerald-50 py-2.5 text-[13px] font-bold text-emerald-700 transition hover:bg-emerald-100"
+                              >
+                                <span className="inline-flex items-center justify-center gap-1.5"><Icono nombre="refresh" size={14} /> {t("presupBuscarReal")}</span>
+                              </button>
+                            )}
                           </div>
                         )}
                         <button
