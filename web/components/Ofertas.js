@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { Icono } from "./Icono";
+import { obtenerTasas } from "@/lib/fx";
 
 // Tablero de "vuelos baratos desde Colombia": lee web/public/ofertas.json
 // (generado por el detector de precios) y muestra las mejores ofertas
@@ -25,6 +26,13 @@ function linkMisFechas(r, rango) {
 export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = null }) {
   const [data, setData] = useState(null);
   const [filtro, setFiltro] = useState("todos"); // todos | BOG | MDE
+  const [copPorUsd, setCopPorUsd] = useState(4000); // tasa COP en vivo (respaldo 4000)
+
+  useEffect(() => {
+    let vivo = true;
+    obtenerTasas().then((r) => vivo && r?.porUsd?.COP && setCopPorUsd(r.porUsd.COP));
+    return () => { vivo = false; };
+  }, []);
 
   useEffect(() => {
     let vivo = true;
@@ -65,9 +73,9 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
     const d = Math.round(h / 24);
     return t("ofertasHaceDias").replace("{n}", d);
   }
-  // Aproximación a pesos colombianos (tasa orientativa ~4000 COP/USD).
+  // Aproximación a pesos colombianos con la tasa del día (lib/fx).
   function fmtCop(v) {
-    return "≈ $ " + Math.round(v * 4000).toLocaleString("es-CO") + " COP";
+    return "≈ $ " + Math.round(v * copPorUsd).toLocaleString("es-CO") + " COP";
   }
 
   return (

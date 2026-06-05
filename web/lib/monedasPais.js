@@ -51,10 +51,13 @@ export const MONEDA_PAIS = {
 };
 
 // Devuelve la moneda local de un país (o null si no la conocemos / es USD).
-export function monedaDePais(pais) {
+// `porUsdLive` (opcional): mapa { COD → tasa en vivo } de lib/fx. Si trae la
+// moneda del país, sustituye la tasa quemada por la real del día.
+export function monedaDePais(pais, porUsdLive = null) {
   const m = MONEDA_PAIS[(pais || "").trim()];
   if (!m || m.cod === "USD") return null; // null = mostrar solo USD
-  return m;
+  const live = porUsdLive?.[m.cod];
+  return live && live > 0 ? { ...m, porUsd: live } : m;
 }
 
 // Redondeo "bonito" para que las cifras locales no se vean falsamente precisas.
