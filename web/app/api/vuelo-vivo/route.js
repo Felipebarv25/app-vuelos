@@ -79,6 +79,7 @@ async function consultar(origen, destino, mes, token, marker) {
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const iata = (searchParams.get("iata") || "").toUpperCase();
+  const iata2 = (searchParams.get("iata2") || "").toUpperCase();
   if (!/^[A-Z]{3}$/.test(iata)) {
     return Response.json({ error: "iata inválido" }, { status: 400 });
   }
@@ -92,13 +93,19 @@ export async function GET(req) {
   }
   const marker = process.env.TRAVELPAYOUTS_MARKER || "";
 
-  // Combinaciones origen × mes en paralelo. Tope ~12 llamadas (2 × 6) que se
-  // resuelven en <8s gracias a paralelismo.
+  // Destinos a probar: principal + alternativo si lo trae (ciudades con más de
+  // un aeropuerto, p. ej. Estambul IST+SAW). Travelpayouts a veces no tiene
+  // datos en uno y sí en el otro.
+  const destinos = /^[A-Z]{3}$/.test(iata2) ? [iata, iata2] : [iata];
+
+  // Combinaciones origen × destino × mes en paralelo. Tope ~24 llamadas (2 × 2 × 6).
   const meses = proximosMeses(6);
   const tareas = [];
   for (const o of ORIGENES) {
-    for (const m of meses) {
-      tareas.push(consultar(o, iata, m, token, marker));
+    for (const d of destinos) {
+      for (const m of meses) {
+        tareas.push(consultar(o, d, m, token, marker));
+      }
     }
   }
   const resultados = (await Promise.all(tareas)).filter(Boolean);

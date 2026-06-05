@@ -2,6 +2,23 @@
 // presupuesto. Necesarios para consultar Travelpayouts en vivo. La clave es la
 // llave "Ciudad|País" igual que llaveCiudad() de presupuesto.js.
 
+// IATAs alternativos (segundo aeropuerto principal) para ciudades con más de uno.
+// Si el principal no devuelve datos en Travelpayouts, probamos el alternativo.
+export const IATA_ALT = {
+  "Estambul|Turquía": "SAW",     // Sabiha Gökçen (además del IST de Atatürk/Yeni)
+  "Londres|Reino Unido": "LGW",  // Gatwick (además de LHR/LON)
+  "París|Francia": "ORY",        // Orly (además de CDG/PAR)
+  "Tokio|Japón": "HND",          // Haneda (además de NRT/TYO)
+  "Nueva York|Estados Unidos": "EWR", // Newark (además de NYC/JFK)
+  "Milán|Italia": "BGY",         // Bergamo (además de MXP/MIL)
+  "Roma|Italia": "CIA",          // Ciampino (además de FCO/ROM)
+  "Berlín|Alemania": "TXL",      // (legacy) además de BER
+  "Bangkok|Tailandia": "DMK",    // Don Mueang (además de BKK)
+  "Shanghái|China": "PVG",       // Pudong (además de SHA)
+  "Seúl|Corea del Sur": "ICN",   // Incheon (además de SEL/GMP)
+  "Pekín|China": "PEK",          // Capital (además de BJS)
+};
+
 export const IATA_CIUDAD = {
   // Sudamérica
   "Lima|Perú": "LIM",
@@ -99,4 +116,8 @@ export const IATA_CIUDAD = {
 
 export function iataDe(ciudad, pais) {
   return IATA_CIUDAD[`${ciudad}|${pais}`] || null;
+}
+
+export function iataAltDe(ciudad, pais) {
+  return IATA_ALT[`${ciudad}|${pais}`] || null;
 }

@@ -12,6 +12,7 @@ import {
   MONEDAS,
 } from "@/lib/presupuesto";
 import { obtenerPreciosReales, buscarVueloEnVivo } from "@/lib/preciosVuelos";
+import { linkVuelos } from "@/lib/afiliados";
 
 // Módulo "¿Adónde puedo ir con mi presupuesto?".
 // Dos modos:
@@ -366,9 +367,16 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                                 {t("presupBuscandoReal")}
                               </div>
                             ) : vivoEstado[llaveCiudad(d)] === "no" ? (
-                              <div className="rounded-xl bg-amber-50 py-2 text-center text-[12px] font-semibold text-amber-700">
-                                {t("presupNoEncontrado")}
-                              </div>
+                              <a
+                                href={linkVuelos({ ciudad: d.ciudad, pais: d.pais })}
+                                target="_blank"
+                                rel="sponsored noopener"
+                                className="block rounded-xl border-[1.5px] border-amber-200 bg-amber-50 py-2.5 text-center text-[12.5px] font-bold text-amber-800 transition hover:bg-amber-100"
+                              >
+                                <span className="inline-flex items-center justify-center gap-1.5">
+                                  <Icono nombre="plane" size={14} /> {t("presupVerAviasales")}
+                                </span>
+                              </a>
                             ) : (
                               <button
                                 onClick={() => pedirVivo(d)}

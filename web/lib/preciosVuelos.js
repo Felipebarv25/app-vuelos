@@ -5,7 +5,7 @@
 // Devuelve un mapa con la llave "Ciudad|País" (igual que llaveCiudad de
 // presupuesto.js). Cada entrada elige la MEJOR oferta entre BOG y MDE.
 
-import { iataDe } from "./iataCiudades";
+import { iataDe, iataAltDe } from "./iataCiudades";
 
 let cache = null;
 let promesaEnCurso = null;
@@ -99,11 +99,13 @@ export async function buscarVueloEnVivo(ciudad, pais) {
     cacheVivo.set(llave, null);
     return null;
   }
+  const iata2 = iataAltDe(ciudad, pais);
 
   try {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 15000);
-    const r = await fetch(`/api/vuelo-vivo?iata=${iata}`, { signal: ctrl.signal });
+    const t = setTimeout(() => ctrl.abort(), 18000);
+    const qs = iata2 ? `iata=${iata}&iata2=${iata2}` : `iata=${iata}`;
+    const r = await fetch(`/api/vuelo-vivo?${qs}`, { signal: ctrl.signal });
     clearTimeout(t);
     if (!r.ok) {
       cacheVivo.set(llave, null);
