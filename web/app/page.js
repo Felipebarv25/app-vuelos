@@ -463,7 +463,15 @@ export default function Home() {
               <div className={`mt-0.5 hidden text-[13px] sm:block ${esHero ? "text-white/85" : "text-slate-400"}`}>{t("tagline")}</div>
             </button>
             <div className="flex items-center gap-3 lg:gap-5">
-              <span className={`hidden text-sm md:inline ${esHero ? "text-white/90" : "text-slate-500"}`}>
+              <span className={`hidden items-center gap-2 text-sm md:inline-flex ${esHero ? "text-white/90" : "text-slate-500"}`}>
+                {usuario.foto && (
+                  <img
+                    src={usuario.foto}
+                    alt=""
+                    className="h-7 w-7 rounded-full border border-white/30 object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                )}
                 {t("hola")}, <b className={esHero ? "" : "text-marca-700"}>{usuario.nombre}</b>
               </span>
               {ciudad && (

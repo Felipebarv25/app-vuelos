@@ -99,6 +99,8 @@ const T = {
     inicio: "Inicio",
     tuNombre: "¿Cómo te llamas?",
     comenzar: "Comenzar",
+    entrarGoogle: "Continuar con Google",
+    oContinuar: "o continuar con tu nombre",
     idioma: "Idioma",
     footer: "Datos de OpenStreetMap y Wikipedia",
     // Afiliados / reservas
@@ -351,6 +353,8 @@ const T = {
     inicio: "Home",
     tuNombre: "What's your name?",
     comenzar: "Start",
+    entrarGoogle: "Continue with Google",
+    oContinuar: "or continue with your name",
     idioma: "Language",
     footer: "Data from OpenStreetMap and Wikipedia",
     // Afiliados / reservas
@@ -598,6 +602,8 @@ const T = {
     inicio: "Início",
     tuNombre: "Como você se chama?",
     comenzar: "Começar",
+    entrarGoogle: "Continuar com o Google",
+    oContinuar: "ou continuar com seu nome",
     idioma: "Idioma",
     footer: "Dados do OpenStreetMap e Wikipedia",
     // Afiliados / reservas
@@ -846,6 +852,8 @@ const T = {
     inicio: "Accueil",
     tuNombre: "Comment vous appelez-vous ?",
     comenzar: "Commencer",
+    entrarGoogle: "Continuer avec Google",
+    oContinuar: "ou continuer avec votre nom",
     idioma: "Langue",
     footer: "Données d'OpenStreetMap et Wikipedia",
     // Afiliados / reservas

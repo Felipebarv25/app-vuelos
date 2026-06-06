@@ -1,6 +1,6 @@
 import "./globals.css";
 import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
-import { AppProvider } from "@/lib/AppContext";
+import Providers from "./providers";
 
 // Cuerpo/UI: Plus Jakarta Sans (legible). Titulares: Fraunces (display editorial
 // con carácter). Ambas auto-hospedadas por Next (sin @import bloqueante).
@@ -73,7 +73,7 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body>
-        <AppProvider>{children}</AppProvider>
+        <Providers>{children}</Providers>
         {/* Registra el service worker para que la app sea instalable y rápida */}
         <script
           dangerouslySetInnerHTML={{
