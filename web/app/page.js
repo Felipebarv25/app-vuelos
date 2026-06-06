@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { geocodificar, traerLugares, CATEGORIAS } from "@/lib/osm";
 import { traducirLoteWD, nombreLocalizado } from "@/lib/nombres";
+import { getDestinoPorSlug } from "@/lib/destinos";
 import { construirItinerario, agregarLugarADia, fmtMin } from "@/lib/itinerario";
 import { CIUDADES_POPULARES } from "@/lib/ciudadesPopulares";
 import { sugerirCiudades } from "@/lib/autocompletar";
@@ -110,6 +111,36 @@ export default function Home() {
   useEffect(() => {
     trackVisita(lang);
   }, [lang]);
+
+  // CTA desde páginas estáticas de SEO (/destino/<slug>): al cargar la app con
+  // ?destino=madrid-espana, abrimos esa ciudad directamente (sin que el usuario
+  // tenga que volver a buscarla). Solo dispara una vez por sesión.
+  useEffect(() => {
+    if (!listo || ciudad) return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const slug = sp.get("destino");
+      if (!slug) return;
+      const d = getDestinoPorSlug(slug);
+      if (!d) return;
+      const q = `${d.ciudad}, ${d.pais}`;
+      setConsulta(q);
+      // Geocodificamos en background y abrimos la ciudad. Si falla, queda el texto.
+      (async () => {
+        try {
+          setCargando(true);
+          const c = await geocodificar(q);
+          setCiudad(c);
+          setCargando(false);
+          track("seo_landing", { slug });
+          cargarCategoria("imperdibles", c);
+        } catch {
+          setCargando(false);
+        }
+      })();
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listo]);
 
   // Traducir nombres de POIs cuando llegan datos nuevos o cambia el idioma.
   // Best-effort: muta lugar.nombres[lang] en sitio y bumpea el state para
