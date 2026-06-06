@@ -10,6 +10,7 @@ import Link from "next/link";
 import { getDestinoPorSlug, TODOS_SLUGS, nombreDestino } from "@/lib/destinos";
 import { datosSeoDe, faqsDe } from "@/lib/seoDestinos";
 import { fotoCiudad } from "@/lib/fotoCiudad";
+import FavToggle from "./FavToggle";
 
 const SITIO = "https://app-vuelos-mfos.vercel.app";
 
@@ -163,6 +164,7 @@ export default async function PaginaDestino({ params }) {
             loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
+          <FavToggle slug={slug} conFoto={true} />
           <div className="relative mx-auto flex h-full max-w-4xl flex-col justify-end px-6 pb-8 pt-12 text-white">
             <div className="flex items-center gap-3 text-[13px] font-semibold uppercase tracking-[0.18em] text-white/85">
               <span className="text-3xl">{d.bandera}</span>
@@ -184,6 +186,7 @@ export default async function PaginaDestino({ params }) {
           <div className="flex items-center gap-3 text-[14px] font-semibold uppercase tracking-[0.18em] text-marca-500">
             <span className="text-3xl">{d.bandera}</span>
             <span>Viaja a {d.pais}</span>
+            <FavToggle slug={slug} />
           </div>
           <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-marca-900 sm:text-5xl">
             Viaje a {d.ciudad} desde Colombia

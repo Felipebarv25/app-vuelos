@@ -4,6 +4,7 @@
 // mejora rankeo en Google ("dónde viajar desde Colombia", "destinos baratos").
 import Link from "next/link";
 import { DESTINOS_SEO } from "@/lib/destinos";
+import IndiceFavoritos from "./IndiceFavoritos";
 
 const SITIO = "https://app-vuelos-mfos.vercel.app";
 
@@ -72,6 +73,8 @@ export default function IndiceDestinos() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+
+      <IndiceFavoritos />
 
       <nav className="mx-auto max-w-6xl px-6 pt-6 text-[13px] text-slate-500">
         <Link href="/" className="hover:text-marca-600">Inicio</Link>
