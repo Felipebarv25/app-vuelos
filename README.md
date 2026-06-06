@@ -151,34 +151,23 @@ Todo se ajusta en **`config.py`**:
 
 ---
 
-## 6b. Panel web con gráficas 📈
+## 6b. App web pública 🌐
 
-El archivo `index.html` es un panel visual que muestra la evolución de los
-precios de cada ruta, las gangas actuales y los precios por mes de salida.
+El panel viejo en HTML (`index.html`, `itinerario.html`, `panel.bat`) fue
+reemplazado por una **app web completa en Next.js** que vive en la carpeta
+[`web/`](./web) y está **publicada y al día** en:
 
-**Verlo en tu PC (la forma más fácil):**
+👉 **https://app-vuelos-mfos.vercel.app/**
 
-1. Haz doble clic en **`panel.bat`**.
-2. Se abrirá tu navegador en `http://localhost:8000` con el panel.
-3. Para cerrar, cierra la ventanita negra que quedó abierta.
+La app es mucho más que un panel: planifica itinerarios día a día en
+cualquier ciudad del mundo, muestra precios reales de vuelos desde Colombia
+(este detector alimenta `web/public/ofertas.json`), arma rutas multiciudad
+por presupuesto, y traduce todo a 4 idiomas. Vercel la redespliega
+automáticamente con cada push a `main`.
 
-> Para ver los datos más recientes que recogió la nube, antes ejecuta
-> `git pull` en la carpeta (trae el historial actualizado por GitHub Actions).
-
-**El panel tiene dos secciones** (botones arriba):
-- **📊 Precios y ofertas:** gráficas e historial. Haz clic en cualquier fila de
-  oferta para abrirla y reservarla en Aviasales (metabuscador legítimo).
-- **🗺️ Planear itinerario:** mapa interactivo de cada destino con los lugares
-  imperdibles, transporte y precios aproximados. El botón "Cómo llegar" abre
-  Google Maps con la ruta real (estaciones, transbordos, horarios). Para añadir
-  ciudades, edita `datos_ciudades.js`.
-
-**Verlo como página web pública (opcional, con GitHub Pages):**
-
-Requiere que el repositorio sea **público**. En el repo:
-**Settings → Pages → Source: Deploy from a branch → rama `main`, carpeta `/root`**.
-En un par de minutos tendrás el panel en
-`https://TU_USUARIO.github.io/app-vuelos/`.
+Si solo quieres ver las gangas detectadas en bruto: el archivo
+[`web/public/ofertas.json`](./web/public/ofertas.json) se actualiza cada
+3 horas vía GitHub Actions (este detector lo regenera).
 
 ---
 
