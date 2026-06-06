@@ -126,6 +126,26 @@ export default function Home() {
         setMostrarPresupuesto(true);
         return;
       }
+      // ?q=texto → auto-buscar (CTA desde /viaje/<id> compartido).
+      const qParam = sp.get("q");
+      if (qParam) {
+        const q = qParam.trim();
+        if (!q) return;
+        setConsulta(q);
+        (async () => {
+          try {
+            setCargando(true);
+            const c = await geocodificar(q);
+            setCiudad(c);
+            setCargando(false);
+            track("seo_landing_q", { q });
+            cargarCategoria("imperdibles", c);
+          } catch {
+            setCargando(false);
+          }
+        })();
+        return;
+      }
       const slug = sp.get("destino");
       if (!slug) return;
       const d = getDestinoPorSlug(slug);
@@ -1067,6 +1087,16 @@ export default function Home() {
       />
 
       <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-slate-400 lg:px-8">
+        {/* Enlaces a las landing pages SEO desde la home */}
+        <div className="mb-3 flex flex-wrap justify-center gap-3 text-[12.5px] font-semibold text-slate-500">
+          <a href="/destino" className="hover:text-marca-600 hover:underline">
+            Ver 80 destinos
+          </a>
+          <span className="text-slate-300">·</span>
+          <a href="/comparar" className="hover:text-marca-600 hover:underline">
+            Comparar destinos
+          </a>
+        </div>
         <div>{t("footer")} · Viajero 360</div>
         <div className="mt-1 text-[11px] text-slate-400">
           Datos de lugares: ©{" "}
