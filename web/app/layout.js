@@ -33,19 +33,19 @@ export const metadata = {
   applicationName: "Viajero 360",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Viajero 360" },
   icons: { icon: "/icono-192.png", apple: "/apple-touch-icon.png" },
+  // og:image y twitter:image los genera la convención de archivos
+  // app/opengraph-image.js y app/twitter-image.js (tarjeta 1200x630).
   openGraph: {
     title: "Viajero 360 · Planea tu viaje perfecto",
     description: DESC,
     type: "website",
     url: "https://app-vuelos-mfos.vercel.app/",
     siteName: "Viajero 360",
-    images: ["/icono-512.png"],
   },
   twitter: {
     card: "summary_large_image",
     title: "Viajero 360 · Planea tu viaje perfecto",
     description: DESC,
-    images: ["/icono-512.png"],
   },
 };
 

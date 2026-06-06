@@ -5,6 +5,7 @@ import { planTransporte, trazarRuta, perfilDeModo } from "@/lib/rutaReal";
 import { distanciaMetros } from "@/lib/rutas";
 import { fmtMin } from "@/lib/itinerario";
 import { monedaDePais, costoLocal, costoUsd } from "@/lib/monedasPais";
+import { obtenerTasas } from "@/lib/fx";
 import { BotonTourLugar } from "./Afiliados";
 import { Icono, iconoCategoria } from "./Icono";
 import { nombreLocalizado } from "@/lib/nombres";
@@ -37,7 +38,17 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
   const refOrigen = origen || (ciudad?.lat != null ? [ciudad.lat, ciudad.lon] : null);
   const metros = refOrigen ? distanciaMetros(refOrigen, lugar.coord) : null;
   const transportes = metros != null ? planTransporte(metros) : [];
-  const moneda = monedaDePais(ciudad?.pais);
+
+  // Tasas de cambio en vivo para mostrar el costo local con el dólar del día
+  // (antes la tasa estaba quemada en monedasPais.js). Si fallan, monedaDePais
+  // usa su valor de respaldo.
+  const [porUsd, setPorUsd] = useState(null);
+  useEffect(() => {
+    let vivo = true;
+    obtenerTasas().then((r) => vivo && setPorUsd(r.porUsd));
+    return () => { vivo = false; };
+  }, []);
+  const moneda = monedaDePais(ciudad?.pais, porUsd);
 
   useEffect(() => {
     let vivo = true;
