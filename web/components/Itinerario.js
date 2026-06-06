@@ -77,7 +77,7 @@ export default function Itinerario({
   }
 
   return (
-    <div>
+    <div className="animar-aparecer">
       {/* Resumen del día */}
       <div className="mb-3 rounded-2xl border border-marca-100 bg-gradient-to-br from-marca-50 to-violet-50 p-4 shadow-suave">
         <div className="flex flex-wrap justify-between gap-2">

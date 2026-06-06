@@ -127,6 +127,25 @@ a:focus:not(:focus-visible) {
   animation: pop 0.25s ease both;
 }
 
+/* Toast: aparece desde arriba con un toque de bounce y se queda. */
+@keyframes toast-in {
+  0% {
+    transform: translateY(-24px);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(2px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.animar-toast {
+  animation: toast-in 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* Botones con feedback al tocar (divertido + a prueba de tontos) */
 button:active {
   transform: scale(0.97);

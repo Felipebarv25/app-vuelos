@@ -22,6 +22,7 @@ import RequisitosViaje from "@/components/RequisitosViaje";
 import { listarViajesAsync, guardarViajeAsync, borrarViajeAsync } from "@/lib/viajes";
 import { LogoMarca } from "@/components/Logo";
 import { Icono } from "@/components/Icono";
+import Toast from "@/components/Toast";
 import { useApp } from "@/lib/AppContext";
 import { track, trackVisita } from "@/lib/track";
 
@@ -873,8 +874,21 @@ export default function Home() {
             </div>
 
             {cargandoLugares && (
-              <div className="flex items-center gap-2 px-0.5 py-2.5 text-sm text-slate-500">
-                <span className="spin" /> {t("cargandoLugares")}
+              <div className="mt-1 space-y-2.5" aria-busy="true" aria-label={t("cargandoLugares")}>
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-suave"
+                  >
+                    <div className="h-7 w-7 shrink-0 animate-pulse rounded-full bg-slate-100" />
+                    <div className="min-w-0 flex-1">
+                      <div className="h-3.5 w-2/3 animate-pulse rounded bg-slate-100" />
+                      <div className="mt-2 h-2.5 w-1/3 animate-pulse rounded bg-slate-100" />
+                    </div>
+                    <div className="h-[60px] w-[60px] shrink-0 animate-pulse rounded-xl bg-slate-100" />
+                  </div>
+                ))}
+                <div className="px-0.5 text-[12px] text-slate-400">{t("cargandoLugares")}</div>
               </div>
             )}
 
@@ -902,6 +916,7 @@ export default function Home() {
 
             {plan[diaVisible] && (
               <Itinerario
+                key={diaVisible}
                 dia={plan[diaVisible]}
                 numeroDia={diaVisible + 1}
                 alternativas={lugaresBase}
@@ -1045,6 +1060,10 @@ export default function Home() {
           {" "}· Información referencial, verifica en fuentes oficiales.
         </div>
       </footer>
+
+      {/* Toasts: confirmaciones rápidas para acciones del usuario */}
+      <Toast mostrar={guardado} texto={t("guardado")} icono="check" />
+      <Toast mostrar={copiado} texto={t("copiado")} icono="check" />
     </div>
   );
 }
