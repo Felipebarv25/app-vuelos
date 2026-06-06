@@ -93,6 +93,12 @@ export default function IndiceDestinos() {
           Vuelos desde Bogotá y Medellín, presupuesto diario aproximado y los mejores
           lugares para visitar. Toca cualquier destino para ver el itinerario completo.
         </p>
+        <Link
+          href="/comparar"
+          className="mt-4 inline-flex items-center gap-1.5 rounded-xl border-[1.5px] border-marca-200 bg-white px-4 py-2 text-[13.5px] font-bold text-marca-700 transition hover:bg-marca-50"
+        >
+          ⚖️ Comparar destinos lado a lado →
+        </Link>
       </header>
 
       {/* Chips de salto a cada región (anchor links) */}

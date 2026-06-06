@@ -20,6 +20,12 @@ export default function sitemap() {
       changeFrequency: "weekly",
       priority: 0.9,
     },
+    {
+      url: `${SITIO}/comparar`,
+      lastModified: ahora,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
   ];
 
   const destinos = TODOS_SLUGS.map((slug) => ({
