@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-06T10:53:50",
+  "generado": "2026-06-06T13:40:37",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -25,26 +25,6 @@
       "visto": "2026-06-06T03:22:48",
       "link": "https://www.aviasales.com/search/BOG1507MEX24071",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Ciudad%20de%20M%C3%A9xico%202026-07-15%202026-07-24"
-    },
-    {
-      "origen": "BOG",
-      "destino": "LIM",
-      "ciudad": "Lima",
-      "pais": "Perú",
-      "bandera": "🇵🇪",
-      "q": "Lima, Perú",
-      "precio": 332,
-      "moneda": "USD",
-      "fecha_ida": "2026-07-07",
-      "fecha_vuelta": "2026-07-09",
-      "aerolinea": "JA",
-      "umbral": 300,
-      "mediana": 391,
-      "descuento": 15,
-      "esGanga": true,
-      "visto": "2026-06-06T03:22:50",
-      "link": "https://www.aviasales.com/search/BOG0707LIM09071",
-      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Lima%202026-07-07%202026-07-09"
     },
     {
       "origen": "MDE",
@@ -107,6 +87,26 @@
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20S%C3%A3o%20Paulo%202026-11-14%202026-11-27"
     },
     {
+      "origen": "BOG",
+      "destino": "LIM",
+      "ciudad": "Lima",
+      "pais": "Perú",
+      "bandera": "🇵🇪",
+      "q": "Lima, Perú",
+      "precio": 332,
+      "moneda": "USD",
+      "fecha_ida": "2026-07-07",
+      "fecha_vuelta": "2026-07-09",
+      "aerolinea": "JA",
+      "umbral": 300,
+      "mediana": 380,
+      "descuento": 13,
+      "esGanga": false,
+      "visto": "2026-06-06T03:22:50",
+      "link": "https://www.aviasales.com/search/BOG0707LIM09071",
+      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Lima%202026-07-07%202026-07-09"
+    },
+    {
       "origen": "MDE",
       "destino": "MIA",
       "ciudad": "Miami",
@@ -159,7 +159,7 @@
       "fecha_vuelta": "2026-08-09",
       "aerolinea": "JA",
       "umbral": 300,
-      "mediana": 368,
+      "mediana": 367,
       "descuento": 0,
       "esGanga": false,
       "visto": "2026-06-06T03:22:57",
