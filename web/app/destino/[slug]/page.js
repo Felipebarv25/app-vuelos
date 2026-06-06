@@ -9,6 +9,7 @@ import path from "path";
 import Link from "next/link";
 import { getDestinoPorSlug, TODOS_SLUGS, nombreDestino } from "@/lib/destinos";
 import { datosSeoDe, faqsDe } from "@/lib/seoDestinos";
+import { fotoCiudad } from "@/lib/fotoCiudad";
 
 const SITIO = "https://app-vuelos-mfos.vercel.app";
 
@@ -49,6 +50,10 @@ export async function generateMetadata({ params }) {
     `Itinerario gratis con Viajero 360.`;
   const url = `${SITIO}/destino/${slug}`;
 
+  // OG image: Next genera la propia (1200x630) por convención de archivos
+  // (opengraph-image.js). Si queremos usar la foto de Wikipedia, hay que
+  // declararla explícitamente. Mantenemos la generada por Next para no
+  // depender de Wikipedia en el metadata (más rápido de servir).
   return {
     title,
     description,
@@ -89,6 +94,7 @@ export default async function PaginaDestino({ params }) {
   const presupuestoSugerido = d.vuelo + d.dia * diasSugeridos;
   const seo = datosSeoDe(d);
   const faqs = faqsDe(d);
+  const foto = await fotoCiudad(d.ciudad, d.pais);
 
   // Schema.org: ayuda a Google a entender que la página describe un destino.
   const jsonLd = {
@@ -146,26 +152,55 @@ export default async function PaginaDestino({ params }) {
         <span className="font-semibold text-marca-700">{nombre}</span>
       </nav>
 
-      {/* Hero */}
-      <header className="mx-auto max-w-4xl px-6 pb-6 pt-6">
-        <div className="flex items-center gap-3 text-[14px] font-semibold uppercase tracking-[0.18em] text-marca-500">
-          <span className="text-3xl">{d.bandera}</span>
-          <span>Viaja a {d.pais}</span>
-        </div>
-        <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-marca-900 sm:text-5xl">
-          Viaje a {d.ciudad} desde Colombia
-        </h1>
-        <p className="mt-3 max-w-2xl text-lg leading-relaxed text-slate-600">
-          {seo.intro}
-        </p>
+      {/* Hero: foto real de Wikipedia con overlay; fallback al gradiente si no
+          se pudo conseguir foto. */}
+      {foto?.url ? (
+        <header className="relative h-[420px] w-full overflow-hidden sm:h-[480px]">
+          <img
+            src={foto.url}
+            alt={`${d.ciudad}, ${d.pais}`}
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="eager"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
+          <div className="relative mx-auto flex h-full max-w-4xl flex-col justify-end px-6 pb-8 pt-12 text-white">
+            <div className="flex items-center gap-3 text-[13px] font-semibold uppercase tracking-[0.18em] text-white/85">
+              <span className="text-3xl">{d.bandera}</span>
+              <span>Viaja a {d.pais}</span>
+            </div>
+            <h1 className="mt-2 text-4xl font-extrabold tracking-tight drop-shadow-md sm:text-5xl">
+              Viaje a {d.ciudad} desde Colombia
+            </h1>
+            <Link
+              href={`/?destino=${slug}`}
+              className="mt-4 inline-flex w-fit items-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-base font-bold text-marca-700 shadow-marca transition hover:brightness-105"
+            >
+              🗺️ Planear mi viaje a {d.ciudad}
+            </Link>
+          </div>
+        </header>
+      ) : (
+        <header className="mx-auto max-w-4xl px-6 pb-6 pt-6">
+          <div className="flex items-center gap-3 text-[14px] font-semibold uppercase tracking-[0.18em] text-marca-500">
+            <span className="text-3xl">{d.bandera}</span>
+            <span>Viaja a {d.pais}</span>
+          </div>
+          <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-marca-900 sm:text-5xl">
+            Viaje a {d.ciudad} desde Colombia
+          </h1>
+          <Link
+            href={`/?destino=${slug}`}
+            className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-marca-500 to-marca-600 px-6 py-3.5 text-base font-bold text-white shadow-marca transition hover:brightness-105"
+          >
+            🗺️ Planear mi viaje a {d.ciudad}
+          </Link>
+        </header>
+      )}
 
-        <Link
-          href={`/?destino=${slug}`}
-          className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-marca-500 to-marca-600 px-6 py-3.5 text-base font-bold text-white shadow-marca transition hover:brightness-105"
-        >
-          🗺️ Planear mi viaje a {d.ciudad}
-        </Link>
-      </header>
+      {/* Descripción del destino debajo del hero */}
+      <section className="mx-auto max-w-4xl px-6 pt-6">
+        <p className="text-lg leading-relaxed text-slate-600">{seo.intro}</p>
+      </section>
 
       {/* Datos clave */}
       <section className="mx-auto max-w-4xl px-6 py-6">

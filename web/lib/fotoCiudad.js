@@ -1,0 +1,38 @@
+// Foto representativa de una ciudad desde la API REST de Wikipedia.
+// Devuelve la URL del "originalimage" del artículo. Cache:
+//   · Next.js cachea el fetch (revalidate 30 días).
+//   · La consulta cae al wiki español primero; si no hay, al inglés.
+// Si todo falla, devuelve null y el componente usa el gradiente como fallback.
+
+const UA = "Viajero360/1.0 (https://app-vuelos-mfos.vercel.app)";
+const TTL = 60 * 60 * 24 * 30; // 30 días en segundos
+
+async function pedirWiki(wiki, titulo) {
+  const url = `https://${wiki}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(titulo)}`;
+  try {
+    const r = await fetch(url, {
+      headers: { "User-Agent": UA, Accept: "application/json" },
+      next: { revalidate: TTL },
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const img = d.originalimage?.source || d.thumbnail?.source || null;
+    return img ? { url: img, ancho: d.originalimage?.width, alto: d.originalimage?.height } : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function fotoCiudad(ciudad, pais) {
+  // Probar es → en → "Ciudad, País" en inglés.
+  const candidatos = [
+    ["es", ciudad],
+    ["en", ciudad],
+    ["en", `${ciudad}, ${pais}`],
+  ];
+  for (const [w, titulo] of candidatos) {
+    const f = await pedirWiki(w, titulo);
+    if (f?.url) return f;
+  }
+  return null;
+}
