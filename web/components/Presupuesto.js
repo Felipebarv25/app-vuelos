@@ -51,7 +51,8 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
   const [vivoEstado, setVivoEstado] = useState({});
   async function pedirVivo(d) {
     const k = llaveCiudad(d);
-    if (vivoEstado[k] === "buscando") return;
+    // Evita relanzar si ya está buscando o si ya tiene datos en preciosReales.
+    if (vivoEstado[k] === "buscando" || vivoEstado[k] === "ok") return;
     setVivoEstado((s) => ({ ...s, [k]: "buscando" }));
     const r = await buscarVueloEnVivo(d.ciudad, d.pais);
     if (r) {
@@ -101,6 +102,20 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
       construirRuta({ presupuestoUsd, dias, personas, region, inicio, semilla, excluir: excluidos, preciosReales }),
     [presupuestoUsd, dias, personas, region, inicio, semilla, excluidos, preciosReales]
   );
+
+  // Modo RUTA: cuando hay ruta y la entrada todavía no tiene precio real,
+  // disparamos buscarVueloEnVivo automáticamente (best-effort). Así el usuario
+  // ve el precio real sin tener que pulsar nada. Si falla, queda el estimado.
+  useEffect(() => {
+    if (modo !== "ruta" || !ruta?.entrada || ruta.esRealEntrada) return;
+    const k = llaveCiudad(ruta.entrada);
+    const estado = vivoEstado[k];
+    if (estado === "buscando" || estado === "no") return; // ya intentado
+    // Pequeño debounce para no disparar mientras el usuario juega con sliders.
+    const id = setTimeout(() => pedirVivo(ruta.entrada), 600);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modo, ruta?.entrada && llaveCiudad(ruta.entrada), ruta?.esRealEntrada]);
 
   // Nombre legible de una ciudad excluida (a partir de su llave).
   const nombreLlave = (k) => k.split("|")[0];
@@ -274,6 +289,8 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) 
                       x.includes(llaveCiudad(c)) ? x : [...x, llaveCiudad(c)]
                     )
                   }
+                  vivoEstadoEntrada={vivoEstado[llaveCiudad(ruta.entrada)] || null}
+                  onPedirVivoEntrada={() => pedirVivo(ruta.entrada)}
                 />
               )}
 
@@ -507,7 +524,18 @@ function Fila({ nombre, valor, badge = null, badgeReal = false }) {
 }
 
 // Tarjeta de la ruta multiciudad: línea de tiempo de ciudades + resumen + desglose.
-function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear, onPlanearCiudad, onExcluir }) {
+function RutaCard({
+  ruta,
+  t,
+  fmtUsd,
+  fmtLocal,
+  onOtra,
+  onPlanear,
+  onPlanearCiudad,
+  onExcluir,
+  vivoEstadoEntrada,
+  onPedirVivoEntrada,
+}) {
   const { ciudades, desglose, total, cabe, sobra, diasTotales } = ruta;
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-suave">
@@ -584,6 +612,64 @@ function RutaCard({ ruta, t, fmtUsd, fmtLocal, onOtra, onPlanear, onPlanearCiuda
           badgeReal={ruta.esRealEntrada}
         />
         {ruta.esRealEntrada && <FechasOferta vueloReal={ruta.vueloRealEntrada} t={t} />}
+
+        {/* Precio real EN VIVO para el vuelo internacional cuando todavía es estimado. */}
+        {!ruta.esRealEntrada && (
+          <div className="mb-1.5 mt-1 flex flex-wrap items-center gap-2">
+            {vivoEstadoEntrada === "buscando" ? (
+              <div className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-slate-500">
+                <span className="spin h-3 w-3 rounded-full border-2 border-slate-300 border-t-marca-500" />
+                {t("presupBuscandoReal")}
+              </div>
+            ) : vivoEstadoEntrada === "no" ? (
+              <a
+                href={linkVuelos({ ciudad: ruta.entrada.ciudad, pais: ruta.entrada.pais })}
+                target="_blank"
+                rel="sponsored noopener"
+                className="text-[11.5px] font-semibold text-amber-700 underline-offset-2 hover:underline"
+              >
+                {t("presupVerAviasales")} ↗
+              </a>
+            ) : (
+              <button
+                onClick={onPedirVivoEntrada}
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11.5px] font-bold text-emerald-700 transition hover:bg-emerald-100"
+              >
+                <Icono nombre="refresh" size={11} /> {t("presupBuscarReal")}
+              </button>
+            )}
+            <a
+              href={linkGoogleFlights({
+                ciudad: ruta.entrada.ciudad,
+                pais: ruta.entrada.pais,
+                fechaIda: ruta.vueloRealEntrada?.fecha_ida,
+                fechaVuelta: ruta.vueloRealEntrada?.fecha_vuelta,
+              })}
+              target="_blank"
+              rel="noopener"
+              className="text-[11.5px] font-semibold text-marca-500 underline-offset-2 hover:underline"
+            >
+              {t("presupCompararGoogle")} ↗
+            </a>
+          </div>
+        )}
+        {/* Cuando ya es real, comparador Google igual disponible para validar. */}
+        {ruta.esRealEntrada && (
+          <a
+            href={linkGoogleFlights({
+              ciudad: ruta.entrada.ciudad,
+              pais: ruta.entrada.pais,
+              fechaIda: ruta.vueloRealEntrada?.fecha_ida,
+              fechaVuelta: ruta.vueloRealEntrada?.fecha_vuelta,
+            })}
+            target="_blank"
+            rel="noopener"
+            className="-mt-1 mb-1 inline-block text-[11px] font-semibold text-marca-500 underline-offset-2 hover:underline"
+          >
+            {t("presupCompararGoogle")} ↗
+          </a>
+        )}
+
         <Fila nombre={"🚄 " + t("presupEntreCiudades")} valor={fmtUsd(desglose.saltos)} />
         <Fila nombre={"🏨 " + t("presupHospedaje")} valor={fmtUsd(desglose.hospedaje)} />
         <Fila nombre={"🍽️ " + t("presupComida")} valor={fmtUsd(desglose.comida)} />
