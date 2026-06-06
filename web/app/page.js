@@ -19,7 +19,7 @@ import Ofertas from "@/components/Ofertas";
 import Asesor from "@/components/Asesor";
 import { AfiliadosCiudad } from "@/components/Afiliados";
 import RequisitosViaje from "@/components/RequisitosViaje";
-import { listarViajes, guardarViaje, borrarViaje } from "@/lib/viajes";
+import { listarViajesAsync, guardarViajeAsync, borrarViajeAsync } from "@/lib/viajes";
 import { LogoMarca } from "@/components/Logo";
 import { Icono } from "@/components/Icono";
 import { useApp } from "@/lib/AppContext";
@@ -172,12 +172,16 @@ export default function Home() {
     try { localStorage.setItem("v360_nac", cc); } catch {}
   }
 
-  // --- Mis viajes (guardado local) ---
+  // --- Mis viajes (guardado local o nube según usuario) ---
+  // Recarga cuando cambia el estado de login (entrar/salir Google). Nota:
+  // depende de usuario?.email para detectar el cambio sin loops infinitos.
   useEffect(() => {
-    setViajesGuardados(listarViajes());
-  }, []);
+    let vivo = true;
+    listarViajesAsync(usuario).then((arr) => vivo && setViajesGuardados(arr));
+    return () => { vivo = false; };
+  }, [usuario?.email, usuario?.google]);
 
-  function guardarViajeActual() {
+  async function guardarViajeActual() {
     if (!ciudad || !seleccion.length) return;
     const v = {
       ciudad,
@@ -189,7 +193,8 @@ export default function Home() {
       categoria,
       seleccion,
     };
-    setViajesGuardados(guardarViaje(v));
+    const arr = await guardarViajeAsync(usuario, v);
+    setViajesGuardados(arr);
     setGuardado(true);
     setTimeout(() => setGuardado(false), 2000);
   }
@@ -215,8 +220,8 @@ export default function Home() {
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function eliminarViaje(id) {
-    setViajesGuardados(borrarViaje(id));
+  async function eliminarViaje(id) {
+    setViajesGuardados(await borrarViajeAsync(usuario, id));
   }
 
   // Volver al menú principal (sin cerrar sesión): limpia la ciudad y resultados.
@@ -615,6 +620,11 @@ export default function Home() {
               </div>
               <h2 className="mt-1 text-[20px] font-extrabold tracking-tight text-marca-900 lg:text-[26px]">
                 {t("misViajesTitulo")}
+                {usuario?.google && (
+                  <span className="ml-2 inline-flex items-center gap-1 align-middle text-[11px] font-bold uppercase tracking-wide text-emerald-700">
+                    <Icono nombre="check" size={12} /> {t("misViajesSync")}
+                  </span>
+                )}
               </h2>
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {viajesGuardados.map((v) => (

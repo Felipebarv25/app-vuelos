@@ -192,6 +192,7 @@ const T = {
     misViajesTitulo: "Mis viajes guardados",
     misViajesReabrir: "Reabrir",
     misViajesEliminar: "Eliminar",
+    misViajesSync: "Sincronizado",
     // Requisitos de entrada
     reqTitulo: "Requisitos de entrada a",
     reqTuPasaporte: "Tu pasaporte:",
@@ -442,6 +443,7 @@ const T = {
     misViajesTitulo: "My saved trips",
     misViajesReabrir: "Reopen",
     misViajesEliminar: "Delete",
+    misViajesSync: "Synced",
     // Entry requirements
     reqTitulo: "Entry requirements for",
     reqTuPasaporte: "Your passport:",
@@ -691,6 +693,7 @@ const T = {
     misViajesTitulo: "Minhas viagens salvas",
     misViajesReabrir: "Reabrir",
     misViajesEliminar: "Excluir",
+    misViajesSync: "Sincronizado",
     // Requisitos de entrada
     reqTitulo: "Requisitos de entrada para",
     reqTuPasaporte: "Seu passaporte:",
@@ -941,6 +944,7 @@ const T = {
     misViajesTitulo: "Mes voyages enregistrés",
     misViajesReabrir: "Rouvrir",
     misViajesEliminar: "Supprimer",
+    misViajesSync: "Synchronisé",
     // Formalités d'entrée
     reqTitulo: "Formalités d'entrée pour",
     reqTuPasaporte: "Votre passeport :",
