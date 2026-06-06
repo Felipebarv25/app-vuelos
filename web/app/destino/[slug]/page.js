@@ -8,6 +8,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import Link from "next/link";
 import { getDestinoPorSlug, TODOS_SLUGS, nombreDestino } from "@/lib/destinos";
+import { datosSeoDe, faqsDe } from "@/lib/seoDestinos";
 
 const SITIO = "https://app-vuelos-mfos.vercel.app";
 
@@ -86,6 +87,8 @@ export default async function PaginaDestino({ params }) {
   const lugares = d.tienePrecalc ? await topLugares(slug, 10) : [];
   const diasSugeridos = d.region === "europa" || d.region === "asia" ? 10 : 7;
   const presupuestoSugerido = d.vuelo + d.dia * diasSugeridos;
+  const seo = datosSeoDe(d);
+  const faqs = faqsDe(d);
 
   // Schema.org: ayuda a Google a entender que la página describe un destino.
   const jsonLd = {
@@ -106,6 +109,17 @@ export default async function PaginaDestino({ params }) {
       { "@type": "ListItem", position: 3, name: nombre, item: `${SITIO}/destino/${slug}` },
     ],
   };
+  // FAQPage schema: Google muestra las FAQs como rich snippets bajo el resultado
+  // (mucho más espacio en SERP y mejor CTR).
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
 
   return (
     <main className="bg-slate-50">
@@ -117,6 +131,10 @@ export default async function PaginaDestino({ params }) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
 
       {/* Breadcrumbs */}
@@ -138,9 +156,7 @@ export default async function PaginaDestino({ params }) {
           Viaje a {d.ciudad} desde Colombia
         </h1>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-slate-600">
-          Planea tu viaje a <b>{nombre}</b> con vuelos desde Bogotá y Medellín,
-          itinerario día a día con los mejores lugares, y un presupuesto realista
-          ajustado a lo que cuesta hoy. Todo gratis con Viajero 360.
+          {seo.intro}
         </p>
 
         <Link
@@ -160,6 +176,59 @@ export default async function PaginaDestino({ params }) {
           <Dato titulo="Presupuesto sugerido" valor={`US$ ${presupuestoSugerido}`} sub={`${diasSugeridos} días, 1 persona`} />
         </div>
       </section>
+
+      {/* Mejor época + datos prácticos */}
+      <section className="mx-auto max-w-4xl px-6 py-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="rounded-2xl border border-marca-100 bg-marca-50/40 p-5">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-marca-600">
+              🗓️ Mejor época para viajar
+            </div>
+            <div className="mt-1.5 text-base leading-relaxed text-slate-700">
+              {seo.mejorEpoca}
+            </div>
+            {seo.evitarEpoca && (
+              <div className="mt-2 text-[13px] text-slate-500">
+                <b className="text-amber-700">Evita:</b> {seo.evitarEpoca}.
+              </div>
+            )}
+          </div>
+          <div className="rounded-2xl border border-slate-100 bg-white p-5">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+              ℹ️ Datos prácticos
+            </div>
+            <dl className="mt-2 grid grid-cols-1 gap-1.5 text-[14px] text-slate-600">
+              <div className="flex gap-2"><dt className="font-semibold text-slate-500">Idioma:</dt><dd>{seo.idioma}</dd></div>
+              <div className="flex gap-2"><dt className="font-semibold text-slate-500">Moneda:</dt><dd>{seo.moneda}</dd></div>
+            </dl>
+            {seo.dato && (
+              <div className="mt-3 rounded-xl bg-amber-50 p-3 text-[13px] leading-relaxed text-amber-800">
+                <b>💡 ¿Sabías que…?</b> {seo.dato}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Comida típica */}
+      {seo.platos?.length > 0 && (
+        <section className="mx-auto max-w-4xl px-6 py-6">
+          <h2 className="text-2xl font-extrabold tracking-tight text-marca-900">
+            Comida típica de {d.ciudad}
+          </h2>
+          <p className="mt-1 text-slate-500">Platos que no te puedes perder.</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {seo.platos.map((p) => (
+              <span
+                key={p}
+                className="rounded-full bg-white px-3.5 py-2 text-[14px] font-semibold text-slate-700 ring-1 ring-slate-200"
+              >
+                🍽️ {p}
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Top lugares */}
       {lugares.length > 0 && (
@@ -193,6 +262,32 @@ export default async function PaginaDestino({ params }) {
         </section>
       )}
 
+      {/* FAQ — rankea muy bien en Google */}
+      <section className="mx-auto max-w-4xl px-6 py-6">
+        <h2 className="text-2xl font-extrabold tracking-tight text-marca-900">
+          Preguntas frecuentes sobre viajar a {d.ciudad}
+        </h2>
+        <div className="mt-4 space-y-2.5">
+          {faqs.map((f, i) => (
+            <details
+              key={i}
+              className="group rounded-2xl border border-slate-100 bg-white p-4 shadow-suave open:shadow-media"
+            >
+              <summary className="cursor-pointer list-none text-base font-bold text-marca-900">
+                <span className="inline-flex items-center gap-2">
+                  <span className="text-marca-600 transition group-open:rotate-90">▸</span>
+                  {f.q}
+                </span>
+              </summary>
+              <p className="mt-2 pl-5 text-[14.5px] leading-relaxed text-slate-600">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* Otros destinos relacionados (linking interno) */}
+      <OtrosDestinos region={d.region} actualSlug={slug} />
+
       {/* CTA inferior */}
       <section className="mx-auto max-w-4xl px-6 py-10">
         <div className="rounded-3xl bg-gradient-to-br from-marca-600 via-marca-700 to-marca-900 p-8 text-white shadow-media">
@@ -217,6 +312,50 @@ export default async function PaginaDestino({ params }) {
         Datos de OpenStreetMap y Wikipedia · Precios orientativos en USD.
       </footer>
     </main>
+  );
+}
+
+// Linking interno: muestra 6 destinos de la misma región (los más baratos)
+// excluyendo el actual. Refuerza la autoridad del catálogo en Google.
+import { DESTINOS_SEO } from "@/lib/destinos";
+
+function OtrosDestinos({ region, actualSlug }) {
+  const otros = DESTINOS_SEO.filter((x) => x.region === region && x.slug !== actualSlug)
+    .sort((a, b) => a.vuelo - b.vuelo)
+    .slice(0, 6);
+  if (!otros.length) return null;
+  return (
+    <section className="mx-auto max-w-4xl px-6 py-6">
+      <h2 className="text-2xl font-extrabold tracking-tight text-marca-900">
+        Otros destinos cercanos
+      </h2>
+      <p className="mt-1 text-slate-500">
+        Si te gusta este destino, mira también:
+      </p>
+      <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+        {otros.map((o) => (
+          <Link
+            key={o.slug}
+            href={`/destino/${o.slug}`}
+            className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-3 transition hover:border-marca-200 hover:bg-marca-50"
+          >
+            <span className="text-2xl">{o.bandera}</span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[13.5px] font-bold text-marca-900">{o.ciudad}</div>
+              <div className="truncate text-[11.5px] text-slate-500">desde US$ {o.vuelo}</div>
+            </div>
+          </Link>
+        ))}
+      </div>
+      <div className="mt-4">
+        <Link
+          href="/destino"
+          className="inline-flex items-center gap-1 text-[13.5px] font-semibold text-marca-600 hover:underline"
+        >
+          Ver los 80 destinos →
+        </Link>
+      </div>
+    </section>
   );
 }
 
