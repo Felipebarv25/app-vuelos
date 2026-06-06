@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { geocodificar, traerLugares, CATEGORIAS } from "@/lib/osm";
 import { traducirLoteWD, nombreLocalizado } from "@/lib/nombres";
+import { compartirEnlace } from "@/lib/compartir";
 import { getDestinoPorSlug } from "@/lib/destinos";
 import { construirItinerario, agregarLugarADia, fmtMin } from "@/lib/itinerario";
 import { CIUDADES_POPULARES } from "@/lib/ciudadesPopulares";
@@ -414,9 +415,43 @@ export default function Home() {
     else if (consulta.trim()) buscarTexto();
   }
 
-  // Compartir/copiar el plan completo (texto plano para WhatsApp/notas).
+  // Compartir el plan: primero intenta crear un enlace público (KV). Si lo
+  // logra, comparte la URL bonita (el receptor abre /viaje/<id> y ve el plan
+  // sin necesidad de cuenta). Si la nube falla, fallback al texto plano.
   async function compartirPlan() {
     if (!ciudad) return;
+
+    // 1) Intentar enlace público.
+    const viaje = {
+      ciudad,
+      fechaInicio,
+      fechaFin,
+      dias,
+      horas,
+      momento,
+      categoria,
+      seleccion,
+    };
+    const url = await compartirEnlace(viaje);
+
+    if (url) {
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: `Viaje a ${ciudad.nombre} · Viajero 360`,
+            text: `${t("miViajeA")} ${ciudad.nombre}`,
+            url,
+          });
+        } else {
+          await navigator.clipboard.writeText(url);
+          setCopiado(true);
+          setTimeout(() => setCopiado(false), 2500);
+        }
+      } catch {}
+      return;
+    }
+
+    // 2) Fallback: texto plano (sin KV configurado).
     let txt = `🗺️ ${t("miViajeA")} ${ciudad.nombre}, ${ciudad.pais} — Viajero 360\n`;
     let n = 0;
     plan.forEach((d) => {
