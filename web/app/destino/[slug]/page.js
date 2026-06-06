@@ -10,6 +10,8 @@ import Link from "next/link";
 import { getDestinoPorSlug, TODOS_SLUGS, nombreDestino } from "@/lib/destinos";
 import { datosSeoDe, faqsDe } from "@/lib/seoDestinos";
 import { fotoCiudad } from "@/lib/fotoCiudad";
+import { preciosPorMes } from "@/lib/historialPrecios";
+import { iataDe } from "@/lib/iataCiudades";
 import FavToggle from "./FavToggle";
 
 const SITIO = "https://app-vuelos-mfos.vercel.app";
@@ -96,6 +98,8 @@ export default async function PaginaDestino({ params }) {
   const seo = datosSeoDe(d);
   const faqs = faqsDe(d);
   const foto = await fotoCiudad(d.ciudad, d.pais);
+  const iata = iataDe(d.ciudad, d.pais);
+  const historial = iata ? await preciosPorMes(iata) : null;
 
   // Schema.org: ayuda a Google a entender que la página describe un destino.
   const jsonLd = {
@@ -264,6 +268,80 @@ export default async function PaginaDestino({ params }) {
                 🍽️ {p}
               </span>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Cuándo viajar más barato — mediana de precios de vuelo por mes, calculada
+          a partir del historial real del detector. Solo aparece si hay datos. */}
+      {historial && (
+        <section className="mx-auto max-w-4xl px-6 py-6">
+          <h2 className="text-2xl font-extrabold tracking-tight text-marca-900">
+            Cuándo viajar más barato a {d.ciudad}
+          </h2>
+          <p className="mt-1 text-slate-500">
+            Precio mediano de vuelo i/v desde Colombia por mes de salida según
+            nuestro detector (últimos 90 días).
+          </p>
+
+          {/* Resumen mejor/peor */}
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-emerald-700">
+                ✨ Más barato
+              </div>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-2xl font-extrabold text-emerald-700">
+                  US$ {historial.mejor.precio}
+                </span>
+                <span className="text-[13px] font-semibold text-emerald-700/80">
+                  saliendo en {historial.mejor.label}
+                </span>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700">
+                🚫 Más caro
+              </div>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-2xl font-extrabold text-amber-700">
+                  US$ {historial.peor.precio}
+                </span>
+                <span className="text-[13px] font-semibold text-amber-700/80">
+                  saliendo en {historial.peor.label}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Mini gráfico de barras */}
+          <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
+            <div className="flex min-w-fit items-end gap-2">
+              {historial.meses.map((m) => {
+                const max = historial.peor.precio;
+                const altura = Math.max(20, Math.round((m.precio / max) * 160));
+                const color = m.mejor
+                  ? "bg-emerald-500"
+                  : m.peor
+                  ? "bg-amber-400"
+                  : "bg-marca-300";
+                return (
+                  <div key={m.ym} className="flex w-[56px] shrink-0 flex-col items-center">
+                    <div className="text-[11px] font-bold text-slate-600">
+                      ${Math.round(m.precio / 10) * 10}
+                    </div>
+                    <div
+                      className={`mt-1 w-full rounded-t-md ${color}`}
+                      style={{ height: altura }}
+                      title={`${m.label}: US$${m.precio} (${m.muestras} consultas)`}
+                    />
+                    <div className="mt-1.5 text-[11px] font-medium text-slate-500">
+                      {m.label}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
       )}
