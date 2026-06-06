@@ -119,6 +119,11 @@ export default function Home() {
     if (!listo || ciudad) return;
     try {
       const sp = new URLSearchParams(window.location.search);
+      // ?presupuesto=1 → abrir el modal de presupuesto (CTA desde /destino).
+      if (sp.get("presupuesto") === "1") {
+        setMostrarPresupuesto(true);
+        return;
+      }
       const slug = sp.get("destino");
       if (!slug) return;
       const d = getDestinoPorSlug(slug);

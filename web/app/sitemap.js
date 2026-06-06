@@ -14,6 +14,12 @@ export default function sitemap() {
       changeFrequency: "weekly",
       priority: 1.0,
     },
+    {
+      url: `${SITIO}/destino`,
+      lastModified: ahora,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
   ];
 
   const destinos = TODOS_SLUGS.map((slug) => ({
