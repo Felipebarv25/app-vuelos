@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-07T19:21:13",
+  "generado": "2026-06-07T22:03:24",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -133,18 +133,18 @@
       "pais": "Estados Unidos",
       "bandera": "🇺🇸",
       "q": "Miami, Estados Unidos",
-      "precio": 367,
+      "precio": 362,
       "moneda": "USD",
-      "fecha_ida": "2026-08-18",
-      "fecha_vuelta": "2026-08-25",
+      "fecha_ida": "2026-08-11",
+      "fecha_vuelta": "2026-08-23",
       "aerolinea": "LA",
       "umbral": 400,
       "mediana": 386,
-      "descuento": 5,
+      "descuento": 6,
       "esGanga": false,
-      "visto": "2026-06-07T03:48:47",
-      "link": "https://www.aviasales.com/search/BOG1808MIA25081",
-      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Miami%202026-08-18%202026-08-25"
+      "visto": "2026-06-07T22:03:13",
+      "link": "https://www.aviasales.com/search/BOG1108MIA23081",
+      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Miami%202026-08-11%202026-08-23"
     },
     {
       "origen": "MDE",
@@ -179,8 +179,8 @@
       "fecha_vuelta": "2026-11-16",
       "aerolinea": "DM",
       "umbral": 400,
-      "mediana": 436,
-      "descuento": 10,
+      "mediana": 451,
+      "descuento": 13,
       "esGanga": false,
       "visto": "2026-06-07T03:49:01",
       "link": "https://www.aviasales.com/search/MDE0511MEX16111",
