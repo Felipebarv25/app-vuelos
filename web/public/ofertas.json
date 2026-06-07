@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-07T03:49:04",
+  "generado": "2026-06-07T08:55:08",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -219,8 +219,8 @@
       "fecha_vuelta": "2026-11-13",
       "aerolinea": "JA",
       "umbral": 450,
-      "mediana": 562,
-      "descuento": 8,
+      "mediana": 555,
+      "descuento": 7,
       "esGanga": false,
       "visto": "2026-06-07T03:49:03",
       "link": "https://www.aviasales.com/search/MDE0711BUE13111",
