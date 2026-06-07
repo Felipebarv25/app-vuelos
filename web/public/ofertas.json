@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-07T08:55:08",
+  "generado": "2026-06-07T11:08:44",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -359,8 +359,8 @@
       "fecha_vuelta": "2026-10-31",
       "aerolinea": "AV",
       "umbral": 750,
-      "mediana": 1012,
-      "descuento": 8,
+      "mediana": 985,
+      "descuento": 6,
       "esGanga": false,
       "visto": "2026-06-07T03:48:53",
       "link": "https://www.aviasales.com/search/MDE2110MAD31101",
