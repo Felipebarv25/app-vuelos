@@ -12,3 +12,7 @@ venv/
 # Archivos temporales / de registro
 datos/registro.log
 resultado.txt
+
+# Clon local de review (otra sesión IA hizo allí su trabajo, ya mergeado)
+# Tiene su propio .git, no debe enredarse con este repo.
+/app-vuelos-review/
