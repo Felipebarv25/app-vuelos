@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-08T15:50:26",
+  "generado": "2026-06-08T20:13:47",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -33,18 +33,18 @@
       "pais": "Estados Unidos",
       "bandera": "🇺🇸",
       "q": "Nueva York, Estados Unidos",
-      "precio": 373,
+      "precio": 371,
       "moneda": "USD",
       "fecha_ida": "2026-09-16",
-      "fecha_vuelta": "2026-09-20",
-      "aerolinea": "UA",
+      "fecha_vuelta": "2026-09-28",
+      "aerolinea": "LA",
       "umbral": 450,
       "mediana": 421,
-      "descuento": 11,
+      "descuento": 12,
       "esGanga": true,
-      "visto": "2026-06-08T03:55:35",
-      "link": "https://www.aviasales.com/search/MDE1609NYC20091",
-      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Nueva%20York%202026-09-16%202026-09-20"
+      "visto": "2026-06-08T20:13:45",
+      "link": "https://www.aviasales.com/search/MDE1609NYC28091",
+      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Nueva%20York%202026-09-16%202026-09-28"
     },
     {
       "origen": "BOG",
@@ -59,8 +59,8 @@
       "fecha_vuelta": "2026-09-28",
       "aerolinea": "DM",
       "umbral": 450,
-      "mediana": 540,
-      "descuento": 15,
+      "mediana": 552,
+      "descuento": 17,
       "esGanga": true,
       "visto": "2026-06-08T03:55:27",
       "link": "https://www.aviasales.com/search/BOG1609NYC28091",
