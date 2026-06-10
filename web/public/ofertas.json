@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-10T09:58:35",
+  "generado": "2026-06-10T15:32:33",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -99,8 +99,8 @@
       "fecha_vuelta": "2026-09-21",
       "aerolinea": "JA",
       "umbral": 300,
-      "mediana": 384,
-      "descuento": 14,
+      "mediana": 389,
+      "descuento": 15,
       "esGanga": false,
       "visto": "2026-06-10T03:37:04",
       "link": "https://www.aviasales.com/search/BOG1009LIM21091",
@@ -259,8 +259,8 @@
       "fecha_vuelta": "2026-10-29",
       "aerolinea": "AC",
       "umbral": 800,
-      "mediana": 780,
-      "descuento": 0,
+      "mediana": 784,
+      "descuento": 1,
       "esGanga": false,
       "visto": "2026-06-10T03:36:51",
       "link": "https://www.aviasales.com/search/BOG2210MIL29101",
