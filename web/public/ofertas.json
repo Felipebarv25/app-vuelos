@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-11T20:21:19",
+  "generado": "2026-06-11T22:49:49",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -19,8 +19,8 @@
       "fecha_vuelta": "2026-08-30",
       "aerolinea": "Y4",
       "umbral": 400,
-      "mediana": 338,
-      "descuento": 3,
+      "mediana": 341,
+      "descuento": 4,
       "esGanga": true,
       "visto": "2026-06-11T03:53:39",
       "link": "https://www.aviasales.com/search/BOG2608MEX30081",
