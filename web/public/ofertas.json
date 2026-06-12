@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-12T03:52:42",
+  "generado": "2026-06-12T10:11:44",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -239,7 +239,7 @@
       "fecha_vuelta": "2026-09-08",
       "aerolinea": "LA",
       "umbral": 450,
-      "mediana": 593,
+      "mediana": 594,
       "descuento": 12,
       "esGanga": false,
       "visto": "2026-06-12T03:52:30",
@@ -533,16 +533,16 @@
       "pais": "China",
       "bandera": "🇨🇳",
       "q": "Pekín, China",
-      "precio": 1732,
+      "precio": 1680,
       "moneda": "USD",
       "fecha_ida": "2026-10-08",
       "fecha_vuelta": "2026-10-23",
       "aerolinea": "AV",
       "umbral": 1700,
       "mediana": 1732,
-      "descuento": 0,
+      "descuento": 3,
       "esGanga": false,
-      "visto": "2026-06-10T03:36:56",
+      "visto": "2026-06-12T10:11:26",
       "link": "https://www.aviasales.com/search/BOG0810BJS23101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Pek%C3%ADn%202026-10-08%202026-10-23"
     }
