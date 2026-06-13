@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-13T11:17:17",
+  "generado": "2026-06-13T13:58:18",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -19,7 +19,7 @@
       "fecha_vuelta": "2026-09-22",
       "aerolinea": "UA",
       "umbral": 450,
-      "mediana": 431,
+      "mediana": 432,
       "descuento": 13,
       "esGanga": true,
       "visto": "2026-06-13T03:37:09",
@@ -279,7 +279,7 @@
       "fecha_vuelta": "2026-11-25",
       "aerolinea": "LH",
       "umbral": 750,
-      "mediana": 827,
+      "mediana": 828,
       "descuento": 1,
       "esGanga": false,
       "visto": "2026-06-13T03:36:57",
@@ -379,7 +379,7 @@
       "fecha_vuelta": "2026-11-19",
       "aerolinea": "AV",
       "umbral": 750,
-      "mediana": 1023,
+      "mediana": 1025,
       "descuento": 1,
       "esGanga": false,
       "visto": "2026-06-13T03:37:05",
