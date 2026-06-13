@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-13T03:37:12",
+  "generado": "2026-06-13T08:57:05",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -159,7 +159,7 @@
       "fecha_vuelta": "2026-10-23",
       "aerolinea": "LA",
       "umbral": 400,
-      "mediana": 390,
+      "mediana": 387,
       "descuento": 7,
       "esGanga": false,
       "visto": "2026-06-13T03:37:02",
@@ -379,8 +379,8 @@
       "fecha_vuelta": "2026-11-19",
       "aerolinea": "AV",
       "umbral": 750,
-      "mediana": 1016,
-      "descuento": 0,
+      "mediana": 1023,
+      "descuento": 1,
       "esGanga": false,
       "visto": "2026-06-13T03:37:05",
       "link": "https://www.aviasales.com/search/MDE0411MAD19111",
