@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-13T08:57:05",
+  "generado": "2026-06-13T11:17:17",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -19,7 +19,7 @@
       "fecha_vuelta": "2026-09-22",
       "aerolinea": "UA",
       "umbral": 450,
-      "mediana": 430,
+      "mediana": 431,
       "descuento": 13,
       "esGanga": true,
       "visto": "2026-06-13T03:37:09",
