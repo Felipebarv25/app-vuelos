@@ -112,12 +112,25 @@ async function fotoCommons(nombre, ciudad) {
   return lista?.[0] || null;
 }
 
+// Coincidencia mas suave para galerias: basta con que UNA palabra significativa
+// se solape. Asi traemos varios angulos del mismo lugar (la API a veces titula
+// como "Side view of X" o "Detail of X night") sin descartar todo.
+function tituloCoincideSuave(nombreLugar, titulo) {
+  const a = norm(nombreLugar);
+  const b = norm(titulo);
+  if (!a || !b) return false;
+  if (a.includes(b) || b.includes(a)) return true;
+  const palabrasA = a.split(" ").filter((w) => w.length > 3);
+  const palabrasB = new Set(b.split(" ").filter((w) => w.length > 3));
+  return palabrasA.some((w) => palabrasB.has(w));
+}
+
 // Variante que devuelve VARIAS fotos validas (para galeria). limite = 5 ideal.
-async function fotosCommons(nombre, ciudad, limite = 5) {
+async function fotosCommons(nombre, ciudad, limite = 5, suave = false) {
   try {
     const q = ciudad ? `${nombre} ${ciudad}` : nombre;
     const r = await fetchRapido(
-      `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrlimit=20&gsrsearch=${encodeURIComponent(
+      `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrlimit=30&gsrsearch=${encodeURIComponent(
         q
       )}&prop=imageinfo&iiprop=url&iiurlwidth=1200&format=json&origin=*`
     );
@@ -130,13 +143,14 @@ async function fotosCommons(nombre, ciudad, limite = 5) {
     );
     const out = [];
     const yaVistas = new Set();
+    const aceptar = suave ? tituloCoincideSuave : tituloCoincide;
     for (const pag of candidatos) {
       const info = pag?.imageinfo?.[0];
       const url = info?.thumburl || info?.url || null;
       if (!url || esImagenMala(url)) continue;
       if (yaVistas.has(url)) continue;
       const tituloArchivo = (pag?.title || "").replace(/^File:|\.[a-z]+$/gi, "");
-      if (!tituloCoincide(nombre, tituloArchivo)) continue;
+      if (!aceptar(nombre, tituloArchivo)) continue;
       yaVistas.add(url);
       out.push({ url, ancho: info?.thumbwidth || 1200, link: info?.descriptionurl || null });
       if (out.length >= limite) break;
@@ -150,14 +164,29 @@ async function fotosCommons(nombre, ciudad, limite = 5) {
 // Galeria de un lugar: hasta `limite` fotos (~5) tomadas de Wikimedia Commons.
 // Se cachea ~30 dias y NO solapa con `fotoDeLugar` (que cachea la principal).
 // Devuelve { urls: string[] } o { urls: [] } si no encontro nada relevante.
+// gal2: clave nueva tras pasar a busqueda permisiva (suave) — la v1 podia
+// cachear arrays casi vacios para lugares con titulos largos.
 export async function galeriaDeLugar(nombre, ciudad = "", limite = 5) {
-  const clave = `gal1:${nombre}|${ciudad}|${limite}`.toLowerCase();
+  const clave = `gal2:${nombre}|${ciudad}|${limite}`.toLowerCase();
   return cacheado(
     clave,
     TTL,
     async () => {
-      const fotos = await fotosCommons(nombre, ciudad, limite);
-      return { urls: fotos.map((f) => f.url) };
+      // Estricto primero (= la foto principal); si trae poco, complementamos con
+      // busqueda suave (cualquier palabra significativa) hasta llegar al limite.
+      const estrictas = await fotosCommons(nombre, ciudad, limite, false);
+      let urls = estrictas.map((f) => f.url);
+      if (urls.length < limite) {
+        const suaves = await fotosCommons(nombre, ciudad, limite, true);
+        const yaVistas = new Set(urls);
+        for (const f of suaves) {
+          if (yaVistas.has(f.url)) continue;
+          yaVistas.add(f.url);
+          urls.push(f.url);
+          if (urls.length >= limite) break;
+        }
+      }
+      return { urls };
     },
     (d) => !!(d && d.urls && d.urls.length > 0)
   );

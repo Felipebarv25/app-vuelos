@@ -88,6 +88,13 @@ const FILTROS_AMPLIO = {
 // q=a. Se prueban varios y se unifican.
 const TERMINOS_PHOTON = {
   imperdibles: ["monument", "museum", "palace", "temple", "church", "mosque", "castle", "square", "park", "viewpoint"],
+  // Antes solo estaban imperdibles/comida; para museos/monumentos/parques/
+  // estadios la categoria caia al "attraction" generico de Photon y ciudades
+  // grandes (Rio, etc.) podian quedar vacias si Overpass tardaba o filtraba mucho.
+  museos: ["museum", "gallery", "exhibition", "pinacoteca", "musee"],
+  monumentos: ["monument", "memorial", "palace", "castle", "fort", "fortress", "tower", "obelisk", "arch", "ruins"],
+  parques: ["park", "garden", "botanical", "promenade", "parque", "jardim", "jardin"],
+  estadios: ["stadium", "arena", "coliseum", "estadio"],
   restaurantes: ["restaurant", "food", "grill", "bbq", "kitchen", "bistro", "diner"],
   cafes: ["cafe", "coffee", "bakery", "tea"],
   bares: ["bar", "pub", "club", "lounge", "brewery"],

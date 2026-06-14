@@ -30,19 +30,22 @@ import { track, trackVisita } from "@/lib/track";
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
 
 // Destinos destacados con foto (fotos libres de Wikimedia Commons).
+// visitantes: turistas internacionales/año (millones, datos publicos UNWTO,
+// Euromonitor y oficinas de turismo locales 2022-2024). Sirve para el chip
+// de prueba social sobre las tarjetas.
 const DESTINOS_DESTACADOS = [
-  { nombre: "París", pais: "Francia", q: "París, Francia", hint: "Torre Eiffel" },
-  { nombre: "Roma", pais: "Italia", q: "Roma, Italia", hint: "Coliseo" },
-  { nombre: "Tokio", pais: "Japón", q: "Tokio, Japón", hint: "Tokyo Tower" },
-  { nombre: "Nueva York", pais: "EE. UU.", q: "Nueva York, Estados Unidos", hint: "Manhattan skyline" },
-  { nombre: "Cartagena", pais: "Colombia", q: "Cartagena, Colombia", hint: "Cartagena de Indias" },
-  { nombre: "Barcelona", pais: "España", q: "Barcelona, España", hint: "Sagrada Familia" },
-  { nombre: "Londres", pais: "Reino Unido", q: "Londres, Reino Unido", hint: "Big Ben London" },
-  { nombre: "Estambul", pais: "Turquía", q: "Estambul, Turquía", hint: "Hagia Sophia Istanbul" },
-  { nombre: "Dubái", pais: "Emiratos Árabes", q: "Dubái, Emiratos Árabes Unidos", hint: "Burj Khalifa Dubai" },
-  { nombre: "Río de Janeiro", pais: "Brasil", q: "Río de Janeiro, Brasil", hint: "Christ the Redeemer Rio de Janeiro" },
-  { nombre: "Ámsterdam", pais: "Países Bajos", q: "Ámsterdam, Países Bajos", hint: "Amsterdam canals" },
-  { nombre: "Buenos Aires", pais: "Argentina", q: "Buenos Aires, Argentina", hint: "Obelisco Buenos Aires" },
+  { nombre: "París", pais: "Francia", q: "París, Francia", hint: "Torre Eiffel", visitantes: 30 },
+  { nombre: "Roma", pais: "Italia", q: "Roma, Italia", hint: "Coliseo", visitantes: 10 },
+  { nombre: "Tokio", pais: "Japón", q: "Tokio, Japón", hint: "Tokyo Tower", visitantes: 15 },
+  { nombre: "Nueva York", pais: "EE. UU.", q: "Nueva York, Estados Unidos", hint: "Manhattan skyline", visitantes: 13 },
+  { nombre: "Cartagena", pais: "Colombia", q: "Cartagena, Colombia", hint: "Cartagena de Indias", visitantes: 1.5 },
+  { nombre: "Barcelona", pais: "España", q: "Barcelona, España", hint: "Sagrada Familia", visitantes: 12 },
+  { nombre: "Londres", pais: "Reino Unido", q: "Londres, Reino Unido", hint: "Big Ben London", visitantes: 21 },
+  { nombre: "Estambul", pais: "Turquía", q: "Estambul, Turquía", hint: "Hagia Sophia Istanbul", visitantes: 16 },
+  { nombre: "Dubái", pais: "Emiratos Árabes", q: "Dubái, Emiratos Árabes Unidos", hint: "Burj Khalifa Dubai", visitantes: 17 },
+  { nombre: "Río de Janeiro", pais: "Brasil", q: "Río de Janeiro, Brasil", hint: "Christ the Redeemer Rio de Janeiro", visitantes: 2.5 },
+  { nombre: "Ámsterdam", pais: "Países Bajos", q: "Ámsterdam, Países Bajos", hint: "Amsterdam canals", visitantes: 9 },
+  { nombre: "Buenos Aires", pais: "Argentina", q: "Buenos Aires, Argentina", hint: "Obelisco Buenos Aires", visitantes: 3 },
 ];
 
 // Imagen del hero del inicio (foto de viaje, CDN de Unsplash). Si fallara, queda
@@ -328,9 +331,18 @@ export default function Home() {
     cargarCategoria("imperdibles", c); // los lugares cargan en segundo plano
   }
 
-  async function buscarTexto(e) {
-    e?.preventDefault();
-    const q = consulta.trim();
+  // Si se pasa qOverride se usa directamente (sin depender de leer `consulta`
+  // del state, que con setTimeout(...,0) leeria el valor viejo y forzaba doble
+  // clic en las tarjetas/CTA de destinos populares, ofertas y asesor).
+  async function buscarTexto(eOrQ) {
+    let q;
+    if (typeof eOrQ === "string") {
+      q = eOrQ.trim();
+      setConsulta(q);
+    } else {
+      eOrQ?.preventDefault?.();
+      q = consulta.trim();
+    }
     if (!q) return;
     ultimaConsultaElegida.current = q;
     clearTimeout(debounce.current);
@@ -855,7 +867,8 @@ export default function Home() {
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-4">
             {DESTINOS_DESTACADOS.map((d) => (
               <CardDestino key={d.q} nombre={d.nombre} pais={d.pais} hint={d.hint}
-                onClick={() => { setConsulta(d.q); setTimeout(() => buscarTexto(), 0); }} />
+                visitantes={d.visitantes}
+                onClick={() => buscarTexto(d.q)} />
             ))}
           </div>
 
@@ -908,7 +921,7 @@ export default function Home() {
             t={t}
             lang={lang}
             rango={fechaInicio && fechaFin ? { inicio: fechaInicio, fin: fechaFin } : null}
-            onPlanear={(q) => { setConsulta(q); setTimeout(() => buscarTexto(), 0); }}
+            onPlanear={(q) => { buscarTexto(q); }}
           />
         </div>
         </div>
@@ -921,9 +934,7 @@ export default function Home() {
           onCerrar={() => setMostrarPresupuesto(false)}
           onElegirCiudad={(d) => {
             setMostrarPresupuesto(false);
-            const q = `${d.ciudad}, ${d.pais}`;
-            setConsulta(q);
-            setTimeout(() => buscarTexto(), 0);
+            buscarTexto(`${d.ciudad}, ${d.pais}`);
           }}
         />
       )}
@@ -1224,7 +1235,7 @@ export default function Home() {
         <Asesor
           t={t}
           usuario={usuario}
-          onPlanear={(q) => { setConsulta(q); setTimeout(() => buscarTexto(), 0); }}
+          onPlanear={(q) => { buscarTexto(q); }}
           onAbrirPresupuesto={() => setMostrarPresupuesto(true)}
         />
       </div>

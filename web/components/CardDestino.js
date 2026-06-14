@@ -4,7 +4,14 @@ import { fotoDeLugar } from "@/lib/imagenes";
 
 // Tarjeta de destino con foto cargada dinámicamente (nunca queda rota:
 // si no hay foto, muestra un degradado con el nombre). Estilo Airbnb/Booking.
-export default function CardDestino({ nombre, pais, consulta, hint, onClick }) {
+// Formato amigable de visitantes/ano en millones (1.5 -> "1.5M", 30 -> "30M").
+function fmtVisitantes(n) {
+  if (typeof n !== "number" || n <= 0) return null;
+  const s = n >= 10 ? Math.round(n).toString() : n.toFixed(1).replace(/\.0$/, "");
+  return `${s}M`;
+}
+
+export default function CardDestino({ nombre, pais, consulta, hint, visitantes, onClick }) {
   const [img, setImg] = useState(null);
 
   useEffect(() => {
@@ -43,6 +50,15 @@ export default function CardDestino({ nombre, pais, consulta, hint, onClick }) {
         <div className="h-full w-full bg-gradient-to-br from-marca-400 to-marca-900" />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+      {fmtVisitantes(visitantes) && (
+        <div
+          className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10.5px] font-bold text-white backdrop-blur"
+          title={`~${visitantes} millones de turistas/año (UNWTO, Euromonitor)`}
+        >
+          <span>★</span>
+          <span>{fmtVisitantes(visitantes)} / año</span>
+        </div>
+      )}
       <div className="absolute bottom-3 left-3.5 text-left text-white">
         <div className="text-[17px] font-extrabold leading-tight drop-shadow lg:text-xl">{nombre}</div>
         <div className="text-xs opacity-95 lg:text-[13px]">{pais}</div>
