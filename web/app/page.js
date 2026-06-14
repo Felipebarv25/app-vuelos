@@ -149,24 +149,46 @@ export default function Home() {
     trackVisita(lang);
   }, [lang]);
 
-  // Conteo de "viajeros activos hoy" para el chip social del HERO. Refresca
-  // cada 2 min. Si KV no esta configurado o el endpoint falla, queda en null
-  // y el chip no se muestra (no estorba). Se llama solo en la pantalla inicio.
-  const [viajerosHoy, setViajerosHoy] = useState(null);
+  // Conteo de "viajeros en linea" (presencia en vivo) para el chip social del
+  // HERO. Genera un sessionId por pestana y hace POST a /api/online cada 60s
+  // mientras la home este abierta. La respuesta trae `online` = navegadores
+  // con ping en los ultimos 90s. Si KV no esta listo el endpoint responde
+  // ok:false y el chip queda oculto.
+  const [viajerosVivos, setViajerosVivos] = useState(null);
   useEffect(() => {
-    if (ciudad) return; // solo necesitamos el conteo en la pantalla de inicio
-    let vivo = true;
-    const cargar = async () => {
+    if (ciudad) return; // solo en la pantalla de inicio
+    let activo = true;
+
+    // sessionId persistente por pestana (no por dispositivo): si abres dos
+    // ventanas son dos "viajeros" — fiel a la idea de "lo que esta abierto".
+    let sid;
+    try {
+      sid = sessionStorage.getItem("v360_sid");
+      if (!sid) {
+        sid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+        sessionStorage.setItem("v360_sid", sid);
+      }
+    } catch {
+      sid = `tmp-${Math.random().toString(36).slice(2, 10)}`;
+    }
+
+    const pingear = async () => {
       try {
-        const r = await fetch("/api/online");
+        const r = await fetch("/api/online", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId: sid }),
+          keepalive: true,
+        });
         if (!r.ok) return;
         const d = await r.json();
-        if (vivo && d?.ok && typeof d.hoy === "number") setViajerosHoy(d.hoy);
+        if (activo && d?.ok && typeof d.online === "number") setViajerosVivos(d.online);
       } catch {}
     };
-    cargar();
-    const id = setInterval(cargar, 120000);
-    return () => { vivo = false; clearInterval(id); };
+
+    pingear();
+    const id = setInterval(pingear, 60000);
+    return () => { activo = false; clearInterval(id); };
   }, [ciudad]);
 
   // CTA desde páginas estáticas de SEO (/destino/<slug>): al cargar la app con
@@ -675,14 +697,14 @@ export default function Home() {
           {esHero ? (
             /* HERO de inicio */
             <div className="mx-auto mt-12 max-w-2xl text-center lg:mt-20">
-              {viajerosHoy != null && viajerosHoy > 0 && (
+              {viajerosVivos != null && viajerosVivos > 0 && (
                 <div className="mb-4 flex justify-center">
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur">
                     <span className="relative flex h-2 w-2">
                       <span className="absolute inset-0 animate-ping rounded-full bg-emerald-300 opacity-75" />
                       <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                     </span>
-                    {viajerosHoy.toLocaleString(lang)} {t("viajerosHoy")}
+                    {viajerosVivos.toLocaleString(lang)} {viajerosVivos === 1 ? t("viajeroEnLinea") : t("viajerosEnLinea")}
                   </span>
                 </div>
               )}
