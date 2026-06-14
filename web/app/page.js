@@ -108,11 +108,36 @@ export default function Home() {
   const { pos: gps } = useGeo(gpsOn);
 
   const debounce = useRef(null);
+  // Guarda el último texto elegido del autocompletado (o pre-cargado por la app).
+  // Sirve para que el useEffect de sugerencias NO reabra el dropdown justo
+  // despues de elegir una ciudad (porque setConsulta dispara el efecto y el
+  // debounce reabria el menu con la misma sugerencia ya seleccionada).
+  const ultimaConsultaElegida = useRef("");
 
   // Métrica: cuenta una visita por sesión (para el panel privado).
   useEffect(() => {
     trackVisita(lang);
   }, [lang]);
+
+  // Conteo de "viajeros activos hoy" para el chip social del HERO. Refresca
+  // cada 2 min. Si KV no esta configurado o el endpoint falla, queda en null
+  // y el chip no se muestra (no estorba). Se llama solo en la pantalla inicio.
+  const [viajerosHoy, setViajerosHoy] = useState(null);
+  useEffect(() => {
+    if (ciudad) return; // solo necesitamos el conteo en la pantalla de inicio
+    let vivo = true;
+    const cargar = async () => {
+      try {
+        const r = await fetch("/api/online");
+        if (!r.ok) return;
+        const d = await r.json();
+        if (vivo && d?.ok && typeof d.hoy === "number") setViajerosHoy(d.hoy);
+      } catch {}
+    };
+    cargar();
+    const id = setInterval(cargar, 120000);
+    return () => { vivo = false; clearInterval(id); };
+  }, [ciudad]);
 
   // CTA desde páginas estáticas de SEO (/destino/<slug>): al cargar la app con
   // ?destino=madrid-espana, abrimos esa ciudad directamente (sin que el usuario
@@ -264,6 +289,11 @@ export default function Home() {
       setSugerencias([]);
       return;
     }
+    // Si el texto fue puesto por elegirCiudad() o por una idea rápida, no
+    // reabras el dropdown: ya tienes la ciudad seleccionada.
+    if (consulta === ultimaConsultaElegida.current) {
+      return;
+    }
     clearTimeout(debounce.current);
     debounce.current = setTimeout(async () => {
       const s = await sugerirCiudades(consulta);
@@ -284,6 +314,8 @@ export default function Home() {
   }
 
   function elegirCiudad(sug) {
+    ultimaConsultaElegida.current = sug.etiqueta;
+    clearTimeout(debounce.current);
     setConsulta(sug.etiqueta);
     setMostrarSug(false);
     setSugerencias([]);
@@ -300,6 +332,8 @@ export default function Home() {
     e?.preventDefault();
     const q = consulta.trim();
     if (!q) return;
+    ultimaConsultaElegida.current = q;
+    clearTimeout(debounce.current);
     setMostrarSug(false);
     setError(null);
     setCargando(true);
@@ -347,6 +381,8 @@ export default function Home() {
   // y abre la búsqueda en un solo click. Maneja sus propios overrides para no
   // depender del orden de actualización de los setState de React.
   async function pruebaRapida({ q, dias: d, momento: m }) {
+    ultimaConsultaElegida.current = q;
+    clearTimeout(debounce.current);
     setConsulta(q);
     setMostrarSug(false);
     setError(null);
@@ -600,6 +636,17 @@ export default function Home() {
           {esHero ? (
             /* HERO de inicio */
             <div className="mx-auto mt-12 max-w-2xl text-center lg:mt-20">
+              {viajerosHoy != null && viajerosHoy > 0 && (
+                <div className="mb-4 flex justify-center">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inset-0 animate-ping rounded-full bg-emerald-300 opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                    </span>
+                    {viajerosHoy.toLocaleString(lang)} {t("viajerosHoy")}
+                  </span>
+                </div>
+              )}
               <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">
                 {t("heroEyebrow")}
               </div>

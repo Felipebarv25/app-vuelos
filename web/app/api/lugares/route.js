@@ -42,13 +42,18 @@ const FILTROS = {
   monumentos: [
     'node["tourism"="attraction"]["name"]',
     'node["historic"~"castle|fort|monastery|archaeological_site|palace"]["name"]',
-    'node["historic"~"monument|memorial"]["name"]["wikidata"]',
+    // Antes exigia ["wikidata"]: muchos monumentos no lo tienen y la ciudad
+    // quedaba vacia. El score penaliza estatuas/placas genericas.
+    'node["historic"~"monument|memorial"]["name"]',
     'way["historic"~"castle|fort|monastery|palace"]["name"]',
-    'node["man_made"="tower"]["name"]["wikidata"]',
+    'node["man_made"="tower"]["name"]',
   ],
   parques: [
-    'node["leisure"~"park|garden"]["name"]["wikidata"]',
-    'way["leisure"~"park|garden"]["name"]["wikidata"]',
+    // Antes exigia ["wikidata"] y dejaba en cero ciudades con muchos parques
+    // sin tag de wikidata (Rio, etc.). El score de procesarElementos ya
+    // ordena por relevancia despues; aqui solo necesitamos traer candidatos.
+    'node["leisure"~"park|garden"]["name"]',
+    'way["leisure"~"park|garden"]["name"]',
     'node["tourism"="theme_park"]["name"]',
     'way["tourism"="theme_park"]["name"]',
   ],

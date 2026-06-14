@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { fotoDeLugar } from "@/lib/imagenes";
+import { fotoDeLugar, galeriaDeLugar } from "@/lib/imagenes";
 import { planTransporte, trazarRuta, perfilDeModo } from "@/lib/rutaReal";
 import { distanciaMetros } from "@/lib/rutas";
 import { fmtMin } from "@/lib/itinerario";
@@ -32,6 +32,11 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
   const [errorFoto, setErrorFoto] = useState(false);
   const [modoSel, setModoSel] = useState(null);
   const [verMas, setVerMas] = useState(false);
+  // Galeria de mas fotos del mismo lugar (Wikimedia Commons). Vacia hasta que
+  // el efecto la cargue; sin spinner: no es esencial para usar la pantalla.
+  const [galeria, setGaleria] = useState([]);
+  // Indice de la foto principal mostrada (0 = foto base; 1..N = galeria[i-1]).
+  const [iFoto, setIFoto] = useState(0);
 
   // Punto de referencia: tu ubicación (GPS) si la hay; si no, el centro de la
   // ciudad, para poder mostrar SIEMPRE las opciones de cómo llegar.
@@ -55,16 +60,31 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
     setCargandoFoto(true);
     setErrorFoto(false);
     setFoto(null);
+    setGaleria([]);
+    setIFoto(0);
     fotoDeLugar(nombreLug, ciudad?.nombre).then((f) => {
       if (vivo) {
         setFoto(f);
         setCargandoFoto(false);
       }
     });
+    // Galeria en paralelo (no bloquea la pantalla); excluye la foto principal.
+    galeriaDeLugar(nombreLug, ciudad?.nombre, 6).then((g) => {
+      if (!vivo) return;
+      const urls = (g?.urls || []).filter(Boolean);
+      setGaleria(urls);
+    });
     return () => {
       vivo = false;
     };
   }, [lugar, ciudad, nombreLug]);
+
+  // URL de la foto que se muestra en grande: la principal si iFoto = 0, o la
+  // miniatura correspondiente. Si no hay foto principal pero si galeria, usamos
+  // la primera de galeria como portada.
+  const urlPrincipal = foto?.url || null;
+  const urlsMostrables = [urlPrincipal, ...galeria.filter((u) => u !== urlPrincipal)].filter(Boolean);
+  const fotoActualUrl = urlsMostrables[iFoto] || urlPrincipal;
 
   async function elegirTransporte(tr) {
     setModoSel(tr.modo);
@@ -91,9 +111,9 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
             <div className="flex h-full w-full items-center justify-center text-slate-400">
               <span className="spin" />
             </div>
-          ) : foto?.url && !errorFoto ? (
+          ) : fotoActualUrl && !errorFoto ? (
             <img
-              src={foto.url}
+              src={fotoActualUrl}
               alt={nombreLug}
               loading="lazy"
               onError={() => setErrorFoto(true)}
@@ -110,6 +130,12 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
           >
             <Icono nombre="x" size={17} />
           </button>
+          {/* Contador de foto cuando hay galeria */}
+          {urlsMostrables.length > 1 && (
+            <div className="absolute left-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white">
+              {iFoto + 1} / {urlsMostrables.length}
+            </div>
+          )}
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-4 pb-3.5 pt-8 text-white">
             <div className="text-[22px] font-extrabold">{nombreLug}</div>
             <div className="text-[13px] opacity-95">
@@ -119,6 +145,24 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
             </div>
           </div>
         </div>
+
+        {/* Tira de miniaturas para cambiar de foto (solo si hay galeria). */}
+        {urlsMostrables.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto px-4 pt-3">
+            {urlsMostrables.map((u, i) => (
+              <button
+                key={u}
+                type="button"
+                onClick={() => { setIFoto(i); setErrorFoto(false); }}
+                className={`h-[58px] w-[78px] shrink-0 overflow-hidden rounded-lg ring-2 transition ${
+                  i === iFoto ? "ring-marca-500" : "ring-transparent hover:ring-slate-300"
+                }`}
+              >
+                <img src={u} alt={`${nombreLug} ${i + 1}`} loading="lazy" className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="p-4">
           {/* Acciones rápidas */}

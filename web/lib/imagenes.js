@@ -108,34 +108,57 @@ function tituloCoincide(nombreLugar, titulo) {
 }
 
 async function fotoCommons(nombre, ciudad) {
+  const lista = await fotosCommons(nombre, ciudad, 1);
+  return lista?.[0] || null;
+}
+
+// Variante que devuelve VARIAS fotos validas (para galeria). limite = 5 ideal.
+async function fotosCommons(nombre, ciudad, limite = 5) {
   try {
     const q = ciudad ? `${nombre} ${ciudad}` : nombre;
-    // Buscamos varios candidatos (no solo el primero) para poder descartar mapas/
-    // escudos/SVG y quedarnos con la primera foto real cuyo título coincida.
     const r = await fetchRapido(
-      `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrlimit=8&gsrsearch=${encodeURIComponent(
+      `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrlimit=20&gsrsearch=${encodeURIComponent(
         q
-      )}&prop=imageinfo&iiprop=url&iiurlwidth=800&format=json&origin=*`
+      )}&prop=imageinfo&iiprop=url&iiurlwidth=1200&format=json&origin=*`
     );
-    if (!r.ok) return null;
+    if (!r.ok) return [];
     const d = await r.json();
     const paginas = d.query?.pages;
-    if (!paginas) return null;
-    // Orden estable por el ranking de búsqueda (index) en vez del orden del objeto.
+    if (!paginas) return [];
     const candidatos = Object.values(paginas).sort(
       (a, b) => (a.index || 0) - (b.index || 0)
     );
+    const out = [];
+    const yaVistas = new Set();
     for (const pag of candidatos) {
       const info = pag?.imageinfo?.[0];
       const url = info?.thumburl || info?.url || null;
       if (!url || esImagenMala(url)) continue;
-      // El título del archivo debe mencionar el lugar (evita fotos de otra ciudad).
+      if (yaVistas.has(url)) continue;
       const tituloArchivo = (pag?.title || "").replace(/^File:|\.[a-z]+$/gi, "");
       if (!tituloCoincide(nombre, tituloArchivo)) continue;
-      return { url, ancho: info?.thumbwidth || 800, link: info?.descriptionurl || null };
+      yaVistas.add(url);
+      out.push({ url, ancho: info?.thumbwidth || 1200, link: info?.descriptionurl || null });
+      if (out.length >= limite) break;
     }
-    return null;
+    return out;
   } catch {
-    return null;
+    return [];
   }
+}
+
+// Galeria de un lugar: hasta `limite` fotos (~5) tomadas de Wikimedia Commons.
+// Se cachea ~30 dias y NO solapa con `fotoDeLugar` (que cachea la principal).
+// Devuelve { urls: string[] } o { urls: [] } si no encontro nada relevante.
+export async function galeriaDeLugar(nombre, ciudad = "", limite = 5) {
+  const clave = `gal1:${nombre}|${ciudad}|${limite}`.toLowerCase();
+  return cacheado(
+    clave,
+    TTL,
+    async () => {
+      const fotos = await fotosCommons(nombre, ciudad, limite);
+      return { urls: fotos.map((f) => f.url) };
+    },
+    (d) => !!(d && d.urls && d.urls.length > 0)
+  );
 }

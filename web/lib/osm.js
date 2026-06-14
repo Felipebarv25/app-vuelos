@@ -209,7 +209,7 @@ export async function geocodificar(consulta) {
 // v25: ciudades TOP servidas desde precálculo estático (WDQS) → instantáneo y con
 // los íconos garantizados (Eiffel, Sagrada Familia, Coliseo…). El motor en vivo
 // queda como respaldo liviano para ciudades no precalculadas. Invalida cachés.
-const API_VER = "26";
+const API_VER = "27";
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.
@@ -276,8 +276,11 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
     } catch {}
   }
 
-  // 2) Respaldo: ir directo a los espejos de Overpass.
-  if (!datos || datos.error || !datos.elements) {
+  // 2) Respaldo: ir directo a los espejos de Overpass. Tambien si el servidor
+  // devolvio elements vacio (filtros demasiado estrictos para esa ciudad/
+  // categoria): probamos directo a Overpass con los filtros del cliente, que
+  // suelen ser mas permisivos.
+  if (!datos || datos.error || !datos.elements || datos.elements.length === 0) {
     const cuerpoFiltros = cat.filtros
       .map((f) => `${f}(around:${radio},${lat},${lon});`)
       .join("\n");
