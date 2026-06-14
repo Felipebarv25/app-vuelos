@@ -1,0 +1,12 @@
+# Excluir el detector de vuelos en Python (no se despliega en Vercel)
+*.py
+__pycache__/
+.venv/
+venv/
+requirements.txt
+datos/
+app-vuelos-review/
+
+# Documentación interna
+AVANCES.md
+FEEDBACK.md
