@@ -53,6 +53,33 @@ const DESTINOS_DESTACADOS = [
 const HERO_IMG =
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70";
 
+// Mensaje rotatorio durante carga larga: en vez del spinner mudo, se le cuenta
+// al usuario en que parte del proceso esta la app. Antes solo veia "Buscando los
+// mejores lugares..." durante hasta 8s, lo que se sentia trabado.
+function MensajeCargandoLugares({ t }) {
+  const [fase, setFase] = useState(0);
+  useEffect(() => {
+    const t1 = setTimeout(() => setFase(1), 2500);
+    const t2 = setTimeout(() => setFase(2), 5500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+  const msgs = [t("cargandoFase1"), t("cargandoFase2"), t("cargandoFase3")];
+  return (
+    <div className="px-0.5">
+      <div className="text-[12.5px] font-semibold text-slate-500 transition-all">
+        {msgs[fase]}
+      </div>
+      {/* Barra de progreso indeterminada (avanza suave para sensacion de vida). */}
+      <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-100">
+        <div
+          className="h-full rounded-full bg-marca-500 transition-all duration-700"
+          style={{ width: fase === 0 ? "30%" : fase === 1 ? "65%" : "90%" }}
+        />
+      </div>
+    </div>
+  );
+}
+
 // Saludo según la hora del día (cálido y personalizado).
 function saludoClave() {
   const h = new Date().getHours();
@@ -1095,7 +1122,7 @@ export default function Home() {
                     <div className="h-[60px] w-[60px] shrink-0 animate-pulse rounded-xl bg-slate-100" />
                   </div>
                 ))}
-                <div className="px-0.5 text-[12px] text-slate-400">{t("cargandoLugares")}</div>
+                <MensajeCargandoLugares t={t} />
               </div>
             )}
 
