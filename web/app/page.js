@@ -462,6 +462,24 @@ export default function Home() {
     else if (consulta.trim()) buscarTexto();
   }
 
+  // Descargar el plan como PDF usando el diálogo nativo de impresion del
+  // navegador (sin dependencias). El CSS @media print de globals.css y el
+  // bloque .solo-imprimir mas abajo hacen que salga limpio en papel/PDF.
+  function descargarPDF() {
+    if (!ciudad) return;
+    track("descargar_pdf", { ciudad: ciudad.nombre });
+    const titulo = `Viajero 360 - ${ciudad.nombre}${ciudad.pais ? `, ${ciudad.pais}` : ""}`;
+    const original = typeof document !== "undefined" ? document.title : "";
+    if (typeof document !== "undefined") document.title = titulo;
+    // Pequeño delay para que el navegador refleje el title antes de abrir el diálogo.
+    setTimeout(() => {
+      if (typeof window !== "undefined") window.print();
+      if (typeof document !== "undefined") {
+        setTimeout(() => { document.title = original; }, 800);
+      }
+    }, 60);
+  }
+
   // Compartir el plan: primero intenta crear un enlace público (KV). Si lo
   // logra, comparte la URL bonita (el receptor abre /viaje/<id> y ve el plan
   // sin necesidad de cuenta). Si la nube falla, fallback al texto plano.
@@ -534,7 +552,7 @@ export default function Home() {
   return (
     <div className="min-h-screen pb-10">
       {/* Cabecera: HERO con foto de viaje en el inicio; cinta blanca en la ciudad */}
-      <header className={`relative z-[1000] ${esHero ? "text-white" : "sticky top-0 border-b border-slate-200 bg-white/95 text-slate-700 shadow-suave backdrop-blur"}`}>
+      <header className={`relative z-[1000] print:hidden ${esHero ? "text-white" : "sticky top-0 border-b border-slate-200 bg-white/95 text-slate-700 shadow-suave backdrop-blur"}`}>
         {esHero && (
           <>
             <div className="absolute inset-0 bg-gradient-to-br from-marca-700 to-marca-900" />
@@ -687,7 +705,7 @@ export default function Home() {
       </header>
 
       {error && (
-        <div className="mx-auto mt-3.5 max-w-7xl px-4 lg:px-8">
+        <div className="mx-auto mt-3.5 max-w-7xl px-4 print:hidden lg:px-8">
           <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-red-100 bg-red-50 p-4 text-red-800 shadow-suave">
             <span className="text-2xl">😕</span>
             <p className="flex-1 text-sm">{error}</p>
@@ -699,7 +717,7 @@ export default function Home() {
       )}
 
       {!ciudad && !cargando && (
-        <div className="relative z-10 -mt-8 rounded-t-[32px] bg-[#f6f7fb] pt-2 lg:-mt-12">
+        <div className="relative z-10 -mt-8 rounded-t-[32px] bg-[#f6f7fb] pt-2 print:hidden lg:-mt-12">
         <div className="animar-subir mx-auto max-w-7xl px-4 pb-4 pt-7 lg:px-8">
           {/* Banner presupuesto: tarjeta blanca con acento verde (a juego con el
               resto de tarjetas de la página; el verde es el acento de "dinero"). */}
@@ -871,7 +889,7 @@ export default function Home() {
 
       {/* Vista de ciudad: dos paneles en escritorio (itinerario + mapa fijo) */}
       {ciudad && (
-        <div className="mx-auto max-w-7xl lg:flex lg:gap-6 lg:px-8 lg:py-6">
+        <div className="mx-auto max-w-7xl lg:flex lg:gap-6 lg:px-8 lg:py-6 print:hidden">
           {/* Panel izquierdo: planeación */}
           <div className="order-2 px-4 py-5 lg:order-1 lg:flex-1 lg:min-w-0 lg:px-0 lg:py-0">
             <div className="mb-4 flex items-end justify-between gap-3">
@@ -899,6 +917,18 @@ export default function Home() {
                     <span className="inline-flex items-center gap-1.5">
                       <Icono nombre={copiado ? "check" : "share"} size={15} />
                       {copiado ? t("copiado") : t("compartir")}
+                    </span>
+                  </button>
+                )}
+                {plan.some((d) => d.paradas.length > 0) && (
+                  <button
+                    onClick={descargarPDF}
+                    title={t("descargarPDF")}
+                    className="rounded-xl border-[1.5px] border-marca-100 bg-white px-3 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-marca-50"
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      <Icono nombre="download" size={15} />
+                      PDF
                     </span>
                   </button>
                 )}
@@ -1143,14 +1173,48 @@ export default function Home() {
       )}
 
       {/* Asesor de viajes (guía gratis + IA opcional, chat flotante) */}
-      <Asesor
-        t={t}
-        usuario={usuario}
-        onPlanear={(q) => { setConsulta(q); setTimeout(() => buscarTexto(), 0); }}
-        onAbrirPresupuesto={() => setMostrarPresupuesto(true)}
-      />
+      <div className="print:hidden">
+        <Asesor
+          t={t}
+          usuario={usuario}
+          onPlanear={(q) => { setConsulta(q); setTimeout(() => buscarTexto(), 0); }}
+          onAbrirPresupuesto={() => setMostrarPresupuesto(true)}
+        />
+      </div>
 
-      <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-slate-400 lg:px-8">
+      {/* Vista de impresión / PDF: oculta en pantalla, solo aparece al imprimir.
+          Renderiza TODOS los dias del plan (no solo el visible) en formato sobrio. */}
+      {ciudad && plan.length > 0 && (
+        <div className="solo-imprimir hidden print:block px-8 py-6">
+          <h1>Viajero 360 — {ciudad.nombre}</h1>
+          <div className="meta">
+            {ciudad.pais}
+            {fechaInicio && fechaFin
+              ? ` · ${new Date(fechaInicio + "T00:00:00").toLocaleDateString(lang, { day: "numeric", month: "short" })} – ${new Date(fechaFin + "T00:00:00").toLocaleDateString(lang, { day: "numeric", month: "short", year: "numeric" })}`
+              : ` · ${dias} ${t("dias").toLowerCase()}`}
+          </div>
+          {plan.map((d, i) => (
+            d.paradas.length > 0 ? (
+              <section key={i}>
+                <h2>{t("dia")} {i + 1}</h2>
+                <ol>
+                  {d.paradas.map((p, j) => (
+                    <li key={j}>
+                      <strong>{nombreLocalizado(p, lang)}</strong>
+                      <div className="meta">{p.categoria}{p.minutos ? ` · ${fmtMin(p.minutos)}` : ""}</div>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            ) : null
+          ))}
+          <div className="meta" style={{ marginTop: "20pt" }}>
+            Generado en Viajero 360 · app-vuelos-mfos.vercel.app
+          </div>
+        </div>
+      )}
+
+      <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-slate-400 print:hidden lg:px-8">
         {/* Enlaces a las landing pages SEO desde la home */}
         <div className="mb-3 flex flex-wrap justify-center gap-3 text-[12.5px] font-semibold text-slate-500">
           <a href="/destino" className="hover:text-marca-600 hover:underline">
