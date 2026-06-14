@@ -18,8 +18,25 @@ function rangoPresupuesto(usd) {
   return "US$10.000+";
 }
 
+// Patrones de User-Agent que NO son personas: crawlers de buscadores, bots
+// genericos, monitores de uptime, fetchers programaticos (curl/wget/python),
+// y los pings internos de Vercel para healthcheck/preview/speed-insights. Filtrar
+// estos antes de tocar KV evita que los contadores ("X viajeros hoy", ranking
+// de ciudades buscadas) queden inflados con trafico no-humano.
+const PATRON_BOT = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|pingdom|uptimerobot|monitor|vercel-screenshot|vercel-favicon|vercel-fetch|vercel-edge|vercel-og|headless|chrome-lighthouse|google-inspectiontool|curl\/|wget\/|python-requests|node-fetch|axios|http-client|postmanruntime|insomnia/i;
+
+function esBot(ua) {
+  if (!ua) return true; // sin UA = bot raro o curl mal hecho
+  return PATRON_BOT.test(ua);
+}
+
 export async function POST(req) {
   if (!kvActivo()) return Response.json({ ok: false });
+
+  // Saltar bots / crawlers / pings internos antes de tocar KV (cuotas + ruido).
+  const ua = req.headers.get("user-agent") || "";
+  if (esBot(ua)) return Response.json({ ok: true, bot: true });
+
   let b = {};
   try {
     b = await req.json();
@@ -42,8 +59,7 @@ export async function POST(req) {
     if (ciudad) cmds.push(["ZINCRBY", "m:geo:ciudad", "1", pais ? `${ciudad} (${pais})` : ciudad]);
     // Idioma del visitante (es/en/pt/fr).
     if (b.lang) cmds.push(["ZINCRBY", "m:lang", "1", String(b.lang)]);
-    // Dispositivo (por user-agent).
-    const ua = h.get("user-agent") || "";
+    // Dispositivo (por user-agent). `ua` ya viene del filtro de bots de arriba.
     const movil = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(ua);
     cmds.push(["ZINCRBY", "m:disp", "1", movil ? "Móvil" : "Escritorio"]);
     // Hora local del visitante (0–23) para ver el pico de actividad.
