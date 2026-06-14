@@ -209,16 +209,16 @@ export async function geocodificar(consulta) {
 // v25: ciudades TOP servidas desde precálculo estático (WDQS) → instantáneo y con
 // los íconos garantizados (Eiffel, Sagrada Familia, Coliseo…). El motor en vivo
 // queda como respaldo liviano para ciudades no precalculadas. Invalida cachés.
-const API_VER = "29";
+const API_VER = "30";
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.
 const RADIO_POR_CAT = {
-  // 50 km a la redonda para imperdibles y miradores (antes 90 km). Decision del
-  // usuario para tener respuestas mas rapidas en ciudades nuevas. Trade-off:
-  // excursiones lejanas como Guatape desde Medellin (~70 km) ya NO entran.
-  imperdibles: 50000,
-  miradores: 50000,
+  // 70 km a la redonda para imperdibles y miradores (antes 90 km). Punto medio
+  // del usuario: respuestas mas rapidas en ciudades nuevas sin perder excursiones
+  // cercanas iconicas (Guatape desde Medellin ~70 km todavia entra al limite).
+  imperdibles: 70000,
+  miradores: 70000,
   museos: 25000,
   monumentos: 25000,
   parques: 25000,
