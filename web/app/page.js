@@ -319,24 +319,51 @@ export default function Home() {
   }
 
   // Carga lugares SIN bloquear la pantalla: usa un indicador propio (cargandoLugares).
-  async function cargarCategoria(cat, c = ciudad, mom = momento) {
+  // diasOverride: para que los chips de "ideas para empezar" reciban su nº de días
+  // ANTES de que React aplique el setDias (evita un re-render con el plan corto).
+  async function cargarCategoria(cat, c = ciudad, mom = momento, diasOverride) {
     if (!c) return;
     setError(null);
     setCategoria(cat);
     setCargandoLugares(true);
     const catReal = mom === "nocturno" && cat === "imperdibles" ? "bares" : cat;
+    const nDias = diasOverride || dias;
     try {
       const lugares = await traerLugares(catReal, c.lat, c.lon);
       setLugaresBase(lugares);
       // Tomamos hasta 5 lugares por día (con margen) para llenar bien cada día.
-      const cupo = Math.max(dias * 5, 6);
+      const cupo = Math.max(nDias * 5, 6);
       const sel = lugares.slice(0, cupo);
       setSeleccion(sel);
-      reconstruir(sel, c);
+      reconstruir(sel, c, nDias);
     } catch (err) {
       setError("Tardó demasiado en cargar lugares. Toca una categoría para reintentar.");
     } finally {
       setCargandoLugares(false);
+    }
+  }
+
+  // Disparador de las ideas rápidas del HERO: pre-fija ciudad, días y/o momento
+  // y abre la búsqueda en un solo click. Maneja sus propios overrides para no
+  // depender del orden de actualización de los setState de React.
+  async function pruebaRapida({ q, dias: d, momento: m }) {
+    setConsulta(q);
+    setMostrarSug(false);
+    setError(null);
+    setCargando(true);
+    if (d) setDias(d);
+    if (m) setMomento(m);
+    try {
+      const c = await geocodificar(q);
+      setCiudad(c);
+      limpiarParaNuevaCiudad();
+      setCargando(false);
+      track("prueba_rapida", { q, dias: d, momento: m });
+      cargarCategoria("imperdibles", c, m || momento, d);
+    } catch (err) {
+      setError(err.message);
+      setCargando(false);
+      track("busqueda_fallida", { q });
     }
   }
 
@@ -589,6 +616,43 @@ export default function Home() {
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Ideas rápidas: pistas para el usuario que aterriza sin saber por dónde empezar. */}
+              <div className="mx-auto mt-5 max-w-xl">
+                <div className="mb-2 text-[10.5px] font-semibold uppercase tracking-[0.22em] text-white/70">
+                  {t("ideasEyebrow")}
+                </div>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => pruebaRapida({ q: "Cartagena, Colombia", dias: 3 })}
+                    className="rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-[13px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                  >
+                    🏖️ Cartagena · 3 {t("dias").toLowerCase()}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => pruebaRapida({ q: "Tokio, Japón", dias: 5 })}
+                    className="rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-[13px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                  >
+                    🗼 Tokio · 5 {t("dias").toLowerCase()}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => pruebaRapida({ q: "Madrid, España", momento: "nocturno" })}
+                    className="rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-[13px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                  >
+                    🌃 Madrid · {t("nocturno").toLowerCase()}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { track("prueba_rapida", { presupuesto: 1 }); setMostrarPresupuesto(true); }}
+                    className="rounded-full border border-emerald-300/60 bg-emerald-400/20 px-3.5 py-1.5 text-[13px] font-semibold text-white backdrop-blur transition hover:bg-emerald-400/30"
+                  >
+                    💰 {t("ideaPresupuesto")}
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
