@@ -16,3 +16,6 @@ resultado.txt
 # Clon local de review (otra sesión IA hizo allí su trabajo, ya mergeado)
 # Tiene su propio .git, no debe enredarse con este repo.
 /app-vuelos-review/
+
+# Config local de Claude Code (no debe trackearse)
+.claude/
