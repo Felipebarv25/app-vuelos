@@ -32,6 +32,24 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   const [region, setRegion] = useState("europa");
   const [detalle, setDetalle] = useState(null);
 
+  // Aeropuerto de origen en Colombia: BOG o MDE (los unicos que el detector
+  // escanea hoy). Define el precio del vuelo internacional i/v y abre las
+  // recomendaciones tipo "Desde Bogota ahorras US$X". Se persiste en
+  // localStorage para que el usuario no lo elija dos veces.
+  const [origen, setOrigen] = useState("BOG");
+  useEffect(() => {
+    try {
+      const g = localStorage.getItem("v360_origen");
+      if (g === "BOG" || g === "MDE") setOrigen(g);
+    } catch {}
+  }, []);
+  function cambiarOrigen(v) {
+    setOrigen(v);
+    try { localStorage.setItem("v360_origen", v); } catch {}
+    track("origen_cambiado", { origen: v });
+  }
+  const NOMBRE_ORIGEN = { BOG: "Bogotá", MDE: "Medellín" };
+
   // Ruta
   const [inicio, setInicio] = useState(""); // llaveCiudad de la ciudad de salida
   const [semilla, setSemilla] = useState(0);
@@ -93,8 +111,8 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   }, [presupuestoUsd, region]);
 
   const resultados = useMemo(
-    () => calcularDestinos({ presupuestoUsd, dias, personas, region, preciosReales }),
-    [presupuestoUsd, dias, personas, region, preciosReales]
+    () => calcularDestinos({ presupuestoUsd, dias, personas, region, preciosReales, origen }),
+    [presupuestoUsd, dias, personas, region, preciosReales, origen]
   );
   const caben = resultados.filter((r) => r.cabe);
 
@@ -118,8 +136,8 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
 
   const ruta = useMemo(
     () =>
-      construirRuta({ presupuestoUsd, dias, personas, region, inicio, semilla, excluir: excluidos, preciosReales }),
-    [presupuestoUsd, dias, personas, region, inicio, semilla, excluidos, preciosReales]
+      construirRuta({ presupuestoUsd, dias, personas, region, inicio, semilla, excluir: excluidos, preciosReales, origen }),
+    [presupuestoUsd, dias, personas, region, inicio, semilla, excluidos, preciosReales, origen]
   );
 
   // Modo RUTA: cuando hay ruta y la entrada todavía no tiene precio real,
@@ -191,6 +209,42 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {/* Controles comunes */}
           <div className="grid gap-3">
+            {/* SALES DESDE: aeropuerto de origen en Colombia. El detector
+                escanea solo BOG y MDE; si el usuario quiere otra ciudad, le
+                avisamos que estamos calculando con el aeropuerto principal
+                mas cercano. */}
+            <div>
+              <Label>{t("presupSalesDesde")}</Label>
+              <div className="flex gap-2">
+                {[
+                  { v: "BOG", emoji: "🛫", nombre: "Bogotá" },
+                  { v: "MDE", emoji: "🛫", nombre: "Medellín" },
+                ].map((o) => (
+                  <button
+                    key={o.v}
+                    type="button"
+                    onClick={() => cambiarOrigen(o.v)}
+                    className={`flex-1 rounded-xl border-2 px-3 py-2.5 text-left transition ${
+                      origen === o.v
+                        ? "border-marca-500 bg-marca-50 text-marca-900 shadow-sm"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-marca-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{o.emoji}</span>
+                      <div>
+                        <div className="text-[14px] font-bold leading-tight">{o.nombre}</div>
+                        <div className="text-[11px] uppercase tracking-wide text-slate-500">{o.v}</div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <div className="mt-1.5 text-[11px] text-slate-500">
+                {t("presupSalesDesdeNota")}
+              </div>
+            </div>
+
             <div>
               <Label>{t("presupTuPresup")}</Label>
               <div className="flex gap-2">
@@ -436,6 +490,21 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                         )}
                       </div>
                     </div>
+
+                    {/* Recomendacion: si otro origen (BOG/MDE) es mas barato,
+                        avisamos cuanto se ahorra cambiando. Es prueba honesta
+                        del detector (compara los precios reales que el sistema
+                        ya tiene escaneados) y empuja la propuesta de valor. */}
+                    {d.ahorroDesde && (
+                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-[12px] font-semibold text-amber-800">
+                        <span>💡</span>
+                        <span>
+                          {t("presupAhorroDesde").replace("{origen}", NOMBRE_ORIGEN[d.ahorroDesde.origen] || d.ahorroDesde.origen)}
+                          {" "}
+                          <b>{fmtUsd(d.ahorroDesde.ahorro)}</b>
+                        </span>
+                      </div>
+                    )}
 
                     {detalle === llaveCiudad(d) && (
                       <div className="animar-subir mt-3 border-t border-dashed border-slate-200 pt-3">

@@ -186,17 +186,46 @@ export function ciudadesDeRegion(region) {
 
 // ---------- Modo 1: un destino ----------
 
+// Helper local: obtiene la oferta del detector para (destino, origen). Acepta
+// tanto el nuevo formato { porOrigen, mejor } como el viejo (oferta plana) por
+// compatibilidad con otros llamadores. Tambien devuelve `mejor` para que la
+// UI pueda recomendar "desde X te ahorras Y".
+function ofertaPara(preciosReales, llave, origen) {
+  const reg = preciosReales?.[llave];
+  if (!reg) return null;
+  if (reg.precio) return reg; // formato viejo (plana)
+  if (origen && reg.porOrigen?.[origen]) return reg.porOrigen[origen];
+  return reg.mejor || null;
+}
+
+// Helper: devuelve la mejor oferta entre todos los origenes (para comparar).
+function mejorOferta(preciosReales, llave) {
+  const reg = preciosReales?.[llave];
+  if (!reg) return null;
+  if (reg.precio) return reg;
+  return reg.mejor || null;
+}
+
 // Calcula qué destinos caben en el presupuesto (en USD) para N días y M personas.
-// `preciosReales` (opcional): map { "Ciudad|País" → {precio, link, ...} } del
-// detector de vuelos. Cuando hay coincidencia, usa el precio REAL en vez del
-// estimado y marca esReal=true en el resultado.
-export function calcularDestinos({ presupuestoUsd, dias, personas, region, preciosReales = {} }) {
+// `preciosReales` (opcional): map del detector de vuelos. Cuando hay coincidencia,
+// usa el precio REAL en vez del estimado y marca esReal=true en el resultado.
+// `origen` (opcional, "BOG"|"MDE"): usa el precio desde ESE aeropuerto. Si no
+// hay datos para ese origen, cae al "mejor" disponible.
+export function calcularDestinos({ presupuestoUsd, dias, personas, region, preciosReales = {}, origen = null }) {
   const lista = DESTINOS_PRESUPUESTO.filter(
     (d) => region === "todas" || d.region === region
   );
 
   const resultados = lista.map((d) => {
-    const real = preciosReales[llaveCiudad(d)];
+    const llave = llaveCiudad(d);
+    const real = ofertaPara(preciosReales, llave, origen);
+    const mejor = mejorOferta(preciosReales, llave);
+    // Recomendacion: si el usuario eligio origen X pero hay otro origen mas
+    // barato, calcular el ahorro y exponerlo a la UI.
+    let ahorroDesde = null;
+    if (origen && real && mejor && mejor.origen && mejor.origen !== origen && mejor.precio < real.precio) {
+      ahorroDesde = { origen: mejor.origen, precio: mejor.precio, ahorro: real.precio - mejor.precio };
+    }
     const vueloUnit = real ? real.precio : d.vuelo;
     const vuelos = vueloUnit * personas;
     const estadia = d.dia * dias * personas;
@@ -221,6 +250,7 @@ export function calcularDestinos({ presupuestoUsd, dias, personas, region, preci
       sobra: presupuestoUsd - total,
       esReal: !!real,
       vueloReal: real || null,
+      ahorroDesde,
     };
   });
 
@@ -253,15 +283,19 @@ export function construirRuta({
   semilla = 0,
   excluir = [],
   preciosReales = {},
+  origen = null,
 }) {
   const fuera = new Set(excluir);
   // Aplicamos precio real (si existe) sobre cada candidato ANTES de elegir la
   // entrada, así "la más barata" se basa en datos reales cuando los hay.
+  // Si el usuario fijo un `origen` (BOG/MDE), se usa el precio desde ESE
+  // aeropuerto; si no hay match exacto, cae al mas barato disponible.
   const cands = DESTINOS_PRESUPUESTO.filter(
     (d) =>
       (region === "todas" || d.region === region) && !fuera.has(llaveCiudad(d))
   ).map((d) => {
-    const real = preciosReales[llaveCiudad(d)];
+    const llave = llaveCiudad(d);
+    const real = ofertaPara(preciosReales, llave, origen);
     return real
       ? { ...d, vuelo: real.precio, esReal: true, vueloReal: real }
       : { ...d, esReal: false, vueloReal: null };

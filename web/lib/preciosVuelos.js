@@ -45,8 +45,11 @@ function llaveDestino(ciudad, pais) {
   return ALIAS[k] || `${ciudad}|${pais}`;
 }
 
-// Lee /ofertas.json y devuelve { llave → { precio, fecha_ida, fecha_vuelta, link, origen, visto, generado } }.
-// Cachea el resultado en memoria; si falla devuelve {} (el presupuesto seguirá
+// Lee /ofertas.json y devuelve { llave → { porOrigen: { BOG, MDE }, mejor: oferta } }.
+// `porOrigen` guarda la oferta vigente para CADA base de Colombia (antes solo
+// se conservaba la mas barata, perdiendo info para la recomendacion "desde X
+// ahorras Y"). `mejor` apunta a la mas barata como atajo de compatibilidad.
+// Cachea el resultado en memoria; si falla devuelve {} (el presupuesto seguira
 // usando los estimados sin romperse).
 export async function obtenerPreciosReales() {
   if (cache) return cache;
@@ -60,18 +63,23 @@ export async function obtenerPreciosReales() {
       const mapa = {};
       for (const ruta of data.rutas || []) {
         const llave = llaveDestino(ruta.ciudad, ruta.pais);
-        const actual = mapa[llave];
-        // Si ya hay una oferta para esta ciudad (otra base), nos quedamos con la más barata.
-        if (!actual || ruta.precio < actual.precio) {
-          mapa[llave] = {
-            precio: ruta.precio,
-            fecha_ida: ruta.fecha_ida,
-            fecha_vuelta: ruta.fecha_vuelta,
-            link: ruta.link,
-            origen: ruta.origen,
-            visto: ruta.visto,
-            generado: data.generado,
-          };
+        const oferta = {
+          precio: ruta.precio,
+          fecha_ida: ruta.fecha_ida,
+          fecha_vuelta: ruta.fecha_vuelta,
+          link: ruta.link,
+          origen: ruta.origen,
+          visto: ruta.visto,
+          generado: data.generado,
+        };
+        if (!mapa[llave]) mapa[llave] = { porOrigen: {}, mejor: null };
+        // Conserva por origen (solo la mas barata si llegan varias muestras de la misma base).
+        const anteriorMismaBase = mapa[llave].porOrigen[ruta.origen];
+        if (!anteriorMismaBase || ruta.precio < anteriorMismaBase.precio) {
+          mapa[llave].porOrigen[ruta.origen] = oferta;
+        }
+        if (!mapa[llave].mejor || oferta.precio < mapa[llave].mejor.precio) {
+          mapa[llave].mejor = oferta;
         }
       }
       cache = mapa;
@@ -85,6 +93,16 @@ export async function obtenerPreciosReales() {
   })();
 
   return promesaEnCurso;
+}
+
+// Helper: devuelve la oferta para el destino y origen pedidos, con fallback
+// a la mejor disponible si no hay match exacto. La logica que llama lo usa
+// para mostrar "💡 Desde X ahorras Y" comparando con `mejor`.
+export function ofertaParaOrigen(mapa, llave, origen) {
+  const reg = mapa?.[llave];
+  if (!reg) return null;
+  if (origen && reg.porOrigen?.[origen]) return reg.porOrigen[origen];
+  return reg.mejor || null;
 }
 
 // Busca el precio i/v EN VIVO desde Colombia (BOG/MDE) para un destino del
