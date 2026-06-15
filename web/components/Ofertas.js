@@ -27,6 +27,19 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
   const [data, setData] = useState(null);
   const [filtro, setFiltro] = useState("todos"); // todos | BOG | MDE
   const [copPorUsd, setCopPorUsd] = useState(4000); // tasa COP en vivo (respaldo 4000)
+  // Moneda principal de visualizacion. Persiste en localStorage: si el usuario
+  // colombiano abre y prefiere COP, no se lo volvemos a preguntar la proxima vez.
+  const [monedaVista, setMonedaVista] = useState("USD");
+  useEffect(() => {
+    try {
+      const g = localStorage.getItem("v360_moneda_vista");
+      if (g === "USD" || g === "COP") setMonedaVista(g);
+    } catch {}
+  }, []);
+  function cambiarMonedaVista(m) {
+    setMonedaVista(m);
+    try { localStorage.setItem("v360_moneda_vista", m); } catch {}
+  }
 
   useEffect(() => {
     let vivo = true;
@@ -112,6 +125,22 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
           )}
         </div>
 
+        {/* Toggle USD / COP: muchos colombianos quieren ver el precio en
+            pesos directamente. Usuario decide y queda guardado. */}
+        <div className="flex gap-1 rounded-full bg-slate-100 p-1">
+          {["USD", "COP"].map((m) => (
+            <button
+              key={m}
+              onClick={() => cambiarMonedaVista(m)}
+              className={`rounded-full px-3 py-1 text-[12px] font-bold transition ${
+                monedaVista === m ? "bg-white text-marca-700 shadow-sm" : "text-slate-500"
+              }`}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+
         {/* Filtro de origen */}
         <div className="flex gap-1 rounded-full bg-slate-100 p-1">
           {[["todos", t("ofertasTodos")], ["BOG", origenes.BOG], ["MDE", origenes.MDE]].map(
@@ -150,7 +179,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
 
             <div className="mt-2 flex items-end gap-2">
               <div className="text-[26px] font-extrabold leading-none text-marca-900">
-                {fmtUsd(r.precio)}
+                {monedaVista === "COP" ? fmtCop(r.precio) : fmtUsd(r.precio)}
               </div>
               {r.descuento > 0 && (
                 <div className="mb-0.5 text-[12px] font-bold text-emerald-600">
@@ -159,7 +188,11 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
               )}
             </div>
             <div className="text-[12px] text-slate-400">{t("ofertasIdaVuelta")}</div>
-            <div className="text-[12px] font-medium text-slate-500">{fmtCop(r.precio)}</div>
+            {/* Mostramos la moneda secundaria (la NO elegida) en pequeno como
+                cross-reference y para que el usuario aprenda la tasa de hecho. */}
+            <div className="text-[12px] font-medium text-slate-500">
+              {monedaVista === "COP" ? fmtUsd(r.precio) : fmtCop(r.precio)}
+            </div>
 
             <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[12.5px] text-slate-500">
               <Icono nombre="calendar" size={13} /> {fmtFecha(r.fecha_ida)} – {fmtFecha(r.fecha_vuelta)}
