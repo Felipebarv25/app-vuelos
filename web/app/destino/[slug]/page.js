@@ -12,9 +12,8 @@ import { datosSeoDe, faqsDe } from "@/lib/seoDestinos";
 import { fotoCiudad } from "@/lib/fotoCiudad";
 import { preciosPorMes } from "@/lib/historialPrecios";
 import { iataDe } from "@/lib/iataCiudades";
-import { traductor } from "@/lib/idiomas";
+import { linkTours, linkHoteles, linkVuelos } from "@/lib/afiliados";
 import FavToggle from "./FavToggle";
-import { AfiliadosCiudad } from "@/components/Afiliados";
 
 const SITIO = "https://app-vuelos-mfos.vercel.app";
 
@@ -401,14 +400,66 @@ export default async function PaginaDestino({ params }) {
         </section>
       )}
 
-      {/* Reserva tu viaje: tours, hospedaje y vuelos via afiliados (Booking,
-          Aviasales, GetYourGuide). Es la principal palanca de monetizacion y
-          el viajero necesita la opcion de hotel a un clic. */}
+      {/* Reserva tu viaje: tours, hospedaje y vuelos via afiliados (GetYourGuide,
+          Hotellook/Booking, Aviasales). Palanca de monetizacion #1 que faltaba
+          en el SSG. Inline en lugar del componente AfiliadosCiudad (que es
+          "use client") porque Next.js no deja pasar functions de server a
+          client component, y aqui no necesitamos tracking ni i18n. */}
       <section className="mx-auto max-w-4xl px-6 py-6">
-        <AfiliadosCiudad
-          ciudad={{ nombre: d.ciudad, pais: d.pais, lat: d.lat, lon: d.lon }}
-          t={traductor("es")}
-        />
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-suave">
+          <h2 className="text-xl font-extrabold tracking-tight text-marca-900">
+            Reserva tu viaje a {d.ciudad}
+          </h2>
+          <p className="mt-1 text-[14px] text-slate-500">
+            Tours, hospedaje y vuelos desde Colombia — todo de proveedores que
+            usamos nosotros.
+          </p>
+          <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
+            <a
+              href={linkTours({ q: d.ciudad, lat: d.lat, lon: d.lon })}
+              target="_blank"
+              rel="sponsored noopener"
+              className="flex items-center gap-3 rounded-2xl border border-marca-100 bg-gradient-to-br from-marca-50 to-marca-100/60 p-3.5 text-marca-700 shadow-suave transition hover:brightness-[0.98]"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">🎟️</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[14.5px] font-bold leading-tight">Tours y experiencias</div>
+                <div className="truncate text-[12.5px] text-slate-500">Tickets sin filas con GetYourGuide</div>
+              </div>
+              <span className="text-xl">→</span>
+            </a>
+            <a
+              href={linkHoteles({ ciudad: d.ciudad, lat: d.lat, lon: d.lon })}
+              target="_blank"
+              rel="sponsored noopener"
+              className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-3.5 text-emerald-700 shadow-suave transition hover:brightness-[0.98]"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">🛏️</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[14.5px] font-bold leading-tight">¿Dónde dormir?</div>
+                <div className="truncate text-[12.5px] text-slate-500">Compara Booking + más en Hotellook</div>
+              </div>
+              <span className="text-xl">→</span>
+            </a>
+            <a
+              href={linkVuelos({ ciudad: d.ciudad, pais: d.pais })}
+              target="_blank"
+              rel="sponsored noopener"
+              className="flex items-center gap-3 rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-sky-100 p-3.5 text-sky-700 shadow-suave transition hover:brightness-[0.98]"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">✈️</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[14.5px] font-bold leading-tight">Vuelos baratos</div>
+                <div className="truncate text-[12.5px] text-slate-500">Compara en Aviasales</div>
+              </div>
+              <span className="text-xl">→</span>
+            </a>
+          </div>
+          <div className="mt-2.5 text-[11px] leading-snug text-slate-400">
+            Algunos enlaces son de afiliados: si reservas, podemos ganar una
+            comisión sin costo extra para ti.
+          </div>
+        </div>
       </section>
 
       {/* FAQ — rankea muy bien en Google */}
