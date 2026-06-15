@@ -53,15 +53,29 @@ export async function generateMetadata({ params }) {
     `presupuesto diario aprox. US$${d.dia}, top lugares para visitar y ruta día a día. ` +
     `Itinerario gratis con Viajero 360.`;
   const url = `${SITIO}/destino/${slug}`;
+  const urlEn = `${SITIO}/en/destino/${slug}`;
 
   // OG image: Next genera la propia (1200x630) por convención de archivos
   // (opengraph-image.js). Si queremos usar la foto de Wikipedia, hay que
   // declararla explícitamente. Mantenemos la generada por Next para no
   // depender de Wikipedia en el metadata (más rápido de servir).
+  // hreflang: avisa a Google que existe la version EN del mismo destino. Sin
+  // esto, Google muestra la pagina espanola a usuarios anglosajones y
+  // viceversa, perdiendo rank en ambos lados. x-default = fallback para
+  // idiomas no listados (apuntamos a ES, mercado principal).
   return {
     title,
     description,
-    alternates: { canonical: url },
+    alternates: {
+      canonical: url,
+      languages: {
+        "es-CO": url,
+        "es": url,
+        "en": urlEn,
+        "en-US": urlEn,
+        "x-default": url,
+      },
+    },
     openGraph: {
       title,
       description,
@@ -149,13 +163,18 @@ export default async function PaginaDestino({ params }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
 
-      {/* Breadcrumbs */}
+      {/* Breadcrumbs + switch a English (refuerza la senial hreflang para Google) */}
       <nav className="mx-auto max-w-4xl px-6 pt-6 text-[13px] text-slate-500">
         <Link href="/" className="hover:text-marca-600">Inicio</Link>
         <span className="mx-1.5 text-slate-300">/</span>
         <span className="text-slate-700">Destinos</span>
         <span className="mx-1.5 text-slate-300">/</span>
         <span className="font-semibold text-marca-700">{nombre}</span>
+        <span className="float-right">
+          <Link href={`/en/destino/${slug}`} className="text-[12px] underline hover:text-marca-600">
+            🇬🇧 View in English
+          </Link>
+        </span>
       </nav>
 
       {/* Hero: foto real de Wikipedia con overlay; fallback al gradiente si no
