@@ -26,7 +26,21 @@ RAIZ = os.path.dirname(__file__)
 HISTORIAL = os.path.join(RAIZ, "datos", "historial.csv")
 SALIDA = os.path.join(RAIZ, "web", "public", "ofertas.json")
 
-ORIGENES = {"BOG": "Bogotá", "MDE": "Medellín"}
+# Hubs origen (IATA → ciudad legible) — Fase 2 multi-pais. Debe coincidir con
+# config.ORIGENES y con web/lib/paisesOrigen.js (PAISES_ORIGEN[*].hubs).
+ORIGENES = {
+    "BOG": "Bogotá",
+    "MDE": "Medellín",
+    "MEX": "Ciudad de México",
+    "UIO": "Quito",
+    "LIM": "Lima",
+    "SCL": "Santiago",
+    "EZE": "Buenos Aires",
+    "GRU": "São Paulo",
+    "CCS": "Caracas",
+    "MAD": "Madrid",
+    "MIA": "Miami",
+}
 
 # Metadatos por destino: nombre limpio, país, bandera y término de búsqueda
 # que usa la web para planear el itinerario ("Ciudad, País").

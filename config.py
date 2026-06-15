@@ -6,8 +6,24 @@ Edita SOLO este archivo para personalizar orígenes, destinos y umbrales.
 Las credenciales (token, correo) NUNCA van aquí: van en el archivo .env
 """
 
-# Aeropuertos / ciudades de salida (códigos IATA de ciudad o aeropuerto)
-ORIGENES = ["BOG", "MDE"]  # Bogotá, Medellín
+# Aeropuertos / ciudades de salida (códigos IATA de ciudad o aeropuerto).
+# Multi-país: hub principal de cada uno de los 10 países soportados en la web.
+# Si la cuota de Travelpayouts se queda corta, lo más sano es:
+#   1) Reducir MESES_A_EXPLORAR (de 6 → 4-5)
+#   2) Reducir frecuencia del cron en .github/workflows/detector.yml (de 3h a 6h)
+#   3) Quitar hubs que no aporten tráfico (mira el panel de visitas por país)
+ORIGENES = [
+    "BOG", "MDE",   # Colombia (mercado principal)
+    "MEX",          # México
+    "UIO",          # Ecuador
+    "LIM",          # Perú
+    "SCL",          # Chile
+    "EZE",          # Argentina
+    "GRU",          # Brasil
+    "CCS",          # Venezuela
+    "MAD",          # España
+    "MIA",          # Estados Unidos (gateway Latam)
+]
 
 # Moneda en la que pedimos y comparamos los precios
 MONEDA = "USD"
@@ -36,8 +52,10 @@ DESTINOS = {
     "LIM": ("Lima (Perú)", 300),
 }
 
-# Cuántos meses hacia adelante explorar (busca el vuelo más barato de cada mes)
-MESES_A_EXPLORAR = 8
+# Cuántos meses hacia adelante explorar (busca el vuelo más barato de cada mes).
+# Bajado de 8 → 6 al pasar de 2 a 11 origenes (multi-pais Fase 2) para mantener
+# el costo de API: 11 origenes × 14 destinos × 6 meses × 8 runs/dia = 7,392/dia.
+MESES_A_EXPLORAR = 6
 
 # ¿Solo vuelos directos? (False = permite escalas; recomendado para mejor precio)
 SOLO_DIRECTOS = False

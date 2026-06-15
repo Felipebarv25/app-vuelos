@@ -29,7 +29,7 @@ export const PAISES_ORIGEN = {
       { iata: "CUN", ciudad: "Cancún" },
       { iata: "GDL", ciudad: "Guadalajara" },
     ],
-    tieneDetector: false,
+    tieneDetector: true,
   },
   EC: {
     bandera: "🇪🇨",
@@ -38,7 +38,7 @@ export const PAISES_ORIGEN = {
       { iata: "UIO", ciudad: "Quito" },
       { iata: "GYE", ciudad: "Guayaquil" },
     ],
-    tieneDetector: false,
+    tieneDetector: true,
   },
   PE: {
     bandera: "🇵🇪",
@@ -46,7 +46,7 @@ export const PAISES_ORIGEN = {
     hubs: [
       { iata: "LIM", ciudad: "Lima" },
     ],
-    tieneDetector: false,
+    tieneDetector: true,
   },
   CL: {
     bandera: "🇨🇱",
@@ -54,7 +54,7 @@ export const PAISES_ORIGEN = {
     hubs: [
       { iata: "SCL", ciudad: "Santiago" },
     ],
-    tieneDetector: false,
+    tieneDetector: true,
   },
   AR: {
     bandera: "🇦🇷",
@@ -62,7 +62,7 @@ export const PAISES_ORIGEN = {
     hubs: [
       { iata: "EZE", ciudad: "Buenos Aires" },
     ],
-    tieneDetector: false,
+    tieneDetector: true,
   },
   BR: {
     bandera: "🇧🇷",
@@ -71,7 +71,7 @@ export const PAISES_ORIGEN = {
       { iata: "GRU", ciudad: "São Paulo" },
       { iata: "GIG", ciudad: "Río de Janeiro" },
     ],
-    tieneDetector: false,
+    tieneDetector: true,
   },
   ES: {
     bandera: "🇪🇸",
@@ -80,7 +80,7 @@ export const PAISES_ORIGEN = {
       { iata: "MAD", ciudad: "Madrid" },
       { iata: "BCN", ciudad: "Barcelona" },
     ],
-    tieneDetector: false,
+    tieneDetector: true,
   },
   US: {
     bandera: "🇺🇸",
@@ -90,7 +90,7 @@ export const PAISES_ORIGEN = {
       { iata: "MIA", ciudad: "Miami" },
       { iata: "LAX", ciudad: "Los Ángeles" },
     ],
-    tieneDetector: false,
+    tieneDetector: true,
   },
   VE: {
     bandera: "🇻🇪",
@@ -98,7 +98,7 @@ export const PAISES_ORIGEN = {
     hubs: [
       { iata: "CCS", ciudad: "Caracas" },
     ],
-    tieneDetector: false,
+    tieneDetector: true,
   },
 };
 
