@@ -1,5 +1,5 @@
 "use client";
-import { linkTours, linkHoteles, linkVuelos } from "@/lib/afiliados";
+import { linkTours, linkHoteles, linkVuelos, linkESIM, linkSeguro } from "@/lib/afiliados";
 import { track } from "@/lib/track";
 import { Icono } from "./Icono";
 
@@ -9,6 +9,8 @@ function CtaReserva({ href, icono, titulo, desc, tipo, color = "marca" }) {
     marca: "from-marca-50 to-marca-100/60 border-marca-100 text-marca-700",
     emerald: "from-emerald-50 to-teal-50 border-emerald-100 text-emerald-700",
     sky: "from-sky-50 to-sky-100 border-sky-100 text-sky-700",
+    violet: "from-violet-50 to-purple-50 border-violet-100 text-violet-700",
+    rose: "from-rose-50 to-pink-50 border-rose-100 text-rose-700",
   }[color];
   return (
     <a
@@ -40,7 +42,7 @@ export function AfiliadosCiudad({ ciudad, t = (k) => k }) {
   return (
     <div className="mt-3.5 rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
       <div className="mb-3 inline-flex items-center gap-1.5 text-sm font-bold text-marca-900"><Icono nombre="luggage" size={16} /> {t("afTitulo")} · {nombre}</div>
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         <CtaReserva
           href={linkTours({ q: nombre, lat, lon })}
           icono="ticket"
@@ -64,6 +66,25 @@ export function AfiliadosCiudad({ ciudad, t = (k) => k }) {
           desc={t("afVuelosDesc")}
           tipo="vuelo"
           color="sky"
+        />
+        {/* eSIM + Seguro: los dos productos que TODO viajero internacional
+            necesita y que mejor convierten cuando se ofrecen en contexto
+            (esta planeando un viaje, no buscando comparativas en frio). */}
+        <CtaReserva
+          href={linkESIM({ pais: ciudad.pais })}
+          icono="phone"
+          titulo={t("afESIM")}
+          desc={t("afESIMDesc")}
+          tipo="esim"
+          color="violet"
+        />
+        <CtaReserva
+          href={linkSeguro({ pais: ciudad.pais })}
+          icono="shield"
+          titulo={t("afSeguro")}
+          desc={t("afSeguroDesc")}
+          tipo="seguro"
+          color="rose"
         />
       </div>
       <div className="mt-2.5 text-[11px] leading-snug text-slate-400">{t("afNota")}</div>

@@ -12,7 +12,7 @@ import { datosSeoDe, faqsDe } from "@/lib/seoDestinos";
 import { fotoCiudad } from "@/lib/fotoCiudad";
 import { preciosPorMes } from "@/lib/historialPrecios";
 import { iataDe } from "@/lib/iataCiudades";
-import { linkTours, linkHoteles, linkVuelos } from "@/lib/afiliados";
+import { linkTours, linkHoteles, linkVuelos, linkESIM, linkSeguro } from "@/lib/afiliados";
 import FavToggle from "./FavToggle";
 
 const SITIO = "https://app-vuelos-mfos.vercel.app";
@@ -470,6 +470,37 @@ export default async function PaginaDestino({ params }) {
               <div className="min-w-0 flex-1">
                 <div className="text-[14.5px] font-bold leading-tight">Vuelos baratos</div>
                 <div className="truncate text-[12.5px] text-slate-500">Compara en Aviasales</div>
+              </div>
+              <span className="text-xl">→</span>
+            </a>
+            {/* eSIM internacional: una de las primeras cosas que el viajero
+                necesita al llegar (datos moviles), y la mas cara si la compra
+                en el aeropuerto. Airalo via Travelpayouts marker. */}
+            <a
+              href={linkESIM({ pais: d.pais })}
+              target="_blank"
+              rel="sponsored noopener"
+              className="flex items-center gap-3 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50 to-purple-50 p-3.5 text-violet-700 shadow-suave transition hover:brightness-[0.98]"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">📱</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[14.5px] font-bold leading-tight">eSIM para {d.pais}</div>
+                <div className="truncate text-[12.5px] text-slate-500">Datos al instante con Airalo</div>
+              </div>
+              <span className="text-xl">→</span>
+            </a>
+            {/* Seguro de viaje: muchas vias europeas/norteamericanas lo piden
+                obligatorio (visa Schengen, etc.). EKTA via afiliado. */}
+            <a
+              href={linkSeguro({ pais: d.pais })}
+              target="_blank"
+              rel="sponsored noopener"
+              className="flex items-center gap-3 rounded-2xl border border-rose-100 bg-gradient-to-br from-rose-50 to-pink-50 p-3.5 text-rose-700 shadow-suave transition hover:brightness-[0.98]"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">🛡️</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[14.5px] font-bold leading-tight">Seguro de viaje</div>
+                <div className="truncate text-[12.5px] text-slate-500">Cobertura médica + cancelación</div>
               </div>
               <span className="text-xl">→</span>
             </a>

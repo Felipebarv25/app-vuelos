@@ -10,7 +10,12 @@
 export const AFILIADOS = {
   getYourGuide: "RGTCZOH", // partner_id de GetYourGuide (tours/experiencias)
   bookingAid: "",          // p.ej. "1234567" (Booking.com → afíliate para activarlo)
-  travelpayouts: "734652", // marker de Travelpayouts (vuelos) — ya activo
+  travelpayouts: "734652", // marker de Travelpayouts — sirve para Aviasales (vuelos),
+                            //   Hotellook (hoteles), Airalo eSIM y EKTA seguro.
+  airaloPartner: "",       // Airalo Partners (https://airalo.com/affiliate-program) -
+                            // si lo dejas vacio, el link de eSIM lleva al store normal.
+  ektaPartner: "",         // EKTA Insurance (https://ektatraveling.com/partners) -
+                            // si lo dejas vacio, lleva al sitio normal.
 };
 
 // ¿Hay al menos un programa configurado? (para decidir si mostrar la nota de afiliados)
@@ -76,4 +81,53 @@ export function linkGoogleFlights({
   const fechas = [fechaIda, fechaVuelta].filter(Boolean).join(" ");
   const q = `vuelos desde ${origen} a ${destino}${fechas ? " " + fechas : ""}`.trim();
   return `https://www.google.com/travel/flights?q=${encodeURIComponent(q)}`;
+}
+
+// eSIM internacional (Airalo). Cuando llegas a otro país, comprar una eSIM en
+// el aeropuerto es 3-5x más caro que comprarla online por adelantado. Airalo
+// vende eSIMs por país con tarifas baratas y activación instantánea. Comisión:
+// ~10% del precio (afiliado Travelpayouts si usas tu marker, o programa propio
+// Airalo Partners si tienes ID).
+export function linkESIM({ pais = "", iso2 = "" } = {}) {
+  const p = new URLSearchParams();
+  if (pais) p.set("q", pais);
+  // Airalo no tiene URL pública con marker; usamos Travelpayouts widget que
+  // redirige a Airalo con la comisión. Si el usuario ha activado Airalo Partners
+  // (afiliado directo), prevalece ese.
+  if (AFILIADOS.airaloPartner) {
+    return `https://www.airalo.com/?partner_id=${encodeURIComponent(AFILIADOS.airaloPartner)}${iso2 ? `&country=${iso2}` : ""}`;
+  }
+  // Fallback Travelpayouts eSIM (Yesim/Airalo redirector con marker).
+  if (AFILIADOS.travelpayouts) {
+    return `https://tp.media/r?marker=${AFILIADOS.travelpayouts}&trs=&p=4115&u=https%3A%2F%2Fwww.airalo.com%2F&campaign_id=541`;
+  }
+  return `https://www.airalo.com/${iso2 ? `?country=${iso2.toLowerCase()}` : ""}`;
+}
+
+// Seguro de viaje (EKTA Traveling — la mayoría de empresas latinas confían en
+// ellos, soporte en español). Cubre cancelación, equipaje, salud en el extranjero.
+// Comisión: ~15% para EKTA Partners. Sin ID, lleva al sitio normal.
+export function linkSeguro({ pais = "", dias = 7 } = {}) {
+  if (AFILIADOS.ektaPartner) {
+    const p = new URLSearchParams();
+    if (pais) p.set("country", pais);
+    p.set("partner", AFILIADOS.ektaPartner);
+    return `https://ektatraveling.com/?${p.toString()}`;
+  }
+  // Fallback Travelpayouts seguro (EKTA/Cherehapa redirector con marker).
+  if (AFILIADOS.travelpayouts) {
+    return `https://tp.media/r?marker=${AFILIADOS.travelpayouts}&trs=&p=5095&u=https%3A%2F%2Fcherehapa.ru%2F&campaign_id=121`;
+  }
+  return "https://ektatraveling.com/";
+}
+
+// Tour cerca de UN punto especifico del itinerario (lat/lon). Es el formato
+// que mejor convierte: el usuario ya esta en "modo planeacion del dia" cuando
+// ve la parada, y el tour es contextual a ese sitio.
+export function linkTourCerca({ nombre = "", ciudad = "", lat, lon } = {}) {
+  return linkTours({
+    q: nombre || ciudad,
+    lat,
+    lon,
+  });
 }

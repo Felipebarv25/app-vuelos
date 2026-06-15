@@ -6,6 +6,8 @@ import { fmtMin, resumenDia } from "@/lib/itinerario";
 import { estadoTiempo, textoEstado } from "@/lib/reloj";
 import { Icono, iconoCategoria } from "./Icono";
 import { nombreLocalizado } from "@/lib/nombres";
+import { linkTourCerca } from "@/lib/afiliados";
+import { track } from "@/lib/track";
 
 // Miniatura de la parada: carga la foto de forma perezosa (Wikipedia/Commons).
 function FotoMini({ nombre, ciudad, onClick }) {
@@ -191,6 +193,26 @@ export default function Itinerario({
                   >
                     <span className="inline-flex items-center gap-1.5"><Icono nombre="x" size={14} /> {t("quitar")}</span>
                   </button>
+                  {/* Tour cerca de ESTA parada (GetYourGuide via afiliado).
+                      Es la palanca de monetizacion mejor posicionada del
+                      itinerario: el usuario esta planeando el dia y mira
+                      directamente el lugar. Comision ~8% por reserva. */}
+                  {p.coord && (
+                    <a
+                      href={linkTourCerca({
+                        nombre: nombreLocalizado(p, lang),
+                        ciudad,
+                        lat: p.coord[0],
+                        lon: p.coord[1],
+                      })}
+                      target="_blank"
+                      rel="sponsored noopener"
+                      onClick={() => track("afiliado_clic", { cat: "tour_parada", lugar: nombreLocalizado(p, lang) })}
+                      className="rounded-[10px] bg-gradient-to-r from-acento-400 to-acento-600 px-3 py-2 text-[13px] font-semibold text-white shadow-suave transition hover:brightness-105"
+                    >
+                      <span className="inline-flex items-center gap-1.5"><Icono nombre="ticket" size={14} /> {t("afTourCerca")}</span>
+                    </a>
+                  )}
                 </div>
               </div>
 
