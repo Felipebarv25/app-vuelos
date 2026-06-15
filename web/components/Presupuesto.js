@@ -14,6 +14,7 @@ import {
 import { obtenerPreciosReales, buscarVueloEnVivo } from "@/lib/preciosVuelos";
 import { linkVuelos, linkGoogleFlights } from "@/lib/afiliados";
 import { obtenerTasas, aUsdDe } from "@/lib/fx";
+import { PAISES_ORIGEN, PAISES_ORDEN, PAIS_DEFAULT, paisValido, nombreDeIATA } from "@/lib/paisesOrigen";
 
 // Módulo "¿Adónde puedo ir con mi presupuesto?".
 // Dos modos:
@@ -32,23 +33,77 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   const [region, setRegion] = useState("europa");
   const [detalle, setDetalle] = useState(null);
 
-  // Aeropuerto de origen en Colombia: BOG o MDE (los unicos que el detector
-  // escanea hoy). Define el precio del vuelo internacional i/v y abre las
-  // recomendaciones tipo "Desde Bogota ahorras US$X". Se persiste en
-  // localStorage para que el usuario no lo elija dos veces.
-  const [origen, setOrigen] = useState("BOG");
+  // Pais de origen del viajero (CO/MX/EC/PE/...). Define que hubs aereos se
+  // ofrecen y si los precios del detector aplican o si hay que ir a vivo.
+  // - Por defecto Colombia (el mercado principal hoy).
+  // - Se detecta automaticamente con /api/geo (x-vercel-ip-country) en la
+  //   primera carga si no hay preferencia guardada en localStorage.
+  // - El usuario puede cambiarlo manualmente, su eleccion gana sobre la geo.
+  const [paisOrigen, setPaisOrigen] = useState(PAIS_DEFAULT);
+  const [origen, setOrigen] = useState(""); // IATA del hub elegido (p.ej. "BOG")
+  const [geoListo, setGeoListo] = useState(false);
+
   useEffect(() => {
+    let vivo = true;
+    // 1) Honrar la preferencia guardada del usuario sobre cualquier cosa.
+    let paisGuardado = null;
+    let hubGuardado = null;
     try {
-      const g = localStorage.getItem("v360_origen");
-      if (g === "BOG" || g === "MDE") setOrigen(g);
+      paisGuardado = localStorage.getItem("v360_pais_origen");
+      hubGuardado = localStorage.getItem("v360_hub_origen");
     } catch {}
+
+    if (paisGuardado && paisValido(paisGuardado)) {
+      setPaisOrigen(paisGuardado);
+      const hubs = PAISES_ORIGEN[paisGuardado].hubs;
+      const hub = hubs.find((h) => h.iata === hubGuardado) || hubs[0];
+      setOrigen(hub.iata);
+      setGeoListo(true);
+      return;
+    }
+
+    // 2) Detectar por IP. Si la geo del usuario coincide con un pais soportado,
+    // lo elegimos por defecto. Si no, queda Colombia.
+    fetch("/api/geo")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((g) => {
+        if (!vivo) return;
+        const pais = g?.pais && paisValido(g.pais) ? g.pais : PAIS_DEFAULT;
+        setPaisOrigen(pais);
+        setOrigen(PAISES_ORIGEN[pais].hubs[0].iata);
+        setGeoListo(true);
+      })
+      .catch(() => {
+        if (!vivo) return;
+        setOrigen(PAISES_ORIGEN[PAIS_DEFAULT].hubs[0].iata);
+        setGeoListo(true);
+      });
+    return () => { vivo = false; };
   }, []);
+
+  function cambiarPais(codigo) {
+    if (!paisValido(codigo)) return;
+    setPaisOrigen(codigo);
+    const primerHub = PAISES_ORIGEN[codigo].hubs[0].iata;
+    setOrigen(primerHub);
+    try {
+      localStorage.setItem("v360_pais_origen", codigo);
+      localStorage.setItem("v360_hub_origen", primerHub);
+    } catch {}
+    track("pais_origen", { pais: codigo, hub: primerHub });
+  }
+
   function cambiarOrigen(v) {
     setOrigen(v);
-    try { localStorage.setItem("v360_origen", v); } catch {}
-    track("origen_cambiado", { origen: v });
+    try { localStorage.setItem("v360_hub_origen", v); } catch {}
+    track("origen_cambiado", { origen: v, pais: paisOrigen });
   }
-  const NOMBRE_ORIGEN = { BOG: "Bogotá", MDE: "Medellín" };
+
+  // Para el chip "💡 Desde X ahorras..." y los disclaimers, calculamos el pais
+  // actual y si su detector tiene cobertura real.
+  const paisActual = PAISES_ORIGEN[paisOrigen] || PAISES_ORIGEN[PAIS_DEFAULT];
+  const hubsPais = paisActual.hubs;
+  const detectorCubre = paisActual.tieneDetector;
 
   // Ruta
   const [inicio, setInicio] = useState(""); // llaveCiudad de la ciudad de salida
@@ -69,15 +124,21 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   }, []);
 
   // Búsquedas en vivo (Travelpayouts) por destino: { "Ciudad|País": "buscando" | "no" }
+  // Pasamos los hubs del pais del usuario para que la API busque desde ahi
+  // (BOG/MDE para CO, MEX/CUN para MX, etc.) — antes era siempre BOG/MDE.
   const [vivoEstado, setVivoEstado] = useState({});
   async function pedirVivo(d) {
     const k = llaveCiudad(d);
     // Evita relanzar si ya está buscando o si ya tiene datos en preciosReales.
     if (vivoEstado[k] === "buscando" || vivoEstado[k] === "ok") return;
     setVivoEstado((s) => ({ ...s, [k]: "buscando" }));
-    const r = await buscarVueloEnVivo(d.ciudad, d.pais);
+    const iatasUsuario = hubsPais.map((h) => h.iata);
+    const r = await buscarVueloEnVivo(d.ciudad, d.pais, iatasUsuario);
     if (r) {
-      setPreciosReales((m) => ({ ...m, [k]: r }));
+      // Lo guardamos en el shape nuevo (porOrigen + mejor) para que el resto
+      // del codigo lo trate igual que los datos del detector.
+      const reg = { porOrigen: { [r.origen]: r }, mejor: r };
+      setPreciosReales((m) => ({ ...m, [k]: reg }));
       setVivoEstado((s) => ({ ...s, [k]: "ok" }));
     } else {
       setVivoEstado((s) => ({ ...s, [k]: "no" }));
@@ -209,40 +270,60 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {/* Controles comunes */}
           <div className="grid gap-3">
-            {/* SALES DESDE: aeropuerto de origen en Colombia. El detector
-                escanea solo BOG y MDE; si el usuario quiere otra ciudad, le
-                avisamos que estamos calculando con el aeropuerto principal
-                mas cercano. */}
+            {/* SALES DESDE: pais + hub aereo. La app detecta tu pais por IP
+                (x-vercel-ip-country) y preselecciona; puedes cambiarlo. Solo
+                Colombia tiene cobertura del detector hoy; el resto cae a
+                estimados/busqueda en vivo y se le avisa al usuario. */}
             <div>
               <Label>{t("presupSalesDesde")}</Label>
-              <div className="flex gap-2">
-                {[
-                  { v: "BOG", emoji: "🛫", nombre: "Bogotá" },
-                  { v: "MDE", emoji: "🛫", nombre: "Medellín" },
-                ].map((o) => (
-                  <button
-                    key={o.v}
-                    type="button"
-                    onClick={() => cambiarOrigen(o.v)}
-                    className={`flex-1 rounded-xl border-2 px-3 py-2.5 text-left transition ${
-                      origen === o.v
-                        ? "border-marca-500 bg-marca-50 text-marca-900 shadow-sm"
-                        : "border-slate-200 bg-white text-slate-700 hover:border-marca-200"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{o.emoji}</span>
-                      <div>
-                        <div className="text-[14px] font-bold leading-tight">{o.nombre}</div>
-                        <div className="text-[11px] uppercase tracking-wide text-slate-500">{o.v}</div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                {/* Selector de pais */}
+                <select
+                  value={paisOrigen}
+                  onChange={(e) => cambiarPais(e.target.value)}
+                  aria-label={t("presupSalesDesde")}
+                  className="rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400"
+                >
+                  {PAISES_ORDEN.map((cod) => (
+                    <option key={cod} value={cod}>
+                      {PAISES_ORIGEN[cod].bandera} {PAISES_ORIGEN[cod].nombre}
+                    </option>
+                  ))}
+                </select>
+                {/* Selector de hub (tarjetas) — se adapta al pais elegido */}
+                <div className="flex flex-1 flex-wrap gap-2">
+                  {hubsPais.map((o) => (
+                    <button
+                      key={o.iata}
+                      type="button"
+                      onClick={() => cambiarOrigen(o.iata)}
+                      className={`flex-1 rounded-xl border-2 px-3 py-2.5 text-left transition ${
+                        origen === o.iata
+                          ? "border-marca-500 bg-marca-50 text-marca-900 shadow-sm"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-marca-200"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🛫</span>
+                        <div>
+                          <div className="text-[14px] font-bold leading-tight">{o.ciudad}</div>
+                          <div className="text-[11px] uppercase tracking-wide text-slate-500">{o.iata}</div>
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="mt-1.5 text-[11px] text-slate-500">
-                {t("presupSalesDesdeNota")}
-              </div>
+              {detectorCubre ? (
+                <div className="mt-1.5 text-[11px] text-slate-500">
+                  {t("presupSalesDesdeNota")}
+                </div>
+              ) : (
+                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11.5px] leading-snug text-amber-800">
+                  <b>⚠️ {t("presupCoberturaTitulo")}</b>{" "}
+                  {t("presupCoberturaAviso").replace("{pais}", paisActual.nombre)}
+                </div>
+              )}
             </div>
 
             <div>
@@ -499,7 +580,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                       <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-[12px] font-semibold text-amber-800">
                         <span>💡</span>
                         <span>
-                          {t("presupAhorroDesde").replace("{origen}", NOMBRE_ORIGEN[d.ahorroDesde.origen] || d.ahorroDesde.origen)}
+                          {t("presupAhorroDesde").replace("{origen}", nombreDeIATA(d.ahorroDesde.origen))}
                           {" "}
                           <b>{fmtUsd(d.ahorroDesde.ahorro)}</b>
                         </span>

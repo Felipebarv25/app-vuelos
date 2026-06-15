@@ -11,7 +11,11 @@
 export const maxDuration = 20;
 
 const BASE = "https://api.travelpayouts.com/aviasales/v3/prices_for_dates";
-const ORIGENES = ["BOG", "MDE"];
+// Origenes por defecto (Colombia): BOG/MDE — son los que el detector escanea
+// cada 3h y los que la mayoria de usuarios usan. Si el cliente pasa `origenes=`
+// (CSV de IATAs), se respeta esa lista en lugar del default. Asi un viajero
+// en Mexico puede pedir MEX+CUN, uno en Ecuador puede pedir UIO+GYE, etc.
+const ORIGENES_DEFAULT = ["BOG", "MDE"];
 const UA = "Viajero360/1.0 (https://app-vuelos-mfos.vercel.app)";
 
 function mesISO(d) {
@@ -83,6 +87,16 @@ export async function GET(req) {
   if (!/^[A-Z]{3}$/.test(iata)) {
     return Response.json({ error: "iata inválido" }, { status: 400 });
   }
+  // Parametro opcional: `origenes=BOG,MDE` o `origenes=MEX,CUN` etc.
+  // Solo aceptamos hasta 3 origenes para acotar el numero de llamadas (24 = 3*N
+  // destinos * 6 meses). Cae al default si no llega o si llega vacio.
+  const origenesRaw = (searchParams.get("origenes") || "").toUpperCase();
+  const origenesParsed = origenesRaw
+    .split(",")
+    .map((x) => x.trim())
+    .filter((x) => /^[A-Z]{3}$/.test(x))
+    .slice(0, 3);
+  const origenes = origenesParsed.length ? origenesParsed : ORIGENES_DEFAULT;
 
   const token = process.env.TRAVELPAYOUTS_TOKEN;
   if (!token) {
@@ -98,10 +112,10 @@ export async function GET(req) {
   // datos en uno y sí en el otro.
   const destinos = /^[A-Z]{3}$/.test(iata2) ? [iata, iata2] : [iata];
 
-  // Combinaciones origen × destino × mes en paralelo. Tope ~24 llamadas (2 × 2 × 6).
+  // Combinaciones origen × destino × mes en paralelo. Tope ~36 llamadas (3 × 2 × 6).
   const meses = proximosMeses(6);
   const tareas = [];
-  for (const o of ORIGENES) {
+  for (const o of origenes) {
     for (const d of destinos) {
       for (const m of meses) {
         tareas.push(consultar(o, d, m, token, marker));

@@ -105,11 +105,15 @@ export function ofertaParaOrigen(mapa, llave, origen) {
   return reg.mejor || null;
 }
 
-// Busca el precio i/v EN VIVO desde Colombia (BOG/MDE) para un destino del
-// catálogo, llamando al endpoint /api/vuelo-vivo (Travelpayouts server-side).
-// Devuelve la oferta o null. Cachea por (ciudad|pais) durante la sesión.
-export async function buscarVueloEnVivo(ciudad, pais) {
-  const llave = `${ciudad}|${pais}`;
+// Busca el precio i/v EN VIVO para un destino, llamando al endpoint
+// /api/vuelo-vivo (Travelpayouts server-side). `origenes` es opcional: una
+// lista de IATAs (BOG, MEX, UIO...) para hacer la busqueda desde el pais del
+// usuario. Si no se pasa, el endpoint cae a BOG/MDE por defecto. La cache
+// vive por (ciudad|pais|origenes) para no mezclar precios de distintos
+// origenes durante la sesion.
+export async function buscarVueloEnVivo(ciudad, pais, origenes = []) {
+  const origenesKey = (origenes || []).filter(Boolean).join(",");
+  const llave = `${ciudad}|${pais}|${origenesKey}`;
   if (cacheVivo.has(llave)) return cacheVivo.get(llave);
 
   const iata = iataDe(ciudad, pais);
@@ -122,7 +126,8 @@ export async function buscarVueloEnVivo(ciudad, pais) {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 18000);
-    const qs = iata2 ? `iata=${iata}&iata2=${iata2}` : `iata=${iata}`;
+    let qs = iata2 ? `iata=${iata}&iata2=${iata2}` : `iata=${iata}`;
+    if (origenesKey) qs += `&origenes=${encodeURIComponent(origenesKey)}`;
     const r = await fetch(`/api/vuelo-vivo?${qs}`, { signal: ctrl.signal });
     clearTimeout(t);
     if (!r.ok) {
