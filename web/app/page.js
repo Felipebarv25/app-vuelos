@@ -28,6 +28,7 @@ import { useApp } from "@/lib/AppContext";
 import { track, trackVisita } from "@/lib/track";
 import { registrarEvento, obtenerRecomendaciones } from "@/lib/perfil";
 import Paywall from "@/components/Paywall";
+import MenuUsuario from "@/components/MenuUsuario";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
 
@@ -835,32 +836,21 @@ export default function Home() {
               <LogoMarca tono={esHero ? "claro" : "marca"} className={esHero ? "drop-shadow" : ""} />
               <div className={`mt-0.5 hidden text-[13px] sm:block ${esHero ? "text-white/85" : "text-slate-400"}`}>{t("tagline")}</div>
             </button>
-            <div className="flex items-center gap-3 lg:gap-5">
-              <span className={`hidden items-center gap-2 text-sm md:inline-flex ${esHero ? "text-white/90" : "text-slate-500"}`}>
-                {usuario.foto && (
-                  <img
-                    src={usuario.foto}
-                    alt=""
-                    className="h-7 w-7 rounded-full border border-white/30 object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                )}
-                {t("hola")}, <b className={esHero ? "" : "text-marca-700"}>{usuario.nombre}</b>
-              </span>
+            <div className="flex items-center gap-3 lg:gap-4">
               {ciudad && (
                 <button onClick={irAlInicio} className={`text-[13px] underline-offset-2 hover:underline ${esHero ? "text-white/90" : "text-slate-500"}`}>
                   <span className="inline-flex items-center gap-1"><Icono nombre="home" size={14} /> {t("inicio")}</span>
                 </button>
               )}
-              <a
-                href="/pro"
-                className={`text-[13px] font-bold underline-offset-2 hover:underline ${esHero ? "text-amber-200" : "text-amber-600"}`}
-              >
-                {pro ? "★ Pro" : "★ Hazte Pro"}
-              </a>
-              <button onClick={salir} className={`text-[13px] underline-offset-2 hover:underline ${esHero ? "text-white/90" : "text-slate-500"}`}>
-                {t("salir")}
-              </button>
+              {!pro && (
+                <a
+                  href="/pro"
+                  className={`hidden text-[13px] font-bold underline-offset-2 hover:underline sm:inline ${esHero ? "text-amber-200" : "text-amber-600"}`}
+                >
+                  ★ Hazte Pro
+                </a>
+              )}
+              <MenuUsuario oscuro={esHero} />
               <SelectorIdioma oscuro={esHero} />
             </div>
           </div>

@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Icono } from "./Icono";
 import { obtenerTasas } from "@/lib/fx";
+import AlertaPrecio from "./AlertaPrecio";
 
 // Tablero de "vuelos baratos desde Colombia": lee web/public/ofertas.json
 // (generado por el detector de precios) y muestra las mejores ofertas
@@ -238,6 +239,17 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
                 <span className="inline-flex items-center justify-center gap-1.5"><Icono nombre="search" size={14} /> {t("ofertasMisFechas")}</span>
               </a>
             )}
+
+            {/* Alerta de precio: el usuario fija un umbral y le avisamos por
+                email cuando el detector vea un vuelo abajo. Gate Free 1 alerta. */}
+            <div className="mt-2.5">
+              <AlertaPrecio
+                ciudad={r.ciudad}
+                pais={r.pais}
+                iata={r.destino}
+                precioActual={r.precio}
+              />
+            </div>
 
             {/* Verificación honesta: comparar el precio en Google Vuelos */}
             <div className="mt-2 flex items-center justify-between text-[11px]">
