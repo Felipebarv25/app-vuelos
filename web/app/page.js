@@ -48,10 +48,43 @@ const DESTINOS_DESTACADOS = [
   { nombre: "Buenos Aires", pais: "Argentina", q: "Buenos Aires, Argentina", hint: "Obelisco Buenos Aires", visitantes: 3 },
 ];
 
-// Imagen del hero del inicio (foto de viaje, CDN de Unsplash). Si fallara, queda
-// el degradado de marca debajo como respaldo.
-const HERO_IMG =
-  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70";
+// Imagenes del hero del inicio (fotos de viaje, CDN de Unsplash) — rotan cada
+// ~10s para sentir vida y mostrar la variedad del producto. Si Unsplash fallara,
+// queda el degradado de marca debajo como respaldo. Curado: playas, ciudades
+// historicas y paisajes — paleta calida que combina con el branding.
+const HERO_IMGS = [
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70", // playa caribena (Bahamas)
+  "https://images.unsplash.com/photo-1503917988258-f87a78e3c995?auto=format&fit=crop&w=1600&q=70", // ciudad costera dorada
+  "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1600&q=70", // Paris al atardecer (Torre Eiffel)
+  "https://images.unsplash.com/photo-1480796927426-f609979314bd?auto=format&fit=crop&w=1600&q=70", // playa con olas
+  "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1600&q=70", // mediterraneo costa
+];
+const HERO_IMG = HERO_IMGS[0];
+
+// Codigo ISO de pais -> nombre legible para el hero. Solo los que cubrimos en
+// el catalogo de origenes mas algunos clave para mostrar el branding correcto.
+// Si el pais detectado no esta aqui, cae al default ("Colombia") por compat.
+const PAIS_GENTILICIO = {
+  CO: "Colombia",
+  MX: "México",
+  EC: "Ecuador",
+  PE: "Perú",
+  CL: "Chile",
+  AR: "Argentina",
+  BR: "Brasil",
+  VE: "Venezuela",
+  ES: "España",
+  US: "Estados Unidos",
+  // Bonus (no estan en el detector pero cubren visitantes comunes):
+  GB: "Reino Unido",
+  FR: "Francia",
+  DE: "Alemania",
+  IT: "Italia",
+  CA: "Canadá",
+  PT: "Portugal",
+  NL: "Países Bajos",
+  CH: "Suiza",
+};
 
 // Mensaje rotatorio durante carga larga: en vez del spinner mudo, se le cuenta
 // al usuario en que parte del proceso esta la app. Antes solo veia "Buscando los
@@ -156,6 +189,40 @@ export default function Home() {
   useEffect(() => {
     trackVisita(lang);
   }, [lang]);
+
+  // Pais del visitante (de /api/geo). Sirve para personalizar el hero:
+  // "Plan tu viaje desde {pais}". Cae a "Colombia" si no se puede detectar.
+  // Detecta una sola vez por sesion (cacheado en sessionStorage).
+  const [paisVisitante, setPaisVisitante] = useState("Colombia");
+  useEffect(() => {
+    let vivo = true;
+    try {
+      const cache = sessionStorage.getItem("v360_pais_nombre");
+      if (cache) { setPaisVisitante(cache); return; }
+    } catch {}
+    fetch("/api/geo")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((g) => {
+        if (!vivo) return;
+        const nombre = (g?.pais && PAIS_GENTILICIO[g.pais]) || "Colombia";
+        setPaisVisitante(nombre);
+        try { sessionStorage.setItem("v360_pais_nombre", nombre); } catch {}
+      })
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, []);
+
+  // Indice del fondo del hero. Rota cada 10s con crossfade suave (CSS) entre
+  // las imagenes de HERO_IMGS. Pausa cuando el usuario no esta en la home
+  // (ciudad seleccionada) para no gastar CPU/memoria innecesario.
+  const [iHero, setIHero] = useState(0);
+  useEffect(() => {
+    if (ciudad) return;
+    // Precargar todas las imagenes para evitar parpadeos en el primer cambio.
+    HERO_IMGS.forEach((src) => { const img = new Image(); img.src = src; });
+    const id = setInterval(() => setIHero((n) => (n + 1) % HERO_IMGS.length), 10000);
+    return () => clearInterval(id);
+  }, [ciudad]);
 
   // Conteo de "viajeros en linea" (presencia en vivo) para el chip social del
   // HERO. Genera un sessionId por pestana y hace POST a /api/online cada 60s
@@ -672,7 +739,16 @@ export default function Home() {
         {esHero && (
           <>
             <div className="absolute inset-0 bg-gradient-to-br from-marca-700 to-marca-900" />
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${HERO_IMG})` }} />
+            {/* Stack de imagenes con crossfade: la actual visible, las demas
+                transparentes. CSS transition hace la mezcla sin librerias. */}
+            {HERO_IMGS.map((src, i) => (
+              <div
+                key={src}
+                aria-hidden="true"
+                className="absolute inset-0 bg-cover bg-center transition-opacity duration-[1500ms] ease-in-out"
+                style={{ backgroundImage: `url(${src})`, opacity: i === iHero ? 1 : 0 }}
+              />
+            ))}
             <div className="absolute inset-0 bg-gradient-to-b from-marca-900/35 via-marca-900/55 to-marca-900/90" />
           </>
         )}
@@ -736,7 +812,7 @@ export default function Home() {
                 {t(saludoClave())}, {usuario.nombre} 👋
               </div>
               <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">
-                {t("heroEyebrowBudget")}
+                {t("heroEyebrowBudget").replace("{pais}", paisVisitante)}
               </div>
               <h1 className="text-[28px] font-extrabold leading-[1.05] tracking-tight drop-shadow-md lg:text-[48px]">
                 {t("heroH1Budget")}
