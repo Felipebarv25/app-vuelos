@@ -100,6 +100,22 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
 
   const ciudadesRegion = useMemo(() => ciudadesDeRegion(region), [region]);
 
+  // Para el select "Saliendo desde": agrupa TODAS las ciudades del catalogo
+  // por region. Antes solo aparecian las de la region elegida como destino
+  // (limitante: si eliges Europa no podias arrancar en Sudamerica). Si el
+  // usuario elige una ciudad fuera de la region actual, auto-cambiamos la
+  // region para mantener la ruta coherente.
+  const ciudadesPorRegion = useMemo(() => {
+    const todas = ciudadesDeRegion("todas");
+    const grupos = {};
+    for (const c of todas) {
+      const r = c.region || "otros";
+      if (!grupos[r]) grupos[r] = [];
+      grupos[r].push(c);
+    }
+    return grupos;
+  }, []);
+
   const ruta = useMemo(
     () =>
       construirRuta({ presupuestoUsd, dias, personas, region, inicio, semilla, excluir: excluidos, preciosReales }),
@@ -267,21 +283,43 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
               </div>
             </div>
 
-            {/* Solo modo ruta: ciudad de salida */}
+            {/* Solo modo ruta: ciudad de salida. Listamos TODO el catalogo
+                agrupado por region; si el usuario elige una ciudad de otra
+                region, ajustamos el destino para que la ruta tenga sentido. */}
             {modo === "ruta" && (
               <div>
                 <Label>{t("presupDesdeCiudad")}</Label>
                 <select
                   value={inicio}
-                  onChange={(e) => { setInicio(e.target.value); setSemilla(0); }}
+                  onChange={(e) => {
+                    const llave = e.target.value;
+                    setInicio(llave);
+                    setSemilla(0);
+                    if (llave) {
+                      // Encuentra a que region pertenece la ciudad elegida y
+                      // sincroniza la region de destino si es distinta.
+                      for (const r of Object.keys(ciudadesPorRegion)) {
+                        if (ciudadesPorRegion[r].some((c) => llaveCiudad(c) === llave)) {
+                          if (r !== region && REGIONES[r]) setRegion(r);
+                          break;
+                        }
+                      }
+                    }
+                  }}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[15px] outline-none"
                 >
                   <option value="">⭐ {t("recomendado")}</option>
-                  {ciudadesRegion.map((c) => (
-                    <option key={llaveCiudad(c)} value={llaveCiudad(c)}>
-                      {c.bandera} {c.ciudad}, {c.pais}
-                    </option>
-                  ))}
+                  {Object.keys(ciudadesPorRegion)
+                    .filter((r) => REGIONES[r])
+                    .map((r) => (
+                      <optgroup key={r} label={REGIONES[r]}>
+                        {ciudadesPorRegion[r].map((c) => (
+                          <option key={llaveCiudad(c)} value={llaveCiudad(c)}>
+                            {c.bandera} {c.ciudad}, {c.pais}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
                 </select>
               </div>
             )}
