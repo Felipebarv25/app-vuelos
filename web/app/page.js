@@ -26,6 +26,7 @@ import { Icono } from "@/components/Icono";
 import Toast from "@/components/Toast";
 import { useApp } from "@/lib/AppContext";
 import { track, trackVisita } from "@/lib/track";
+import { registrarEvento, obtenerRecomendaciones } from "@/lib/perfil";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
 
@@ -48,18 +49,63 @@ const DESTINOS_DESTACADOS = [
   { nombre: "Buenos Aires", pais: "Argentina", q: "Buenos Aires, Argentina", hint: "Obelisco Buenos Aires", visitantes: 3 },
 ];
 
-// Imagenes del hero del inicio (fotos de viaje, CDN de Unsplash) — rotan cada
-// ~10s para sentir vida y mostrar la variedad del producto. Si Unsplash fallara,
-// queda el degradado de marca debajo como respaldo. Curado: playas, ciudades
-// historicas y paisajes — paleta calida que combina con el branding.
-const HERO_IMGS = [
-  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70", // playa caribena (Bahamas)
-  "https://images.unsplash.com/photo-1503917988258-f87a78e3c995?auto=format&fit=crop&w=1600&q=70", // ciudad costera dorada
-  "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1600&q=70", // Paris al atardecer (Torre Eiffel)
-  "https://images.unsplash.com/photo-1480796927426-f609979314bd?auto=format&fit=crop&w=1600&q=70", // playa con olas
-  "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1600&q=70", // mediterraneo costa
-];
-const HERO_IMG = HERO_IMGS[0];
+// Imagenes del hero del inicio agrupadas por TEMA (gusto principal del usuario).
+// Si el perfil del usuario indica que le gustan las playas, mostramos playas;
+// historia => ciudades historicas; etc. Si no hay perfil, usamos "general"
+// que es una mezcla. Rotan cada ~10s con crossfade suave.
+const HERO_IMGS_POR_TEMA = {
+  playa: [
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70", // playa caribena
+    "https://images.unsplash.com/photo-1480796927426-f609979314bd?auto=format&fit=crop&w=1600&q=70", // playa con olas
+    "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1600&q=70", // playa tropical aerea
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70",
+  ],
+  ciudad: [
+    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1600&q=70", // Paris/Torre Eiffel
+    "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1600&q=70", // ciudad NY noche
+    "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1600&q=70", // ciudad europea
+  ],
+  historia: [
+    "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1600&q=70", // Coliseo Roma
+    "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=1600&q=70", // Acropolis Atenas
+    "https://images.unsplash.com/photo-1543589077-47d81606c1bf?auto=format&fit=crop&w=1600&q=70", // arquitectura clasica
+  ],
+  naturaleza: [
+    "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=70", // montanas lago
+    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=70", // bosque verde
+    "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=70", // panorama natural
+  ],
+  montana: [
+    "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=70", // alpes amanecer
+    "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?auto=format&fit=crop&w=1600&q=70", // sierra
+    "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1600&q=70", // valle montanas
+  ],
+  gastronomia: [
+    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1600&q=70", // restaurante calido
+    "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=70", // mesa con comida
+    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=70", // plato gourmet
+  ],
+  lujo: [
+    "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1600&q=70", // piscina infinity
+    "https://images.unsplash.com/photo-1455587734955-081b22074882?auto=format&fit=crop&w=1600&q=70", // resort lujo
+  ],
+  nocturna: [
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=70", // bar coctel
+    "https://images.unsplash.com/photo-1535079859068-2f9b3fa4d4ca?auto=format&fit=crop&w=1600&q=70", // ciudad de noche
+  ],
+  romantico: [
+    "https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1600&q=70", // Santorini atardecer
+    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1600&q=70", // Paris romantico
+  ],
+  general: [
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70",
+    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1600&q=70",
+    "https://images.unsplash.com/photo-1503917988258-f87a78e3c995?auto=format&fit=crop&w=1600&q=70",
+    "https://images.unsplash.com/photo-1480796927426-f609979314bd?auto=format&fit=crop&w=1600&q=70",
+    "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1600&q=70",
+  ],
+};
+const HERO_IMG = HERO_IMGS_POR_TEMA.general[0];
 
 // Codigo ISO de pais -> nombre legible para el hero. Solo los que cubrimos en
 // el catalogo de origenes mas algunos clave para mostrar el branding correcto.
@@ -212,17 +258,36 @@ export default function Home() {
     return () => { vivo = false; };
   }, []);
 
+  // Tema personalizado del hero (playa, ciudad, historia...) — depende del
+  // perfil del usuario logueado. Lo trae /api/profile/recomendar; mientras
+  // carga usamos "general". Tambien guardamos las recomendaciones para
+  // mostrar una seccion "Pensamos que te gustaria".
+  const [tema, setTema] = useState("general");
+  const [recomendados, setRecomendados] = useState([]);
+  useEffect(() => {
+    if (!usuario?.email_login) return;
+    let vivo = true;
+    obtenerRecomendaciones().then((r) => {
+      if (!vivo) return;
+      if (r.tema && HERO_IMGS_POR_TEMA[r.tema]) setTema(r.tema);
+      setRecomendados(r.recomendaciones || []);
+    });
+    return () => { vivo = false; };
+  }, [usuario?.email_login, usuario?.email]);
+
   // Indice del fondo del hero. Rota cada 10s con crossfade suave (CSS) entre
-  // las imagenes de HERO_IMGS. Pausa cuando el usuario no esta en la home
+  // las imagenes del tema actual. Pausa cuando el usuario no esta en la home
   // (ciudad seleccionada) para no gastar CPU/memoria innecesario.
   const [iHero, setIHero] = useState(0);
+  const heroImgs = HERO_IMGS_POR_TEMA[tema] || HERO_IMGS_POR_TEMA.general;
   useEffect(() => {
     if (ciudad) return;
-    // Precargar todas las imagenes para evitar parpadeos en el primer cambio.
-    HERO_IMGS.forEach((src) => { const img = new Image(); img.src = src; });
-    const id = setInterval(() => setIHero((n) => (n + 1) % HERO_IMGS.length), 10000);
+    setIHero(0);
+    // Precargar todas las imagenes del tema para evitar parpadeos en el cambio.
+    heroImgs.forEach((src) => { const img = new Image(); img.src = src; });
+    const id = setInterval(() => setIHero((n) => (n + 1) % heroImgs.length), 10000);
     return () => clearInterval(id);
-  }, [ciudad]);
+  }, [ciudad, tema]);
 
   // Conteo de "viajeros en linea" (presencia en vivo) para el chip social del
   // HERO. Genera un sessionId por pestana y hace POST a /api/online cada 60s
@@ -479,6 +544,9 @@ export default function Home() {
       limpiarParaNuevaCiudad();
       setCargando(false);
       track("busqueda", { ciudad: c.nombre, pais: c.pais });
+      // Perfil de gustos: la busqueda revela una preferencia. Si el usuario
+      // tiene sesion email, esto se acumula en KV; si es invitado no hace nada.
+      registrarEvento({ tipo: "busqueda", ciudad: c.nombre, pais: c.pais });
       cargarCategoria("imperdibles", c); // lugares en segundo plano
     } catch (err) {
       setError(err.message);
@@ -521,6 +589,7 @@ export default function Home() {
     setMonedaHero(moneda);
     setPresupuestoInicial({ monto, moneda });
     track("presupuesto_hero", { monto, moneda });
+    registrarEvento({ tipo: "presupuesto" });
     setMostrarPresupuesto(true);
   }
 
@@ -741,9 +810,9 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-br from-marca-700 to-marca-900" />
             {/* Stack de imagenes con crossfade: la actual visible, las demas
                 transparentes. CSS transition hace la mezcla sin librerias. */}
-            {HERO_IMGS.map((src, i) => (
+            {heroImgs.map((src, i) => (
               <div
-                key={src}
+                key={src + i}
                 aria-hidden="true"
                 className="absolute inset-0 bg-cover bg-center transition-opacity duration-[1500ms] ease-in-out"
                 style={{ backgroundImage: `url(${src})`, opacity: i === iHero ? 1 : 0 }}
@@ -1074,6 +1143,30 @@ export default function Home() {
                       <Icono nombre="x" size={15} />
                     </button>
                   </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recomendaciones personalizadas: solo si el usuario tiene perfil
+              con datos. Ordenado por afinidad con los gustos acumulados. */}
+          {recomendados.length > 0 && (
+            <div className="mb-4 mt-10">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-600">
+                ✨ {t("recomendadoEyebrow")}
+              </div>
+              <h2 className="mt-1 text-[20px] font-extrabold tracking-tight text-marca-900 lg:text-[26px]">
+                {t("recomendadoTitulo").replace("{nombre}", usuario?.nombre || "")}
+              </h2>
+              <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-3 lg:gap-4">
+                {recomendados.slice(0, 6).map((r) => (
+                  <CardDestino
+                    key={r.slug}
+                    nombre={r.ciudad}
+                    pais={r.pais}
+                    hint={r.ciudad}
+                    onClick={() => buscarTexto(`${r.ciudad}, ${r.pais}`)}
+                  />
                 ))}
               </div>
             </div>
