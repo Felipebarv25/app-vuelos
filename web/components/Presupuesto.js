@@ -179,9 +179,25 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
               <Label>{t("presupTuPresup")}</Label>
               <div className="flex gap-2">
                 <input
-                  type="number"
-                  value={monto}
-                  onChange={(e) => setMonto(Math.max(0, +e.target.value))}
+                  type="text"
+                  inputMode="numeric"
+                  value={monto > 0 ? monto.toLocaleString("es-CO") : ""}
+                  onChange={(e) => {
+                    // Solo digitos: ignora puntos, comas, letras o caracteres
+                    // raros que el usuario pegue. Si queda vacio, monto = 0
+                    // (sin "0" colgando en el input — value="" lo limpia visualmente).
+                    const raw = (e.target.value || "").replace(/\D/g, "");
+                    if (raw === "") { setMonto(0); return; }
+                    const n = parseInt(raw, 10);
+                    if (!Number.isNaN(n)) setMonto(Math.max(0, n));
+                  }}
+                  onFocus={(e) => {
+                    // Al hacer focus, seleccionar todo: tipear reemplaza sin
+                    // tener que borrar el monto anterior digito por digito.
+                    try { e.target.select(); } catch {}
+                  }}
+                  placeholder="0"
+                  aria-label={t("presupTuPresup")}
                   className="flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-[15px] outline-none focus:border-marca-400"
                 />
                 <select

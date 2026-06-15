@@ -757,12 +757,15 @@ export default function Home() {
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={montoHero.toLocaleString(lang === "es" || lang === "pt" ? "es-CO" : "en-US")}
+                      value={montoHero > 0 ? montoHero.toLocaleString(lang === "es" || lang === "pt" ? "es-CO" : "en-US") : ""}
                       onChange={(e) => {
-                        const n = parseInt((e.target.value || "").replace(/\D/g, ""), 10);
+                        const raw = (e.target.value || "").replace(/\D/g, "");
+                        if (raw === "") { setMontoHero(0); return; }
+                        const n = parseInt(raw, 10);
                         if (!Number.isNaN(n)) setMontoHero(n);
-                        else if (e.target.value === "") setMontoHero(0);
                       }}
+                      onFocus={(e) => { try { e.target.select(); } catch {} }}
+                      placeholder="0"
                       aria-label={t("heroH1Budget")}
                       className="w-full border-0 bg-transparent text-left text-[20px] font-extrabold text-marca-900 outline-none placeholder:text-slate-300 lg:text-[24px]"
                     />
