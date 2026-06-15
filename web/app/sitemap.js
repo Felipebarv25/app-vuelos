@@ -44,6 +44,12 @@ export default function sitemap() {
       changeFrequency: "monthly",
       priority: 0.7,
     },
+    {
+      url: `${SITIO}/pro`,
+      lastModified: ahora,
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
   ];
 
   // ES + EN per destination. Each ES entry declares the EN alternate (Google

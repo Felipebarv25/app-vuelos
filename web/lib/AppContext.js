@@ -21,6 +21,17 @@ export function AppProvider({ children }) {
   const [listoLocal, setListoLocal] = useState(false);
   const [listoEmail, setListoEmail] = useState(false);
 
+  // Estado de subscripcion Pro. `null` = no consultado todavia, false = no Pro,
+  // true = Pro vigente. Se carga desde /api/me cuando hay sesion (Google o
+  // email) y se refresca cuando el usuario cambia. `creditos` cuenta las
+  // microcompras (PDF, alerta) que el usuario tiene disponibles.
+  const [pro, setPro] = useState(false);
+  const [plan, setPlan] = useState(null);
+  const [creditos, setCreditos] = useState({ pdf: 0, alerta: 0 });
+  // Modal de paywall: { abierto, motivo }. El componente padre lo renderiza
+  // viendo este estado; cualquier feature gateada llama abrirPaywall("pdf").
+  const [paywall, setPaywall] = useState({ abierto: false, motivo: null });
+
   // Cargar idioma y usuario LOCAL guardados al iniciar.
   useEffect(() => {
     setLang(idiomaInicial());
@@ -53,11 +64,61 @@ export function AppProvider({ children }) {
     return () => { vivo = false; };
   }, []);
 
+  // Cargar/refrescar el estado Pro cuando cambia el usuario y al volver al
+  // foco (el usuario puede haber comprado en otra pestana).
+  useEffect(() => {
+    refrescarPro();
+    const onFocus = () => refrescarPro();
+    if (typeof window !== "undefined") {
+      window.addEventListener("focus", onFocus);
+      return () => window.removeEventListener("focus", onFocus);
+    }
+  }, [session?.user?.email, usuarioEmail?.email]);
+
   function cambiarIdioma(nuevo) {
     setLang(nuevo);
     try {
       localStorage.setItem("idioma", nuevo);
     } catch {}
+  }
+
+  // Refresca el estado Pro/creditos desde /api/me. Se llama cuando el usuario
+  // cambia de identidad (login/logout) o cuando volvemos al foco tras un
+  // checkout (el webhook puede haber actualizado KV).
+  async function refrescarPro() {
+    try {
+      let headers = { "Content-Type": "application/json" };
+      // Si tenemos token email, lo pasamos para identificar al usuario.
+      try {
+        const tk = localStorage.getItem("v360_auth_token");
+        if (tk) headers.Authorization = `Bearer ${tk}`;
+      } catch {}
+      const r = await fetch("/api/me", { headers });
+      if (!r.ok) return;
+      const d = await r.json();
+      setPro(!!d?.pro);
+      setPlan(d?.plan || null);
+      if (d?.creditos) setCreditos(d.creditos);
+    } catch {}
+  }
+
+  // Disparador del paywall. `motivo` controla el texto contextual del modal
+  // ("pdf", "guardar", "alerta", "grafico", "compartir").
+  function abrirPaywall(motivo = "guardar") {
+    setPaywall({ abierto: true, motivo });
+  }
+  function cerrarPaywall() {
+    setPaywall({ abierto: false, motivo: null });
+  }
+  // Guardia general: si el usuario es Pro -> ejecuta accion. Si no -> abre
+  // paywall con el motivo correcto. Devuelve true si ejecuto, false si gateo.
+  function requierePro(motivo, accion) {
+    if (pro) {
+      try { accion?.(); } catch {}
+      return true;
+    }
+    abrirPaywall(motivo);
+    return false;
   }
 
   // Login LIGERO (sin Google): solo nombre en localStorage.
@@ -163,6 +224,14 @@ export function AppProvider({ children }) {
         verificarCodigoEmail,
         salir,
         listo,
+        pro,
+        plan,
+        creditos,
+        paywall,
+        abrirPaywall,
+        cerrarPaywall,
+        requierePro,
+        refrescarPro,
       }}
     >
       {children}

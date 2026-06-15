@@ -27,6 +27,7 @@ import Toast from "@/components/Toast";
 import { useApp } from "@/lib/AppContext";
 import { track, trackVisita } from "@/lib/track";
 import { registrarEvento, obtenerRecomendaciones } from "@/lib/perfil";
+import Paywall from "@/components/Paywall";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
 
@@ -176,7 +177,7 @@ function saludoEmoji() {
 }
 
 export default function Home() {
-  const { t, lang, usuario, salir, listo } = useApp();
+  const { t, lang, usuario, salir, listo, pro, paywall, abrirPaywall, cerrarPaywall, requierePro } = useApp();
   const [consulta, setConsulta] = useState("");
   const [sugerencias, setSugerencias] = useState([]);
   const [mostrarSug, setMostrarSug] = useState(false);
@@ -851,6 +852,12 @@ export default function Home() {
                   <span className="inline-flex items-center gap-1"><Icono nombre="home" size={14} /> {t("inicio")}</span>
                 </button>
               )}
+              <a
+                href="/pro"
+                className={`text-[13px] font-bold underline-offset-2 hover:underline ${esHero ? "text-amber-200" : "text-amber-600"}`}
+              >
+                {pro ? "★ Pro" : "★ Hazte Pro"}
+              </a>
               <button onClick={salir} className={`text-[13px] underline-offset-2 hover:underline ${esHero ? "text-white/90" : "text-slate-500"}`}>
                 {t("salir")}
               </button>
@@ -1277,7 +1284,14 @@ export default function Home() {
               <div className="flex items-center gap-2.5">
                 {plan.some((d) => d.paradas.length > 0) && (
                   <button
-                    onClick={guardarViajeActual}
+                    onClick={() => {
+                      // Free tier: 1 viaje guardado. A partir del 2do, gate.
+                      if (!pro && viajesGuardados.length >= 1) {
+                        abrirPaywall("guardar");
+                        return;
+                      }
+                      guardarViajeActual();
+                    }}
                     className="rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-3 py-2 text-[13px] font-bold text-white shadow-marca transition hover:brightness-105"
                   >
                     <span className="inline-flex items-center gap-1.5">
@@ -1288,7 +1302,7 @@ export default function Home() {
                 )}
                 {plan.some((d) => d.paradas.length > 0) && (
                   <button
-                    onClick={compartirPlan}
+                    onClick={() => requierePro("compartir", compartirPlan)}
                     className="rounded-xl border-[1.5px] border-marca-100 bg-white px-3 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-marca-50"
                   >
                     <span className="inline-flex items-center gap-1.5">
@@ -1299,7 +1313,7 @@ export default function Home() {
                 )}
                 {plan.some((d) => d.paradas.length > 0) && (
                   <button
-                    onClick={descargarPDF}
+                    onClick={() => requierePro("pdf", descargarPDF)}
                     title={t("descargarPDF")}
                     className="rounded-xl border-[1.5px] border-marca-100 bg-white px-3 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-marca-50"
                   >
@@ -1634,6 +1648,16 @@ export default function Home() {
       {/* Toasts: confirmaciones rápidas para acciones del usuario */}
       <Toast mostrar={guardado} texto={t("guardado")} icono="check" />
       <Toast mostrar={copiado} texto={t("copiado")} icono="check" />
+
+      {/* Paywall: se renderiza solo cuando alguna feature gateada lo dispara */}
+      {paywall.abierto && (
+        <Paywall
+          motivo={paywall.motivo}
+          emailUsuario={usuario?.email}
+          onCerrar={cerrarPaywall}
+          t={t}
+        />
+      )}
     </div>
   );
 }
