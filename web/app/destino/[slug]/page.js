@@ -12,7 +12,9 @@ import { datosSeoDe, faqsDe } from "@/lib/seoDestinos";
 import { fotoCiudad } from "@/lib/fotoCiudad";
 import { preciosPorMes } from "@/lib/historialPrecios";
 import { iataDe } from "@/lib/iataCiudades";
+import { traductor } from "@/lib/idiomas";
 import FavToggle from "./FavToggle";
+import { AfiliadosCiudad } from "@/components/Afiliados";
 
 const SITIO = "https://app-vuelos-mfos.vercel.app";
 
@@ -273,7 +275,28 @@ export default async function PaginaDestino({ params }) {
       )}
 
       {/* Cuándo viajar más barato — mediana de precios de vuelo por mes, calculada
-          a partir del historial real del detector. Solo aparece si hay datos. */}
+          a partir del historial real del detector. Si todavia no hay historial
+          para esta ruta, mostramos un estado explicito (en vez de "desaparecer"
+          la seccion, que hacia parecer las fichas ricas vs. pobres sin razon). */}
+      {!historial && (
+        <section className="mx-auto max-w-4xl px-6 py-6">
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-5">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+              🕒 Cuándo viajar más barato
+            </div>
+            <p className="mt-2 text-[14px] leading-relaxed text-slate-600">
+              Todavía estamos recopilando datos de precios para vuelos a{" "}
+              <b className="text-marca-700">{d.ciudad}</b> desde Colombia. Nuestro
+              detector consulta esta ruta cada 3 horas; en cuanto haya muestras
+              suficientes verás aquí la mediana mes a mes y la mejor temporada
+              para volar.
+            </p>
+            <p className="mt-2 text-[12.5px] text-slate-500">
+              Mientras tanto, usa el presupuesto sugerido de arriba como referencia.
+            </p>
+          </div>
+        </section>
+      )}
       {historial && (
         <section className="mx-auto max-w-4xl px-6 py-6">
           <h2 className="text-2xl font-extrabold tracking-tight text-marca-900">
@@ -377,6 +400,16 @@ export default async function PaginaDestino({ params }) {
           </ol>
         </section>
       )}
+
+      {/* Reserva tu viaje: tours, hospedaje y vuelos via afiliados (Booking,
+          Aviasales, GetYourGuide). Es la principal palanca de monetizacion y
+          el viajero necesita la opcion de hotel a un clic. */}
+      <section className="mx-auto max-w-4xl px-6 py-6">
+        <AfiliadosCiudad
+          ciudad={{ nombre: d.ciudad, pais: d.pais, lat: d.lat, lon: d.lon }}
+          t={traductor("es")}
+        />
+      </section>
 
       {/* FAQ — rankea muy bien en Google */}
       <section className="mx-auto max-w-4xl px-6 py-6">

@@ -48,6 +48,18 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
     return filtro === "todos" ? list : list.filter((r) => r.origen === filtro);
   }, [data, filtro]);
 
+  // Frescura GLOBAL: el escaneo mas reciente entre todas las rutas. Sirve para
+  // el sello "actualizado hace X" del header (prueba social honesta de que
+  // los precios son de hoy, no estimados).
+  const ultimoEscaneo = useMemo(() => {
+    let max = 0;
+    for (const r of data?.rutas || []) {
+      const ts = r.visto ? new Date(r.visto).getTime() : 0;
+      if (ts > max) max = ts;
+    }
+    return max || null;
+  }, [data]);
+
   if (!data) return null; // cargando: no mostramos nada (evita parpadeo)
   if (!data.rutas?.length) return null;
 
@@ -89,6 +101,15 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
             {t("ofertasTitulo")}
           </h2>
           <p className="mt-1 max-w-xl text-[13.5px] text-slate-500">{t("ofertasSub")}</p>
+          {ultimoEscaneo && (
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11.5px] font-semibold text-emerald-700">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              </span>
+              {t("ofertasActualizado")} {fmtHace(new Date(ultimoEscaneo).toISOString())}
+            </div>
+          )}
         </div>
 
         {/* Filtro de origen */}

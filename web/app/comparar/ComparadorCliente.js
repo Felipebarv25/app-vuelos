@@ -16,13 +16,19 @@ const DESTINOS_ORDEN = [...DESTINOS_SEO].sort((a, b) =>
   a.ciudad.localeCompare(b.ciudad, "es")
 );
 
+// Defaults inteligentes: las 3 ciudades mas baratas del catalogo por costo total
+// de un viaje de 7 dias (vuelo + 7 dias de gasto). Mucho mas util al aterrizar
+// que un Madrid/Tokio/Mexico hard-codeado, y le habla a un viajero colombiano
+// con presupuesto. Se calcula una vez al cargar el modulo.
+const DEFAULTS_MAS_BARATOS = (() => {
+  const conCosto = DESTINOS_SEO.map((d) => ({ slug: d.slug, total: d.vuelo + d.dia * 7 }));
+  conCosto.sort((a, b) => a.total - b.total);
+  return conCosto.slice(0, 3).map((x) => x.slug);
+})();
+
 export default function ComparadorCliente() {
-  // Slug por slot. Defaults para sembrar la comparación cómoda.
-  const [slots, setSlots] = useState([
-    "madrid-espana",
-    "tokio-japon",
-    "ciudad-de-mexico-mexico",
-  ]);
+  // Slug por slot. Defaults dinamicos: las 3 ciudades mas baratas para 7 dias.
+  const [slots, setSlots] = useState(DEFAULTS_MAS_BARATOS);
 
   const destinos = useMemo(
     () => slots.map((s) => DESTINOS_SEO.find((d) => d.slug === s) || null),
