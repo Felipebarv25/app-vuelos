@@ -1,18 +1,44 @@
 {
-  "name": "Viajero 360",
+  "name": "Viajero 360 · planea tu viaje desde tu país",
   "short_name": "Viajero360",
-  "description": "Planea tu viaje perfecto: itinerarios, mapas, transporte y los mejores lugares.",
-  "start_url": "/",
+  "description": "Planificador de viajes con presupuesto: precios reales de vuelos, itinerarios día por día y alertas de precios. Funciona offline.",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
   "orientation": "portrait",
   "background_color": "#0f766e",
   "theme_color": "#0f766e",
   "lang": "es",
-  "categories": ["travel", "navigation", "lifestyle"],
+  "dir": "ltr",
+  "categories": ["travel", "navigation", "lifestyle", "productivity"],
+  "prefer_related_applications": false,
   "icons": [
     { "src": "/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icono-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Planear por presupuesto",
+      "short_name": "Presupuesto",
+      "description": "Dime cuánto tienes y te digo a dónde puedes ir.",
+      "url": "/?presupuesto=1",
+      "icons": [{ "src": "/icono-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Vuelos baratos",
+      "short_name": "Vuelos",
+      "description": "Las mejores ofertas de vuelos detectadas hoy.",
+      "url": "/#ofertas",
+      "icons": [{ "src": "/icono-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mis alertas de precio",
+      "short_name": "Alertas",
+      "description": "Gestiona tus alertas activas.",
+      "url": "/?menu=alertas",
+      "icons": [{ "src": "/icono-192.png", "sizes": "192x192" }]
+    }
   ]
 }

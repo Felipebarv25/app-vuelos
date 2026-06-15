@@ -28,6 +28,18 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
   const [data, setData] = useState(null);
   const [filtro, setFiltro] = useState("todos"); // todos | BOG | MDE
   const [copPorUsd, setCopPorUsd] = useState(4000); // tasa COP en vivo (respaldo 4000)
+  // Popularidad real por destino (cuantas busquedas ha tenido). Behavioral
+  // econ: social proof aumenta CTR cuando es VERIDICO. Si no hay datos
+  // (KV vacio), el badge no se muestra.
+  const [popularidad, setPopularidad] = useState({});
+  useEffect(() => {
+    let vivo = true;
+    fetch("/api/popular")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => vivo && d?.ok && d.ciudades && setPopularidad(d.ciudades))
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, []);
   // Moneda principal de visualizacion. Persiste en localStorage: si el usuario
   // colombiano abre y prefiere COP, no se lo volvemos a preguntar la proxima vez.
   const [monedaVista, setMonedaVista] = useState("USD");
@@ -177,6 +189,14 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
               <span className="text-slate-300">→</span>
               <span>{r.bandera} {r.ciudad}</span>
             </div>
+            {/* Social proof real: muestra cuantos viajeros han buscado este
+                destino. Solo aparece cuando hay datos reales en KV (umbral
+                minimo de 3 para no destacar destinos sin trafico). */}
+            {popularidad[r.q] && popularidad[r.q] >= 3 && (
+              <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10.5px] font-bold text-amber-700 ring-1 ring-amber-100">
+                🔥 {Number(popularidad[r.q]).toLocaleString(lang)} {t("ofertasViajerosVieron")}
+              </div>
+            )}
 
             <div className="mt-2 flex items-end gap-2">
               <div className="text-[26px] font-extrabold leading-none text-marca-900">

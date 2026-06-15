@@ -13,9 +13,11 @@ jobs:
   buscar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # Actualizadas a las versiones con Node 22 (las v4/v5 corrian sobre
+      # Node 20 ya deprecado en GitHub Actions).
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
