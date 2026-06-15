@@ -4,10 +4,12 @@ Detector de vuelos internacionales económicos desde Colombia.
 
 Uso:  python detector.py
 """
+import os
 import statistics
 import time
 from datetime import date
 
+import requests
 from dotenv import load_dotenv
 
 import config
@@ -17,6 +19,48 @@ from almacenamiento import (cargar_precios_por_ruta_mes, guardar_precio,
 from notificaciones import notificar
 
 load_dotenv()  # carga las credenciales del archivo .env
+
+# Endpoint en Vercel que recibe los precios detectados y dispara emails a los
+# usuarios con alertas activas. Si ALERTS_SHARED_SECRET no esta configurado
+# (entorno local sin secret, o secret no propagado al cron), el detector
+# sigue funcionando normal y solo se omite la llamada.
+ALERTS_URL = os.environ.get(
+    "ALERTS_URL",
+    "https://app-vuelos-mfos.vercel.app/api/alertas/disparar",
+)
+ALERTS_SECRET = os.environ.get("ALERTS_SHARED_SECRET", "")
+
+
+def notificar_alertas_web(origen, destino, precio, fecha_ida, fecha_vuelta,
+                          link, aerolinea):
+    """Avisa al endpoint Vercel que vio un precio. La app busca usuarios con
+    alertas para ese destino cuyo umbral cumpla y les manda email. Best-effort:
+    si falla la red o el secret no esta, no rompe la corrida."""
+    if not ALERTS_SECRET:
+        return
+    try:
+        requests.post(
+            ALERTS_URL,
+            headers={
+                "X-Alert-Secret": ALERTS_SECRET,
+                "Content-Type": "application/json",
+                "User-Agent": "Viajero360-Detector/1.0",
+            },
+            json={
+                "origen": origen,
+                "iata": destino,
+                "precio": precio,
+                "fecha_ida": fecha_ida,
+                "fecha_vuelta": fecha_vuelta,
+                "link": link,
+                "aerolinea": aerolinea,
+            },
+            timeout=8,
+        )
+    except Exception as e:
+        # No detenemos al detector por esto: las alertas son secundarias al
+        # objetivo primario (escanear precios y guardar historial).
+        print(f"  ! No se pudo notificar alertas web: {e}")
 
 
 def generar_meses():
@@ -110,6 +154,18 @@ def main():
                 # Historia previa de ESTA ruta y mes (antes de guardar la actual)
                 historico = historial.get((origen, destino, mes_salida), [])
                 guardar_precio(origen, destino, fecha_ida, fecha_vuelta, oferta)
+
+                # Notificar a la app web para que dispare las alertas de los
+                # usuarios cuyo umbral se cumpla (best-effort, no bloquea).
+                notificar_alertas_web(
+                    origen=origen,
+                    destino=destino,
+                    precio=int(precio),
+                    fecha_ida=fecha_ida,
+                    fecha_vuelta=fecha_vuelta,
+                    link=oferta.get("link", ""),
+                    aerolinea=oferta.get("aerolinea", ""),
+                )
 
                 es_ganga, razon = evaluar_oferta(precio, umbral, historico)
                 if not es_ganga:

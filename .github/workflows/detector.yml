@@ -31,6 +31,9 @@ jobs:
           EMAIL_REMITENTE: ${{ secrets.EMAIL_REMITENTE }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           EMAIL_DESTINATARIO: ${{ secrets.EMAIL_DESTINATARIO }}
+          # Secret compartido para POSTear al endpoint Vercel /api/alertas/disparar
+          # Debe coincidir con ALERTS_SHARED_SECRET en Vercel env vars.
+          ALERTS_SHARED_SECRET: ${{ secrets.ALERTS_SHARED_SECRET }}
         run: python detector.py
 
       - name: Generar ofertas para la web

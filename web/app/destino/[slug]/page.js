@@ -14,6 +14,7 @@ import { preciosPorMes } from "@/lib/historialPrecios";
 import { iataDe } from "@/lib/iataCiudades";
 import { linkTours, linkHoteles, linkVuelos, linkESIM, linkSeguro } from "@/lib/afiliados";
 import FavToggle from "./FavToggle";
+import AlertaPrecio from "@/components/AlertaPrecio";
 
 const SITIO = "https://app-vuelos-mfos.vercel.app";
 
@@ -197,12 +198,22 @@ export default async function PaginaDestino({ params }) {
             <h1 className="mt-2 text-4xl font-extrabold tracking-tight drop-shadow-md sm:text-5xl">
               Viaje a {d.ciudad} desde Colombia
             </h1>
-            <Link
-              href={`/?destino=${slug}`}
-              className="mt-4 inline-flex w-fit items-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-base font-bold text-marca-700 shadow-marca transition hover:brightness-105"
-            >
-              🗺️ Planear mi viaje a {d.ciudad}
-            </Link>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <Link
+                href={`/?destino=${slug}`}
+                className="inline-flex w-fit items-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-base font-bold text-marca-700 shadow-marca transition hover:brightness-105"
+              >
+                🗺️ Planear mi viaje a {d.ciudad}
+              </Link>
+              {iata && (
+                <AlertaPrecio
+                  ciudad={d.ciudad}
+                  pais={d.pais}
+                  iata={iata}
+                  precioActual={d.vuelo}
+                />
+              )}
+            </div>
           </div>
         </header>
       ) : (
@@ -215,12 +226,22 @@ export default async function PaginaDestino({ params }) {
           <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-marca-900 sm:text-5xl">
             Viaje a {d.ciudad} desde Colombia
           </h1>
-          <Link
-            href={`/?destino=${slug}`}
-            className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-marca-500 to-marca-600 px-6 py-3.5 text-base font-bold text-white shadow-marca transition hover:brightness-105"
-          >
-            🗺️ Planear mi viaje a {d.ciudad}
-          </Link>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <Link
+              href={`/?destino=${slug}`}
+              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-marca-500 to-marca-600 px-6 py-3.5 text-base font-bold text-white shadow-marca transition hover:brightness-105"
+            >
+              🗺️ Planear mi viaje a {d.ciudad}
+            </Link>
+            {iata && (
+              <AlertaPrecio
+                ciudad={d.ciudad}
+                pais={d.pais}
+                iata={iata}
+                precioActual={d.vuelo}
+              />
+            )}
+          </div>
         </header>
       )}
 
