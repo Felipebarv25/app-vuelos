@@ -26,6 +26,22 @@ const TEMPORADA_REGION = {
     africa: { mejor: "October to April (drier season north and south)", evitar: "June to August (rains and extreme heat in some areas)" },
     oceania: { mejor: "September to November (austral spring) and March to May (autumn)", evitar: "December to February (peak summer)" },
   },
+  pt: {
+    sudamerica: { mejor: "março a junho e setembro a novembro", evitar: "dezembro a fevereiro (verão austral, alta temporada na Argentina/Chile)" },
+    norteamerica: { mejor: "abril a junho e setembro a novembro", evitar: "dezembro a janeiro (caro) e julho-agosto (pico do verão nos EUA)" },
+    europa: { mejor: "abril, maio, setembro, outubro", evitar: "junho a agosto (alta temporada, tudo mais caro)" },
+    asia: { mejor: "novembro a março (estação seca)", evitar: "junho a outubro (monções em grande parte da Ásia)" },
+    africa: { mejor: "outubro a abril (mais seco no norte e no sul)", evitar: "junho a agosto (chuvas e calor extremo)" },
+    oceania: { mejor: "setembro a novembro (primavera austral) e março a maio (outono)", evitar: "dezembro a fevereiro (verão de pico)" },
+  },
+  fr: {
+    sudamerica: { mejor: "de mars à juin et de septembre à novembre", evitar: "de décembre à février (été austral, haute saison en Argentine/Chili)" },
+    norteamerica: { mejor: "d'avril à juin et de septembre à novembre", evitar: "de décembre à janvier (cher) et juillet-août (pic estival US)" },
+    europa: { mejor: "avril, mai, septembre, octobre", evitar: "de juin à août (haute saison, tout est plus cher)" },
+    asia: { mejor: "de novembre à mars (saison sèche)", evitar: "de juin à octobre (mousson dans une grande partie de l'Asie)" },
+    africa: { mejor: "d'octobre à avril (saison plus sèche au nord et au sud)", evitar: "de juin à août (pluies et chaleur extrême)" },
+    oceania: { mejor: "de septembre à novembre (printemps austral) et de mars à mai (automne)", evitar: "de décembre à février (été de pointe)" },
+  },
 };
 
 // Datos específicos por idioma. La estructura es la misma; cuando agregues una
@@ -315,6 +331,290 @@ const DATOS_POR_LANG = {
       platos: ["Arepa de huevo", "Shrimp ceviche", "Coconut rice", "Patacones"],
     },
   },
+  pt: {
+    "madrid-espana": {
+      intro: "Madri é a capital e coração cultural da Espanha: museus de classe mundial, palácios, vida noturna intensa e uma gastronomia onde as tapas são religião. É também um dos hubs aéreos mais conectados com a América Latina, com voos diretos.",
+      idioma: "Espanhol",
+      moneda: "Euro (EUR)",
+      dato: "O Museu do Prado tem uma das mais importantes coleções de pintura europeia do mundo (Velázquez, Goya, Bosco).",
+      platos: ["Cozido madrilenho", "Sanduíche de lula", "Churros com chocolate", "Tortilha espanhola"],
+    },
+    "barcelona-espana": {
+      intro: "Barcelona combina praias, arquitetura modernista de Gaudí (Sagrada Família, Park Güell), bairros históricos como o Gótico e uma vida noturna inesgotável. Uma das cidades mais visitadas da Europa.",
+      idioma: "Espanhol e catalão",
+      moneda: "Euro (EUR)",
+      dato: "A Sagrada Família está em construção desde 1882 e a previsão é terminar em 2026.",
+      platos: ["Paella", "Pão com tomate", "Crema catalana", "Bombas"],
+    },
+    "paris-francia": {
+      intro: "Paris é sinônimo de romance, arte e elegância: Torre Eiffel, Louvre, Champs-Élysées, Montmartre e a gastronomia mais influente do mundo. Visita obrigatória na vida.",
+      idioma: "Francês (inglês nas zonas turísticas)",
+      moneda: "Euro (EUR)",
+      dato: "O Louvre é o museu mais visitado do mundo, com quase 10 milhões de visitantes por ano.",
+      platos: ["Croissants", "Escargots", "Crème brûlée", "Macarons", "Steak frites"],
+    },
+    "roma-italia": {
+      intro: "Roma é um museu a céu aberto: Coliseu, Vaticano, Fórum Romano, fontes barrocas. Cada esquina tem 2.000 anos de história e a comida está entre as melhores do mundo.",
+      idioma: "Italiano",
+      moneda: "Euro (EUR)",
+      dato: "A Cidade do Vaticano dentro de Roma é o menor país do mundo (0,49 km²).",
+      platos: ["Cacio e pepe", "Carbonara", "Pizza romana", "Saltimbocca", "Tiramisù"],
+    },
+    "londres-reino-unido": {
+      intro: "Londres é uma das cidades mais cosmopolitas do planeta: Big Ben, British Museum, Camden, pubs históricos e os musicais do West End. Multicultural, moderna e com história milenar.",
+      idioma: "Inglês",
+      moneda: "Libra esterlina (GBP)",
+      dato: "O metrô de Londres ('the Tube') é o mais antigo do mundo, aberto em 1863.",
+      platos: ["Fish and chips", "Sunday roast", "Pie and mash", "Afternoon tea"],
+    },
+    "tokio-japon": {
+      intro: "Tóquio é o contraste perfeito entre tradição e futuro: templos centenários ao lado de arranha-céus, cruzamentos caóticos como Shibuya, izakayas escondidas e o melhor sushi do mundo.",
+      idioma: "Japonês (pouco inglês)",
+      moneda: "Iene japonês (JPY)",
+      dato: "O cruzamento de Shibuya é o mais movimentado do mundo: até 3.000 pessoas atravessam a cada semáforo.",
+      platos: ["Sushi", "Ramen", "Tempura", "Wagyu", "Takoyaki"],
+    },
+    "bali-indonesia": {
+      intro: "Bali é paraíso tropical acessível: praias para surfar, templos hindus, terraços de arroz em Ubud, espiritualidade que se sente no ar e preços muito baixos. Excelente para mochileiros e lua de mel.",
+      idioma: "Indonésio (inglês comum em áreas turísticas)",
+      moneda: "Rupia indonésia (IDR)",
+      dato: "Bali é majoritariamente hindu, mesmo a Indonésia sendo um país de maioria muçulmana.",
+      platos: ["Nasi goreng", "Babi guling", "Sate", "Gado-gado"],
+    },
+    "bangkok-tailandia": {
+      intro: "Bangkok é o portal para a Ásia para viajantes com orçamento: templos dourados, mercados flutuantes, comida de rua fenomenal e vida noturna 24/7. Conexão chave para Vietnã, Camboja e ilhas tailandesas.",
+      idioma: "Tailandês (inglês no turismo)",
+      moneda: "Baht tailandês (THB)",
+      dato: "Bangkok é a cidade mais visitada do mundo por turistas internacionais segundo a Mastercard.",
+      platos: ["Pad thai", "Tom yum", "Massaman curry", "Som tam", "Mango sticky rice"],
+    },
+    "nueva-york-estados-unidos": {
+      intro: "Nova York é a cidade que nunca dorme: Times Square, Central Park, musicais da Broadway, arranha-céus icônicos. A capital cultural e financeira dos EUA.",
+      idioma: "Inglês",
+      moneda: "Dólar americano (USD)",
+      dato: "O metrô de NY funciona 24/7, um dos poucos do mundo que não fecha à noite.",
+      platos: ["NY pizza slice", "Bagels", "Cheesecake", "Pastrami sandwich"],
+    },
+    "ciudad-de-mexico-mexico": {
+      intro: "CDMX é uma megacidade vibrante: ruínas astecas no centro, murais de Diego Rivera, mercados, mezcalerias de bairro e uma das gastronomias mais reconhecidas pela UNESCO. Voos muito baratos.",
+      idioma: "Espanhol",
+      moneda: "Peso mexicano (MXN)",
+      dato: "CDMX foi construída sobre um lago: por isso afunda cerca de 40 cm/ano em algumas áreas.",
+      platos: ["Tacos al pastor", "Tlayuda", "Mole", "Chiles en nogada", "Pozole"],
+    },
+    "lima-peru": {
+      intro: "Lima é a capital gastronômica da América do Sul: 3 restaurantes no top 50 mundial. Mistura mar e deserto, com bairros boêmios como Barranco e vista do Pacífico desde Miraflores.",
+      idioma: "Espanhol",
+      moneda: "Sol peruano (PEN)",
+      dato: "Lima é a única capital do mundo com um rio que cruza um deserto e desemboca no Pacífico.",
+      platos: ["Ceviche", "Lomo saltado", "Anticuchos", "Ají de gallina", "Causa limeña"],
+    },
+    "cusco-peru": {
+      intro: "Cusco foi capital do Império Inca e é a porta para Machu Picchu. Ruas de pedra, ruínas de Sacsayhuamán e o Vale Sagrado fazem uma viagem inesquecível. Altitude: 3.400 m.",
+      idioma: "Espanhol e quéchua",
+      moneda: "Sol peruano (PEN)",
+      dato: "Sacsayhuamán tem pedras de até 200 toneladas encaixadas sem argamassa, e ninguém sabe como fizeram.",
+      platos: ["Cuy (porquinho da Índia)", "Alpaca grelhada", "Chicha morada", "Choclo com queijo"],
+    },
+    "buenos-aires-argentina": {
+      intro: "Buenos Aires é a capital do tango, da carne e do futebol. Bairros com personalidade própria (Palermo, San Telmo, La Boca), livrarias icônicas e a vida noturna mais longa da América do Sul.",
+      idioma: "Espanhol",
+      moneda: "Peso argentino (ARS)",
+      dato: "O Obelisco foi construído em apenas 31 dias em 1936 para celebrar os 400 anos da cidade.",
+      platos: ["Asado", "Empanadas", "Milanesa napolitana", "Choripán", "Doce de leite"],
+    },
+    "rio-de-janeiro-brasil": {
+      intro: "Rio é natureza e festa: Cristo Redentor, Pão de Açúcar, Copacabana, Ipanema, samba e o carnaval mais famoso do mundo. A cidade maravilhosa.",
+      idioma: "Português",
+      moneda: "Real brasileiro (BRL)",
+      dato: "O Cristo Redentor mede 38 m (incluindo o pedestal) e foi inaugurado em 1931.",
+      platos: ["Feijoada", "Coxinha", "Açaí", "Brigadeiro", "Picanha"],
+    },
+    "estambul-turquia": {
+      intro: "Istambul é a única cidade em dois continentes: Europa e Ásia separadas pelo Bósforo. Hagia Sophia, Mesquita Azul, Grande Bazar e mil anos de impérios bizantino e otomano.",
+      idioma: "Turco (inglês no turismo)",
+      moneda: "Lira turca (TRY)",
+      dato: "O Grande Bazar de Istambul tem 4.000 lojas e é um dos mercados cobertos mais antigos do mundo (1455).",
+      platos: ["Kebab", "Baklava", "Köfte", "Lahmacun", "Turkish delight"],
+    },
+    "amsterdam-paises-bajos": {
+      intro: "Amsterdã é canais, bicicletas, museus de classe mundial (Van Gogh, Rijksmuseum) e a casa de Anne Frank. Cidade compacta, liberal e perfeita para 3-4 dias.",
+      idioma: "Holandês (inglês universal)",
+      moneda: "Euro (EUR)",
+      dato: "Há mais bicicletas que habitantes em Amsterdã (881.000 bikes vs 821.000 pessoas).",
+      platos: ["Stroopwafels", "Bitterballen", "Arenque", "Batatas com maionese", "Pannenkoeken"],
+    },
+    "lisboa-portugal": {
+      intro: "Lisboa é luz, azulejos, bondes amarelos e mirantes com vista para o Tejo. Mais barata que o resto da Europa ocidental, com vida noturna sem igual no Bairro Alto.",
+      idioma: "Português",
+      moneda: "Euro (EUR)",
+      dato: "Lisboa é a segunda capital mais antiga da Europa, apenas Atenas é mais velha.",
+      platos: ["Pastel de nata", "Bacalhau", "Bifana", "Caldo verde", "Polvo à lagareiro"],
+    },
+    "praga-chequia": {
+      intro: "Praga é um conto de fadas em pedra: o relógio astronômico, a Ponte Carlos, o maior castelo do mundo e cerveja ao melhor preço da Europa.",
+      idioma: "Tcheco (inglês nas áreas turísticas)",
+      moneda: "Coroa tcheca (CZK)",
+      dato: "Os tchecos são os maiores consumidores de cerveja per capita do mundo: 188 L por pessoa ao ano.",
+      platos: ["Goulash", "Knedlíky", "Svíčková", "Trdelník", "Pilsner"],
+    },
+    "miami-estados-unidos": {
+      intro: "Miami é América Latina com poder de compra americano: praias de South Beach, vida noturna em Wynwood, compras em Aventura e portal para Cuba/Bahamas. Voos diretos baratos da América Latina.",
+      idioma: "Inglês e espanhol",
+      moneda: "Dólar americano (USD)",
+      dato: "Miami é a única grande cidade dos EUA onde mais de 70% da população fala espanhol em casa.",
+      platos: ["Cuban sandwich", "Stone crab", "Pastelitos", "Key lime pie"],
+    },
+    "cartagena-colombia": {
+      intro: "Cartagena é a joia colonial do Caribe colombiano: muralhas, varandas floridas, praias a 20 minutos de barco e pôr do sol no Café del Mar. Imperdível na América do Sul.",
+      idioma: "Espanhol",
+      moneda: "Peso colombiano (COP)",
+      dato: "As muralhas de Cartagena foram declaradas Patrimônio da Humanidade pela UNESCO em 1984.",
+      platos: ["Arepa de huevo", "Ceviche de camarão", "Arroz com coco", "Patacones"],
+    },
+  },
+  fr: {
+    "madrid-espana": {
+      intro: "Madrid est la capitale et le cœur culturel de l'Espagne : musées de classe mondiale, palais royaux, vie nocturne intense et une gastronomie où les tapas sont une religion. C'est aussi l'un des hubs les mieux connectés à l'Amérique latine, avec des vols directs.",
+      idioma: "Espagnol",
+      moneda: "Euro (EUR)",
+      dato: "Le Musée du Prado abrite l'une des plus importantes collections de peinture européenne au monde (Velázquez, Goya, Bosch).",
+      platos: ["Cocido madrilène", "Sandwich aux calamars", "Churros au chocolat", "Tortilla espagnole"],
+    },
+    "barcelona-espana": {
+      intro: "Barcelone combine plages, architecture moderniste de Gaudí (Sagrada Família, Park Güell), quartiers historiques comme le Gothique et une vie nocturne sans fin. L'une des villes les plus visitées d'Europe.",
+      idioma: "Espagnol et catalan",
+      moneda: "Euro (EUR)",
+      dato: "La Sagrada Família est en construction depuis 1882 et devrait être achevée en 2026.",
+      platos: ["Paella", "Pain à la tomate", "Crème catalane", "Bombas"],
+    },
+    "paris-francia": {
+      intro: "Paris est synonyme de romance, d'art et d'élégance : la tour Eiffel, le Louvre, les Champs-Élysées, Montmartre et la cuisine la plus influente au monde. Une visite incontournable dans une vie.",
+      idioma: "Français (l'anglais se comprend dans les zones touristiques)",
+      moneda: "Euro (EUR)",
+      dato: "Le Louvre est le musée le plus visité au monde avec près de 10 millions de visiteurs par an.",
+      platos: ["Croissants", "Escargots", "Crème brûlée", "Macarons", "Steak frites"],
+    },
+    "roma-italia": {
+      intro: "Rome est un musée à ciel ouvert : le Colisée, le Vatican, le Forum romain, les fontaines baroques. Chaque coin de rue compte 2 000 ans d'histoire et la cuisine compte parmi les meilleures au monde.",
+      idioma: "Italien",
+      moneda: "Euro (EUR)",
+      dato: "La Cité du Vatican à Rome est le plus petit pays au monde (0,49 km²).",
+      platos: ["Cacio e pepe", "Carbonara", "Pizza romaine", "Saltimbocca", "Tiramisu"],
+    },
+    "londres-reino-unido": {
+      intro: "Londres est l'une des villes les plus cosmopolites de la planète : Big Ben, British Museum, Camden, pubs historiques et comédies musicales du West End. Multiculturelle, moderne et avec une histoire millénaire.",
+      idioma: "Anglais",
+      moneda: "Livre sterling (GBP)",
+      dato: "Le métro de Londres ('the Tube') est le plus ancien au monde, ouvert en 1863.",
+      platos: ["Fish and chips", "Sunday roast", "Pie and mash", "Afternoon tea"],
+    },
+    "tokio-japon": {
+      intro: "Tokyo est le contraste parfait entre tradition et futur : temples centenaires aux côtés de gratte-ciels, carrefours chaotiques comme Shibuya, izakayas cachés et les meilleurs sushis du monde.",
+      idioma: "Japonais (peu d'anglais)",
+      moneda: "Yen japonais (JPY)",
+      dato: "Le carrefour de Shibuya est le plus fréquenté du monde : jusqu'à 3 000 personnes traversent à chaque feu.",
+      platos: ["Sushi", "Ramen", "Tempura", "Wagyu", "Takoyaki"],
+    },
+    "bali-indonesia": {
+      intro: "Bali est un paradis tropical accessible : plages de surf, temples hindous, rizières en terrasse à Ubud, une spiritualité palpable et des prix très bas. Excellent pour les backpackers et les lunes de miel.",
+      idioma: "Indonésien (anglais courant en zone touristique)",
+      moneda: "Roupie indonésienne (IDR)",
+      dato: "Bali est à majorité hindoue alors que l'Indonésie est à majorité musulmane.",
+      platos: ["Nasi goreng", "Babi guling", "Sate", "Gado-gado"],
+    },
+    "bangkok-tailandia": {
+      intro: "Bangkok est la porte d'entrée de l'Asie pour les voyageurs au budget serré : temples dorés, marchés flottants, street food phénoménale et vie nocturne 24/7. Connexion clé vers le Vietnam, le Cambodge et les îles thaïlandaises.",
+      idioma: "Thaï (anglais dans le tourisme)",
+      moneda: "Baht thaïlandais (THB)",
+      dato: "Bangkok est la ville la plus visitée au monde par les touristes internationaux selon Mastercard.",
+      platos: ["Pad thaï", "Tom yum", "Curry Massaman", "Som tam", "Mango sticky rice"],
+    },
+    "nueva-york-estados-unidos": {
+      intro: "New York est la ville qui ne dort jamais : Times Square, Central Park, les comédies musicales de Broadway, les gratte-ciels iconiques. La capitale culturelle et financière des États-Unis.",
+      idioma: "Anglais",
+      moneda: "Dollar américain (USD)",
+      dato: "Le métro de New York fonctionne 24/7, l'un des rares au monde à ne pas fermer la nuit.",
+      platos: ["NY pizza slice", "Bagels", "Cheesecake", "Sandwich pastrami"],
+    },
+    "ciudad-de-mexico-mexico": {
+      intro: "Mexico City est une mégalopole vibrante : ruines aztèques au centre, fresques de Diego Rivera, marchés, mezcalerías de quartier et une cuisine reconnue par l'UNESCO. Vols très bon marché.",
+      idioma: "Espagnol",
+      moneda: "Peso mexicain (MXN)",
+      dato: "Mexico City est construite sur un lac : elle s'enfonce d'environ 40 cm par an à certains endroits.",
+      platos: ["Tacos al pastor", "Tlayuda", "Mole", "Chiles en nogada", "Pozole"],
+    },
+    "lima-peru": {
+      intro: "Lima est la capitale gastronomique de l'Amérique du Sud : 3 restaurants dans le top 50 mondial. Elle mêle mer et désert, avec des quartiers bohèmes comme Barranco et vue sur le Pacifique depuis Miraflores.",
+      idioma: "Espagnol",
+      moneda: "Sol péruvien (PEN)",
+      dato: "Lima est la seule capitale au monde dont un fleuve traverse un désert et se jette dans le Pacifique.",
+      platos: ["Ceviche", "Lomo saltado", "Anticuchos", "Ají de gallina", "Causa limeña"],
+    },
+    "cusco-peru": {
+      intro: "Cusco fut la capitale de l'Empire inca et c'est la porte d'entrée vers le Machu Picchu. Ses rues pavées, les ruines de Sacsayhuamán et la Vallée Sacrée font un voyage inoubliable. Altitude : 3 400 m.",
+      idioma: "Espagnol et quechua",
+      moneda: "Sol péruvien (PEN)",
+      dato: "Sacsayhuamán comporte des pierres jusqu'à 200 tonnes assemblées sans mortier, et personne ne sait comment.",
+      platos: ["Cuy (cochon d'Inde)", "Alpaga grillé", "Chicha morada", "Choclo au fromage"],
+    },
+    "buenos-aires-argentina": {
+      intro: "Buenos Aires est la capitale du tango, de la viande et du football. Quartiers à forte personnalité (Palermo, San Telmo, La Boca), librairies iconiques et la vie nocturne la plus longue d'Amérique du Sud.",
+      idioma: "Espagnol",
+      moneda: "Peso argentin (ARS)",
+      dato: "L'Obélisque a été construit en seulement 31 jours en 1936 pour célébrer les 400 ans de la ville.",
+      platos: ["Asado", "Empanadas", "Milanesa napolitaine", "Choripán", "Dulce de leche"],
+    },
+    "rio-de-janeiro-brasil": {
+      intro: "Rio, c'est la nature et la fête : Christ Rédempteur, Pain de Sucre, Copacabana, Ipanema, samba et le carnaval le plus célèbre du monde. La ville merveilleuse.",
+      idioma: "Portugais",
+      moneda: "Real brésilien (BRL)",
+      dato: "Le Christ Rédempteur mesure 38 m (avec le socle) et a été inauguré en 1931.",
+      platos: ["Feijoada", "Coxinha", "Açaí", "Brigadeiro", "Picanha"],
+    },
+    "estambul-turquia": {
+      intro: "Istanbul est la seule ville à cheval sur deux continents : Europe et Asie séparées par le Bosphore. Sainte-Sophie, la Mosquée bleue, le Grand Bazar et mille ans d'empires byzantin et ottoman.",
+      idioma: "Turc (anglais dans le tourisme)",
+      moneda: "Livre turque (TRY)",
+      dato: "Le Grand Bazar d'Istanbul compte 4 000 boutiques et c'est l'un des marchés couverts les plus anciens au monde (1455).",
+      platos: ["Kebab", "Baklava", "Köfte", "Lahmacun", "Turkish delight"],
+    },
+    "amsterdam-paises-bajos": {
+      intro: "Amsterdam, ce sont les canaux, les vélos, les musées de classe mondiale (Van Gogh, Rijksmuseum) et la maison d'Anne Frank. Une ville compacte, libérale, parfaite pour 3-4 jours.",
+      idioma: "Néerlandais (anglais universel)",
+      moneda: "Euro (EUR)",
+      dato: "Il y a plus de vélos que d'habitants à Amsterdam (881 000 vélos vs 821 000 personnes).",
+      platos: ["Stroopwafels", "Bitterballen", "Hareng", "Frites mayo", "Pannenkoeken"],
+    },
+    "lisboa-portugal": {
+      intro: "Lisbonne, c'est la lumière, les azulejos, les tramways jaunes et les belvédères sur le Tage. Moins chère que le reste de l'Europe occidentale, avec une vie nocturne sans égale au Bairro Alto.",
+      idioma: "Portugais",
+      moneda: "Euro (EUR)",
+      dato: "Lisbonne est la deuxième capitale la plus ancienne d'Europe, seule Athènes est plus vieille.",
+      platos: ["Pastel de nata", "Bacalhau", "Bifana", "Caldo verde", "Polvo à lagareiro"],
+    },
+    "praga-chequia": {
+      intro: "Prague est un conte de fées en pierre : l'horloge astronomique, le pont Charles, le plus grand château au monde et la bière au meilleur prix d'Europe.",
+      idioma: "Tchèque (anglais dans les zones touristiques)",
+      moneda: "Couronne tchèque (CZK)",
+      dato: "Les Tchèques sont les plus gros consommateurs de bière par habitant au monde : 188 L par personne et par an.",
+      platos: ["Goulash", "Knedlíky", "Svíčková", "Trdelník", "Pilsner"],
+    },
+    "miami-estados-unidos": {
+      intro: "Miami, c'est l'Amérique latine avec le pouvoir d'achat américain : plages de South Beach, vie nocturne à Wynwood, shopping à Aventura et porte d'entrée vers Cuba et les Bahamas. Vols directs bon marché.",
+      idioma: "Anglais et espagnol",
+      moneda: "Dollar américain (USD)",
+      dato: "Miami est la seule grande ville des États-Unis où plus de 70 % de la population parle espagnol à la maison.",
+      platos: ["Cuban sandwich", "Stone crab", "Pastelitos", "Key lime pie"],
+    },
+    "cartagena-colombia": {
+      intro: "Carthagène est le joyau colonial des Caraïbes colombiennes : remparts en pierre, balcons fleuris, plages à 20 min en bateau et couchers de soleil au Café del Mar. Incontournable en Amérique du Sud.",
+      idioma: "Espagnol",
+      moneda: "Peso colombien (COP)",
+      dato: "Les remparts de Carthagène ont été inscrits au Patrimoine mondial de l'UNESCO en 1984.",
+      platos: ["Arepa de huevo", "Ceviche de crevettes", "Riz à la noix de coco", "Patacones"],
+    },
+  },
 };
 
 // Plantilla genérica por región para destinos sin datos específicos.
@@ -334,6 +634,46 @@ function generico(d, lang) {
         `US$${d.dia} per person (lodging, food, transport and activities).`,
       idioma: "Check local language",
       moneda: "Check local currency",
+      dato: null,
+      platos: [],
+    };
+  }
+  if (lang === "pt") {
+    const regionPt = d.region === "sudamerica" ? "América do Sul"
+      : d.region === "norteamerica" ? "América do Norte e Central"
+      : d.region === "europa" ? "Europa"
+      : d.region === "asia" ? "Ásia"
+      : d.region === "africa" ? "África"
+      : "Oceania";
+    return {
+      intro:
+        `Um destino fascinante na ${regionPt}. ${d.ciudad} combina cultura, ` +
+        `gastronomia e experiências únicas. Voos ida e volta custam cerca de ` +
+        `US$${d.vuelo} desde os principais hubs, e o orçamento diário para um turista ` +
+        `de médio porte gira em torno de US$${d.dia} por pessoa (hospedagem, comida, ` +
+        `transporte e atividades).`,
+      idioma: "Consulte o idioma local",
+      moneda: "Consulte a moeda local",
+      dato: null,
+      platos: [],
+    };
+  }
+  if (lang === "fr") {
+    const regionFr = d.region === "sudamerica" ? "Amérique du Sud"
+      : d.region === "norteamerica" ? "Amérique du Nord et centrale"
+      : d.region === "europa" ? "Europe"
+      : d.region === "asia" ? "Asie"
+      : d.region === "africa" ? "Afrique"
+      : "Océanie";
+    return {
+      intro:
+        `Une destination fascinante en ${regionFr}. ${d.ciudad} combine culture, ` +
+        `gastronomie et expériences uniques. Les vols A/R coûtent environ ` +
+        `US$${d.vuelo} depuis les principaux hubs, et le budget quotidien pour un voyageur ` +
+        `de gamme moyenne tourne autour de US$${d.dia} par personne (hébergement, ` +
+        `nourriture, transport et activités).`,
+      idioma: "Vérifiez la langue locale",
+      moneda: "Vérifiez la monnaie locale",
       dato: null,
       platos: [],
     };
@@ -365,9 +705,15 @@ export function datosSeoDe(d, lang = "es") {
   const base = DATOS_POR_LANG[langOk][d.slug] || generico(d, langOk);
   const tempLang = TEMPORADA_REGION[langOk] || TEMPORADA_REGION.es;
   const temp = tempLang[d.region] || {};
+  const fallbackEpoca = {
+    es: "todo el año",
+    en: "year-round",
+    pt: "o ano todo",
+    fr: "toute l'année",
+  }[langOk] || "todo el año";
   return {
     ...base,
-    mejorEpoca: base.mejorEpoca || temp.mejor || (langOk === "en" ? "year-round" : "todo el año"),
+    mejorEpoca: base.mejorEpoca || temp.mejor || fallbackEpoca,
     evitarEpoca: temp.evitar || null,
   };
 }
@@ -392,6 +738,40 @@ export function faqsDe(d, lang = "es") {
       {
         q: `How many days are recommended to visit ${d.ciudad}?`,
         a: `To explore ${d.ciudad} without rushing, we recommend between 5 and 10 days. The main sights can be seen in 4-5 days; with 7-10 you can include nearby excursions. With Viajero 360 you build a day-by-day itinerary based on your time available.`,
+      },
+    ];
+  }
+
+  if (lang === "pt") {
+    return [
+      {
+        q: `Quanto custa uma viagem para ${d.ciudad}?`,
+        a: `Uma semana em ${d.ciudad} custa aproximadamente US$${presupSemana} por pessoa (US$${d.vuelo} de voo ida e volta + US$${d.dia * 7} de estadia). Duas semanas sobem para US$${presupDosSem}. Valores orientativos para um turista de médio porte; com o Viajero 360 você vê o preço ao vivo.`,
+      },
+      {
+        q: `Quando é a melhor época para visitar ${d.ciudad}?`,
+        a: `A melhor temporada para ${d.ciudad} é ${datos.mejorEpoca}. ${datos.evitarEpoca ? `É recomendável evitar ${datos.evitarEpoca}.` : ""}`.trim(),
+      },
+      {
+        q: `Quantos dias são recomendados para visitar ${d.ciudad}?`,
+        a: `Para conhecer ${d.ciudad} sem correria, recomendamos entre 5 e 10 dias. Os principais pontos podem ser vistos em 4-5 dias; com 7-10 dias você inclui excursões próximas. Com o Viajero 360 você monta um roteiro dia a dia.`,
+      },
+    ];
+  }
+
+  if (lang === "fr") {
+    return [
+      {
+        q: `Combien coûte un voyage à ${d.ciudad} ?`,
+        a: `Une semaine à ${d.ciudad} coûte environ US$${presupSemana} par personne (US$${d.vuelo} de vol A/R + US$${d.dia * 7} de séjour). Deux semaines montent à US$${presupDosSem}. Valeurs indicatives pour un voyageur de gamme moyenne ; avec Viajero 360 vous voyez le prix en direct.`,
+      },
+      {
+        q: `Quelle est la meilleure période pour visiter ${d.ciudad} ?`,
+        a: `La meilleure saison pour ${d.ciudad} est ${datos.mejorEpoca}. ${datos.evitarEpoca ? `Il est conseillé d'éviter ${datos.evitarEpoca}.` : ""}`.trim(),
+      },
+      {
+        q: `Combien de jours sont recommandés pour ${d.ciudad} ?`,
+        a: `Pour découvrir ${d.ciudad} sans courir, nous recommandons entre 5 et 10 jours. Les principaux sites se voient en 4-5 jours ; avec 7-10 vous ajoutez des excursions. Avec Viajero 360 vous bâtissez un itinéraire jour par jour.`,
       },
     ];
   }

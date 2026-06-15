@@ -71,6 +71,53 @@ export default function RootLayout({ children }) {
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        {/* Schema.org: Organization + WebSite con SearchAction. Ayuda a Google
+            a entender la marca y muestra un sitelinks searchbox en la SERP
+            (campo de busqueda Viajero 360 directamente en Google). */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  "@id": "https://app-vuelos-mfos.vercel.app/#organization",
+                  name: "Viajero 360",
+                  url: "https://app-vuelos-mfos.vercel.app/",
+                  logo: "https://app-vuelos-mfos.vercel.app/icono-192.png",
+                  description: "Planificador de viajes personalizado: itinerarios por presupuesto, precios reales de vuelos y recomendaciones globales.",
+                  sameAs: ["https://github.com/Felipebarv25/app-vuelos"],
+                },
+                {
+                  "@type": "TravelAgency",
+                  "@id": "https://app-vuelos-mfos.vercel.app/#agency",
+                  name: "Viajero 360",
+                  url: "https://app-vuelos-mfos.vercel.app/",
+                  description: "Itinerarios día a día, presupuestos por país, alertas de precios y planificación multiciudad para 80+ destinos.",
+                  areaServed: { "@type": "Country", name: "Worldwide" },
+                  priceRange: "$",
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": "https://app-vuelos-mfos.vercel.app/#website",
+                  url: "https://app-vuelos-mfos.vercel.app/",
+                  name: "Viajero 360",
+                  publisher: { "@id": "https://app-vuelos-mfos.vercel.app/#organization" },
+                  inLanguage: ["es", "en", "pt", "fr"],
+                  potentialAction: {
+                    "@type": "SearchAction",
+                    target: {
+                      "@type": "EntryPoint",
+                      urlTemplate: "https://app-vuelos-mfos.vercel.app/?q={search_term_string}",
+                    },
+                    "query-input": "required name=search_term_string",
+                  },
+                },
+              ],
+            }),
+          }}
+        />
       </head>
       <body>
         <Providers>{children}</Providers>

@@ -63,6 +63,10 @@ export async function generateMetadata({ params }) {
         "es": urlEs,
         "en": url,
         "en-US": url,
+        "pt": `${SITIO}/pt/destino/${slug}`,
+        "pt-BR": `${SITIO}/pt/destino/${slug}`,
+        "fr": `${SITIO}/fr/destino/${slug}`,
+        "fr-FR": `${SITIO}/fr/destino/${slug}`,
         "x-default": urlEs, // default goes to Spanish (primary market today)
       },
     },
@@ -141,10 +145,10 @@ export default async function DestinationPage({ params }) {
         <span className="text-slate-700">Destinations</span>
         <span className="mx-1.5 text-slate-300">/</span>
         <span className="font-semibold text-marca-700">{nombre}</span>
-        <span className="float-right">
-          <Link href={`/destino/${slug}`} className="text-[12px] underline hover:text-marca-600">
-            🇪🇸 Ver en español
-          </Link>
+        <span className="float-right space-x-2">
+          <Link href={`/destino/${slug}`} className="text-[12px] underline hover:text-marca-600">🇪🇸 ES</Link>
+          <Link href={`/pt/destino/${slug}`} className="text-[12px] underline hover:text-marca-600">🇧🇷 PT</Link>
+          <Link href={`/fr/destino/${slug}`} className="text-[12px] underline hover:text-marca-600">🇫🇷 FR</Link>
         </span>
       </nav>
 
