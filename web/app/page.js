@@ -872,9 +872,10 @@ export default function Home() {
                       className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
                     >
                       🌃 Madrid
-                  </button>
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ) : (
             /* Cinta de ciudad: buscador compacto sobre fondo blanco */
