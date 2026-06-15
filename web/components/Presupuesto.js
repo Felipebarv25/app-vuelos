@@ -20,10 +20,13 @@ import { obtenerTasas, aUsdDe } from "@/lib/fx";
 //  - Un destino: lista de ciudades que caben en el presupuesto.
 //  - Ruta multiciudad: arma una ruta de varias ciudades dentro del presupuesto,
 //    con botón para regenerar otra ruta.
-export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k }) {
+export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, inicial = null }) {
   const [modo, setModo] = useState("ruta"); // "ruta" | "destino"
-  const [monto, setMonto] = useState(10000000); // 10M COP por defecto
-  const [moneda, setMoneda] = useState("COP");
+  // `inicial` permite que el HERO abra este modal pre-llenado con el monto+moneda
+  // que el usuario tipeo en el input principal de la home. Sin override quedan
+  // los defaults razonables (10M COP).
+  const [monto, setMonto] = useState(inicial?.monto ?? 10000000);
+  const [moneda, setMoneda] = useState(inicial?.moneda ?? "COP");
   const [dias, setDias] = useState(10);
   const [personas, setPersonas] = useState(1);
   const [region, setRegion] = useState("europa");

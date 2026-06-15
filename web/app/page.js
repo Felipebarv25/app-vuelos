@@ -128,6 +128,14 @@ export default function Home() {
   const [detalle, setDetalle] = useState(null);
   const [rutaTrazada, setRutaTrazada] = useState(null);
   const [mostrarPresupuesto, setMostrarPresupuesto] = useState(false);
+  // Valores que el usuario tipea en el input de presupuesto del HERO. Si abre el
+  // modal por ese camino, se le pasan como `inicial` y arranca ya con su monto.
+  const [montoHero, setMontoHero] = useState(10000000);
+  const [monedaHero, setMonedaHero] = useState("COP");
+  const [presupuestoInicial, setPresupuestoInicial] = useState(null);
+  // Despliega/colapsa el bloque de busqueda por ciudad (secundario en el nuevo
+  // HERO: la entrada por presupuesto es la principal).
+  const [mostrarBuscarCiudad, setMostrarBuscarCiudad] = useState(false);
   const [mostrarTodos, setMostrarTodos] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const [viajesGuardados, setViajesGuardados] = useState([]);
@@ -438,6 +446,17 @@ export default function Home() {
     }
   }
 
+  // Abre el modal de Presupuesto pre-llenado con los valores que el usuario
+  // tipeo o eligio en el HERO (chips rapidos o input grande). Es el CTA
+  // principal de la pantalla de inicio.
+  function abrirPresupuestoCon(monto, moneda) {
+    setMontoHero(monto);
+    setMonedaHero(moneda);
+    setPresupuestoInicial({ monto, moneda });
+    track("presupuesto_hero", { monto, moneda });
+    setMostrarPresupuesto(true);
+  }
+
   // Disparador de las ideas rápidas del HERO: pre-fija ciudad, días y/o momento
   // y abre la búsqueda en un solo click. Maneja sus propios overrides para no
   // depender del orden de actualización de los setState de React.
@@ -695,8 +714,13 @@ export default function Home() {
           </div>
 
           {esHero ? (
-            /* HERO de inicio */
-            <div className="mx-auto mt-12 max-w-2xl text-center lg:mt-20">
+            /* HERO de inicio: REDISENO 2026-06-14. El feedback del viajero
+               critico fue claro - la propuesta de valor de la app es
+               "dime cuanto tienes y te digo a donde vas desde Colombia", no
+               "busca una ciudad". El input de presupuesto pasa a ser el CTA
+               principal; la busqueda por ciudad queda como opcion secundaria
+               desplegable. */
+            <div className="mx-auto mt-10 max-w-2xl text-center lg:mt-16">
               {viajerosVivos != null && viajerosVivos > 0 && (
                 <div className="mb-4 flex justify-center">
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur">
@@ -708,75 +732,146 @@ export default function Home() {
                   </span>
                 </div>
               )}
-              <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">
-                {t("heroEyebrow")}
+              <div className="mb-2 text-[14px] font-semibold text-white/85">
+                {t(saludoClave())}, {usuario.nombre} 👋
               </div>
-              <h1 className="text-[34px] font-extrabold leading-[1.05] tracking-tight drop-shadow-md lg:text-[58px]">
-                {t(saludoClave())}, {usuario.nombre}
+              <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">
+                {t("heroEyebrowBudget")}
+              </div>
+              <h1 className="text-[28px] font-extrabold leading-[1.05] tracking-tight drop-shadow-md lg:text-[48px]">
+                {t("heroH1Budget")}
               </h1>
-              <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-white/90 lg:text-[19px]">
-                {t("heroTexto")}
+              <p className="mx-auto mt-3 max-w-xl text-[14px] leading-relaxed text-white/90 lg:text-[17px]">
+                {t("heroSubBudget")}
               </p>
 
-              <div className="relative mx-auto mt-7 max-w-xl">
-                <form onSubmit={buscarTexto} className="flex gap-2 rounded-2xl bg-white/95 p-1.5 shadow-2xl ring-1 ring-white/40 backdrop-blur">
-                  <input
-                    value={consulta}
-                    onChange={(e) => setConsulta(e.target.value)}
-                    onFocus={() => sugerencias.length && setMostrarSug(true)}
-                    placeholder={t("buscarPlaceholder")}
-                    list="ciudades-pop"
-                    className="flex-1 rounded-xl border-0 bg-transparent px-4 py-3 text-base text-slate-800 outline-none placeholder:text-slate-400"
-                  />
-                  <button type="submit" aria-label={t("buscar")} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-5 text-base font-bold text-white shadow-md transition hover:brightness-110">
-                    <Icono nombre="search" size={18} /> <span className="hidden sm:inline">{t("buscar")}</span>
-                  </button>
-                </form>
-                {mostrarSug && sugerencias.length > 0 && (
-                  <div className="animar-subir absolute inset-x-0 top-full z-[1100] mt-1.5 overflow-hidden rounded-2xl bg-white text-left shadow-xl">
-                    {sugerencias.map((s, i) => (
-                      <div key={i} className="flex cursor-pointer items-center gap-2.5 border-b border-slate-100 px-4 py-3 text-slate-800 hover:bg-marca-50" onClick={() => elegirCiudad(s)}>
-                        <Icono nombre="pin" size={18} className="text-marca-500" />
-                        <div><div className="text-[15px] font-semibold">{s.ciudad}</div><div className="text-xs text-slate-500">{s.pais}</div></div>
-                      </div>
-                    ))}
+              {/* Form principal: presupuesto + moneda + CTA. Al enviar abre
+                  el modal de Presupuesto pre-llenado con esos valores. */}
+              <form
+                onSubmit={(e) => { e.preventDefault(); abrirPresupuestoCon(montoHero, monedaHero); }}
+                className="mx-auto mt-6 max-w-xl rounded-2xl bg-white/95 p-2 shadow-2xl ring-1 ring-white/40 backdrop-blur"
+              >
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <div className="flex flex-1 items-center gap-2 rounded-xl bg-white px-3.5 py-2.5 ring-1 ring-slate-200 focus-within:ring-marca-400">
+                    <span className="text-2xl">💰</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={montoHero.toLocaleString(lang === "es" || lang === "pt" ? "es-CO" : "en-US")}
+                      onChange={(e) => {
+                        const n = parseInt((e.target.value || "").replace(/\D/g, ""), 10);
+                        if (!Number.isNaN(n)) setMontoHero(n);
+                        else if (e.target.value === "") setMontoHero(0);
+                      }}
+                      aria-label={t("heroH1Budget")}
+                      className="w-full border-0 bg-transparent text-left text-[20px] font-extrabold text-marca-900 outline-none placeholder:text-slate-300 lg:text-[24px]"
+                    />
+                    <select
+                      value={monedaHero}
+                      onChange={(e) => setMonedaHero(e.target.value)}
+                      aria-label="Moneda"
+                      className="rounded-lg border-0 bg-slate-100 px-2 py-1 text-[13px] font-bold text-slate-700 outline-none"
+                    >
+                      <option value="COP">COP</option>
+                      <option value="USD">USD</option>
+                      <option value="MXN">MXN</option>
+                      <option value="EUR">EUR</option>
+                    </select>
                   </div>
-                )}
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-3 text-[15px] font-bold text-white shadow-md transition hover:brightness-110"
+                  >
+                    {t("heroVerOpciones")} <Icono nombre="arrowRight" size={18} />
+                  </button>
+                </div>
+              </form>
+
+              {/* Chips de montos sugeridos: clicar fija el monto+moneda y abre
+                  el modal directo (atajo para el usuario que no quiere tipear). */}
+              <div className="mx-auto mt-3 flex max-w-xl flex-wrap justify-center gap-2">
+                {[
+                  { monto: 5000000, moneda: "COP", label: "$5M COP" },
+                  { monto: 10000000, moneda: "COP", label: "$10M COP" },
+                  { monto: 20000000, moneda: "COP", label: "$20M COP" },
+                  { monto: 1500, moneda: "USD", label: "US$ 1.500" },
+                  { monto: 3000, moneda: "USD", label: "US$ 3.000" },
+                ].map((opt) => (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    onClick={() => abrirPresupuestoCon(opt.monto, opt.moneda)}
+                    className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12.5px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
 
-              {/* Ideas rápidas: pistas para el usuario que aterriza sin saber por dónde empezar. */}
-              <div className="mx-auto mt-5 max-w-xl">
-                <div className="mb-2 text-[10.5px] font-semibold uppercase tracking-[0.22em] text-white/70">
-                  {t("ideasEyebrow")}
-                </div>
-                <div className="flex flex-wrap justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => pruebaRapida({ q: "Cartagena, Colombia", dias: 3 })}
-                    className="rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-[13px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
-                  >
-                    🏖️ Cartagena · 3 {t("dias").toLowerCase()}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => pruebaRapida({ q: "Tokio, Japón", dias: 5 })}
-                    className="rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-[13px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
-                  >
-                    🗼 Tokio · 5 {t("dias").toLowerCase()}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => pruebaRapida({ q: "Madrid, España", momento: "nocturno" })}
-                    className="rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-[13px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
-                  >
-                    🌃 Madrid · {t("nocturno").toLowerCase()}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { track("prueba_rapida", { presupuesto: 1 }); setMostrarPresupuesto(true); }}
-                    className="rounded-full border border-emerald-300/60 bg-emerald-400/20 px-3.5 py-1.5 text-[13px] font-semibold text-white backdrop-blur transition hover:bg-emerald-400/30"
-                  >
-                    💰 {t("ideaPresupuesto")}
+              {/* Divisor + opcion secundaria: buscar por ciudad. Empieza
+                  COLAPSADA — solo aparece el link "o busca por ciudad" para
+                  los que ya saben a donde. Mantiene la entrada por ciudad
+                  accesible sin competir con el CTA principal de presupuesto. */}
+              <div className="mx-auto mt-7 flex max-w-xl items-center gap-3 text-[12px] text-white/70">
+                <span className="h-px flex-1 bg-white/25" />
+                <button
+                  type="button"
+                  onClick={() => setMostrarBuscarCiudad((v) => !v)}
+                  className="flex items-center gap-1 font-semibold uppercase tracking-[0.18em] text-white/80 transition hover:text-white"
+                >
+                  {t("heroOSabesDestino")} <span className={`transition ${mostrarBuscarCiudad ? "rotate-180" : ""}`}>▾</span>
+                </button>
+                <span className="h-px flex-1 bg-white/25" />
+              </div>
+
+              {mostrarBuscarCiudad && (
+                <div className="animar-subir relative mx-auto mt-3 max-w-xl">
+                  <form onSubmit={buscarTexto} className="flex gap-2 rounded-2xl bg-white/95 p-1.5 shadow-xl ring-1 ring-white/40 backdrop-blur">
+                    <input
+                      value={consulta}
+                      onChange={(e) => setConsulta(e.target.value)}
+                      onFocus={() => sugerencias.length && setMostrarSug(true)}
+                      placeholder={t("buscarPlaceholder")}
+                      list="ciudades-pop"
+                      className="flex-1 rounded-xl border-0 bg-transparent px-4 py-2.5 text-[15px] text-slate-800 outline-none placeholder:text-slate-400"
+                    />
+                    <button type="submit" aria-label={t("buscar")} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-4 text-[14px] font-bold text-white shadow-md transition hover:brightness-110">
+                      <Icono nombre="search" size={16} /> <span className="hidden sm:inline">{t("buscar")}</span>
+                    </button>
+                  </form>
+                  {mostrarSug && sugerencias.length > 0 && (
+                    <div className="animar-subir absolute inset-x-0 top-full z-[1100] mt-1.5 overflow-hidden rounded-2xl bg-white text-left shadow-xl">
+                      {sugerencias.map((s, i) => (
+                        <div key={i} className="flex cursor-pointer items-center gap-2.5 border-b border-slate-100 px-4 py-3 text-slate-800 hover:bg-marca-50" onClick={() => elegirCiudad(s)}>
+                          <Icono nombre="pin" size={18} className="text-marca-500" />
+                          <div><div className="text-[15px] font-semibold">{s.ciudad}</div><div className="text-xs text-slate-500">{s.pais}</div></div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Ideas rapidas de ciudad - solo si el bloque secundario esta abierto */}
+                  <div className="mt-3 flex flex-wrap justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => pruebaRapida({ q: "Cartagena, Colombia", dias: 3 })}
+                      className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                    >
+                      🏖️ Cartagena
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => pruebaRapida({ q: "Tokio, Japón", dias: 5 })}
+                      className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                    >
+                      🗼 Tokio
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => pruebaRapida({ q: "Madrid, España", momento: "nocturno" })}
+                      className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                    >
+                      🌃 Madrid
                   </button>
                 </div>
               </div>
@@ -980,9 +1075,11 @@ export default function Home() {
       {mostrarPresupuesto && (
         <Presupuesto
           t={t}
-          onCerrar={() => setMostrarPresupuesto(false)}
+          inicial={presupuestoInicial}
+          onCerrar={() => { setMostrarPresupuesto(false); setPresupuestoInicial(null); }}
           onElegirCiudad={(d) => {
             setMostrarPresupuesto(false);
+            setPresupuestoInicial(null);
             buscarTexto(`${d.ciudad}, ${d.pais}`);
           }}
         />
