@@ -1,7 +1,7 @@
 // Service Worker mínimo: hace que la app abra rápido y funcione como app
 // instalada. Estrategia "network-first" para HTML (siempre lo más nuevo) y
 // caché para los recursos estáticos (mapa, iconos, etc.).
-const CACHE = "viajero360-v9";
+const CACHE = "viajero360-v10";
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();

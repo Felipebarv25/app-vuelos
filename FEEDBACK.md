@@ -30,6 +30,20 @@ a 360px"). Prioriza impacto. No repitas lo ya resuelto. Felicita lo que sí qued
 
 ## 📋 Hallazgos
 
+### 2026-06-16 — P5 quality signal POI + (anterior)
+
+- ✅ 🟡 **P5 auditoría: señal de calidad por POI diferenciada.** Antes mostraba
+  badge genérico "⭐ Top" para cualquier `p.notable`. Ahora separa por fuente
+  verificable:
+  - `p.wiki === true` → "📖 En Wikipedia" (badge ámbar, tooltip explica
+    "señal verificable de relevancia"). Es la prueba más fuerte.
+  - `p.notable && !p.wiki` → "⭐ Notable" (badge gris, tooltip "Registrado en
+    Wikidata"). Señal media.
+  - Sin ninguna → sin badge.
+  El usuario ahora ve POR QUÉ un lugar está en la lista. i18n 4 idiomas
+  (claves itinBadgeWikipedia, itinBadgeNotable + tooltips).
+- ✅ SW cache `v9 → v10`.
+
 ### 2026-06-16 — P4 magic numbers + sitemap legal
 
 Cleanup autónomo mientras el usuario hacía otras cosas:

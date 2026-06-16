@@ -166,11 +166,20 @@ export default function Itinerario({
                   <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11.5px] font-semibold text-slate-500">
                     <Icono nombre="clock" size={11} /> {fmtMin(p.minutos)}
                   </span>
-                  {p.notable && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11.5px] font-semibold text-amber-800">
-                      <Icono nombre="star" size={11} /> Top
+                  {p.wiki ? (
+                    /* Lugar con articulo de Wikipedia = senal de calidad verificable.
+                       Es la prueba mas fuerte (la auditoria pidio que el usuario vea
+                       POR QUE este lugar esta en la lista, no solo "Top" generico). */
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11.5px] font-semibold text-amber-800" title={t("itinSenalWikipedia")}>
+                      <Icono nombre="star" size={11} /> {t("itinBadgeWikipedia")}
                     </span>
-                  )}
+                  ) : p.notable ? (
+                    /* Tiene entrada en Wikidata pero sin articulo de Wikipedia:
+                       relevante pero menos famoso. */
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11.5px] font-semibold text-slate-700" title={t("itinSenalNotable")}>
+                      <Icono nombre="star" size={11} /> {t("itinBadgeNotable")}
+                    </span>
+                  ) : null}
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
