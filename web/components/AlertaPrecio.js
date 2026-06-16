@@ -41,6 +41,28 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
   const [montado, setMontado] = useState(false);
   useEffect(() => { setMontado(true); }, []);
 
+  // Body scroll lock mientras el modal esta abierto. Mas profesional que
+  // dejar que la pagina haga scroll detras: a) si el contenido del modal
+  // mide mas que el viewport el usuario puede hacer scroll dentro del modal
+  // sin mover la pagina, b) si las ofertas detras se siguen scrolleando
+  // el usuario se desorienta. Restauramos overflow al cerrar.
+  useEffect(() => {
+    if (!abierto) return;
+    const overflowPrev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = overflowPrev; };
+  }, [abierto]);
+
+  // ESC cierra el modal. Estandar de accesibilidad de cualquier dialog.
+  useEffect(() => {
+    if (!abierto) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") { setAbierto(false); setEstado(null); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [abierto]);
+
   if (!iata) return null;
 
   function abrir() {
