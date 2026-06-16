@@ -4,7 +4,16 @@
 // Props minimas: ciudad, pais, iata, precioActual?, lang?
 // El precio por defecto sugerido es 80% del precio actual (psicologico, un
 // descuento que se siente real pero alcanzable).
+//
+// CRITICAL: el modal se RENDERIZA VIA PORTAL A document.body. Razon: la card
+// padre tiene `hover:-translate-y-0.5` (transform). Un position:fixed dentro
+// de un ancestro con transform se vuelve relativo a ese ancestro, no al
+// viewport. Sin portal, el modal saltaba de posicion cuando el mouse entraba
+// o salia de la card (el hover toggle reposicionaba el "viewport"). Con
+// portal, el modal vive directamente bajo body y queda anclado al viewport
+// real.
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useApp } from "@/lib/AppContext";
 import { Icono } from "./Icono";
 
@@ -19,16 +28,18 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
   const [cargando, setCargando] = useState(false);
   const [estado, setEstado] = useState(null); // null | "ok" | "limite" | "auth" | "error"
 
-  // Auto-cerrar el modal de exito tras 1.8s. Sin este timer el usuario ve la
-  // tarjeta "Alerta activada" + boton Cerrar, y si en algun ancho de pantalla
-  // el contenido del modal se encoge respecto al formulario, el modal saltaba
-  // hacia arriba con la animacion "subir" y parecia que se cerraba y reabria.
-  // Auto-close es el patron de Stripe/GitHub: confirmas y sigues.
+  // Auto-cerrar el modal de exito tras 1.8s. Patron Stripe/GitHub: el usuario
+  // confirma la accion y sigue, no tiene que dismissear "Hecho".
   useEffect(() => {
     if (estado !== "ok") return;
     const id = setTimeout(() => { setAbierto(false); setEstado(null); }, 1800);
     return () => clearTimeout(id);
   }, [estado]);
+
+  // Para usar createPortal necesitamos esperar al primer paint en cliente.
+  // En SSR `document` no existe; sin este guard el componente reventaria.
+  const [montado, setMontado] = useState(false);
+  useEffect(() => { setMontado(true); }, []);
 
   if (!iata) return null;
 
@@ -86,7 +97,7 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
         🔔 {label || t("alertaBoton")}
       </button>
 
-      {abierto && (
+      {abierto && montado && createPortal(
         <div
           className="fixed inset-0 z-[5400] flex items-end justify-center bg-slate-900/55 p-3 animar-aparecer sm:items-center"
           onClick={() => { setAbierto(false); setEstado(null); }}
@@ -204,7 +215,8 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
