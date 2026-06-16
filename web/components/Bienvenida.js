@@ -4,11 +4,15 @@ import { useApp } from "@/lib/AppContext";
 import { IDIOMAS } from "@/lib/idiomas";
 import { Logo } from "@/components/Logo";
 
-// Pantalla de bienvenida: idioma + autenticacion. Solo dos metodos: Google
-// (primario) y magic code por email (secundario). Si Google aun no esta
-// configurado en el servidor (env vars), el boton aparece deshabilitado para
-// que el usuario sepa que existe pero esta llegando. Login solo-por-nombre
-// fue removido: queremos una cuenta real para persistencia y privacidad.
+// Landing pre-login: scrolleable, full-screen, con propuesta de valor antes
+// del formulario de auth. Aplica principios de neuromarketing / behavioral
+// econ: loss aversion en headline, social proof real (no inflado), scarcity
+// legitima (datos cada 3h), reciprocity ("gratis para siempre"), curiosity
+// gap, cognitive ease (Fraunces en titulos + espacios generosos).
+//
+// Auth: Google primario + email magic code secundario. Login solo-por-nombre
+// removido. Checkbox "Mantener sesion iniciada" controla persistencia del
+// token de magic code (localStorage si activo, sessionStorage si no).
 export default function Bienvenida() {
   const {
     t,
@@ -20,6 +24,7 @@ export default function Bienvenida() {
   } = useApp();
 
   const [nombre, setNombre] = useState("");
+  const [recordar, setRecordar] = useState(true); // default ON
 
   // Auth config: que metodos estan disponibles segun env vars del servidor.
   const [authConfig, setAuthConfig] = useState({ google: false, magicCode: false });
@@ -30,9 +35,8 @@ export default function Bienvenida() {
       .catch(() => {});
   }, []);
 
-  // Flujo magic code: paso 1 = email, paso 2 = codigo. Se cierra si el
-  // usuario aprieta "Volver".
-  const [pasoMagic, setPasoMagic] = useState(0); // 0=oculto, 1=email, 2=codigo
+  // Flujo magic code: paso 1 = email, paso 2 = codigo.
+  const [pasoMagic, setPasoMagic] = useState(0);
   const [emailInput, setEmailInput] = useState("");
   const [codigoInput, setCodigoInput] = useState("");
   const [magicCargando, setMagicCargando] = useState(false);
@@ -48,11 +52,8 @@ export default function Bienvenida() {
     setMagicCargando(true);
     const r = await pedirCodigoEmail(emailInput.trim());
     setMagicCargando(false);
-    if (r.ok) {
-      setPasoMagic(2);
-    } else {
-      setMagicError(t("authErrorEnvio"));
-    }
+    if (r.ok) setPasoMagic(2);
+    else setMagicError(t("authErrorEnvio"));
   }
 
   async function verificarCodigo(e) {
@@ -64,138 +65,218 @@ export default function Bienvenida() {
       return;
     }
     setMagicCargando(true);
-    const r = await verificarCodigoEmail(emailInput.trim(), codigo, nombre.trim() || null);
+    const r = await verificarCodigoEmail(emailInput.trim(), codigo, nombre.trim() || null, recordar);
     setMagicCargando(false);
-    if (!r.ok) {
-      setMagicError(t("authErrorCodigoMal"));
-    }
-    // Si ok, AppContext setea usuarioEmail y el modal de Bienvenida desaparece
-    // (la home se renderiza porque `usuario` ya tiene valor).
+    if (!r.ok) setMagicError(t("authErrorCodigoMal"));
+  }
+
+  function irALogin() {
+    document.getElementById("v360-login")?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  // Si el usuario ya inicio el flujo de magic code, mostramos pantalla
+  // dedicada (mas focus, menos distraccion). Si no, mostramos landing completo.
+  if (pasoMagic > 0) {
+    return <PantallaMagicCode {...{
+      t, pasoMagic, emailInput, codigoInput, nombre, recordar, magicCargando, magicError,
+      setEmailInput, setCodigoInput, setNombre, setRecordar, setPasoMagic, setMagicError,
+      enviarCodigo, verificarCodigo,
+    }} />;
   }
 
   return (
-    <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4 bg-gradient-to-br from-marca-500 via-marca-600 to-marca-900">
-      <div className="bg-white rounded-3xl p-7 w-full max-w-sm shadow-[0_24px_60px_rgba(49,46,129,.45)] animar-subir">
-        <div className="flex justify-center text-marca-600"><Logo size={56} /></div>
-        <h1 className="text-[26px] font-bold text-marca-900 text-center tracking-tight mt-2">
-          Viajero <span className="text-acento-500">360</span>
-        </h1>
-        <p className="text-sm text-slate-500 text-center mt-1">{t("tagline")}</p>
+    <div className="fixed inset-0 z-[5000] overflow-y-auto bg-slate-50">
+      {/* ============== HERO ============== */}
+      <section className="relative min-h-[88vh] w-full overflow-hidden">
+        {/* Foto de fondo: cinemática, evoca wanderlust (paisaje + camino). */}
+        <img
+          src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=2000&q=80&auto=format&fit=crop"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover"
+          loading="eager"
+          fetchpriority="high"
+        />
+        {/* Overlay gradiente para legibilidad del texto sobre foto */}
+        <div className="absolute inset-0 bg-gradient-to-b from-marca-900/85 via-marca-800/70 to-marca-900/95" />
 
-        {/* Selector de idioma */}
-        <div className="mt-6">
-          <div className="text-[13px] font-bold text-slate-600 mb-2">{t("idioma")}</div>
-          <div className="grid grid-cols-2 gap-2">
-            {Object.entries(IDIOMAS).map(([cod, info]) => (
-              <button
-                key={cod}
-                onClick={() => cambiarIdioma(cod)}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition ${
-                  lang === cod
-                    ? "border-marca-500 bg-marca-50 font-bold text-marca-900"
-                    : "border-slate-200 bg-white font-medium text-slate-700"
-                }`}
-              >
-                <span className={`flex h-6 w-7 shrink-0 items-center justify-center rounded text-[11px] font-bold ${
-                  lang === cod ? "bg-marca-600 text-white" : "bg-slate-100 text-slate-500"
-                }`}>{cod.toUpperCase()}</span>
-                {info.nombre}
-              </button>
-            ))}
+        {/* Selector de idioma flotante arriba a la derecha */}
+        <div className="absolute right-4 top-4 z-10 flex gap-1.5 rounded-full bg-white/10 p-1 backdrop-blur-md">
+          {Object.entries(IDIOMAS).map(([cod]) => (
+            <button
+              key={cod}
+              onClick={() => cambiarIdioma(cod)}
+              className={`rounded-full px-3 py-1 text-[11.5px] font-bold uppercase tracking-wider transition ${
+                lang === cod ? "bg-white text-marca-700" : "text-white/70 hover:text-white"
+              }`}
+            >
+              {cod.toUpperCase()}
+            </button>
+          ))}
+        </div>
+
+        {/* Contenido hero */}
+        <div className="relative mx-auto flex min-h-[88vh] max-w-3xl flex-col items-center justify-center px-6 py-16 text-center text-white">
+          <div className="text-white/85"><Logo size={56} /></div>
+
+          {/* Chip de prueba social legítima (gratis = reciprocity) */}
+          <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-wider backdrop-blur-md">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+            {t("landingChipVivo")}
+          </div>
+
+          {/* Headline (Fraunces / serif), activa curiosity gap */}
+          <h1 className="mt-5 font-display text-[40px] font-extrabold leading-[1.05] tracking-tight sm:text-[56px]">
+            {t("landingHeadline1")}<br />
+            <span className="text-acento-400">{t("landingHeadline2")}</span>
+          </h1>
+
+          <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-white/85 sm:text-[18px]">
+            {t("landingSub")}
+          </p>
+
+          {/* CTA primario */}
+          <button
+            onClick={irALogin}
+            className="mt-8 rounded-2xl bg-acento-500 px-7 py-3.5 text-[15.5px] font-bold text-white shadow-[0_10px_30px_rgba(244,99,63,.45)] transition hover:-translate-y-0.5 hover:bg-acento-600"
+          >
+            {t("landingCtaHero")} →
+          </button>
+
+          {/* Chips de credibilidad */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-[12.5px] font-semibold text-white/80">
+            <span className="rounded-full border border-white/25 px-3 py-1">✓ {t("landingChipGratis")}</span>
+            <span className="rounded-full border border-white/25 px-3 py-1">✓ {t("landingChipSinTarjeta")}</span>
+            <span className="rounded-full border border-white/25 px-3 py-1">✓ {t("landingChipReal")}</span>
           </div>
         </div>
 
-        {/* Flujo magic code: si esta abierto, OCULTA todo lo demas para
-            que el usuario se concentre en email -> codigo. */}
-        {pasoMagic > 0 ? (
-          <div className="mt-6 animar-aparecer">
-            {pasoMagic === 1 && (
-              <form onSubmit={enviarCodigo}>
-                <div className="text-[13px] font-bold text-slate-600 mb-2">{t("authTuEmail")}</div>
-                <input
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="tu@email.com"
-                  className="w-full px-3.5 py-3 rounded-xl border border-slate-200 text-base"
-                  autoFocus
-                />
-                {magicError && (
-                  <div className="mt-2 text-[12.5px] font-semibold text-red-600">{magicError}</div>
-                )}
-                <button
-                  type="submit"
-                  disabled={magicCargando}
-                  className="w-full mt-4 py-3.5 rounded-2xl border-0 bg-gradient-to-r from-marca-500 to-marca-600 text-white text-base font-bold shadow-marca disabled:opacity-60"
-                >
-                  {magicCargando ? "…" : t("authEnviarCodigo")} →
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setPasoMagic(0); setMagicError(null); }}
-                  className="w-full mt-2 py-2 text-[13px] font-semibold text-slate-500"
-                >
-                  ← {t("authVolver")}
-                </button>
-              </form>
-            )}
+        {/* Indicador "scroll para ver más" — reduce uncertainty */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/60 animate-bounce">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        </div>
+      </section>
 
-            {pasoMagic === 2 && (
-              <form onSubmit={verificarCodigo}>
-                <div className="text-[13px] text-slate-600 mb-2">
-                  {t("authMandamosCodigo")} <b className="text-marca-700">{emailInput}</b>
-                </div>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={6}
-                  value={codigoInput}
-                  onChange={(e) => setCodigoInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  placeholder="123456"
-                  className="w-full px-3.5 py-3 rounded-xl border-2 border-marca-200 text-center text-2xl font-extrabold tracking-[0.4em] font-mono"
-                  autoFocus
-                />
-                {/* Campo opcional: como llamamos al usuario */}
-                <div className="mt-3 text-[12.5px] font-semibold text-slate-500">{t("authComoLlamamos")}</div>
-                <input
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  placeholder="Felipe…"
-                  className="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-base"
-                />
-                {magicError && (
-                  <div className="mt-2 text-[12.5px] font-semibold text-red-600">{magicError}</div>
-                )}
-                <button
-                  type="submit"
-                  disabled={magicCargando}
-                  className="w-full mt-4 py-3.5 rounded-2xl border-0 bg-gradient-to-r from-marca-500 to-marca-600 text-white text-base font-bold shadow-marca disabled:opacity-60"
-                >
-                  {magicCargando ? "…" : t("authVerificar")} →
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setPasoMagic(1); setCodigoInput(""); setMagicError(null); }}
-                  className="w-full mt-2 py-2 text-[13px] font-semibold text-slate-500"
-                >
-                  ← {t("authCambiarEmail")}
-                </button>
-              </form>
-            )}
+      {/* ============== FEATURES (4 cards) ============== */}
+      <section className="bg-white py-20 px-6">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center">
+            <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-marca-600">
+              {t("landingFeatEyebrow")}
+            </div>
+            <h2 className="mt-2 font-display text-[32px] font-extrabold tracking-tight text-marca-900 sm:text-[40px]">
+              {t("landingFeatTit")}
+            </h2>
           </div>
-        ) : (
-          <>
-            {/* Google: primario, grande. Si OAuth aun no esta configurado en
-                env vars, lo mostramos deshabilitado para que el usuario sepa
-                que llega pronto (no desaparecer una opcion conocida). */}
+
+          <div className="mt-12 grid gap-5 sm:grid-cols-2">
+            {[
+              { emoji: "🗺️", titKey: "landingFeat1Tit", subKey: "landingFeat1Sub" },
+              { emoji: "✈️", titKey: "landingFeat2Tit", subKey: "landingFeat2Sub" },
+              { emoji: "🔔", titKey: "landingFeat3Tit", subKey: "landingFeat3Sub" },
+              { emoji: "🧭", titKey: "landingFeat4Tit", subKey: "landingFeat4Sub" },
+            ].map((f, i) => (
+              <div
+                key={i}
+                className="group rounded-3xl border border-slate-100 bg-white p-6 shadow-suave transition hover:-translate-y-1 hover:border-marca-200 hover:shadow-media"
+              >
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-marca-50 text-2xl">
+                  {f.emoji}
+                </div>
+                <h3 className="mt-4 text-[19px] font-extrabold text-marca-900">{t(f.titKey)}</h3>
+                <p className="mt-2 text-[14.5px] leading-relaxed text-slate-600">{t(f.subKey)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============== CÓMO FUNCIONA (3 pasos, cognitive ease) ============== */}
+      <section className="bg-slate-50 py-20 px-6">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center">
+            <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-acento-600">
+              {t("landingComoEyebrow")}
+            </div>
+            <h2 className="mt-2 font-display text-[32px] font-extrabold tracking-tight text-marca-900 sm:text-[40px]">
+              {t("landingComoTit")}
+            </h2>
+          </div>
+
+          <div className="mt-12 grid gap-6 sm:grid-cols-3">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="relative">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-acento-500 text-[16px] font-extrabold text-white shadow-[0_6px_18px_rgba(244,99,63,.35)]">
+                  {n}
+                </div>
+                <h3 className="mt-4 text-[18px] font-extrabold text-marca-900">{t(`landingPaso${n}Tit`)}</h3>
+                <p className="mt-2 text-[14.5px] leading-relaxed text-slate-600">{t(`landingPaso${n}Sub`)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============== SOCIAL PROOF (stats reales) ============== */}
+      <section className="bg-marca-900 py-16 px-6 text-white">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="font-display text-[28px] font-extrabold tracking-tight sm:text-[36px]">
+            {t("landingSocialTit")}
+          </h2>
+          <div className="mt-10 grid gap-8 sm:grid-cols-3">
+            <div>
+              <div className="font-display text-[44px] font-extrabold text-acento-400">80+</div>
+              <div className="mt-1 text-[14px] font-semibold uppercase tracking-wider text-white/70">
+                {t("landingStatDestinos")}
+              </div>
+            </div>
+            <div>
+              <div className="font-display text-[44px] font-extrabold text-acento-400">3h</div>
+              <div className="mt-1 text-[14px] font-semibold uppercase tracking-wider text-white/70">
+                {t("landingStatFrescura")}
+              </div>
+            </div>
+            <div>
+              <div className="font-display text-[44px] font-extrabold text-acento-400">0$</div>
+              <div className="mt-1 text-[14px] font-semibold uppercase tracking-wider text-white/70">
+                {t("landingStatGratis")}
+              </div>
+            </div>
+          </div>
+
+          {/* Anchor de precio real: muestra US$ alcanzable para Bogotá -> Madrid */}
+          <div className="mt-10 inline-flex flex-col items-center rounded-2xl bg-white/10 px-6 py-4 backdrop-blur-md">
+            <div className="text-[12px] font-semibold uppercase tracking-wider text-white/70">
+              {t("landingPrecioEjemplo")}
+            </div>
+            <div className="mt-1 font-display text-[26px] font-extrabold">
+              {t("landingPrecioRuta")} <span className="text-acento-400">US$733</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============== LOGIN ============== */}
+      <section id="v360-login" className="bg-gradient-to-b from-slate-50 to-white py-20 px-6">
+        <div className="mx-auto max-w-md">
+          <div className="text-center">
+            <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-marca-600">
+              {t("landingLoginEyebrow")}
+            </div>
+            <h2 className="mt-2 font-display text-[32px] font-extrabold tracking-tight text-marca-900 sm:text-[38px]">
+              {t("landingLoginTit")}
+            </h2>
+            <p className="mt-3 text-[14.5px] text-slate-500">{t("landingLoginSub")}</p>
+          </div>
+
+          <div className="mt-8 rounded-3xl bg-white p-7 shadow-[0_24px_60px_rgba(15,118,110,.18)] border border-slate-100">
+            {/* Google */}
             <button
               onClick={authConfig.google ? entrarGoogle : undefined}
               disabled={!authConfig.google}
-              aria-disabled={!authConfig.google}
-              className={`mt-6 flex w-full items-center justify-center gap-3 rounded-2xl border py-3.5 text-[15px] font-bold shadow-suave transition ${
+              className={`flex w-full items-center justify-center gap-3 rounded-2xl border py-3.5 text-[15px] font-bold shadow-suave transition ${
                 authConfig.google
                   ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:shadow-media"
                   : "border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed"
@@ -210,7 +291,7 @@ export default function Bienvenida() {
               {t("entrarGoogle")}
             </button>
 
-            {/* Separador "o" entre Google y email. Solo si ambos disponibles. */}
+            {/* Separador */}
             {authConfig.magicCode && (
               <div className="my-4 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                 <span className="h-px flex-1 bg-slate-200" />
@@ -219,8 +300,7 @@ export default function Bienvenida() {
               </div>
             )}
 
-            {/* Email (magic code via Resend): secundario, mismo peso visual
-                que Google para que el usuario elija sin sentir empujon. */}
+            {/* Email */}
             {authConfig.magicCode && (
               <button
                 onClick={() => setPasoMagic(1)}
@@ -230,14 +310,130 @@ export default function Bienvenida() {
               </button>
             )}
 
-            {/* Si ni Google ni email estan configurados, advertimos en vez de
-                fallar silenciosamente. No deberia pasar en prod. */}
             {!authConfig.google && !authConfig.magicCode && (
-              <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12.5px] text-amber-800">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12.5px] text-amber-800">
                 Estamos configurando el acceso. Vuelve en unos minutos.
               </div>
             )}
-          </>
+
+            {/* Mantener sesión iniciada */}
+            <label className="mt-5 flex cursor-pointer items-center gap-2.5 text-[13px] font-medium text-slate-600">
+              <input
+                type="checkbox"
+                checked={recordar}
+                onChange={(e) => setRecordar(e.target.checked)}
+                className="h-4 w-4 cursor-pointer rounded border-slate-300 text-marca-600 focus:ring-marca-500"
+              />
+              {t("authRecordar")}
+            </label>
+
+            <div className="mt-3 text-center text-[11.5px] text-slate-400">
+              {t("landingLoginPrivacidad")}
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+// Pantalla dedicada del flujo magic code (paso 1 email / paso 2 código).
+// La extraigo para mantener el componente principal mas legible.
+function PantallaMagicCode({
+  t, pasoMagic, emailInput, codigoInput, nombre, recordar, magicCargando, magicError,
+  setEmailInput, setCodigoInput, setNombre, setRecordar, setPasoMagic, setMagicError,
+  enviarCodigo, verificarCodigo,
+}) {
+  return (
+    <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4 bg-gradient-to-br from-marca-500 via-marca-600 to-marca-900">
+      <div className="bg-white rounded-3xl p-7 w-full max-w-sm shadow-[0_24px_60px_rgba(15,118,110,.45)] animar-subir">
+        <div className="flex justify-center text-marca-600"><Logo size={48} /></div>
+
+        {pasoMagic === 1 && (
+          <form onSubmit={enviarCodigo} className="mt-5">
+            <div className="text-[13px] font-bold text-slate-600 mb-2">{t("authTuEmail")}</div>
+            <input
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              placeholder="tu@email.com"
+              className="w-full px-3.5 py-3 rounded-xl border border-slate-200 text-base"
+              autoFocus
+            />
+            {magicError && (
+              <div className="mt-2 text-[12.5px] font-semibold text-red-600">{magicError}</div>
+            )}
+            <button
+              type="submit"
+              disabled={magicCargando}
+              className="w-full mt-4 py-3.5 rounded-2xl border-0 bg-gradient-to-r from-marca-500 to-marca-600 text-white text-base font-bold shadow-marca disabled:opacity-60"
+            >
+              {magicCargando ? "…" : t("authEnviarCodigo")} →
+            </button>
+            <button
+              type="button"
+              onClick={() => { setPasoMagic(0); setMagicError(null); }}
+              className="w-full mt-2 py-2 text-[13px] font-semibold text-slate-500"
+            >
+              ← {t("authVolver")}
+            </button>
+          </form>
+        )}
+
+        {pasoMagic === 2 && (
+          <form onSubmit={verificarCodigo} className="mt-5">
+            <div className="text-[13px] text-slate-600 mb-2">
+              {t("authMandamosCodigo")} <b className="text-marca-700">{emailInput}</b>
+            </div>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              value={codigoInput}
+              onChange={(e) => setCodigoInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="123456"
+              className="w-full px-3.5 py-3 rounded-xl border-2 border-marca-200 text-center text-2xl font-extrabold tracking-[0.4em] font-mono"
+              autoFocus
+            />
+            <div className="mt-3 text-[12.5px] font-semibold text-slate-500">{t("authComoLlamamos")}</div>
+            <input
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              placeholder="Felipe…"
+              className="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-base"
+            />
+
+            <label className="mt-3 flex cursor-pointer items-center gap-2.5 text-[13px] font-medium text-slate-600">
+              <input
+                type="checkbox"
+                checked={recordar}
+                onChange={(e) => setRecordar(e.target.checked)}
+                className="h-4 w-4 cursor-pointer rounded border-slate-300 text-marca-600 focus:ring-marca-500"
+              />
+              {t("authRecordar")}
+            </label>
+
+            {magicError && (
+              <div className="mt-2 text-[12.5px] font-semibold text-red-600">{magicError}</div>
+            )}
+            <button
+              type="submit"
+              disabled={magicCargando}
+              className="w-full mt-4 py-3.5 rounded-2xl border-0 bg-gradient-to-r from-marca-500 to-marca-600 text-white text-base font-bold shadow-marca disabled:opacity-60"
+            >
+              {magicCargando ? "…" : t("authVerificar")} →
+            </button>
+            <button
+              type="button"
+              onClick={() => { setPasoMagic(1); setCodigoInput(""); setMagicError(null); }}
+              className="w-full mt-2 py-2 text-[13px] font-semibold text-slate-500"
+            >
+              ← {t("authCambiarEmail")}
+            </button>
+          </form>
         )}
       </div>
     </div>

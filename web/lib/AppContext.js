@@ -42,11 +42,16 @@ export function AppProvider({ children }) {
     setListoLocal(true);
   }, []);
 
-  // Validar el token de email si existe en localStorage.
+  // Validar el token de email si existe. Buscamos en localStorage primero
+  // (persistente, "mantener sesion iniciada") y caemos a sessionStorage
+  // (se borra cuando el usuario cierra el navegador) si no esta.
   useEffect(() => {
     let vivo = true;
     let token;
-    try { token = localStorage.getItem("v360_auth_token"); } catch {}
+    try {
+      token = localStorage.getItem("v360_auth_token")
+           || sessionStorage.getItem("v360_auth_token");
+    } catch {}
     if (!token) { setListoEmail(true); return; }
     fetch("/api/auth/sesion", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => (r.ok ? r.json() : null))
@@ -55,8 +60,11 @@ export function AppProvider({ children }) {
         if (d?.ok && d.usuario) {
           setUsuarioEmail({ ...d.usuario, token, email_login: true });
         } else {
-          // Token invalido (expirado, revocado): limpiar.
-          try { localStorage.removeItem("v360_auth_token"); } catch {}
+          // Token invalido (expirado, revocado): limpiar ambos stores.
+          try {
+            localStorage.removeItem("v360_auth_token");
+            sessionStorage.removeItem("v360_auth_token");
+          } catch {}
         }
       })
       .catch(() => {})
@@ -142,7 +150,12 @@ export function AppProvider({ children }) {
   }
 
   // Login EMAIL paso 2: validar codigo, recibir token, persistir sesion.
-  async function verificarCodigoEmail(email, codigo, nombre) {
+  // `recordar` controla DONDE guardamos el token:
+  //   true  -> localStorage (persistente, sobrevive cierre de navegador)
+  //   false -> sessionStorage (se borra al cerrar la pestana/navegador)
+  // El servidor crea la sesion con TTL 30 dias en KV en ambos casos; la
+  // diferencia es solo cliente. Por seguridad limpiamos el otro store.
+  async function verificarCodigoEmail(email, codigo, nombre, recordar = true) {
     const r = await fetch("/api/auth/codigo/verificar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -152,7 +165,15 @@ export function AppProvider({ children }) {
     if (!data?.ok || !data?.token) {
       return { ok: false, motivo: data?.motivo || "error" };
     }
-    try { localStorage.setItem("v360_auth_token", data.token); } catch {}
+    try {
+      if (recordar) {
+        localStorage.setItem("v360_auth_token", data.token);
+        sessionStorage.removeItem("v360_auth_token");
+      } else {
+        sessionStorage.setItem("v360_auth_token", data.token);
+        localStorage.removeItem("v360_auth_token");
+      }
+    } catch {}
     setUsuarioEmail({ ...data.usuario, token: data.token, email_login: true });
     return { ok: true };
   }
@@ -181,6 +202,7 @@ export function AppProvider({ children }) {
     try {
       localStorage.removeItem("usuario");
       localStorage.removeItem("v360_auth_token");
+      sessionStorage.removeItem("v360_auth_token");
     } catch {}
   }
 
