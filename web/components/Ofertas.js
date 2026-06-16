@@ -227,9 +227,13 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
             </div>
             <div className="text-[12px] text-slate-400">{t("ofertasIdaVuelta")}</div>
             {/* Mostramos la moneda secundaria (la NO elegida) en pequeno como
-                cross-reference y para que el usuario aprenda la tasa de hecho. */}
+                cross-reference. Etiqueta "aprox" adyacente — disclaimer junto al
+                precio, no solo en el footer (feedback auditoria). */}
             <div className="text-[12px] font-medium text-slate-500">
               {monedaVista === "COP" ? fmtUsd(r.precio) : fmtCop(r.precio)}
+              <span className="ml-1.5 rounded bg-slate-100 px-1 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-slate-500">
+                {t("ofertasAproxBadge")}
+              </span>
             </div>
 
             <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[12.5px] text-slate-500">

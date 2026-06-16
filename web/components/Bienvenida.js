@@ -22,6 +22,7 @@ export default function Bienvenida() {
     lang,
     cambiarIdioma,
     entrarGoogle,
+    entrarDemo,
     pedirCodigoEmail,
     verificarCodigoEmail,
   } = useApp();
@@ -318,7 +319,12 @@ export default function Bienvenida() {
 
       {/* ============== FOOTER simple ============== */}
       <footer className="bg-marca-900 px-6 py-8 text-center text-[12.5px] text-white/50">
-        © {new Date().getFullYear()} Viajero 360 · {t("footer")}
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <a href="/privacidad" className="hover:text-white/80">{t("footerPrivacidad")}</a>
+          <span className="text-white/30">·</span>
+          <a href="/terminos" className="hover:text-white/80">{t("footerTerminos")}</a>
+        </div>
+        <div className="mt-3">© {new Date().getFullYear()} Viajero 360 · {t("footer")}</div>
       </footer>
 
       {/* ============== DIÁLOGO LOGIN ============== */}
@@ -404,6 +410,27 @@ export default function Bienvenida() {
 
               <div className="mt-3 text-center text-[11.5px] text-slate-400">
                 {t("landingLoginPrivacidad")}
+              </div>
+
+              {/* Demo accounts: sin crear cuenta real, ver la app entera */}
+              <div className="mt-5 border-t border-slate-100 pt-4">
+                <div className="text-center text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  {t("demoTitulo")}
+                </div>
+                <div className="mt-2.5 grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => entrarDemo("pro")}
+                    className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-[12.5px] font-bold text-emerald-700 transition hover:bg-emerald-100"
+                  >
+                    ★ {t("demoPro")}
+                  </button>
+                  <button
+                    onClick={() => entrarDemo("free")}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[12.5px] font-bold text-slate-600 transition hover:bg-slate-50"
+                  >
+                    {t("demoFree")}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

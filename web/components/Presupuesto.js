@@ -12,7 +12,7 @@ import {
   MONEDAS,
 } from "@/lib/presupuesto";
 import { obtenerPreciosReales, buscarVueloEnVivo } from "@/lib/preciosVuelos";
-import { linkVuelos, linkGoogleFlights } from "@/lib/afiliados";
+import { linkVuelos, linkGoogleFlights, linkHoteles } from "@/lib/afiliados";
 import { obtenerTasas, aUsdDe } from "@/lib/fx";
 import { PAISES_ORIGEN, PAISES_ORDEN, PAIS_DEFAULT, paisValido, nombreDeIATA } from "@/lib/paisesOrigen";
 
@@ -596,7 +596,21 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                           badgeReal={d.esReal}
                         />
                         {d.esReal && <FechasOferta vueloReal={d.vueloReal} t={t} />}
-                        <Fila nombre={t("presupHospedaje")} valor={fmtUsd(d.desglose.hospedaje)} />
+                        <Fila
+                          nombre={t("presupHospedaje")}
+                          valor={fmtUsd(d.desglose.hospedaje)}
+                          accion={
+                            <a
+                              href={linkHoteles({ ciudad: d.ciudad })}
+                              target="_blank"
+                              rel="sponsored noopener"
+                              className="text-[11px] font-bold text-marca-600 hover:underline"
+                              title={t("presupBuscarHoteles")}
+                            >
+                              {t("presupBuscarHoteles")} ↗
+                            </a>
+                          }
+                        />
                         <Fila nombre={t("presupComida")} valor={fmtUsd(d.desglose.comida)} />
                         <Fila nombre={t("presupTransporte")} valor={fmtUsd(d.desglose.transporte)} />
                         <Fila nombre={t("presupExtras")} valor={fmtUsd(d.desglose.extras)} />
@@ -710,7 +724,7 @@ function FechasOferta({ vueloReal, t }) {
   );
 }
 
-function Fila({ nombre, valor, badge = null, badgeReal = false }) {
+function Fila({ nombre, valor, badge = null, badgeReal = false, accion = null }) {
   return (
     <div className="flex items-center justify-between py-1 text-[13px] text-slate-600">
       <span className="flex items-center gap-1.5">
@@ -725,7 +739,10 @@ function Fila({ nombre, valor, badge = null, badgeReal = false }) {
           </span>
         )}
       </span>
-      <b className="text-slate-800">{valor}</b>
+      <span className="flex items-center gap-2">
+        {accion}
+        <b className="text-slate-800">{valor}</b>
+      </span>
     </div>
   );
 }

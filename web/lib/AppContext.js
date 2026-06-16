@@ -183,6 +183,22 @@ export function AppProvider({ children }) {
     signIn("google");
   }
 
+  // Login DEMO instantaneo: crea sesion para una cuenta demo predefinida sin
+  // pasar por codigo email ni Google. `plan` = "pro" muestra la app con todas
+  // las features Pro; `plan` = "free" la muestra con paywall normal.
+  async function entrarDemo(plan = "pro") {
+    const r = await fetch("/api/auth/demo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!data?.ok || !data?.token) return { ok: false, motivo: data?.motivo || "error" };
+    try { sessionStorage.setItem("v360_auth_token", data.token); } catch {}
+    setUsuarioEmail({ ...data.usuario, token: data.token, email_login: true, demo: true });
+    return { ok: true };
+  }
+
   // Salir: cierra Google + sesion email + limpia el local.
   async function salir() {
     if (session) signOut({ callbackUrl: "/" });
@@ -242,6 +258,7 @@ export function AppProvider({ children }) {
         usuario,
         entrar,
         entrarGoogle,
+        entrarDemo,
         pedirCodigoEmail,
         verificarCodigoEmail,
         salir,

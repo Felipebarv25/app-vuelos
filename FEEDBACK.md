@@ -30,6 +30,58 @@ a 360px"). Prioriza impacto. No repitas lo ya resuelto. Felicita lo que sí qued
 
 ## 📋 Hallazgos
 
+### 2026-06-15 — Auditoría senior + admin/demo
+
+Auditoria externa de diseñador + analista de viajes + viajero exigente.
+Aplicado en una tanda (commit pendiente) + sistema de cuentas demo / admin:
+
+- ✅ 🔴 **Asesor: branding "IA" eliminado.** `components/Asesor.js` solo es chat
+  guiado por botones (sin IA real); el card del landing decia "Asesor de viajes
+  IA" — mismatch igual que "gratis para siempre". Cambio a "Asesor de viajes
+  Brújula" + copy honesto ("guía paso a paso", "respuestas instantáneas") en
+  ES/EN/PT/FR.
+- ✅ 🔴 **Páginas legales creadas.** `/pro` prometía política de privacidad
+  inexistente — riesgo legal real (Habeas Data Colombia + GDPR). Creadas
+  `/privacidad` y `/terminos` con contenido real cubriendo recolección, uso,
+  terceros (Vercel, Resend, Lemon Squeezy, Google), derechos ARCO, retención,
+  cookies, ley aplicable. Links en footer de Bienvenida + actualizada FAQ de
+  /pro apuntando a /privacidad.
+- ✅ 🟡 **Hospedaje afiliado en presupuesto.** `lib/afiliados.js` ya tenía
+  `linkHoteles` (Hotellook/Travelpayouts con marker propio) pero solo se usaba
+  en `/destino/<slug>` y en `components/Afiliados.js`. Agregado link "Buscar
+  hospedaje" en la fila Hospedaje del desglose en `Presupuesto.js`. La prop
+  `accion` se añadió al subcomponente `Fila`. Genera comisión sin requerir
+  programa de Booking aparte.
+- ✅ 🟡 **Disclaimer "Aprox" adyacente al precio.** Antes el "Precio aproximado"
+  vivía solo en el footer del card de Ofertas. Ahora hay badge "APROX" pegado
+  a la moneda secundaria (COP/USD) en cada card, junto al precio. `fmtHace`
+  para frescura ya estaba bien.
+
+**Bonus — sistema admin + 2 cuentas demo (no parte de la auditoría):**
+
+- ✅ **Override Pro por email** en `lib/entitlements.js`: env var `PRO_EMAILS`
+  (comma-separated) tiene precedencia sobre KV. Util para owner/admin/cortesía.
+  Devuelve `{ plan: "lifetime", cortesia: true }`.
+- ✅ **Endpoint `/api/auth/demo`**: crea sesión instantánea (sin código email)
+  para `demo-pro@viajero360.app` o `demo-free@viajero360.app`. TTL 30d en KV.
+- ✅ **Función `entrarDemo(plan)` en AppContext** + 2 botones en el diálogo de
+  login ("★ Demo con Pro" verde, "Demo gratis" gris). Token va a sessionStorage
+  (sesión se borra al cerrar navegador — apropiado para demos).
+- ⚠️ **PENDIENTE manual del usuario:** agregar env var en Vercel:
+  `PRO_EMAILS=felipebarv@gmail.com,demo-pro@viajero360.app`
+  Sin esto, el demo "Pro" se loguea pero verá el paywall en features Pro
+  (porque el email no está en la lista). Después del set, redeploy.
+
+**Pendientes de la auditoría no aplicados** (justificados):
+
+- 🟡 P3-A reactivar Asesor IA real → requiere `ANTHROPIC_API_KEY` + costo en
+  cada request. Mejor cuando haya tráfico. P3-B (copy) hecho.
+- 🟡 P4 fix magic numbers del mapa (top-[150px], calc(100vh-172px)) → bug menor,
+  no afecta usuarios reales hoy. Documentado para sesión de limpieza.
+- 🟡 P4 redesign densidad vista de ciudad → subjetivo. Esperar feedback real.
+- 🟡 P5 quality signal POI → ya parcial en scoring server-side. Visibilizarlo
+  más es nice-to-have.
+
 ### 2026-06-01 — Ronda 6 (OPTIMIZACIÓN técnica) — del 7/10 al ~9/10
 
 El agente crítico auditó rendimiento/robustez. Aplicado:

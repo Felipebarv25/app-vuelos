@@ -95,7 +95,7 @@ const FAQS = [
   },
   {
     q: "¿Comparten mi información?",
-    a: "No vendemos datos. Lo único que guardamos para Pro es tu email asociado a tu suscripción. Para más, revisa nuestra política de privacidad.",
+    a: "No vendemos datos. Lo único que guardamos para Pro es tu email asociado a tu suscripción. Para más, revisa nuestra política de privacidad en /privacidad.",
   },
 ];
 
