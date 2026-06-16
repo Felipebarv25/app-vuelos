@@ -127,29 +127,31 @@ a:focus:not(:focus-visible) {
   animation: pop 0.25s ease both;
 }
 
-/* Logo animado: el planeta rota 360 deg llevandose los landmarks de fondo,
-   y el viajero camina con swagger estilo Liam Gallagher (sway lateral
-   confiado, sin grandes balanceos). Solo activo con .logo-animado. */
-@keyframes logo-girar {
+/* Logo animado v4 — composicion estatica con elementos sutiles vivos:
+   sol gira lentamente y el viajero hace swagger lateral (estilo Liam
+   Gallagher). El resto de landmarks son estaticos para mantener la
+   identidad de logo de empresa. Solo activo con .logo-animado. */
+@keyframes logo-sol-girar {
   to { transform: rotate(360deg); }
 }
 @keyframes logo-swagger {
-  0%   { transform: rotate(-1.4deg) translateY(0); }
-  50%  { transform: rotate(1.4deg) translateY(-0.45px); }
-  100% { transform: rotate(-1.4deg) translateY(0); }
+  0%   { transform: rotate(-1.5deg) translateY(0); }
+  50%  { transform: rotate(1.5deg) translateY(-0.4px); }
+  100% { transform: rotate(-1.5deg) translateY(0); }
 }
-.logo-animado .logo-planeta {
-  animation: logo-girar 14s linear infinite;
-  transform-box: view-box;
-  transform-origin: 50px 62px;
+.logo-animado .logo-sol {
+  /* El wrapper exterior posiciona via SVG attr; este group solo rota. */
+  animation: logo-sol-girar 18s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 .logo-animado .logo-viajero {
-  animation: logo-swagger 1.4s ease-in-out infinite;
+  animation: logo-swagger 1.5s ease-in-out infinite;
   transform-box: fill-box;
   transform-origin: center bottom;
 }
 @media (prefers-reduced-motion: reduce) {
-  .logo-animado .logo-planeta,
+  .logo-animado .logo-sol,
   .logo-animado .logo-viajero {
     animation: none;
   }
