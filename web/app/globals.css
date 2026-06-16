@@ -127,6 +127,30 @@ a:focus:not(:focus-visible) {
   animation: pop 0.25s ease both;
 }
 
+/* Logo animado: la tierra fluye bajo los pies del viajero y este hace un leve
+   bobbing como caminando. Solo se activa cuando el SVG tiene .logo-animado. */
+@keyframes logo-tierra {
+  to { stroke-dashoffset: -16; }
+}
+@keyframes logo-paso {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-1.1px); }
+}
+.logo-animado .logo-flujo {
+  animation: logo-tierra 2.4s linear infinite;
+}
+.logo-animado .logo-viajero {
+  animation: logo-paso 0.55s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-animado .logo-flujo,
+  .logo-animado .logo-viajero {
+    animation: none;
+  }
+}
+
 /* Toast: aparece desde arriba con un toque de bounce y se queda. */
 @keyframes toast-in {
   0% {
