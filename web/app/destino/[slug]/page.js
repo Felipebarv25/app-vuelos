@@ -7,7 +7,8 @@
 import { promises as fs } from "fs";
 import path from "path";
 import Link from "next/link";
-import { getDestinoPorSlug, TODOS_SLUGS, nombreDestino } from "@/lib/destinos";
+import { redirect } from "next/navigation";
+import { getDestinoPorSlug, getDestinoPorCiudadSlug, TODOS_SLUGS, nombreDestino } from "@/lib/destinos";
 import { datosSeoDe, faqsDe } from "@/lib/seoDestinos";
 import { fotoCiudad } from "@/lib/fotoCiudad";
 import { preciosPorMes } from "@/lib/historialPrecios";
@@ -101,6 +102,13 @@ export default async function PaginaDestino({ params }) {
   const { slug } = await params;
   const d = getDestinoPorSlug(slug);
   if (!d) {
+    // Intento de recuperación: si el slug es solo la ciudad (ej. "paris"),
+    // buscamos el slug completo "ciudad-pais" (ej. "paris-francia") y
+    // redirigimos. Solo redirige si hay exactamente 1 coincidencia.
+    const dPorCiudad = getDestinoPorCiudadSlug(slug);
+    if (dPorCiudad) {
+      redirect(`/destino/${dPorCiudad.slug}`);
+    }
     return (
       <main className="mx-auto max-w-3xl px-6 py-16 text-center">
         <h1 className="text-3xl font-extrabold">Destino no encontrado</h1>

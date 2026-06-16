@@ -617,8 +617,69 @@ const DATOS_POR_LANG = {
   },
 };
 
+// Datos deterministas por país: idioma, moneda y platos típicos.
+// Se usan como fallback en generico() para las ciudades sin entrada específica.
+// El idioma/moneda es objetivo; los platos son los más representativos del país.
+const DATOS_PAIS = {
+  // Sudamérica
+  "Perú":           { idioma: "Español", moneda: "Sol peruano (PEN)", platos: ["Ceviche", "Lomo saltado", "Ají de gallina", "Anticuchos"] },
+  "Ecuador":        { idioma: "Español", moneda: "Dólar estadounidense (USD)", platos: ["Encebollado", "Llapingachos", "Seco de pollo", "Ceviche de camarones"] },
+  "Chile":          { idioma: "Español", moneda: "Peso chileno (CLP)", platos: ["Empanada de pino", "Chupe de mariscos", "Asado", "Completo"] },
+  "Argentina":      { idioma: "Español", moneda: "Peso argentino (ARS)", platos: ["Asado", "Empanadas", "Milanesa napolitana", "Dulce de leche"] },
+  "Brasil":         { idioma: "Portugués", moneda: "Real brasileño (BRL)", platos: ["Feijoada", "Churrasco", "Coxinha", "Brigadeiro"] },
+  "Uruguay":        { idioma: "Español", moneda: "Peso uruguayo (UYU)", platos: ["Chivito", "Asado uruguayo", "Milanesa", "Medialunas"] },
+  "Bolivia":        { idioma: "Español y lenguas indígenas", moneda: "Boliviano (BOB)", platos: ["Salteñas", "Silpancho", "Anticuchos", "Sopa de maní"] },
+  "Paraguay":       { idioma: "Español y guaraní", moneda: "Guaraní paraguayo (PYG)", platos: ["Sopa paraguaya", "Chipa", "Mbejú", "Asado"] },
+  // Norte y Centroamérica
+  "México":         { idioma: "Español", moneda: "Peso mexicano (MXN)", platos: ["Tacos al pastor", "Enchiladas", "Mole", "Pozole"] },
+  "Panamá":         { idioma: "Español", moneda: "Dólar estadounidense (USD)", platos: ["Sancocho panameño", "Arroz con pollo", "Ceviche", "Tamales"] },
+  "Costa Rica":     { idioma: "Español", moneda: "Colón costarricense (CRC)", platos: ["Gallo pinto", "Casado", "Chifrijo", "Ceviche"] },
+  "Estados Unidos": { idioma: "Inglés", moneda: "Dólar estadounidense (USD)", platos: ["Hamburguesa", "BBQ ribs", "Clam chowder", "Cheesecake"] },
+  "Canadá":         { idioma: "Inglés y francés", moneda: "Dólar canadiense (CAD)", platos: ["Poutine", "Smoked meat", "Butter tart", "Nanaimo bar"] },
+  "Cuba":           { idioma: "Español", moneda: "Peso cubano (CUP)", platos: ["Ropa vieja", "Arroz moros y cristianos", "Lechón asado", "Croquetas"] },
+  "Guatemala":      { idioma: "Español", moneda: "Quetzal guatemalteco (GTQ)", platos: ["Pepián", "Jocon", "Kak'ik", "Tamales colorados"] },
+  // Europa
+  "España":         { idioma: "Español", moneda: "Euro (EUR)", platos: ["Paella", "Jamón ibérico", "Tortilla española", "Gazpacho"] },
+  "Portugal":       { idioma: "Portugués", moneda: "Euro (EUR)", platos: ["Bacalhau", "Pastel de nata", "Caldo verde", "Francesinha"] },
+  "Francia":        { idioma: "Francés", moneda: "Euro (EUR)", platos: ["Croissant", "Crème brûlée", "Soupe à l'oignon", "Ratatouille"] },
+  "Italia":         { idioma: "Italiano", moneda: "Euro (EUR)", platos: ["Pizza napolitana", "Pasta al ragú", "Risotto", "Tiramisú"] },
+  "Reino Unido":    { idioma: "Inglés", moneda: "Libra esterlina (GBP)", platos: ["Fish and chips", "Sunday roast", "Pie and mash", "Afternoon tea"] },
+  "Países Bajos":   { idioma: "Neerlandés (inglés universal)", moneda: "Euro (EUR)", platos: ["Stroopwafels", "Bitterballen", "Herring", "Stamppot"] },
+  "Bélgica":        { idioma: "Francés y neerlandés", moneda: "Euro (EUR)", platos: ["Moules-frites", "Gaufres", "Chocolates belgas", "Carbonade flamande"] },
+  "Alemania":       { idioma: "Alemán", moneda: "Euro (EUR)", platos: ["Bratwurst", "Schnitzel", "Currywurst", "Sauerkraut"] },
+  "Austria":        { idioma: "Alemán", moneda: "Euro (EUR)", platos: ["Wiener Schnitzel", "Apfelstrudel", "Tafelspitz", "Sachertorte"] },
+  "Chequia":        { idioma: "Checo (inglés en zonas turísticas)", moneda: "Corona checa (CZK)", platos: ["Goulash", "Knedlíky", "Svíčková", "Pilsner"] },
+  "Hungría":        { idioma: "Húngaro", moneda: "Forinto húngaro (HUF)", platos: ["Goulash húngaro", "Lángos", "Halászlé", "Kürtőskalács"] },
+  "Grecia":         { idioma: "Griego", moneda: "Euro (EUR)", platos: ["Moussaka", "Souvlaki", "Spanakopita", "Tzatziki"] },
+  "Turquía":        { idioma: "Turco (inglés en turismo)", moneda: "Lira turca (TRY)", platos: ["Kebab", "Baklava", "Lahmacun", "Köfte"] },
+  "Irlanda":        { idioma: "Inglés e irlandés", moneda: "Euro (EUR)", platos: ["Irish stew", "Boxty", "Coddle", "Soda bread"] },
+  "Dinamarca":      { idioma: "Danés", moneda: "Corona danesa (DKK)", platos: ["Smørrebrød", "Frikadeller", "Æbleskiver", "Rugbrød"] },
+  "Suecia":         { idioma: "Sueco", moneda: "Corona sueca (SEK)", platos: ["Köttbullar", "Gravlax", "Smörgåsbord", "Semla"] },
+  "Suiza":          { idioma: "Alemán, francés e italiano", moneda: "Franco suizo (CHF)", platos: ["Fondue", "Raclette", "Rösti", "Zürcher Geschnetzeltes"] },
+  "Polonia":        { idioma: "Polaco", moneda: "Esloti polaco (PLN)", platos: ["Pierogi", "Bigos", "Żurek", "Kielbasa"] },
+  // Asia
+  "Japón":          { idioma: "Japonés (poco inglés)", moneda: "Yen japonés (JPY)", platos: ["Ramen", "Sushi", "Tempura", "Yakitori"] },
+  "Corea del Sur":  { idioma: "Coreano", moneda: "Won surcoreano (KRW)", platos: ["Bibimbap", "Bulgogi", "Samgyeopsal", "Kimchi"] },
+  "Tailandia":      { idioma: "Tailandés (inglés en turismo)", moneda: "Baht tailandés (THB)", platos: ["Pad thai", "Tom yum", "Massaman curry", "Som tam"] },
+  "Indonesia":      { idioma: "Indonesio (inglés en zonas turísticas)", moneda: "Rupia indonesia (IDR)", platos: ["Nasi goreng", "Satay", "Gado-gado", "Rendang"] },
+  "Singapur":       { idioma: "Inglés, malayo, chino y tamil", moneda: "Dólar de Singapur (SGD)", platos: ["Hainanese chicken rice", "Laksa", "Chili crab", "Char kway teow"] },
+  "Emiratos Árabes":{ idioma: "Árabe (inglés muy extendido)", moneda: "Dírham emiratí (AED)", platos: ["Shawarma", "Hummus", "Harees", "Machboos"] },
+  "China":          { idioma: "Mandarín", moneda: "Yuan chino (CNY)", platos: ["Dim sum", "Pato a la pekinesa", "Xiaolongbao", "Mapo tofu"] },
+  "India":          { idioma: "Hindi e inglés", moneda: "Rupia india (INR)", platos: ["Biryani", "Butter chicken", "Samosa", "Dosa"] },
+  // África
+  "Egipto":         { idioma: "Árabe", moneda: "Libra egipcia (EGP)", platos: ["Koshari", "Ful medames", "Taameya", "Molokhia"] },
+  "Marruecos":      { idioma: "Árabe y francés", moneda: "Dírham marroquí (MAD)", platos: ["Tajín de cordero", "Cuscús", "Pastilla", "Harira"] },
+  "Sudáfrica":      { idioma: "Inglés y otros 10 idiomas oficiales", moneda: "Rand sudafricano (ZAR)", platos: ["Braai", "Bobotie", "Boerewors", "Bunny chow"] },
+  // Oceanía
+  "Australia":      { idioma: "Inglés", moneda: "Dólar australiano (AUD)", platos: ["Meat pie", "Barramundi", "Tim Tams", "Vegemite toast"] },
+  "Nueva Zelanda":  { idioma: "Inglés y māori", moneda: "Dólar neozelandés (NZD)", platos: ["Hāngi", "Pavlova", "Whitebait fritters", "Lamb rack"] },
+};
+
 // Plantilla genérica por región para destinos sin datos específicos.
+// Usa DATOS_PAIS para idioma, moneda y platos (deterministas por país);
+// solo el intro y la mejorEpoca se generan a partir de la región.
 function generico(d, lang) {
+  const pais = DATOS_PAIS[d.pais] || {};
   if (lang === "en") {
     const regionEn = d.region === "sudamerica" ? "South America"
       : d.region === "norteamerica" ? "North & Central America"
@@ -632,10 +693,10 @@ function generico(d, lang) {
         `cuisine and unique experiences. Round-trip flights cost approximately ` +
         `US$${d.vuelo} from major hubs, and a mid-range daily budget is around ` +
         `US$${d.dia} per person (lodging, food, transport and activities).`,
-      idioma: "Check local language",
-      moneda: "Check local currency",
+      idioma: pais.idioma || "Check local language",
+      moneda: pais.moneda || "Check local currency",
       dato: null,
-      platos: [],
+      platos: pais.platos || [],
     };
   }
   if (lang === "pt") {
@@ -652,10 +713,10 @@ function generico(d, lang) {
         `US$${d.vuelo} desde os principais hubs, e o orçamento diário para um turista ` +
         `de médio porte gira em torno de US$${d.dia} por pessoa (hospedagem, comida, ` +
         `transporte e atividades).`,
-      idioma: "Consulte o idioma local",
-      moneda: "Consulte a moeda local",
+      idioma: pais.idioma || "Consulte o idioma local",
+      moneda: pais.moneda || "Consulte a moeda local",
       dato: null,
-      platos: [],
+      platos: pais.platos || [],
     };
   }
   if (lang === "fr") {
@@ -672,10 +733,10 @@ function generico(d, lang) {
         `US$${d.vuelo} depuis les principaux hubs, et le budget quotidien pour un voyageur ` +
         `de gamme moyenne tourne autour de US$${d.dia} par personne (hébergement, ` +
         `nourriture, transport et activités).`,
-      idioma: "Vérifiez la langue locale",
-      moneda: "Vérifiez la monnaie locale",
+      idioma: pais.idioma || "Vérifiez la langue locale",
+      moneda: pais.moneda || "Vérifiez la monnaie locale",
       dato: null,
-      platos: [],
+      platos: pais.platos || [],
     };
   }
   const region = d.region === "sudamerica" ? "Sudamérica"
@@ -690,10 +751,10 @@ function generico(d, lang) {
       `experiencias únicas. Es alcanzable desde Colombia con vuelos i/v aproximados de ` +
       `US$${d.vuelo} desde Bogotá o Medellín, y el presupuesto diario para un turista de ` +
       `gama media ronda los US$${d.dia} por persona (hospedaje, comida, transporte y actividades).`,
-    idioma: "Consulta el idioma local",
-    moneda: "Consulta la moneda local",
+    idioma: pais.idioma || "Consulta el idioma local",
+    moneda: pais.moneda || "Consulta la moneda local",
     dato: null,
-    platos: [],
+    platos: pais.platos || [],
   };
 }
 

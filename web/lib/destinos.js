@@ -47,6 +47,18 @@ export function getDestinoPorSlug(slug) {
   return POR_SLUG[slug] || null;
 }
 
+// Busca un destino cuando el slug recibido es solo la ciudad (sin país).
+// El slug completo tiene formato "ciudad-pais"; buscamos todos los slugs que
+// empiecen con `ciudadSlug + "-"` para evitar coincidencias parciales.
+// Devuelve el destino solo si hay exactamente 1 coincidencia; null en caso
+// de ambigüedad (0 o >1 matches) para no redirigir a la ciudad equivocada.
+export function getDestinoPorCiudadSlug(ciudadSlug) {
+  if (!ciudadSlug) return null;
+  const prefijo = ciudadSlug + "-";
+  const matches = DESTINOS_SEO.filter((d) => d.slug.startsWith(prefijo));
+  return matches.length === 1 ? matches[0] : null;
+}
+
 // Slugs disponibles (los que tienen entry en el catálogo). Lo que pasamos a
 // generateStaticParams en Next.js para que pre-renderice todas las páginas.
 export const TODOS_SLUGS = DESTINOS_SEO.map((d) => d.slug);

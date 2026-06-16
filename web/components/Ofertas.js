@@ -24,9 +24,12 @@ function linkMisFechas(r, rango) {
   return `https://www.aviasales.com/search/${code}` + (mk ? `?marker=${mk}` : "");
 }
 
+const LOTE = 12; // tarjetas por lote inicial y por "Ver más"
+
 export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = null }) {
   const [data, setData] = useState(null);
-  const [filtro, setFiltro] = useState("todos"); // todos | BOG | MDE
+  const [filtro, setFiltro] = useState("colombia"); // colombia | BOG | MDE | todos
+  const [visibles, setVisibles] = useState(LOTE); // cuántas tarjetas mostrar
   const [copPorUsd, setCopPorUsd] = useState(4000); // tasa COP en vivo (respaldo 4000)
   // Popularidad real por destino (cuantas busquedas ha tenido). Behavioral
   // econ: social proof aumenta CTR cuando es VERIDICO. Si no hay datos
@@ -71,7 +74,17 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
 
   const rutas = useMemo(() => {
     const list = data?.rutas || [];
-    return filtro === "todos" ? list : list.filter((r) => r.origen === filtro);
+    const filtradas =
+      filtro === "todos" ? list
+      : filtro === "colombia" ? list.filter((r) => r.origen === "BOG" || r.origen === "MDE")
+      : list.filter((r) => r.origen === filtro);
+    // Orden: mayor descuento primero; si empatan, más reciente primero.
+    return [...filtradas].sort((a, b) => {
+      if (b.descuento !== a.descuento) return b.descuento - a.descuento;
+      const ta = a.visto ? new Date(a.visto).getTime() : 0;
+      const tb = b.visto ? new Date(b.visto).getTime() : 0;
+      return tb - ta;
+    });
   }, [data, filtro]);
 
   // Frescura GLOBAL: el escaneo mas reciente entre todas las rutas. Sirve para
@@ -154,26 +167,30 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
           ))}
         </div>
 
-        {/* Filtro de origen */}
+        {/* Filtro de origen: Colombia (BOG+MDE) es el default para que el
+            título sea coherente; "Todos" expande a ofertas internacionales. */}
         <div className="flex gap-1 rounded-full bg-slate-100 p-1">
-          {[["todos", t("ofertasTodos")], ["BOG", origenes.BOG], ["MDE", origenes.MDE]].map(
-            ([k, label]) => (
-              <button
-                key={k}
-                onClick={() => setFiltro(k)}
-                className={`rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition ${
-                  filtro === k ? "bg-white text-marca-700 shadow" : "text-slate-500"
-                }`}
-              >
-                {label}
-              </button>
-            )
-          )}
+          {[
+            ["colombia", "Colombia"],
+            ["BOG", origenes.BOG || "Bogotá"],
+            ["MDE", origenes.MDE || "Medellín"],
+            ["todos", t("ofertasTodos")],
+          ].map(([k, label]) => (
+            <button
+              key={k}
+              onClick={() => { setFiltro(k); setVisibles(LOTE); }}
+              className={`rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition ${
+                filtro === k ? "bg-white text-marca-700 shadow" : "text-slate-500"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {rutas.map((r) => (
+        {rutas.slice(0, visibles).map((r) => (
           <div
             key={r.origen + r.destino}
             className="group relative flex flex-col rounded-2xl border border-slate-100 bg-white p-4 shadow-suave transition hover:-translate-y-0.5 hover:shadow-media"
@@ -282,6 +299,21 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Contador + paginación */}
+      <div className="mt-5 flex flex-col items-center gap-3">
+        <p className="text-[12.5px] text-slate-400">
+          Mostrando {Math.min(visibles, rutas.length)} de {rutas.length} oferta{rutas.length !== 1 ? "s" : ""}
+        </p>
+        {visibles < rutas.length && (
+          <button
+            onClick={() => setVisibles((v) => v + LOTE)}
+            className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-[13.5px] font-semibold text-marca-700 shadow-suave transition hover:border-marca-200 hover:bg-marca-50"
+          >
+            Ver más ofertas ({Math.min(LOTE, rutas.length - visibles)} más)
+          </button>
+        )}
       </div>
 
       {data.generado && (
