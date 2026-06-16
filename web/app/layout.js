@@ -33,6 +33,13 @@ export const metadata = {
   applicationName: "Viajero 360",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Viajero 360" },
   icons: { icon: "/icono-192.png", apple: "/apple-touch-icon.png" },
+  // Google Search Console verification: cuando registres el sitio en Search
+  // Console te dan un meta tag con un codigo unico. En vez de pegarlo a mano,
+  // pones el valor en la env var GOOGLE_SITE_VERIFICATION en Vercel y Next
+  // lo inyecta solo. Si la env var no esta, omite el meta (no rompe nada).
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+  },
   // og:image y twitter:image los genera la convención de archivos
   // app/opengraph-image.js y app/twitter-image.js (tarjeta 1200x630).
   openGraph: {
