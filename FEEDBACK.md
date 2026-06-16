@@ -30,6 +30,23 @@ a 360px"). Prioriza impacto. No repitas lo ya resuelto. Felicita lo que sí qued
 
 ## 📋 Hallazgos
 
+### 2026-06-16 — P4 magic numbers + sitemap legal
+
+Cleanup autónomo mientras el usuario hacía otras cosas:
+
+- ✅ 🟡 **P4 auditoría: magic numbers del mapa fijo eliminados.** `app/page.js`
+  tenía `lg:top-[150px]` y `lg:h-[calc(100vh-172px)]` hardcoded — al cambiar
+  idioma o el header recibir wrap, el mapa se desalineaba. Fix: useEffect con
+  ResizeObserver sobre el `<header>` que mide la altura real y publica
+  `--v360-header-h` (con +88 para el sub-header de ciudad). Las clases ahora
+  usan `lg:top-[var(--v360-header-h,150px)]` y
+  `lg:h-[calc(100vh-var(--v360-header-h,150px)-22px)]` (los 150px quedan como
+  fallback para SSR / antes de que corra el effect).
+- ✅ **Páginas legales agregadas al sitemap.** `/privacidad` y `/terminos`
+  priority 0.3, changeFrequency yearly. Google las indexa y suma confianza al
+  dominio (E-E-A-T: pages legales públicas son señal de sitio serio).
+- ✅ SW cache `v8 → v9` (cambió page.js).
+
 ### 2026-06-15 — Auditoría senior + admin/demo
 
 Auditoria externa de diseñador + analista de viajes + viajero exigente.

@@ -179,6 +179,28 @@ function saludoEmoji() {
 
 export default function Home() {
   const { t, lang, usuario, salir, listo, pro, paywall, abrirPaywall, cerrarPaywall, requierePro } = useApp();
+
+  // ResizeObserver: medimos la altura REAL del <header> y la exponemos como
+  // CSS var `--v360-header-h`. Antes el mapa sticky usaba `top-[150px]` y
+  // `calc(100vh-172px)` hardcoded — si el header cambiaba de alto (idioma
+  // con texto mas largo, wrap en pantalla angosta, etc.) el mapa se
+  // desalineaba. Ahora se ajusta solo. El +88 cubre el sub-header de ciudad
+  // que va entre el header global y el mapa sticky.
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof ResizeObserver === "undefined") return;
+    const header = document.querySelector("header");
+    if (!header) return;
+    const aplicar = () => {
+      const h = header.getBoundingClientRect().height;
+      document.documentElement.style.setProperty("--v360-header-h", `${Math.round(h + 88)}px`);
+    };
+    aplicar();
+    const ro = new ResizeObserver(aplicar);
+    ro.observe(header);
+    window.addEventListener("resize", aplicar);
+    return () => { ro.disconnect(); window.removeEventListener("resize", aplicar); };
+  }, []);
+
   const [consulta, setConsulta] = useState("");
   const [sugerencias, setSugerencias] = useState([]);
   const [mostrarSug, setMostrarSug] = useState(false);
@@ -1523,8 +1545,8 @@ export default function Home() {
 
           {/* Panel derecho: mapa (arriba en móvil, fijo a la derecha en escritorio) */}
           <div className="order-1 lg:order-2 lg:w-[44%] lg:shrink-0">
-            <div className="lg:sticky lg:top-[150px]">
-              <div className="h-[42vh] min-h-[260px] overflow-hidden lg:h-[calc(100vh-172px)] lg:rounded-2xl lg:shadow-media">
+            <div className="lg:sticky lg:top-[var(--v360-header-h,150px)]">
+              <div className="h-[42vh] min-h-[260px] overflow-hidden lg:h-[calc(100vh-var(--v360-header-h,150px)-22px)] lg:rounded-2xl lg:shadow-media">
                 <Mapa
                   centro={[ciudad.lat, ciudad.lon]}
                   lugares={lugaresDelDia}
