@@ -4,7 +4,7 @@
 // Props minimas: ciudad, pais, iata, precioActual?, lang?
 // El precio por defecto sugerido es 80% del precio actual (psicologico, un
 // descuento que se siente real pero alcanzable).
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "@/lib/AppContext";
 import { Icono } from "./Icono";
 
@@ -18,6 +18,17 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
   );
   const [cargando, setCargando] = useState(false);
   const [estado, setEstado] = useState(null); // null | "ok" | "limite" | "auth" | "error"
+
+  // Auto-cerrar el modal de exito tras 1.8s. Sin este timer el usuario ve la
+  // tarjeta "Alerta activada" + boton Cerrar, y si en algun ancho de pantalla
+  // el contenido del modal se encoge respecto al formulario, el modal saltaba
+  // hacia arriba con la animacion "subir" y parecia que se cerraba y reabria.
+  // Auto-close es el patron de Stripe/GitHub: confirmas y sigues.
+  useEffect(() => {
+    if (estado !== "ok") return;
+    const id = setTimeout(() => { setAbierto(false); setEstado(null); }, 1800);
+    return () => clearTimeout(id);
+  }, [estado]);
 
   if (!iata) return null;
 
@@ -81,8 +92,11 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
           onClick={() => { setAbierto(false); setEstado(null); }}
         >
           <div
+            role="dialog"
+            aria-modal="true"
             className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl animar-subir"
             onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
           >
             <div className="relative bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 px-6 pb-6 pt-5 text-white">
               <button
@@ -101,7 +115,10 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
               </p>
             </div>
 
-            <div className="px-5 py-5">
+            {/* min-height evita el "salto" visual cuando el contenido pasa de
+                formulario (alto) a estado de exito (corto). Mantiene el modal
+                anclado en el mismo lugar y no parece que se cierre y reabra. */}
+            <div className="px-5 py-5 min-h-[220px] flex flex-col justify-center">
               {estado === "ok" ? (
                 <div className="text-center">
                   <div className="text-5xl">✓</div>
