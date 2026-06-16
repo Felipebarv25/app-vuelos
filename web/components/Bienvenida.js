@@ -130,7 +130,7 @@ export default function Bienvenida() {
         <div className="relative z-10 flex items-center justify-between gap-3 px-5 pt-4 sm:px-8">
           {/* Marca discreta arriba izquierda */}
           <div className="text-white/85 hidden sm:block">
-            <Logo size={36} animado />
+            <Logo size={44} animado />
           </div>
 
           {/* Acciones top-right */}
@@ -167,7 +167,7 @@ export default function Bienvenida() {
 
         {/* Contenido hero centrado */}
         <div className="relative mx-auto flex min-h-[80vh] max-w-3xl flex-col items-center justify-center px-6 py-12 text-center text-white">
-          <div className="text-white/85"><Logo size={64} animado /></div>
+          <div className="text-white drop-shadow-[0_8px_20px_rgba(0,0,0,0.3)]"><Logo size={110} animado /></div>
 
           {/* Chip "precios actualizados ahora" — livelyness real */}
           <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-wider backdrop-blur-md">
@@ -334,7 +334,7 @@ export default function Bienvenida() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between">
-              <div className="text-marca-600"><Logo size={42} animado /></div>
+              <div className="text-marca-600"><Logo size={56} animado /></div>
               <button
                 onClick={() => setMostrarLogin(false)}
                 aria-label="Cerrar"
@@ -423,7 +423,7 @@ function PantallaMagicCode({
   return (
     <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4 bg-gradient-to-br from-marca-500 via-marca-600 to-marca-900">
       <div className="bg-white rounded-3xl p-7 w-full max-w-sm shadow-[0_24px_60px_rgba(15,118,110,.45)] animar-subir">
-        <div className="flex justify-center text-marca-600"><Logo size={48} animado /></div>
+        <div className="flex justify-center text-marca-600"><Logo size={64} animado /></div>
 
         {pasoMagic === 1 && (
           <form onSubmit={enviarCodigo} className="mt-5">

@@ -127,25 +127,29 @@ a:focus:not(:focus-visible) {
   animation: pop 0.25s ease both;
 }
 
-/* Logo animado: la tierra fluye bajo los pies del viajero y este hace un leve
-   bobbing como caminando. Solo se activa cuando el SVG tiene .logo-animado. */
-@keyframes logo-tierra {
-  to { stroke-dashoffset: -16; }
+/* Logo animado: el planeta rota 360 deg llevandose los landmarks de fondo,
+   y el viajero camina con swagger estilo Liam Gallagher (sway lateral
+   confiado, sin grandes balanceos). Solo activo con .logo-animado. */
+@keyframes logo-girar {
+  to { transform: rotate(360deg); }
 }
-@keyframes logo-paso {
-  from { transform: translateY(0); }
-  to   { transform: translateY(-1.1px); }
+@keyframes logo-swagger {
+  0%   { transform: rotate(-1.4deg) translateY(0); }
+  50%  { transform: rotate(1.4deg) translateY(-0.45px); }
+  100% { transform: rotate(-1.4deg) translateY(0); }
 }
-.logo-animado .logo-flujo {
-  animation: logo-tierra 2.4s linear infinite;
+.logo-animado .logo-planeta {
+  animation: logo-girar 14s linear infinite;
+  transform-box: view-box;
+  transform-origin: 50px 62px;
 }
 .logo-animado .logo-viajero {
-  animation: logo-paso 0.55s ease-in-out infinite alternate;
+  animation: logo-swagger 1.4s ease-in-out infinite;
   transform-box: fill-box;
   transform-origin: center bottom;
 }
 @media (prefers-reduced-motion: reduce) {
-  .logo-animado .logo-flujo,
+  .logo-animado .logo-planeta,
   .logo-animado .logo-viajero {
     animation: none;
   }

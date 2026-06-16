@@ -1,87 +1,128 @@
-// Logo de marca: viajero con mochila caminando sobre el horizonte de un
-// planeta, con landmarks (arbol, montana, edificio) en la curva. Pasa el prop
-// `animado` para activar la version con movimiento (suelo que fluye bajo el
-// viajero + leve bobbing al caminar). Usa currentColor para integrarse al
-// contexto (blanco sobre foto, teal sobre fondo claro).
-export function Logo({ size = 28, className = "", animado = false }) {
+// Logo de marca: viajero con mochila CAMINANDO sobre un planeta que rota
+// trayendo landmarks de fondo (Eiffel, montana, bosque, ciudad, piramide).
+// Caminata estilo Liam Gallagher (swagger lateral, arms ligeramente afuera,
+// sin grandes balanceos, head ligeramente forward).
+//
+// Prop `animado` activa la rotacion del planeta (12s linear) + swagger del
+// viajero (1.4s con rotacion -1deg/+1deg). Respeta prefers-reduced-motion.
+// Monocromatico (currentColor) para integrarse con el contexto.
+export function Logo({ size = 32, className = "", animado = false }) {
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 64 64"
+      viewBox="0 0 100 100"
       fill="none"
       className={`${className} ${animado ? "logo-animado" : ""}`}
       aria-hidden="true"
     >
-      {/* Anillo exterior con guiones — concepto 360 / globo */}
+      {/* Anillo exterior dasheado (concepto 360 / globo, estatico) */}
       <circle
-        cx="32"
-        cy="40"
-        r="26"
+        cx="50"
+        cy="62"
+        r="44"
         stroke="currentColor"
         strokeWidth="1.2"
-        strokeDasharray="2.4 3.4"
-        opacity="0.32"
+        strokeDasharray="2.5 3.5"
+        opacity="0.28"
       />
 
-      {/* Arco solido del horizonte (la "tierra") */}
-      <path
-        d="M 8 42 A 24 24 0 0 1 56 42"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        fill="none"
-        strokeLinecap="round"
-      />
+      {/* GRUPO ROTATORIO: planeta + landmarks anclados a su superficie */}
+      <g className="logo-planeta">
+        {/* Linea solida del planeta */}
+        <circle
+          cx="50"
+          cy="62"
+          r="34"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          fill="none"
+        />
 
-      {/* Arco con guiones encima — anima como flujo de la tierra bajo el viajero */}
-      <path
-        className="logo-flujo"
-        d="M 8 42 A 24 24 0 0 1 56 42"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeDasharray="3 5"
-        fill="none"
-        strokeLinecap="round"
-        opacity="0.45"
-      />
+        {/* Landmarks posicionados en la perimetria del planeta, orientados
+            radialmente hacia afuera. Cada uno usa transform translate+rotate
+            para anclarse al punto de la circunferencia y apuntar hacia afuera. */}
 
-      {/* Landmarks fijos en la curva: arbol (izq), montana (centro-izq), edificio (der) */}
-      <g opacity="0.6">
-        {/* Arbol */}
-        <g transform="translate(14 39)">
-          <circle cx="0" cy="-2.2" r="2.2" fill="currentColor" />
-          <rect x="-0.4" y="0" width="0.8" height="2" fill="currentColor" />
+        {/* 2 o'clock: TORRE EIFFEL (60 grados) — pos (79.4, 45) */}
+        <g transform="translate(79.4 45) rotate(60)">
+          <path
+            d="M -2.4 0 L 0 -9 L 2.4 0 Z"
+            stroke="currentColor"
+            strokeWidth="0.9"
+            fill="none"
+            strokeLinejoin="round"
+          />
+          <line x1="-1.7" y1="-3" x2="1.7" y2="-3" stroke="currentColor" strokeWidth="0.8" />
+          <line x1="-1.2" y1="-5.5" x2="1.2" y2="-5.5" stroke="currentColor" strokeWidth="0.8" />
+          <circle cx="0" cy="-9" r="0.5" fill="currentColor" />
         </g>
-        {/* Montana */}
-        <path d="M 21 41 L 25 33.5 L 29 41 Z" fill="currentColor" />
-        {/* Edificio */}
-        <g transform="translate(47 39)">
-          <rect x="-2.4" y="-5" width="4.8" height="7" fill="currentColor" />
-          <rect x="-1.6" y="-4" width="0.9" height="0.9" fill="#fff" opacity="0.85" />
-          <rect x="-0.2" y="-4" width="0.9" height="0.9" fill="#fff" opacity="0.85" />
-          <rect x="1.2" y="-4" width="0.9" height="0.9" fill="#fff" opacity="0.85" />
-          <rect x="-1.6" y="-2.4" width="0.9" height="0.9" fill="#fff" opacity="0.85" />
-          <rect x="-0.2" y="-2.4" width="0.9" height="0.9" fill="#fff" opacity="0.85" />
-          <rect x="1.2" y="-2.4" width="0.9" height="0.9" fill="#fff" opacity="0.85" />
+
+        {/* 4 o'clock: MONTANA (120 grados) — pos (79.4, 79) */}
+        <g transform="translate(79.4 79) rotate(120)">
+          <path d="M -4 0 L -1.2 -5 L 0.5 -3 L 2 -7 L 4 0 Z" fill="currentColor" />
+          <path d="M -1.2 -5 L 0 -3.2 L 0.5 -3" fill="#fff" opacity="0.5" />
+        </g>
+
+        {/* 6 o'clock: BOSQUE (180 grados) — pos (50, 96) */}
+        <g transform="translate(50 96) rotate(180)">
+          <circle cx="-2.6" cy="-2.5" r="1.8" fill="currentColor" />
+          <rect x="-2.9" y="-1" width="0.6" height="1.4" fill="currentColor" />
+          <circle cx="0" cy="-3.2" r="2.1" fill="currentColor" />
+          <rect x="-0.3" y="-1.5" width="0.6" height="1.7" fill="currentColor" />
+          <circle cx="2.6" cy="-2.5" r="1.8" fill="currentColor" />
+          <rect x="2.3" y="-1" width="0.6" height="1.4" fill="currentColor" />
+        </g>
+
+        {/* 8 o'clock: SKYLINE DE CIUDAD (240 grados) — pos (20.6, 79) */}
+        <g transform="translate(20.6 79) rotate(240)">
+          <rect x="-4" y="-4" width="1.5" height="4" fill="currentColor" />
+          <rect x="-2" y="-6.5" width="1.5" height="6.5" fill="currentColor" />
+          <rect x="0" y="-3.5" width="1.5" height="3.5" fill="currentColor" />
+          <rect x="2" y="-5.5" width="1.7" height="5.5" fill="currentColor" />
+          {/* ventanas */}
+          <rect x="-1.7" y="-5.5" width="0.4" height="0.4" fill="#fff" opacity="0.7" />
+          <rect x="-1.7" y="-4" width="0.4" height="0.4" fill="#fff" opacity="0.7" />
+          <rect x="2.3" y="-4.5" width="0.4" height="0.4" fill="#fff" opacity="0.7" />
+          <rect x="2.3" y="-3" width="0.4" height="0.4" fill="#fff" opacity="0.7" />
+        </g>
+
+        {/* 10 o'clock: PIRAMIDE (300 grados) — pos (20.6, 45) */}
+        <g transform="translate(20.6 45) rotate(300)">
+          <path d="M -4 0 L 0 -6 L 4 0 Z" fill="currentColor" />
+          {/* lineas de relleno (efecto bloques de piedra) */}
+          <line x1="-2.5" y1="-2" x2="2.5" y2="-2" stroke="#fff" strokeWidth="0.4" opacity="0.4" />
+          <line x1="-1.4" y1="-4" x2="1.4" y2="-4" stroke="#fff" strokeWidth="0.4" opacity="0.4" />
         </g>
       </g>
 
-      {/* Viajero en el polo norte (centro) — el wrapper de transform fija la
-          posicion, el group interno hace el bobbing del caminar */}
-      <g transform="translate(32 17)">
+      {/* VIAJERO FIJO en la cima — silueta estilo Liam Gallagher: ligero lean
+          forward, arms separados del cuerpo, head ligeramente abajo. La
+          animacion swagger se aplica al grupo interno. */}
+      <g transform="translate(50 22)">
         <g className="logo-viajero">
-          {/* Mochila — visible detras del cuerpo, ligeramente al lado */}
-          <rect x="-4.6" y="2.5" width="3.2" height="6" rx="0.9" fill="currentColor" opacity="0.85" />
-          {/* Cabeza */}
-          <circle cx="0" cy="-0.6" r="2.5" fill="currentColor" />
-          {/* Cuerpo — torso con hombros */}
+          {/* Mochila atras (visible al lado izq por la inclinacion) */}
+          <rect x="-5.5" y="3" width="3.5" height="7.5" rx="1" fill="currentColor" opacity="0.85" />
+          {/* Tira de mochila */}
+          <line x1="-3.2" y1="3" x2="-2" y2="2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.85" />
+
+          {/* Cabeza ligeramente inclinada forward (Gallagher head tilt) */}
+          <circle cx="0.3" cy="-1" r="3.2" fill="currentColor" />
+
+          {/* Cuerpo con ligero forward lean (Gallagher swagger) */}
           <path
-            d="M -2.3 2.4 Q -2.3 1.6 0 1.6 Q 2.3 1.6 2.3 2.4 L 1.8 10 L -1.8 10 Z"
+            d="M -2.8 2.5 Q -2.8 1.5 0.3 1.5 Q 3.3 1.5 3.3 2.5 L 2.3 12 L -2 12 Z"
             fill="currentColor"
           />
-          {/* Piernas (caminando) */}
-          <line x1="-1" y1="10" x2="-2.2" y2="15" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
-          <line x1="1" y1="10" x2="2" y2="15" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+
+          {/* Brazos separados del cuerpo (Gallagher style: arms held out, no swing) */}
+          {/* Brazo izquierdo */}
+          <line x1="-3" y1="4" x2="-5.5" y2="11" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" />
+          {/* Brazo derecho */}
+          <line x1="3.3" y1="4" x2="5" y2="11.5" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" />
+
+          {/* Piernas caminando: una adelantada, una atrasada (paso de Gallagher) */}
+          <line x1="-1" y1="12" x2="-2.8" y2="19" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+          <line x1="1.5" y1="12" x2="3" y2="19" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
         </g>
       </g>
     </svg>
@@ -90,7 +131,7 @@ export function Logo({ size = 28, className = "", animado = false }) {
 
 // Logo + nombre, para cabeceras. `tono`: 'claro' (texto blanco) | 'marca' (teal).
 // Pasa `animado` para que el logo del header tambien camine.
-export function LogoMarca({ tono = "marca", size = 28, className = "", animado = false }) {
+export function LogoMarca({ tono = "marca", size = 32, className = "", animado = false }) {
   const color = tono === "claro" ? "text-white" : "text-marca-600";
   return (
     <span className={`inline-flex items-center gap-2 ${color} ${className}`}>
