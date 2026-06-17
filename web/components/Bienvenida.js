@@ -117,8 +117,13 @@ export default function Bienvenida() {
     <div className="fixed inset-0 z-[5000] overflow-y-auto bg-slate-50">
       {/* ============== HERO ============== */}
       <section className="relative min-h-[92vh] w-full overflow-hidden">
+        {/* Hero servido desde public/ (no hotlink Unsplash) por 3 razones:
+            1) LCP estable — no depende de la red ni de cambios de URL externa.
+            2) Cache edge de Vercel sirve la imagen siempre rapido.
+            3) Evita que Unsplash limite el sitio si crece el trafico.
+            Foto: vintage travel essentials (mapa + camara + libreta). */}
         <img
-          src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=2000&q=80&auto=format&fit=crop"
+          src="/landing-hero.jpg"
           alt=""
           aria-hidden="true"
           className="absolute inset-0 h-full w-full object-cover"

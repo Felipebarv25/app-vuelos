@@ -30,6 +30,19 @@ a 360px"). Prioriza impacto. No repitas lo ya resuelto. Felicita lo que sí qued
 
 ## 📋 Hallazgos
 
+### 2026-06-16 — Hero landing local (LCP estable)
+
+- ✅ 🟢 **Backlog: hero del landing pre-login servido desde public/**. Antes el
+  `<img>` del hero de Bienvenida.js hacía hotlink a Unsplash
+  (`photo-1488646953014-85cb44e25828`). Ahora vive en `public/landing-hero.jpg`
+  (729 KB). Beneficios: LCP estable (no depende de la red de Unsplash), edge
+  cache de Vercel sirve siempre rápido, evita rate-limits si crece el tráfico.
+- ❌ **NO migrado**: `app/page.js` HERO_IMGS_POR_TEMA tiene ~30 fotos dinámicas
+  por tema (playa/ciudad/historia/etc.). Migrar todas serían 15-20 MB de
+  bloat en el repo. Como esta página solo la ven usuarios YA logueados (no es
+  la LCP del primer visitor), no vale la pena. Decisión pragmática.
+- ✅ SW cache `v11 → v12`.
+
 ### 2026-06-16 — Control de ritmo en ruta multiciudad
 
 - ✅ 🟡 **Backlog: "menos ciudades, más días" en rutas largas.** El agente
