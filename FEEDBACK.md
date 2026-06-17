@@ -30,6 +30,17 @@ a 360px"). Prioriza impacto. No repitas lo ya resuelto. Felicita lo que sí qued
 
 ## 📋 Hallazgos
 
+### 2026-06-16 — Control de ritmo en ruta multiciudad
+
+- ✅ 🟡 **Backlog: "menos ciudades, más días" en rutas largas.** El agente
+  crítico ronda 1 anotó "2 días/ciudad en rutas de 5 ciudades se siente
+  apretado". Ahora `construirRuta` acepta `ritmo: "normal" | "tranquilo"`:
+  - normal: DIAS_MIN=2 (default, max ciudades)
+  - tranquilo: DIAS_MIN=3 (menos ciudades, más tiempo en cada una)
+  En Presupuesto.js modo ruta multiciudad, toggle de 2 botones ("Más
+  ciudades" / "Más días por ciudad") arriba del RutaCard. i18n 4 idiomas.
+- ✅ SW cache `v10 → v11`.
+
 ### 2026-06-16 — P5 quality signal POI + (anterior)
 
 - ✅ 🟡 **P5 auditoría: señal de calidad por POI diferenciada.** Antes mostraba

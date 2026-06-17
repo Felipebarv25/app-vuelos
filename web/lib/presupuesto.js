@@ -284,6 +284,7 @@ export function construirRuta({
   excluir = [],
   preciosReales = {},
   origen = null,
+  ritmo = "normal", // "normal" (DIAS_MIN=2, mas ciudades) | "tranquilo" (DIAS_MIN=3, menos)
 }) {
   const fuera = new Set(excluir);
   // Aplicamos precio real (si existe) sobre cada candidato ANTES de elegir la
@@ -311,7 +312,11 @@ export function construirRuta({
 
   const rnd = mulberry32((semilla * 2654435761) ^ hashStr(llaveCiudad(entrada)));
 
-  const DIAS_MIN = 2;
+  // ritmo "normal" = 2 dias minimo por ciudad (max ciudades posibles).
+  // ritmo "tranquilo" = 3 dias minimo (menos ciudades, mas tiempo en cada una).
+  // Feedback del agente critico ronda 1: "2 dias/ciudad en rutas de 5 ciudades
+  // se siente apretado". El usuario puede elegir el ritmo en la UI.
+  const DIAS_MIN = ritmo === "tranquilo" ? 3 : 2;
   const maxCiudades = Math.min(6, Math.max(1, Math.floor(dias / DIAS_MIN)));
 
   // Costo "piso": cada ciudad con DIAS_MIN días + sus saltos.

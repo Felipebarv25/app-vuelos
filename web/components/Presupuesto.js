@@ -108,6 +108,10 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   // Ruta
   const [inicio, setInicio] = useState(""); // llaveCiudad de la ciudad de salida
   const [semilla, setSemilla] = useState(0);
+  // Ritmo de la ruta multiciudad: "normal" rellena con tantas ciudades como
+  // quepan (2 dias/ciudad min); "tranquilo" deja 3 dias/ciudad min, menos
+  // ciudades pero mas tiempo en cada una. Default normal.
+  const [ritmo, setRitmo] = useState("normal");
 
   // Modo destino: buscador de texto.
   const [buscarDestino, setBuscarDestino] = useState("");
@@ -197,8 +201,8 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
 
   const ruta = useMemo(
     () =>
-      construirRuta({ presupuestoUsd, dias, personas, region, inicio, semilla, excluir: excluidos, preciosReales, origen }),
-    [presupuestoUsd, dias, personas, region, inicio, semilla, excluidos, preciosReales, origen]
+      construirRuta({ presupuestoUsd, dias, personas, region, inicio, semilla, excluir: excluidos, preciosReales, origen, ritmo }),
+    [presupuestoUsd, dias, personas, region, inicio, semilla, excluidos, preciosReales, origen, ritmo]
   );
 
   // Modo RUTA: cuando hay ruta y la entrada todavía no tiene precio real,
@@ -468,6 +472,28 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   {t("presupNoRuta")}
                 </div>
               ) : (
+                <>
+                  {/* Toggle de ritmo: feedback de la auditoria + agente critico
+                      ronda 1. 2 dias/ciudad en rutas largas se siente apretado;
+                      tranquilo da 3 dias min (menos ciudades, mas tiempo). */}
+                  <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl bg-slate-50 p-2">
+                    <span className="px-2 text-[12px] font-semibold text-slate-600">{t("presupRitmoTit")}</span>
+                    <div className="flex gap-1">
+                      {[["normal", t("presupRitmoNormal")], ["tranquilo", t("presupRitmoTranquilo")]].map(([k, label]) => (
+                        <button
+                          key={k}
+                          onClick={() => setRitmo(k)}
+                          className={`rounded-full px-3 py-1.5 text-[12px] font-bold transition ${
+                            ritmo === k
+                              ? "bg-marca-600 text-white shadow"
+                              : "text-slate-500 hover:bg-white"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 <RutaCard
                   ruta={ruta}
                   t={t}
@@ -484,6 +510,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   vivoEstadoEntrada={vivoEstado[llaveCiudad(ruta.entrada)] || null}
                   onPedirVivoEntrada={() => pedirVivo(ruta.entrada)}
                 />
+                </>
               )}
 
               {/* Ciudades excluidas: fichas para volver a incluirlas */}
