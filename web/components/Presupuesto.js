@@ -107,7 +107,15 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   // Cuando el usuario elige un aeropuerto del combobox, fijamos país e IATA
   // a la vez. Soporta cualquier país del mundo (incluso uno que no esté en
   // PAISES_ORIGEN — en ese caso, paisActual cae al fallback "sin detector").
+  // Si a === null, significa que el usuario cambió el filtro de país y el
+  // aeropuerto previo ya no era válido — limpiamos origen pero mantenemos
+  // paisOrigen (lo seteó el combobox via su propio estado).
   function elegirAeropuerto(a) {
+    if (!a) {
+      setOrigen("");
+      try { localStorage.removeItem("v360_hub_origen"); } catch {}
+      return;
+    }
     setPaisOrigen(a.pais);
     setOrigen(a.iata);
     try {
