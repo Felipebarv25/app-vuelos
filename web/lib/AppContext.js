@@ -16,6 +16,7 @@ const Ctx = createContext(null);
 export function AppProvider({ children }) {
   const { data: session, status } = useSession();
   const [lang, setLang] = useState("es");
+  const [darkMode, setDarkMode] = useState(false);
   const [usuarioLocal, setUsuarioLocal] = useState(null);
   const [usuarioEmail, setUsuarioEmail] = useState(null);
   const [listoLocal, setListoLocal] = useState(false);
@@ -32,12 +33,20 @@ export function AppProvider({ children }) {
   // viendo este estado; cualquier feature gateada llama abrirPaywall("pdf").
   const [paywall, setPaywall] = useState({ abierto: false, motivo: null });
 
-  // Cargar idioma y usuario LOCAL guardados al iniciar.
+  // Cargar idioma, tema oscuro y usuario LOCAL guardados al iniciar.
   useEffect(() => {
     setLang(idiomaInicial());
     try {
       const u = localStorage.getItem("usuario");
       if (u) setUsuarioLocal(JSON.parse(u));
+    } catch {}
+    // Leer preferencia de modo oscuro (el script anti-FOUC ya aplicó la clase
+    // al <html>; aquí sólo sincronizamos el estado React).
+    try {
+      const prefer = localStorage.getItem("v360_dark");
+      const prefersOS = typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const esDark = prefer !== null ? prefer === "1" : prefersOS;
+      setDarkMode(esDark);
     } catch {}
     setListoLocal(true);
   }, []);
@@ -88,6 +97,17 @@ export function AppProvider({ children }) {
     try {
       localStorage.setItem("idioma", nuevo);
     } catch {}
+  }
+
+  function toggleDark() {
+    const nuevo = !darkMode;
+    setDarkMode(nuevo);
+    try {
+      localStorage.setItem("v360_dark", nuevo ? "1" : "0");
+    } catch {}
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.toggle("dark", nuevo);
+    }
   }
 
   // Refresca el estado Pro/creditos desde /api/me. Se llama cuando el usuario
@@ -254,6 +274,8 @@ export function AppProvider({ children }) {
       value={{
         lang,
         cambiarIdioma,
+        darkMode,
+        toggleDark,
         t,
         usuario,
         entrar,

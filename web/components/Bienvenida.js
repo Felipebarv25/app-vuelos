@@ -114,7 +114,7 @@ export default function Bienvenida() {
   }
 
   return (
-    <div className="fixed inset-0 z-[5000] overflow-y-auto bg-slate-50">
+    <div className="fixed inset-0 z-[5000] overflow-y-auto bg-slate-50 dark:bg-slate-900">
       {/* ============== HERO ============== */}
       <section className="relative min-h-[92vh] w-full overflow-hidden">
         {/* Hero servido desde public/ (no hotlink Unsplash) por 3 razones:
@@ -216,7 +216,7 @@ export default function Bienvenida() {
       </section>
 
       {/* ============== FEATURES ============== */}
-      <section className="bg-white py-20 px-6">
+      <section className="bg-white py-20 px-6 dark:bg-slate-800">
         <div className="mx-auto max-w-5xl">
           <div className="text-center">
             <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-marca-600">
@@ -250,7 +250,7 @@ export default function Bienvenida() {
       </section>
 
       {/* ============== CÓMO FUNCIONA ============== */}
-      <section className="bg-slate-50 py-20 px-6">
+      <section className="bg-slate-50 py-20 px-6 dark:bg-slate-900">
         <div className="mx-auto max-w-5xl">
           <div className="text-center">
             <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-acento-600">
@@ -341,7 +341,7 @@ export default function Bienvenida() {
           <div
             role="dialog"
             aria-modal="true"
-            className="w-full max-w-sm rounded-3xl bg-white p-7 shadow-2xl animar-subir"
+            className="w-full max-w-sm rounded-3xl bg-white p-7 shadow-2xl animar-subir dark:bg-slate-800"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between">
@@ -368,8 +368,8 @@ export default function Bienvenida() {
                 disabled={!authConfig.google}
                 className={`flex w-full items-center justify-center gap-3 rounded-2xl border py-3.5 text-[15px] font-bold shadow-suave transition ${
                   authConfig.google
-                    ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:shadow-media"
-                    : "border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed"
+                    ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:shadow-media dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                    : "border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed dark:border-slate-700 dark:bg-slate-700"
                 }`}
               >
                 <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
@@ -418,7 +418,7 @@ export default function Bienvenida() {
               </div>
 
               {/* Demo accounts: sin crear cuenta real, ver la app entera */}
-              <div className="mt-5 border-t border-slate-100 pt-4">
+              <div className="mt-5 border-t border-slate-100 pt-4 dark:border-slate-700">
                 <div className="text-center text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                   {t("demoTitulo")}
                 </div>
@@ -431,7 +431,7 @@ export default function Bienvenida() {
                   </button>
                   <button
                     onClick={() => entrarDemo("free")}
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[12.5px] font-bold text-slate-600 transition hover:bg-slate-50"
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[12.5px] font-bold text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
                   >
                     {t("demoFree")}
                   </button>
@@ -453,8 +453,8 @@ function PantallaMagicCode({
   enviarCodigo, verificarCodigo,
 }) {
   return (
-    <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4 bg-gradient-to-br from-marca-500 via-marca-600 to-marca-900">
-      <div className="bg-white rounded-3xl p-7 w-full max-w-sm shadow-[0_24px_60px_rgba(15,118,110,.45)] animar-subir">
+    <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4 bg-gradient-to-br from-marca-500 via-marca-600 to-marca-900 dark:from-slate-900 dark:via-slate-800 dark:to-marca-900">
+      <div className="bg-white rounded-3xl p-7 w-full max-w-sm shadow-[0_24px_60px_rgba(15,118,110,.45)] animar-subir dark:bg-slate-800">
         <div className="flex justify-center text-marca-600"><Logo size={64} animado /></div>
 
         {pasoMagic === 1 && (

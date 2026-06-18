@@ -66,6 +66,15 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es" className={`${jakarta.variable} ${fraunces.variable}`}>
       <head>
+        {/* Script anti-FOUC: aplica la clase 'dark' al <html> ANTES de que
+            React hidrate. Sin esto habría un parpadeo blanco al cargar en
+            modo oscuro (el server renderiza sin clase, el cliente la añade
+            solo tras montar el componente). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var p=localStorage.getItem('v360_dark');var os=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;if(p!==null?p==='1':os){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+          }}
+        />
         {/* Conexiones tempranas a los dominios de imágenes (acelera la 1ª foto) */}
         <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="" />
         <link rel="preconnect" href="https://upload.wikimedia.org" crossOrigin="" />

@@ -99,7 +99,7 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
       onClick={onCerrar}
     >
       <div
-        className="max-h-[92vh] w-full max-w-[560px] overflow-y-auto rounded-t-[20px] bg-white shadow-[0_-8px_30px_rgba(0,0,0,.3)] animar-subir"
+        className="max-h-[92vh] w-full max-w-[560px] overflow-y-auto rounded-t-[20px] bg-white shadow-[0_-8px_30px_rgba(0,0,0,.3)] animar-subir dark:bg-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Asa para arrastrar (estética móvil) */}

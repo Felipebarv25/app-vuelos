@@ -291,3 +291,82 @@ button:active {
     margin: 14mm;
   }
 }
+
+/* ====== MODO OSCURO ====== */
+/* Variables: los componentes que usan var() se actualizan solos.
+   Los que usan clases Tailwind (bg-white, text-slate-*) se cubren
+   con las reglas específicas de abajo (especificidad 2-clase > 1-clase). */
+.dark {
+  --texto: #e2e8f0;
+  --texto-sec: #94a3b8;
+  --borde: #1e293b;
+  --gris: #1e293b;
+  --gris-med: #334155;
+  --sombra: 0 1px 3px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --sombra-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --sombra-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.dark body {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+/* Fondos blancos y claros (opacidad-variants como bg-white/95 son clases
+   distintas en Tailwind → no se ven afectadas, lo que es correcto). */
+.dark .bg-white { background-color: #1e293b; }
+.dark .bg-slate-50 { background-color: #162032; }
+.dark .bg-slate-100 { background-color: #1e293b; }
+
+/* Texto oscuro → claro en modo oscuro */
+.dark .text-slate-900 { color: #f1f5f9; }
+.dark .text-slate-800 { color: #e2e8f0; }
+.dark .text-slate-700 { color: #cbd5e1; }
+.dark .text-slate-600 { color: #94a3b8; }
+.dark .text-slate-500 { color: #64748b; }
+.dark .text-slate-400 { color: #475569; }
+.dark .text-marca-900 { color: #d7f0ee; }
+.dark .text-marca-700 { color: #79cbc5; }
+
+/* Bordes → más oscuros */
+.dark .border-slate-100 { border-color: #1e293b; }
+.dark .border-slate-200 { border-color: #334155; }
+
+/* Scrollbars */
+.dark ::-webkit-scrollbar-thumb { background: #334155; }
+
+/* Inputs y selects: sólo si no tienen una clase bg-* explícita del componente */
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="date"],
+.dark input[type="number"],
+.dark select {
+  background-color: #1e293b;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+/* Placeholder más suave en oscuro */
+.dark ::placeholder { color: #475569; }
+
+/* Spin (loading ring) más visible en fondo oscuro */
+.dark .spin {
+  border-color: #334155;
+  border-top-color: var(--azul-claro);
+}
+
+/* Leaflet popup en oscuro */
+.dark .leaflet-popup-content-wrapper,
+.dark .leaflet-popup-tip {
+  background: #1e293b;
+  color: #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.dark .leaflet-popup-content a { color: #79cbc5; }
+
+/* Skeleton loaders: ajustar el gradiente de shimmer */
+.dark .skeleton-shimmer {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+}
+
+/* Selección de texto */
+.dark ::selection { background: rgba(29, 150, 144, 0.3); }

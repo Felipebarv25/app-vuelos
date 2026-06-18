@@ -178,7 +178,7 @@ function saludoEmoji() {
 }
 
 export default function Home() {
-  const { t, lang, usuario, salir, listo, pro, paywall, abrirPaywall, cerrarPaywall, requierePro } = useApp();
+  const { t, lang, usuario, salir, listo, pro, paywall, abrirPaywall, cerrarPaywall, requierePro, darkMode, toggleDark } = useApp();
 
   // ResizeObserver: medimos la altura REAL del <header> y la exponemos como
   // CSS var `--v360-header-h`. Antes el mapa sticky usaba `top-[150px]` y
@@ -826,9 +826,9 @@ export default function Home() {
   const esHero = !ciudad && !cargando;
 
   return (
-    <div className="min-h-screen pb-10">
+    <div className="min-h-screen pb-10 dark:bg-slate-900">
       {/* Cabecera: HERO con foto de viaje en el inicio; cinta blanca en la ciudad */}
-      <header className={`relative z-[1000] print:hidden ${esHero ? "text-white" : "sticky top-0 border-b border-slate-200 bg-white/95 text-slate-700 shadow-suave backdrop-blur"}`}>
+      <header className={`relative z-[1000] print:hidden ${esHero ? "text-white" : "sticky top-0 border-b border-slate-200 bg-white/95 text-slate-700 shadow-suave backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200"}`}>
         {esHero && (
           <>
             <div className="absolute inset-0 bg-gradient-to-br from-marca-700 to-marca-900" />
@@ -873,6 +873,19 @@ export default function Home() {
                 </a>
               )}
               <MenuUsuario oscuro={esHero} />
+              <button
+                type="button"
+                onClick={toggleDark}
+                aria-label={darkMode ? "Modo claro" : "Modo oscuro"}
+                title={darkMode ? "Modo claro" : "Modo oscuro"}
+                className={`flex h-8 w-8 items-center justify-center rounded-full border text-[16px] transition ${
+                  esHero
+                    ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-marca-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                }`}
+              >
+                {darkMode ? "☀️" : "🌙"}
+              </button>
               <SelectorIdioma oscuro={esHero} />
             </div>
           </div>
@@ -1088,7 +1101,7 @@ export default function Home() {
       )}
 
       {!ciudad && !cargando && (
-        <div className="relative z-10 -mt-8 rounded-t-[32px] bg-[#f6f7fb] pt-2 print:hidden lg:-mt-12">
+        <div className="relative z-10 -mt-8 rounded-t-[32px] bg-[#f6f7fb] pt-2 print:hidden dark:bg-slate-900 lg:-mt-12">
         <div className="animar-subir mx-auto max-w-7xl px-4 pb-4 pt-7 lg:px-8">
           {/* Banner presupuesto: tarjeta blanca con acento verde (a juego con el
               resto de tarjetas de la página; el verde es el acento de "dinero"). */}
@@ -1137,7 +1150,7 @@ export default function Home() {
               </h2>
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {viajesGuardados.map((v) => (
-                  <div key={v.id} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3.5 shadow-suave">
+                  <div key={v.id} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3.5 shadow-suave dark:border-slate-700 dark:bg-slate-800">
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-[15px] font-extrabold text-marca-900">{v.ciudad?.nombre}</div>
                       <div className="truncate text-[12.5px] text-slate-500">
@@ -1353,7 +1366,7 @@ export default function Home() {
             />
 
             {/* Configuración del viaje (colapsable: deja el itinerario más arriba) */}
-            <details open className="mb-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave">
+            <details open className="mb-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave dark:border-slate-700 dark:bg-slate-800">
               <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-bold text-marca-900">
                 <span className="inline-flex items-center gap-1.5"><Icono nombre="sliders" size={16} /> {t("ajustarViaje")}</span>
                 <span className="text-slate-400">▾</span>
@@ -1361,7 +1374,7 @@ export default function Home() {
               <div className="px-4 pb-4">
               {/* Rango de fechas del viaje (opcional): de aquí salen los días, el
                   itinerario fechado y la búsqueda de vuelos para esas fechas. */}
-              <div className="mb-3 flex flex-wrap items-end gap-3 rounded-xl bg-marca-50/60 p-3">
+              <div className="mb-3 flex flex-wrap items-end gap-3 rounded-xl bg-marca-50/60 p-3 dark:bg-slate-700/40">
                 <label className="flex flex-col gap-1 text-[13px] font-semibold text-slate-600">
                   <span className="inline-flex items-center gap-1.5"><Icono nombre="planeTakeoff" size={15} /> {t("fechaIda")}</span>
                   <input type="date" value={fechaInicio} min={new Date().toISOString().slice(0, 10)}
@@ -1534,7 +1547,7 @@ export default function Home() {
             )}
 
             {/* GPS toggle */}
-            <label className={`mt-3.5 flex cursor-pointer items-center gap-2.5 rounded-2xl border border-slate-100 p-4 shadow-suave transition ${gpsOn ? "bg-emerald-50" : "bg-white"}`}>
+            <label className={`mt-3.5 flex cursor-pointer items-center gap-2.5 rounded-2xl border border-slate-100 p-4 shadow-suave transition dark:border-slate-700 ${gpsOn ? "bg-emerald-50 dark:bg-emerald-900/20" : "bg-white dark:bg-slate-800"}`}>
               <input type="checkbox" checked={gpsOn} onChange={(e) => setGpsOn(e.target.checked)} />
               <span className="inline-flex items-center gap-1.5 text-sm">
                 <Icono nombre="pin" size={15} className="text-marca-600" /> {t("activarGps")}
@@ -1617,7 +1630,7 @@ export default function Home() {
         </div>
       )}
 
-      <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-slate-400 print:hidden lg:px-8">
+      <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-slate-400 print:hidden dark:text-slate-500 lg:px-8">
         {/* Enlaces a las landing pages SEO desde la home */}
         <div className="mb-3 flex flex-wrap justify-center gap-3 text-[12.5px] font-semibold text-slate-500">
           <a href="/destino" className="hover:text-marca-600 hover:underline">

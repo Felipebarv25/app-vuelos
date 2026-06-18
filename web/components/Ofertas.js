@@ -153,13 +153,13 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
 
         {/* Toggle USD / COP: muchos colombianos quieren ver el precio en
             pesos directamente. Usuario decide y queda guardado. */}
-        <div className="flex gap-1 rounded-full bg-slate-100 p-1">
+        <div className="flex gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-700">
           {["USD", "COP"].map((m) => (
             <button
               key={m}
               onClick={() => cambiarMonedaVista(m)}
               className={`rounded-full px-3 py-1 text-[12px] font-bold transition ${
-                monedaVista === m ? "bg-white text-marca-700 shadow-sm" : "text-slate-500"
+                monedaVista === m ? "bg-white text-marca-700 shadow-sm dark:bg-slate-600 dark:text-marca-300" : "text-slate-500 dark:text-slate-400"
               }`}
             >
               {m}
@@ -169,7 +169,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
 
         {/* Filtro de origen: Colombia (BOG+MDE) es el default para que el
             título sea coherente; "Todos" expande a ofertas internacionales. */}
-        <div className="flex gap-1 rounded-full bg-slate-100 p-1">
+        <div className="flex gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-700">
           {[
             ["colombia", "Colombia"],
             ["BOG", origenes.BOG || "Bogotá"],
@@ -180,7 +180,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
               key={k}
               onClick={() => { setFiltro(k); setVisibles(LOTE); }}
               className={`rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition ${
-                filtro === k ? "bg-white text-marca-700 shadow" : "text-slate-500"
+                filtro === k ? "bg-white text-marca-700 shadow dark:bg-slate-600 dark:text-marca-300" : "text-slate-500 dark:text-slate-400"
               }`}
             >
               {label}
@@ -193,7 +193,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
         {rutas.slice(0, visibles).map((r) => (
           <div
             key={r.origen + r.destino}
-            className="group relative flex flex-col rounded-2xl border border-slate-100 bg-white p-4 shadow-suave transition hover:-translate-y-0.5 hover:shadow-media"
+            className="group relative flex flex-col rounded-2xl border border-slate-100 bg-white p-4 shadow-suave transition hover:-translate-y-0.5 hover:shadow-media dark:border-slate-700 dark:bg-slate-800"
           >
             {r.esGanga && (
               <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-acento-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
@@ -231,7 +231,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
                 precio, no solo en el footer (feedback auditoria). */}
             <div className="text-[12px] font-medium text-slate-500">
               {monedaVista === "COP" ? fmtUsd(r.precio) : fmtCop(r.precio)}
-              <span className="ml-1.5 rounded bg-slate-100 px-1 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-slate-500">
+              <span className="ml-1.5 rounded bg-slate-100 px-1 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-slate-500 dark:bg-slate-700 dark:text-slate-400">
                 {t("ofertasAproxBadge")}
               </span>
             </div>
@@ -239,7 +239,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
             <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[12.5px] text-slate-500">
               <Icono nombre="calendar" size={13} /> {fmtFecha(r.fecha_ida)} – {fmtFecha(r.fecha_vuelta)}
               <span className="text-slate-300">·</span>
-              <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500">
+              <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-700 dark:text-slate-400">
                 {r.aerolinea}
               </span>
               {r.visto && (
@@ -263,7 +263,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
                 rel="sponsored noopener"
                 aria-label={t("ofertasVerVuelos") || "Ver vuelos"}
                 title={t("ofertasVerVuelos") || "Ver vuelos"}
-                className="flex items-center justify-center rounded-xl border-[1.5px] border-slate-200 px-3 text-marca-600 transition hover:bg-slate-50"
+                className="flex items-center justify-center rounded-xl border-[1.5px] border-slate-200 px-3 text-marca-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-marca-400 dark:hover:bg-slate-700"
               >
                 <Icono nombre="plane" size={18} />
               </a>

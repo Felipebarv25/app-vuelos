@@ -70,7 +70,7 @@ export default function Paywall({
       onClick={onCerrar}
     >
       <div
-        className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl animar-subir"
+        className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl animar-subir dark:bg-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative bg-gradient-to-br from-marca-600 via-marca-700 to-marca-900 px-6 pb-7 pt-6 text-white">

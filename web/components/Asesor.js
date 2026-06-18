@@ -31,7 +31,7 @@ export default function Asesor({ t = (k) => k, usuario, onPlanear, onAbrirPresup
 
       {abierto && (
         <div className="fixed inset-x-0 bottom-0 z-[3500] flex justify-center sm:inset-auto sm:bottom-5 sm:right-5">
-          <div className="animar-subir flex h-[78vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-white shadow-[0_-12px_40px_rgba(0,0,0,.3)] sm:h-[580px] sm:rounded-3xl sm:shadow-[0_20px_50px_rgba(0,0,0,.3)]">
+          <div className="animar-subir flex h-[78vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-white shadow-[0_-12px_40px_rgba(0,0,0,.3)] dark:bg-slate-800 sm:h-[580px] sm:rounded-3xl sm:shadow-[0_20px_50px_rgba(0,0,0,.3)]">
             {/* Cabecera */}
             <div className="bg-gradient-to-br from-marca-600 to-marca-800 px-4 py-3.5 text-white">
               <div className="flex items-center justify-between">

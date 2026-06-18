@@ -127,7 +127,7 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
           <div
             role="dialog"
             aria-modal="true"
-            className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl animar-subir"
+            className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl animar-subir dark:bg-slate-800"
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
           >
@@ -180,7 +180,7 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
               ) : (
                 <form onSubmit={crear}>
                   <div className="text-[13px] font-bold text-slate-600">{t("alertaUmbral")}</div>
-                  <div className="mt-2 flex items-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-3.5 py-3 focus-within:border-amber-400">
+                  <div className="mt-2 flex items-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-3.5 py-3 focus-within:border-amber-400 dark:border-slate-600 dark:bg-slate-700">
                     <span className="text-[16px] font-bold text-slate-500">US$</span>
                     <input
                       type="number"
