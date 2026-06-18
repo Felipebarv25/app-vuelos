@@ -30,6 +30,44 @@ a 360px"). Prioriza impacto. No repitas lo ya resuelto. Felicita lo que sí qued
 
 ## 📋 Hallazgos
 
+### 2026-06-18 — Landing pre-login + paywall orientados a conversión
+
+Prompt del desarrollador (4 prioridades). Estado de cada uno tras esta sesión:
+
+- ✅ 🔴 **P1 — Sembrar Pro en la landing**. Nueva sección entre "Cómo funciona"
+  y "Social proof": grid de 2 columnas. Izquierda: card blanca con eyebrow,
+  título "Pro desde US$4.99/mes", sub, 3 beneficios concretos (viajes
+  ilimitados sincronizados, PDF + compartir, alertas ilimitadas) + botón
+  fantasma `/pro`. Derecha: tile teal gradient con badge naranja "Oferta de
+  fundador", precio grande "Lifetime US$39" + sub honesto "primeros 100 ·
+  luego US$79", link a `/pro`. Aspiracional, no bloquea el flujo gratis.
+- ✅ 🔴 **P2 — Social proof real con `/api/online`**. Eliminadas las stats
+  inventadas "3h" y "100%" (no eran prueba social, una era redundante con el
+  chip del hero y la otra suena vaga). En su lugar: contador en vivo con punto
+  pulsante "X viajeros planeando ahora" usando `/api/online` (poll cada 45 s;
+  endpoint ya tiene s-maxage=10 en edge así que no satura KV). Si KV no
+  responde o `online === 0`, el bloque se oculta — cero números inventados.
+  "80+ ciudades indexadas" se conservó como dato de producto sólido.
+- ✅ 🟡 **P3 — Price anchor + CTA framing**. (a) Ancla "Bogotá → Madrid US$733"
+  ahora muestra debajo "vs ~US$1.200 armándolo por tu cuenta" (line-through,
+  blanco/70) + chip verde esmeralda "✓ ahorras ~US$467". (b) `landingCtaHero`
+  en 4 idiomas pasa de "Empezar ahora" a copy de deseo "Ver a dónde llego con
+  mi plata" (EN: "See where I can go with my budget", PT: "Ver até onde chego
+  com meu dinheiro", FR: "Voir où je peux aller avec mon budget").
+- ⚠️ 🟡 **P3 — Foto de persona en hero**: NO aplicado en esta sesión. El hero
+  actual usa `public/landing-hero.jpg` (libreta + mapa + cámara). Reemplazarla
+  por una con persona mirando al CTA requiere curar y descargar una nueva
+  imagen de stock (Unsplash). Riesgo de derechos si elijo mal. **Pendiente
+  manual del usuario**: descargar nueva imagen a `web/public/landing-hero.jpg`
+  manteniendo el mismo path (el código no cambia).
+- ✅ 🟡 **P4 — Escasez de fundador en `Paywall.js`**. Banner naranja/ámbar
+  arriba de las 3 plan cards: emoji ⏳ + "Oferta de fundador" + "Lifetime
+  US$39 · solo los primeros 100 · luego US$79". Empujón legítimo (no
+  contador falso). Cuando LemonSqueezy esté wireado y podamos contar
+  lifetime vendidos vía webhook, se puede sustituir por "quedan X de 100" sin
+  cambiar la copy del banner.
+- ✅ SW cache `v22 → v23`.
+
 ### 2026-06-16 — Hero landing local (LCP estable)
 
 - ✅ 🟢 **Backlog: hero del landing pre-login servido desde public/**. Antes el
