@@ -57,47 +57,95 @@ const DESTINOS_DESTACADOS = [
 // que es una mezcla. Rotan cada ~10s con crossfade suave.
 const HERO_IMGS_POR_TEMA = {
   playa: [
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70", // playa caribena
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70", // playa caribeña
     "https://images.unsplash.com/photo-1480796927426-f609979314bd?auto=format&fit=crop&w=1600&q=70", // playa con olas
-    "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1600&q=70", // playa tropical aerea
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70",
+    "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1600&q=70", // playa tropical aérea
+    "https://images.unsplash.com/photo-1505228395891-9a51e7e86bf6?auto=format&fit=crop&w=1600&q=70", // playa palmeras
+    "https://images.unsplash.com/photo-1493558103817-58b2924bce98?auto=format&fit=crop&w=1600&q=70", // Cancún
+    "https://images.unsplash.com/photo-1499002238440-d264edd596ec?auto=format&fit=crop&w=1600&q=70", // Bali playa
+    "https://images.unsplash.com/photo-1505881402582-c5bc11054f91?auto=format&fit=crop&w=1600&q=70", // Maldivas overwater
   ],
   ciudad: [
-    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1600&q=70", // Paris/Torre Eiffel
-    "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1600&q=70", // ciudad NY noche
+    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1600&q=70", // París / Torre Eiffel
+    "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1600&q=70", // NY noche
     "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1600&q=70", // ciudad europea
+    "https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=1600&q=70", // NY skyline
+    "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1600&q=70", // Tokio
   ],
   historia: [
     "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1600&q=70", // Coliseo Roma
-    "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=1600&q=70", // Acropolis Atenas
-    "https://images.unsplash.com/photo-1543589077-47d81606c1bf?auto=format&fit=crop&w=1600&q=70", // arquitectura clasica
+    "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=1600&q=70", // Acrópolis Atenas
+    "https://images.unsplash.com/photo-1492571350019-22de08371fd3?auto=format&fit=crop&w=1600&q=70", // templo asiático
+    "https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?auto=format&fit=crop&w=1600&q=70", // Marrakech
   ],
   naturaleza: [
-    "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=70", // montanas lago
+    "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=70", // montañas lago
     "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=70", // bosque verde
     "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=70", // panorama natural
+    "https://images.unsplash.com/photo-1426604966848-d7adac402bff?auto=format&fit=crop&w=1600&q=70", // sendero en el bosque
+    "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=1600&q=70", // bosque con rayos de luz
+    "https://images.unsplash.com/photo-1500964757637-c85e8a162699?auto=format&fit=crop&w=1600&q=70", // cataratas / selva
   ],
   montana: [
-    "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=70", // alpes amanecer
+    "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=70", // Alpes amanecer
     "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?auto=format&fit=crop&w=1600&q=70", // sierra
-    "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1600&q=70", // valle montanas
+    "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1600&q=70", // valle montañas
+    "https://images.unsplash.com/photo-1483653364400-eedcfb9f1f88?auto=format&fit=crop&w=1600&q=70", // cabaña en la montaña
+    "https://images.unsplash.com/photo-1495344517868-8ebaf0a2044a?auto=format&fit=crop&w=1600&q=70", // camping con vista
   ],
   gastronomia: [
-    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1600&q=70", // restaurante calido
+    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1600&q=70", // restaurante cálido
     "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=70", // mesa con comida
     "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=70", // plato gourmet
   ],
   lujo: [
     "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1600&q=70", // piscina infinity
     "https://images.unsplash.com/photo-1455587734955-081b22074882?auto=format&fit=crop&w=1600&q=70", // resort lujo
+    "https://images.unsplash.com/photo-1505881402582-c5bc11054f91?auto=format&fit=crop&w=1600&q=70", // Maldivas overwater
   ],
   nocturna: [
-    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=70", // bar coctel
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=70", // bar cóctel
     "https://images.unsplash.com/photo-1535079859068-2f9b3fa4d4ca?auto=format&fit=crop&w=1600&q=70", // ciudad de noche
+    "https://images.unsplash.com/photo-1534430480872-3498386e7856?auto=format&fit=crop&w=1600&q=70", // skyline nocturno
+    "https://images.unsplash.com/photo-1444723121867-7a241cacace9?auto=format&fit=crop&w=1600&q=70", // luces de ciudad
   ],
   romantico: [
     "https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1600&q=70", // Santorini atardecer
-    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1600&q=70", // Paris romantico
+    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1600&q=70", // París romántico
+    "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=1600&q=70", // París atardecer
+    "https://images.unsplash.com/photo-1473625247510-8ceb1760943f?auto=format&fit=crop&w=1600&q=70", // Mykonos
+  ],
+  // ==== TEMAS NUEVOS ====
+  // Aventura: lo activan TAGS_POR_REGION (África y Oceanía empiezan con
+  // "aventura"). Cubre safari, selva y deportes extremos.
+  aventura: [
+    "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1600&q=70", // safari elefantes
+    "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1600&q=70", // safari
+    "https://images.unsplash.com/photo-1547036967-23d11aacaee0?auto=format&fit=crop&w=1600&q=70", // cebras África
+    "https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=1600&q=70", // selva profunda
+    "https://images.unsplash.com/photo-1469041797191-50ace28483c3?auto=format&fit=crop&w=1600&q=70", // camellos
+  ],
+  // Invierno / nieve. Para destinos fríos (Suiza, Noruega, Canadá, Japón
+  // en invierno). Por ahora solo se activa si manualmente seteas tema o si
+  // luego ampliamos destinosTags.js.
+  invierno: [
+    "https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?auto=format&fit=crop&w=1600&q=70", // montañas nevadas
+    "https://images.unsplash.com/photo-1418985991508-e47386d96a71?auto=format&fit=crop&w=1600&q=70", // ski
+    "https://images.unsplash.com/photo-1542401886-65d6c61db217?auto=format&fit=crop&w=1600&q=70", // ski montaña
+    "https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=1600&q=70", // bosque invierno
+  ],
+  // Desierto. Para Dubái, Marruecos, Egipto, etc.
+  desierto: [
+    "https://images.unsplash.com/photo-1473580044384-7ba9967e16a0?auto=format&fit=crop&w=1600&q=70", // Sáhara
+    "https://images.unsplash.com/photo-1493514789931-586cb221d7a7?auto=format&fit=crop&w=1600&q=70", // dunas
+    "https://images.unsplash.com/photo-1469041797191-50ace28483c3?auto=format&fit=crop&w=1600&q=70", // camellos
+  ],
+  // Asia / Oriente. Templos, ciudades asiáticas, naturaleza tropical.
+  asia: [
+    "https://images.unsplash.com/photo-1492571350019-22de08371fd3?auto=format&fit=crop&w=1600&q=70", // templo
+    "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1600&q=70", // Tokio
+    "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?auto=format&fit=crop&w=1600&q=70", // Bali templo
+    "https://images.unsplash.com/photo-1437846972679-9e6e537be46e?auto=format&fit=crop&w=1600&q=70", // cuevas tropicales
   ],
   general: [
     "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70",
@@ -105,6 +153,9 @@ const HERO_IMGS_POR_TEMA = {
     "https://images.unsplash.com/photo-1503917988258-f87a78e3c995?auto=format&fit=crop&w=1600&q=70",
     "https://images.unsplash.com/photo-1480796927426-f609979314bd?auto=format&fit=crop&w=1600&q=70",
     "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1600&q=70",
+    "https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=1600&q=70", // NY
+    "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1600&q=70", // Tokio
+    "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1600&q=70", // mapa vintage
   ],
 };
 const HERO_IMG = HERO_IMGS_POR_TEMA.general[0];
