@@ -1,9 +1,10 @@
 import "./globals.css";
-import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
+import { Plus_Jakarta_Sans, Fraunces, Sora } from "next/font/google";
 import Providers from "./providers";
 
 // Cuerpo/UI: Plus Jakarta Sans (legible). Titulares: Fraunces (display editorial
-// con carácter). Ambas auto-hospedadas por Next (sin @import bloqueante).
+// con carácter). Wordmark "Viajero 360": Sora (parte del sistema de identidad
+// del logo v5). Las tres auto-hospedadas por Next (sin @import bloqueante).
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
@@ -16,6 +17,12 @@ const fraunces = Fraunces({
   style: ["normal", "italic"],
   display: "swap",
   variable: "--font-fraunces",
+});
+const sora = Sora({
+  subsets: ["latin"],
+  weight: ["700", "800"],
+  display: "swap",
+  variable: "--font-sora",
 });
 
 // Debe coincidir EXACTO con HERO_IMG de page.js para que el preload sirva.
@@ -64,7 +71,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="es" className={`${jakarta.variable} ${fraunces.variable}`}>
+    <html lang="es" className={`${jakarta.variable} ${fraunces.variable} ${sora.variable}`}>
       <head>
         {/* Script anti-FOUC: aplica la clase 'dark' al <html> ANTES de que
             React hidrate. Sin esto habría un parpadeo blanco al cargar en

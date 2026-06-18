@@ -19,3 +19,9 @@ resultado.txt
 
 # Config local de Claude Code (no debe trackearse)
 .claude/
+
+# Entregas/extracciones del usuario (no son fuente; los componentes ya viven
+# en web/components/ y los SVGs en web/public/).
+/_logo_nuevo/
+/Viajero 360 Logo Design.zip
+/web/build_out.txt
