@@ -15,6 +15,7 @@ import { obtenerPreciosReales, buscarVueloEnVivo } from "@/lib/preciosVuelos";
 import { linkVuelos, linkGoogleFlights, linkHoteles } from "@/lib/afiliados";
 import { obtenerTasas, aUsdDe } from "@/lib/fx";
 import { PAISES_ORIGEN, PAISES_ORDEN, PAIS_DEFAULT, paisValido, nombreDeIATA } from "@/lib/paisesOrigen";
+import SelectorAeropuerto, { banderaDePais } from "./SelectorAeropuerto";
 
 // Módulo "¿Adónde puedo ir con mi presupuesto?".
 // Dos modos:
@@ -53,11 +54,15 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
       hubGuardado = localStorage.getItem("v360_hub_origen");
     } catch {}
 
-    if (paisGuardado && paisValido(paisGuardado)) {
+    // Acepta CUALQUIER ISO 2-letras como pais guardado (no solo los de
+    // PAISES_ORIGEN), porque el combobox de aeropuertos permite elegir
+    // países fuera del catálogo curado. Si tenemos hub guardado, lo
+    // respetamos; si no, intentamos primer hub del país (si está en
+    // catálogo) y si no, dejamos el campo vacío para que el combobox
+    // pida selección.
+    if (paisGuardado && /^[A-Z]{2}$/.test(paisGuardado) && hubGuardado) {
       setPaisOrigen(paisGuardado);
-      const hubs = PAISES_ORIGEN[paisGuardado].hubs;
-      const hub = hubs.find((h) => h.iata === hubGuardado) || hubs[0];
-      setOrigen(hub.iata);
+      setOrigen(hubGuardado);
       setGeoListo(true);
       return;
     }
@@ -99,9 +104,29 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
     track("origen_cambiado", { origen: v, pais: paisOrigen });
   }
 
+  // Cuando el usuario elige un aeropuerto del combobox, fijamos país e IATA
+  // a la vez. Soporta cualquier país del mundo (incluso uno que no esté en
+  // PAISES_ORIGEN — en ese caso, paisActual cae al fallback "sin detector").
+  function elegirAeropuerto(a) {
+    setPaisOrigen(a.pais);
+    setOrigen(a.iata);
+    try {
+      localStorage.setItem("v360_pais_origen", a.pais);
+      localStorage.setItem("v360_hub_origen", a.iata);
+    } catch {}
+    track("aeropuerto_origen", { pais: a.pais, iata: a.iata, ciudad: a.ciudad });
+  }
+
   // Para el chip "💡 Desde X ahorras..." y los disclaimers, calculamos el pais
-  // actual y si su detector tiene cobertura real.
-  const paisActual = PAISES_ORIGEN[paisOrigen] || PAISES_ORIGEN[PAIS_DEFAULT];
+  // actual y si su detector tiene cobertura real. Si el usuario eligió un
+  // país fuera del catálogo curado, generamos un placeholder con bandera real
+  // pero sin detector — el banner ámbar se muestra correctamente.
+  const paisActual = PAISES_ORIGEN[paisOrigen] || {
+    bandera: banderaDePais(paisOrigen),
+    nombre: paisOrigen || "",
+    hubs: [],
+    tieneDetector: false,
+  };
   const hubsPais = paisActual.hubs;
   const detectorCubre = paisActual.tieneDetector;
 
@@ -136,7 +161,12 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
     // Evita relanzar si ya está buscando o si ya tiene datos en preciosReales.
     if (vivoEstado[k] === "buscando" || vivoEstado[k] === "ok") return;
     setVivoEstado((s) => ({ ...s, [k]: "buscando" }));
-    const iatasUsuario = hubsPais.map((h) => h.iata);
+    // Prioriza el IATA elegido por el usuario, y como fallback usa los hubs
+    // curados del país (si está en catálogo). Si el país no está en
+    // PAISES_ORIGEN, hubsPais=[] y solo se intenta `origen`.
+    const iatasUsuario = origen
+      ? [origen, ...hubsPais.map((h) => h.iata).filter((x) => x !== origen)]
+      : hubsPais.map((h) => h.iata);
     const r = await buscarVueloEnVivo(d.ciudad, d.pais, iatasUsuario);
     if (r) {
       // Lo guardamos en el shape nuevo (porOrigen + mejor) para que el resto
@@ -280,36 +310,16 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                 estimados/busqueda en vivo y se le avisa al usuario. */}
             <div>
               <Label>{t("presupSalesDesde")}</Label>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {/* Selector de país */}
-                <select
-                  value={paisOrigen}
-                  onChange={(e) => cambiarPais(e.target.value)}
-                  aria-label={t("presupSalesDesdePais")}
-                  className="rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400"
-                >
-                  {PAISES_ORDEN.map((cod) => (
-                    <option key={cod} value={cod}>
-                      {PAISES_ORIGEN[cod].bandera} {PAISES_ORIGEN[cod].nombre}
-                    </option>
-                  ))}
-                </select>
-                {/* Selector de ciudad (aeropuerto internacional) — se adapta
-                    al país elegido. Si el país tiene un solo hub, igual se
-                    muestra como dropdown para mantener consistencia visual. */}
-                <select
-                  value={origen}
-                  onChange={(e) => cambiarOrigen(e.target.value)}
-                  aria-label={t("presupSalesDesdeCiudad")}
-                  className="rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400"
-                >
-                  {hubsPais.map((o) => (
-                    <option key={o.iata} value={o.iata}>
-                      🛫 {o.ciudad} ({o.iata})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Combobox con typeahead sobre catálogo IATA completo (~7000
+                  aeropuertos del mundo, /aeropuertos.json cargado bajo
+                  demanda). El usuario puede escribir ciudad, nombre de
+                  aeropuerto o IATA. Setea país + IATA juntos. */}
+              <SelectorAeropuerto
+                value={origen}
+                onChange={elegirAeropuerto}
+                placeholder={t("presupSalesDesdePlaceholder")}
+                ariaLabel={t("presupSalesDesde")}
+              />
               {detectorCubre ? (
                 <div className="mt-1.5 text-[11px] text-slate-500">
                   {t("presupSalesDesdeNota")}
