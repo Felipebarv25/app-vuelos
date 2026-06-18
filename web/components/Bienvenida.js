@@ -31,6 +31,10 @@ export default function Bienvenida() {
   const [recordar, setRecordar] = useState(true);
   const [mostrarLogin, setMostrarLogin] = useState(false);
   const [montado, setMontado] = useState(false);
+  // Social proof real: conteo en vivo desde /api/online. null = aún no lo
+  // sabemos; número = lo que reporta KV. Si la red falla o KV no responde,
+  // queda en null y la UI lo oculta (cero números inventados).
+  const [online, setOnline] = useState(null);
 
   // Auth config (Google / magic code disponibles segun env vars).
   const [authConfig, setAuthConfig] = useState({ google: false, magicCode: false });
@@ -46,6 +50,23 @@ export default function Bienvenida() {
       const params = new URLSearchParams(window.location.search);
       if (params.get("login") === "1") setMostrarLogin(true);
     }
+  }, []);
+
+  // Polling del live counter (cada 45s). El endpoint tiene cache-control 10s
+  // en su edge así que muchos usuarios concurrentes no saturan KV.
+  useEffect(() => {
+    let vivo = true;
+    async function cargar() {
+      try {
+        const r = await fetch("/api/online", { cache: "no-store" });
+        if (!r.ok) return;
+        const d = await r.json();
+        if (vivo && d?.ok && typeof d.online === "number") setOnline(d.online);
+      } catch {}
+    }
+    cargar();
+    const id = setInterval(cargar, 45000);
+    return () => { vivo = false; clearInterval(id); };
   }, []);
 
   // ESC cierra el dialogo de login. Estandar de accesibilidad.
@@ -280,40 +301,112 @@ export default function Bienvenida() {
         </div>
       </section>
 
-      {/* ============== SOCIAL PROOF (stats honestos) ============== */}
+      {/* ============== PRO UPSELL (sembrado, sin bloquear) ============== */}
+      <section className="bg-gradient-to-br from-marca-50 via-white to-marca-50/60 py-20 px-6 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
+        <div className="mx-auto max-w-5xl">
+          <div className="grid items-stretch gap-6 lg:grid-cols-[1.2fr_1fr]">
+            {/* Card principal: pitch de Pro */}
+            <div className="rounded-3xl border border-marca-100 bg-white p-8 shadow-suave dark:border-slate-700 dark:bg-slate-800">
+              <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-marca-600 dark:text-marca-400">
+                {t("landingProEyebrow")}
+              </div>
+              <h2 className="mt-2 font-display text-[28px] font-extrabold tracking-tight text-marca-900 dark:text-marca-300 sm:text-[34px]">
+                {t("landingProTit")}
+              </h2>
+              <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-slate-600 dark:text-slate-300">
+                {t("landingProSub")}
+              </p>
+              <ul className="mt-5 space-y-2 text-[14px] text-slate-700 dark:text-slate-200">
+                {[1, 2, 3].map((n) => (
+                  <li key={n} className="flex items-start gap-2">
+                    <span className="text-emerald-500 dark:text-emerald-400">✓</span>
+                    <span>{t(`landingProBeneficio${n}`)}</span>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="/pro"
+                className="mt-6 inline-flex items-center gap-1.5 rounded-2xl border-[1.5px] border-marca-300 bg-white px-5 py-3 text-[14.5px] font-bold text-marca-700 transition hover:-translate-y-0.5 hover:border-marca-500 hover:bg-marca-50 dark:border-marca-700 dark:bg-slate-800 dark:text-marca-300 dark:hover:bg-marca-900/30"
+              >
+                {t("landingProVerPlanes")}
+              </a>
+            </div>
+
+            {/* Card lateral: escasez real de fundador (Lifetime) */}
+            <a
+              href="/pro"
+              className="group flex flex-col justify-between rounded-3xl bg-gradient-to-br from-marca-700 via-marca-800 to-marca-900 p-8 text-white shadow-media transition hover:-translate-y-0.5"
+            >
+              <div>
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-acento-500/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-acento-200">
+                  ★ {t("landingProOfertaTit")}
+                </div>
+                <div className="mt-4 font-display text-[36px] font-extrabold leading-tight tracking-tight sm:text-[42px]">
+                  {t("landingProOfertaPrecio")}
+                </div>
+                <div className="mt-1 text-[13.5px] text-white/85">
+                  {t("landingProOfertaSub")}
+                </div>
+              </div>
+              <div className="mt-6 inline-flex items-center gap-1.5 text-[13px] font-bold text-acento-300 transition group-hover:gap-2">
+                {t("landingProVerPlanes")}
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ============== SOCIAL PROOF (live + stats honestos) ============== */}
       <section className="bg-marca-900 py-16 px-6 text-white">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="font-display text-[28px] font-extrabold tracking-tight sm:text-[36px]">
             {t("landingSocialTit")}
           </h2>
-          <div className="mt-10 grid gap-8 sm:grid-cols-3">
-            <div>
-              <div className="font-display text-[44px] font-extrabold text-acento-400">80+</div>
-              <div className="mt-1 text-[14px] font-semibold uppercase tracking-wider text-white/70">
-                {t("landingStatDestinos")}
+
+          {/* Contador en vivo (señal de manada real). Solo aparece si KV
+              respondió con un valor ≥1. Si no, se omite — nunca un número
+              inventado. */}
+          {online != null && online >= 1 && (
+            <div className="mt-10 inline-flex items-center gap-3 rounded-2xl bg-emerald-500/15 px-5 py-4 ring-1 ring-emerald-400/40">
+              <span className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-400" />
+              </span>
+              <div className="text-left">
+                <div className="font-display text-[28px] font-extrabold leading-none text-white sm:text-[32px]">
+                  {online}
+                </div>
+                <div className="mt-0.5 text-[12px] font-semibold uppercase tracking-wider text-white/75">
+                  {online === 1 ? t("landingViajeroAhora") : t("landingViajerosAhora")}
+                </div>
               </div>
             </div>
-            <div>
-              <div className="font-display text-[44px] font-extrabold text-acento-400">3h</div>
-              <div className="mt-1 text-[14px] font-semibold uppercase tracking-wider text-white/70">
-                {t("landingStatFrescura")}
-              </div>
-            </div>
-            <div>
-              <div className="font-display text-[44px] font-extrabold text-acento-400">100%</div>
-              <div className="mt-1 text-[14px] font-semibold uppercase tracking-wider text-white/70">
-                {t("landingStatReales")}
-              </div>
-            </div>
+          )}
+
+          {/* Stats de producto: dato sólido (80+ ciudades). Quitamos "3h" y
+              "100%" porque no son social proof — el "3h" ya está en el chip
+              vivo del hero y "100%" suena vago. */}
+          <div className="mt-10 inline-flex items-baseline gap-3">
+            <span className="font-display text-[44px] font-extrabold text-acento-400">80+</span>
+            <span className="text-[14px] font-semibold uppercase tracking-wider text-white/70">
+              {t("landingStatDestinos")}
+            </span>
           </div>
 
-          {/* Anchor de precio real */}
-          <div className="mt-10 inline-flex flex-col items-center rounded-2xl bg-white/10 px-6 py-4 backdrop-blur-md">
+          {/* Anchor de precio: precio real + comparación con armarlo por tu
+              cuenta + ahorro estimado. */}
+          <div className="mt-10 inline-flex flex-col items-center rounded-2xl bg-white/10 px-6 py-5 backdrop-blur-md">
             <div className="text-[12px] font-semibold uppercase tracking-wider text-white/70">
               {t("landingPrecioEjemplo")}
             </div>
             <div className="mt-1 font-display text-[26px] font-extrabold">
               {t("landingPrecioRuta")} <span className="text-acento-400">US$733</span>
+            </div>
+            <div className="mt-1 text-[13px] text-white/70 line-through">
+              {t("landingPrecioVs")}
+            </div>
+            <div className="mt-1 text-[12px] font-bold uppercase tracking-wider text-emerald-300">
+              ✓ {t("landingPrecioAhorro")}
             </div>
           </div>
 
