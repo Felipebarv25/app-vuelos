@@ -37,7 +37,7 @@ export default function ProCheckoutBoton({ tipo, destacado = false }) {
 
   if (pro) {
     return (
-      <div className="mt-5 rounded-xl bg-emerald-50 px-3 py-2.5 text-center text-[13px] font-bold text-emerald-700">
+      <div className="mt-5 rounded-xl bg-emerald-50 px-3 py-2.5 text-center text-[13px] font-bold text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
         ★ Ya eres Pro
       </div>
     );
@@ -50,7 +50,7 @@ export default function ProCheckoutBoton({ tipo, destacado = false }) {
       className={`mt-5 block w-full rounded-2xl py-3.5 text-[14.5px] font-bold transition ${
         destacado
           ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-marca hover:brightness-105"
-          : "border-2 border-marca-200 bg-white text-marca-700 hover:bg-marca-50"
+          : "border-2 border-marca-200 bg-white text-marca-700 hover:bg-marca-50 dark:border-marca-700 dark:text-marca-300 dark:hover:bg-marca-900/30"
       }`}
     >
       Empezar →

@@ -6,11 +6,11 @@ import { Icono } from "./Icono";
 // CTA reutilizable de reserva (tarjeta con icono, texto y flecha).
 function CtaReserva({ href, icono, titulo, desc, tipo, color = "marca" }) {
   const tono = {
-    marca: "from-marca-50 to-marca-100/60 border-marca-100 text-marca-700",
-    emerald: "from-emerald-50 to-teal-50 border-emerald-100 text-emerald-700",
-    sky: "from-sky-50 to-sky-100 border-sky-100 text-sky-700",
-    violet: "from-violet-50 to-purple-50 border-violet-100 text-violet-700",
-    rose: "from-rose-50 to-pink-50 border-rose-100 text-rose-700",
+    marca: "from-marca-50 to-marca-100/60 border-marca-100 text-marca-700 dark:from-marca-900/30 dark:to-marca-900/20 dark:border-marca-800 dark:text-marca-300",
+    emerald: "from-emerald-50 to-teal-50 border-emerald-100 text-emerald-700 dark:from-emerald-900/30 dark:to-teal-900/20 dark:border-emerald-800 dark:text-emerald-300",
+    sky: "from-sky-50 to-sky-100 border-sky-100 text-sky-700 dark:from-sky-900/30 dark:to-sky-900/20 dark:border-sky-800 dark:text-sky-300",
+    violet: "from-violet-50 to-purple-50 border-violet-100 text-violet-700 dark:from-violet-900/30 dark:to-purple-900/20 dark:border-violet-800 dark:text-violet-300",
+    rose: "from-rose-50 to-pink-50 border-rose-100 text-rose-700 dark:from-rose-900/30 dark:to-pink-900/20 dark:border-rose-800 dark:text-rose-300",
   }[color];
   return (
     <a
@@ -41,7 +41,7 @@ export function AfiliadosCiudad({ ciudad, t = (k) => k }) {
   const lon = ciudad.lon;
   return (
     <div className="mt-3.5 rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
-      <div className="mb-3 inline-flex items-center gap-1.5 text-sm font-bold text-marca-900"><Icono nombre="luggage" size={16} /> {t("afTitulo")} · {nombre}</div>
+      <div className="mb-3 inline-flex items-center gap-1.5 text-sm font-bold text-marca-900 dark:text-marca-300"><Icono nombre="luggage" size={16} /> {t("afTitulo")} · {nombre}</div>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         <CtaReserva
           href={linkTours({ q: nombre, lat, lon })}

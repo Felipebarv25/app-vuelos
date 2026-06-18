@@ -4,7 +4,7 @@ import { useApp } from "@/lib/AppContext";
 import { IDIOMAS } from "@/lib/idiomas";
 
 export default function SelectorIdioma({ oscuro = true }) {
-  const { lang, cambiarIdioma, darkMode } = useApp();
+  const { lang, cambiarIdioma } = useApp();
   const [abierto, setAbierto] = useState(false);
 
   return (

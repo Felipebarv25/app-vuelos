@@ -14,8 +14,8 @@ export const metadata = {
 export default function PaginaPrivacidad() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-16 text-slate-700">
-      <a href="/" className="text-[13px] font-bold text-marca-700 hover:underline">← Inicio</a>
-      <h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight text-marca-900">
+      <a href="/" className="text-[13px] font-bold text-marca-700 hover:underline dark:text-marca-300">← Inicio</a>
+      <h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
         Política de privacidad
       </h1>
       <p className="mt-2 text-[13px] text-slate-500">
@@ -28,7 +28,7 @@ export default function PaginaPrivacidad() {
             Viajero 360 es un servicio operado de manera independiente desde Colombia.
             Esta política explica qué datos recolectamos cuando usas la aplicación
             web disponible en{" "}
-            <a href="https://app-vuelos-mfos.vercel.app/" className="text-marca-700 underline">
+            <a href="https://app-vuelos-mfos.vercel.app/" className="text-marca-700 underline dark:text-marca-300">
               app-vuelos-mfos.vercel.app
             </a>{" "}
             (en adelante, el &quot;Servicio&quot;) y cómo los utilizamos.
@@ -36,7 +36,7 @@ export default function PaginaPrivacidad() {
           <p>
             Si tienes dudas o quieres ejercer tus derechos de acceso, rectificación,
             cancelación u oposición (ARCO) sobre tus datos personales, escribe a{" "}
-            <a href="mailto:felipebarv@gmail.com" className="text-marca-700 underline">
+            <a href="mailto:felipebarv@gmail.com" className="text-marca-700 underline dark:text-marca-300">
               felipebarv@gmail.com
             </a>.
           </p>
@@ -55,7 +55,7 @@ export default function PaginaPrivacidad() {
             </li>
             <li>
               <b>Pagos:</b> cuando contratas Pro, el procesamiento es realizado por{" "}
-              <a href="https://lemonsqueezy.com" target="_blank" rel="noopener" className="text-marca-700 underline">
+              <a href="https://lemonsqueezy.com" target="_blank" rel="noopener" className="text-marca-700 underline dark:text-marca-300">
                 Lemon Squeezy
               </a>, que actúa como Merchant of Record. Nosotros recibimos del proveedor
               solo el estado de tu suscripción (activa, cancelada, expirada) y el email
@@ -126,7 +126,7 @@ export default function PaginaPrivacidad() {
           </ul>
           <p>
             Para ejercer cualquiera de estos derechos, escribe a{" "}
-            <a href="mailto:felipebarv@gmail.com" className="text-marca-700 underline">
+            <a href="mailto:felipebarv@gmail.com" className="text-marca-700 underline dark:text-marca-300">
               felipebarv@gmail.com
             </a>. Te responderemos en un plazo máximo de 15 días hábiles.
           </p>
@@ -153,14 +153,14 @@ export default function PaginaPrivacidad() {
         <Seccion titulo="9. Contacto">
           <p>
             Para cualquier pregunta sobre esta política, escribe a{" "}
-            <a href="mailto:felipebarv@gmail.com" className="text-marca-700 underline">
+            <a href="mailto:felipebarv@gmail.com" className="text-marca-700 underline dark:text-marca-300">
               felipebarv@gmail.com
             </a>.
           </p>
         </Seccion>
       </div>
 
-      <div className="mt-12 flex flex-wrap gap-4 text-[13px] font-semibold text-marca-700">
+      <div className="mt-12 flex flex-wrap gap-4 text-[13px] font-semibold text-marca-700 dark:text-marca-300">
         <a href="/terminos" className="hover:underline">Términos y condiciones</a>
         <a href="/" className="hover:underline">← Volver al inicio</a>
       </div>
@@ -171,7 +171,7 @@ export default function PaginaPrivacidad() {
 function Seccion({ titulo, children }) {
   return (
     <section>
-      <h2 className="font-display text-[22px] font-extrabold text-marca-900">{titulo}</h2>
+      <h2 className="font-display text-[22px] font-extrabold text-marca-900 dark:text-marca-300">{titulo}</h2>
       <div className="mt-3 space-y-3">{children}</div>
     </section>
   );

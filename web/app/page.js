@@ -1090,7 +1090,7 @@ export default function Home() {
 
       {error && (
         <div className="mx-auto mt-3.5 max-w-7xl px-4 print:hidden lg:px-8">
-          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-red-100 bg-red-50 p-4 text-red-800 shadow-suave">
+          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-red-100 bg-red-50 p-4 text-red-800 shadow-suave dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300">
             <span className="text-2xl">😕</span>
             <p className="flex-1 text-sm">{error}</p>
             <button onClick={reintentar} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:brightness-110">

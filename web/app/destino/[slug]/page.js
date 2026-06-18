@@ -182,7 +182,7 @@ export default async function PaginaDestino({ params }) {
         <span className="mx-1.5 text-slate-300">/</span>
         <span className="text-slate-700">Destinos</span>
         <span className="mx-1.5 text-slate-300">/</span>
-        <span className="font-semibold text-marca-700">{nombre}</span>
+        <span className="font-semibold text-marca-700 dark:text-marca-300">{nombre}</span>
         <span className="float-right space-x-2">
           <Link href={`/en/destino/${slug}`} className="text-[12px] underline hover:text-marca-600">🇬🇧 EN</Link>
           <Link href={`/pt/destino/${slug}`} className="text-[12px] underline hover:text-marca-600">🇧🇷 PT</Link>
@@ -230,12 +230,12 @@ export default async function PaginaDestino({ params }) {
         </header>
       ) : (
         <header className="mx-auto max-w-4xl px-6 pb-6 pt-6">
-          <div className="flex items-center gap-3 text-[14px] font-semibold uppercase tracking-[0.18em] text-marca-500">
+          <div className="flex items-center gap-3 text-[14px] font-semibold uppercase tracking-[0.18em] text-marca-500 dark:text-marca-400">
             <span className="text-3xl">{d.bandera}</span>
             <span>Viaja a {d.pais}</span>
             <FavToggle slug={slug} />
           </div>
-          <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-marca-900 sm:text-5xl">
+          <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300 sm:text-5xl">
             Viaje a {d.ciudad} desde Colombia
           </h1>
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -275,7 +275,7 @@ export default async function PaginaDestino({ params }) {
       {/* Mejor época + datos prácticos */}
       <section className="mx-auto max-w-4xl px-6 py-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-marca-100 bg-marca-50/40 p-5">
+          <div className="rounded-2xl border border-marca-100 bg-marca-50/40 p-5 dark:border-marca-800 dark:bg-marca-900/20">
             <div className="text-[11px] font-bold uppercase tracking-wide text-marca-600">
               🗓️ Mejor época para viajar
             </div>
@@ -284,7 +284,7 @@ export default async function PaginaDestino({ params }) {
             </div>
             {seo.evitarEpoca && (
               <div className="mt-2 text-[13px] text-slate-500">
-                <b className="text-amber-700">Evita:</b> {seo.evitarEpoca}.
+                <b className="text-amber-700 dark:text-amber-300">Evita:</b> {seo.evitarEpoca}.
               </div>
             )}
           </div>
@@ -297,7 +297,7 @@ export default async function PaginaDestino({ params }) {
               <div className="flex gap-2"><dt className="font-semibold text-slate-500">Moneda:</dt><dd>{seo.moneda}</dd></div>
             </dl>
             {seo.dato && (
-              <div className="mt-3 rounded-xl bg-amber-50 p-3 text-[13px] leading-relaxed text-amber-800">
+              <div className="mt-3 rounded-xl bg-amber-50 p-3 text-[13px] leading-relaxed text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
                 <b>💡 ¿Sabías que…?</b> {seo.dato}
               </div>
             )}
@@ -308,7 +308,7 @@ export default async function PaginaDestino({ params }) {
       {/* Comida típica */}
       {seo.platos?.length > 0 && (
         <section className="mx-auto max-w-4xl px-6 py-6">
-          <h2 className="text-2xl font-extrabold tracking-tight text-marca-900">
+          <h2 className="text-2xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
             Comida típica de {d.ciudad}
           </h2>
           <p className="mt-1 text-slate-500">Platos que no te puedes perder.</p>
@@ -316,7 +316,7 @@ export default async function PaginaDestino({ params }) {
             {seo.platos.map((p) => (
               <span
                 key={p}
-                className="rounded-full bg-white px-3.5 py-2 text-[14px] font-semibold text-slate-700 ring-1 ring-slate-200"
+                className="rounded-full bg-white px-3.5 py-2 text-[14px] font-semibold text-slate-700 ring-1 ring-slate-200 dark:ring-slate-700"
               >
                 🍽️ {p}
               </span>
@@ -331,13 +331,13 @@ export default async function PaginaDestino({ params }) {
           la seccion, que hacia parecer las fichas ricas vs. pobres sin razon). */}
       {!historial && (
         <section className="mx-auto max-w-4xl px-6 py-6">
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-5">
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-5 dark:border-slate-700 dark:bg-slate-800/60">
             <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
               🕒 Cuándo viajar más barato
             </div>
             <p className="mt-2 text-[14px] leading-relaxed text-slate-600">
               Todavía estamos recopilando datos de precios para vuelos a{" "}
-              <b className="text-marca-700">{d.ciudad}</b> desde Colombia. Nuestro
+              <b className="text-marca-700 dark:text-marca-300">{d.ciudad}</b> desde Colombia. Nuestro
               detector consulta esta ruta cada 3 horas; en cuanto haya muestras
               suficientes verás aquí la mediana mes a mes y la mejor temporada
               para volar.
@@ -350,7 +350,7 @@ export default async function PaginaDestino({ params }) {
       )}
       {historial && (
         <section className="mx-auto max-w-4xl px-6 py-6">
-          <h2 className="text-2xl font-extrabold tracking-tight text-marca-900">
+          <h2 className="text-2xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
             Cuándo viajar más barato a {d.ciudad}
           </h2>
           <p className="mt-1 text-slate-500">
@@ -360,28 +360,28 @@ export default async function PaginaDestino({ params }) {
 
           {/* Resumen mejor/peor */}
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-emerald-700">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-900/20">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
                 ✨ Más barato
               </div>
               <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-emerald-700">
+                <span className="text-2xl font-extrabold text-emerald-700 dark:text-emerald-300">
                   US$ {historial.mejor.precio}
                 </span>
-                <span className="text-[13px] font-semibold text-emerald-700/80">
+                <span className="text-[13px] font-semibold text-emerald-700/80 dark:text-emerald-400">
                   saliendo en {historial.mejor.label}
                 </span>
               </div>
             </div>
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">
                 🚫 Más caro
               </div>
               <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-amber-700">
+                <span className="text-2xl font-extrabold text-amber-700 dark:text-amber-300">
                   US$ {historial.peor.precio}
                 </span>
-                <span className="text-[13px] font-semibold text-amber-700/80">
+                <span className="text-[13px] font-semibold text-amber-700/80 dark:text-amber-400">
                   saliendo en {historial.peor.label}
                 </span>
               </div>
@@ -423,7 +423,7 @@ export default async function PaginaDestino({ params }) {
       {/* Top lugares */}
       {lugares.length > 0 && (
         <section className="mx-auto max-w-4xl px-6 py-6">
-          <h2 className="text-2xl font-extrabold tracking-tight text-marca-900">
+          <h2 className="text-2xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
             Los mejores lugares para visitar en {d.ciudad}
           </h2>
           <p className="mt-1 text-slate-500">
@@ -435,11 +435,11 @@ export default async function PaginaDestino({ params }) {
                 key={l.nombre + i}
                 className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-suave"
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-marca-100 text-sm font-extrabold text-marca-700">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-marca-100 text-sm font-extrabold text-marca-700 dark:bg-marca-900/40 dark:text-marca-300">
                   {i + 1}
                 </span>
                 <div>
-                  <div className="font-bold text-marca-900">{l.nombre}</div>
+                  <div className="font-bold text-marca-900 dark:text-marca-300">{l.nombre}</div>
                   {l.tipo && (
                     <div className="mt-0.5 text-[12.5px] capitalize text-slate-500">
                       {l.tipo.replace(/_/g, " ")}
@@ -459,7 +459,7 @@ export default async function PaginaDestino({ params }) {
           client component, y aqui no necesitamos tracking ni i18n. */}
       <section className="mx-auto max-w-4xl px-6 py-6">
         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-suave">
-          <h2 className="text-xl font-extrabold tracking-tight text-marca-900">
+          <h2 className="text-xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
             Reserva tu viaje a {d.ciudad}
           </h2>
           <p className="mt-1 text-[14px] text-slate-500">
@@ -471,7 +471,7 @@ export default async function PaginaDestino({ params }) {
               href={linkTours({ q: d.ciudad, lat: d.lat, lon: d.lon })}
               target="_blank"
               rel="sponsored noopener"
-              className="flex items-center gap-3 rounded-2xl border border-marca-100 bg-gradient-to-br from-marca-50 to-marca-100/60 p-3.5 text-marca-700 shadow-suave transition hover:brightness-[0.98]"
+              className="flex items-center gap-3 rounded-2xl border border-marca-100 bg-gradient-to-br from-marca-50 to-marca-100/60 p-3.5 text-marca-700 shadow-suave transition hover:brightness-[0.98] dark:border-marca-800 dark:from-marca-900/30 dark:to-marca-900/20 dark:text-marca-300"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">🎟️</span>
               <div className="min-w-0 flex-1">
@@ -484,7 +484,7 @@ export default async function PaginaDestino({ params }) {
               href={linkHoteles({ ciudad: d.ciudad, lat: d.lat, lon: d.lon })}
               target="_blank"
               rel="sponsored noopener"
-              className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-3.5 text-emerald-700 shadow-suave transition hover:brightness-[0.98]"
+              className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-3.5 text-emerald-700 shadow-suave transition hover:brightness-[0.98] dark:border-emerald-800 dark:from-emerald-900/30 dark:to-teal-900/20 dark:text-emerald-300"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">🛏️</span>
               <div className="min-w-0 flex-1">
@@ -497,7 +497,7 @@ export default async function PaginaDestino({ params }) {
               href={linkVuelos({ ciudad: d.ciudad, pais: d.pais })}
               target="_blank"
               rel="sponsored noopener"
-              className="flex items-center gap-3 rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-sky-100 p-3.5 text-sky-700 shadow-suave transition hover:brightness-[0.98]"
+              className="flex items-center gap-3 rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-sky-100 p-3.5 text-sky-700 shadow-suave transition hover:brightness-[0.98] dark:border-sky-800 dark:from-sky-900/30 dark:to-sky-900/20 dark:text-sky-300"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">✈️</span>
               <div className="min-w-0 flex-1">
@@ -513,7 +513,7 @@ export default async function PaginaDestino({ params }) {
               href={linkESIM({ pais: d.pais })}
               target="_blank"
               rel="sponsored noopener"
-              className="flex items-center gap-3 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50 to-purple-50 p-3.5 text-violet-700 shadow-suave transition hover:brightness-[0.98]"
+              className="flex items-center gap-3 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50 to-purple-50 p-3.5 text-violet-700 shadow-suave transition hover:brightness-[0.98] dark:border-violet-800 dark:from-violet-900/30 dark:to-purple-900/20 dark:text-violet-300"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">📱</span>
               <div className="min-w-0 flex-1">
@@ -528,7 +528,7 @@ export default async function PaginaDestino({ params }) {
               href={linkSeguro({ pais: d.pais })}
               target="_blank"
               rel="sponsored noopener"
-              className="flex items-center gap-3 rounded-2xl border border-rose-100 bg-gradient-to-br from-rose-50 to-pink-50 p-3.5 text-rose-700 shadow-suave transition hover:brightness-[0.98]"
+              className="flex items-center gap-3 rounded-2xl border border-rose-100 bg-gradient-to-br from-rose-50 to-pink-50 p-3.5 text-rose-700 shadow-suave transition hover:brightness-[0.98] dark:border-rose-800 dark:from-rose-900/30 dark:to-pink-900/20 dark:text-rose-300"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">🛡️</span>
               <div className="min-w-0 flex-1">
@@ -547,7 +547,7 @@ export default async function PaginaDestino({ params }) {
 
       {/* FAQ — rankea muy bien en Google */}
       <section className="mx-auto max-w-4xl px-6 py-6">
-        <h2 className="text-2xl font-extrabold tracking-tight text-marca-900">
+        <h2 className="text-2xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
           Preguntas frecuentes sobre viajar a {d.ciudad}
         </h2>
         <div className="mt-4 space-y-2.5">
@@ -556,7 +556,7 @@ export default async function PaginaDestino({ params }) {
               key={i}
               className="group rounded-2xl border border-slate-100 bg-white p-4 shadow-suave open:shadow-media"
             >
-              <summary className="cursor-pointer list-none text-base font-bold text-marca-900">
+              <summary className="cursor-pointer list-none text-base font-bold text-marca-900 dark:text-marca-300">
                 <span className="inline-flex items-center gap-2">
                   <span className="text-marca-600 transition group-open:rotate-90">▸</span>
                   {f.q}
@@ -609,7 +609,7 @@ function OtrosDestinos({ region, actualSlug }) {
   if (!otros.length) return null;
   return (
     <section className="mx-auto max-w-4xl px-6 py-6">
-      <h2 className="text-2xl font-extrabold tracking-tight text-marca-900">
+      <h2 className="text-2xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
         Otros destinos cercanos
       </h2>
       <p className="mt-1 text-slate-500">
@@ -620,11 +620,11 @@ function OtrosDestinos({ region, actualSlug }) {
           <Link
             key={o.slug}
             href={`/destino/${o.slug}`}
-            className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-3 transition hover:border-marca-200 hover:bg-marca-50"
+            className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-3 transition hover:border-marca-200 hover:bg-marca-50 dark:hover:border-marca-700 dark:hover:bg-marca-900/30"
           >
             <span className="text-2xl">{o.bandera}</span>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[13.5px] font-bold text-marca-900">{o.ciudad}</div>
+              <div className="truncate text-[13.5px] font-bold text-marca-900 dark:text-marca-300">{o.ciudad}</div>
               <div className="truncate text-[11.5px] text-slate-500">desde US$ {o.vuelo}</div>
             </div>
           </Link>
@@ -648,7 +648,7 @@ function Dato({ titulo, valor, sub }) {
       <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
         {titulo}
       </div>
-      <div className="mt-1 text-2xl font-extrabold text-marca-900">{valor}</div>
+      <div className="mt-1 text-2xl font-extrabold text-marca-900 dark:text-marca-300">{valor}</div>
       {sub && <div className="mt-0.5 text-[11.5px] text-slate-500">{sub}</div>}
     </div>
   );

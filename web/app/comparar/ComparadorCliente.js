@@ -80,10 +80,10 @@ export default function ComparadorCliente() {
                 ))}
               </select>
               {d && (
-                <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-marca-50 p-3">
+                <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-marca-50 p-3 dark:bg-marca-900/30">
                   <span className="text-3xl">{d.bandera}</span>
                   <div className="min-w-0">
-                    <div className="truncate text-base font-extrabold text-marca-900">
+                    <div className="truncate text-base font-extrabold text-marca-900 dark:text-marca-300">
                       {d.ciudad}
                     </div>
                     <div className="truncate text-[12px] text-slate-500">{d.pais}</div>
@@ -99,7 +99,7 @@ export default function ComparadorCliente() {
       <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-suave">
         <table className="w-full text-left text-[14px]">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/60">
+            <tr className="border-b border-slate-100 bg-slate-50/60 dark:bg-slate-800/60">
               <th className="px-4 py-3 text-[12px] font-bold uppercase tracking-wide text-slate-500">
                 Criterio
               </th>
@@ -193,11 +193,11 @@ function Fila({ titulo, valores, destacar }) {
       {valores.map((v, i) => (
         <td
           key={i}
-          className={`px-4 py-3 ${destacar?.[i] ? "bg-emerald-50 font-bold text-emerald-700" : ""}`}
+          className={`px-4 py-3 ${destacar?.[i] ? "bg-emerald-50 font-bold text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300" : ""}`}
         >
           {v}
           {destacar?.[i] && (
-            <span className="ml-1 text-[11px] font-bold uppercase tracking-wide text-emerald-600">
+            <span className="ml-1 text-[11px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
               · mejor
             </span>
           )}
