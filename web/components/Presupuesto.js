@@ -316,6 +316,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   aeropuerto o IATA. Setea país + IATA juntos. */}
               <SelectorAeropuerto
                 value={origen}
+                paisInicial={paisOrigen}
                 onChange={elegirAeropuerto}
                 placeholder={t("presupSalesDesdePlaceholder")}
                 ariaLabel={t("presupSalesDesde")}

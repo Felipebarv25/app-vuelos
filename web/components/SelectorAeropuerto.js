@@ -47,38 +47,51 @@ function norm(s) {
 }
 
 // Filtra y rankea. Devuelve hasta `limite` matches ordenados por score.
-function buscar(catalogo, q, limite = 20) {
+// Si `paisFiltro` no es vacío, solo considera aeropuertos de ese país (ISO
+// 2-letras), incluso si el query está vacío — en ese caso devuelve los
+// primeros del país ordenados por nombre.
+function buscar(catalogo, q, paisFiltro = "", limite = 20) {
   // Stripear los paréntesis "(IATA)" — cuando el input muestra la etiqueta
   // formateada "Ciudad (XXX)", el query incluye los paréntesis. Sin esto,
   // un usuario que enfoca el campo con un valor pre-seleccionado nunca
   // vería resultados (el texto literal no matchea ninguna ciudad).
   const limpio = q.replace(/\s*\([^)]*\)\s*/g, " ").trim();
   const t = norm(limpio);
+  // Pool inicial: todo el catálogo, o solo el país elegido si hay filtro.
+  const pool = paisFiltro
+    ? catalogo.filter((a) => a.pais === paisFiltro)
+    : catalogo;
+
+  // Sin query y con filtro de país → mostrar los primeros 20 del país.
+  if (!t && paisFiltro) {
+    return [...pool].sort((a, b) => a.ciudad.localeCompare(b.ciudad, "es")).slice(0, limite);
+  }
   if (!t) return [];
+
   // Si el query original mencionaba un IATA entre paréntesis (ej. "Bogotá
   // (BOG)"), aprovechamos ese hint para subir su match.
   const hintIata = (q.match(/\(([A-Za-z]{3})\)/) || [])[1]?.toUpperCase();
   // IATA exacto = match prioritario.
   if (t.length === 3) {
-    const ex = catalogo.find((a) => a.iata.toLowerCase() === t);
+    const ex = pool.find((a) => a.iata.toLowerCase() === t);
     if (ex) {
-      const resto = catalogo
+      const resto = pool
         .filter((a) => a !== ex && (norm(a.ciudadLower).startsWith(t) || norm(a.nombreLower).includes(t)))
         .slice(0, limite - 1);
       return [ex, ...resto];
     }
   }
   if (hintIata) {
-    const ex = catalogo.find((a) => a.iata === hintIata);
+    const ex = pool.find((a) => a.iata === hintIata);
     if (ex) {
-      const resto = catalogo
+      const resto = pool
         .filter((a) => a !== ex && (norm(a.ciudadLower).includes(t) || norm(a.nombreLower).includes(t)))
         .slice(0, limite - 1);
       return [ex, ...resto];
     }
   }
   const scored = [];
-  for (const a of catalogo) {
+  for (const a of pool) {
     const c = norm(a.ciudadLower);
     const n = norm(a.nombreLower);
     let score = 0;
@@ -94,17 +107,33 @@ function buscar(catalogo, q, limite = 20) {
   return scored.slice(0, limite).map((x) => x.a);
 }
 
+// Helper: nombre legible de un país ISO 2-letras usando Intl.DisplayNames.
+// Si el navegador no lo soporta, cae al código.
+function nombrePais(cc, lang = "es") {
+  try {
+    const dn = new Intl.DisplayNames([lang], { type: "region" });
+    return dn.of(cc) || cc;
+  } catch {
+    return cc;
+  }
+}
+
 export default function SelectorAeropuerto({
   value, // iata seleccionado (string)
+  paisInicial = "", // ISO 2-letras opcional para pre-filtrar
   onChange, // (aeropuerto) => void  recibe { iata, ciudad, pais, nombre }
   placeholder = "Ciudad, aeropuerto o IATA…",
   ariaLabel,
   className = "",
+  lang = "es",
 }) {
   const [catalogo, setCatalogo] = useState([]);
   const [texto, setTexto] = useState("");
   const [abierto, setAbierto] = useState(false);
   const [resaltado, setResaltado] = useState(0);
+  // Filtro de país. "" = Todo el mundo (sin filtro). Cuando el usuario
+  // elige un aeropuerto, se actualiza para reflejar el país elegido.
+  const [paisFiltro, setPaisFiltro] = useState(paisInicial);
   const ref = useRef(null);
   const inputRef = useRef(null);
 
@@ -120,7 +149,11 @@ export default function SelectorAeropuerto({
   useEffect(() => {
     if (!value || !catalogo.length) return;
     const a = catalogo.find((x) => x.iata === value);
-    if (a) setTexto(`${a.ciudad} (${a.iata})`);
+    if (a) {
+      setTexto(`${a.ciudad} (${a.iata})`);
+      // Auto-sync del país filtro a lo que se eligió desde afuera.
+      setPaisFiltro(a.pais);
+    }
   }, [value, catalogo]);
 
   // Click afuera cierra el dropdown.
@@ -132,14 +165,39 @@ export default function SelectorAeropuerto({
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
-  // Resultados memoizados — solo recalcula cuando cambia texto o catálogo.
+  // Lista de países derivada del catálogo (única, ordenada por nombre
+  // localizado). Incluye solo países que tienen al menos un aeropuerto con
+  // IATA. Memoizada para evitar recomputo en cada render.
+  const paisesDisponibles = useMemo(() => {
+    if (!catalogo.length) return [];
+    const set = new Set(catalogo.map((a) => a.pais));
+    const arr = [...set].map((cc) => ({ codigo: cc, nombre: nombrePais(cc, lang) }));
+    arr.sort((a, b) => a.nombre.localeCompare(b.nombre, lang));
+    return arr;
+  }, [catalogo, lang]);
+
+  // Resultados memoizados — solo recalcula cuando cambia texto, filtro o
+  // catálogo. Si hay filtro de país y query vacío, muestra primeros 20 del
+  // país.
   const resultados = useMemo(
-    () => buscar(catalogo, texto, 20),
-    [catalogo, texto]
+    () => buscar(catalogo, texto, paisFiltro, 20),
+    [catalogo, texto, paisFiltro]
   );
+
+  function cambiarPaisFiltro(codigo) {
+    setPaisFiltro(codigo);
+    setResaltado(0);
+    // Si cambia el filtro a un país distinto al que está en el input, no
+    // borramos el texto (el usuario puede querer mantenerlo para edición),
+    // pero abrimos la lista para que vean los primeros resultados.
+    setAbierto(true);
+    // Focus en el input para que el usuario pueda tipear de inmediato.
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
 
   function elegir(a) {
     setTexto(`${a.ciudad} (${a.iata})`);
+    setPaisFiltro(a.pais);
     setAbierto(false);
     onChange?.({ iata: a.iata, ciudad: a.ciudad, pais: a.pais, nombre: a.nombre });
   }
@@ -167,30 +225,48 @@ export default function SelectorAeropuerto({
 
   return (
     <div ref={ref} className={`relative ${className}`}>
-      <input
-        ref={inputRef}
-        type="text"
-        value={texto}
-        placeholder={placeholder}
-        aria-label={ariaLabel}
-        aria-autocomplete="list"
-        aria-expanded={abierto}
-        autoComplete="off"
-        onChange={(e) => {
-          setTexto(e.target.value);
-          setAbierto(true);
-          setResaltado(0);
-        }}
-        onFocus={(e) => {
-          setAbierto(true);
-          // Selecciona todo el texto al enfocar — así si el campo ya tiene
-          // un aeropuerto elegido ("New York (JFK)"), tipear lo reemplaza
-          // inmediato sin que el usuario tenga que borrar manualmente.
-          try { e.target.select(); } catch {}
-        }}
-        onKeyDown={onKey}
-        className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
-      />
+      {/* Grid 2-col en desktop, stack en móvil: país (filtro) + combobox. */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[180px_1fr]">
+        {/* Selector de país — opcional, filtra el typeahead. Si está vacío
+            ("Todo el mundo"), no aplica filtro y se busca en todo el catálogo. */}
+        <select
+          value={paisFiltro}
+          onChange={(e) => cambiarPaisFiltro(e.target.value)}
+          aria-label="País de salida"
+          className="rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+        >
+          <option value="">🌍 Todo el mundo</option>
+          {paisesDisponibles.map((p) => (
+            <option key={p.codigo} value={p.codigo}>
+              {banderaDePais(p.codigo)} {p.nombre}
+            </option>
+          ))}
+        </select>
+        <input
+          ref={inputRef}
+          type="text"
+          value={texto}
+          placeholder={paisFiltro ? `Buscar en ${nombrePais(paisFiltro, lang)}…` : placeholder}
+          aria-label={ariaLabel}
+          aria-autocomplete="list"
+          aria-expanded={abierto}
+          autoComplete="off"
+          onChange={(e) => {
+            setTexto(e.target.value);
+            setAbierto(true);
+            setResaltado(0);
+          }}
+          onFocus={(e) => {
+            setAbierto(true);
+            // Selecciona todo el texto al enfocar — así si el campo ya tiene
+            // un aeropuerto elegido ("New York (JFK)"), tipear lo reemplaza
+            // inmediato sin que el usuario tenga que borrar manualmente.
+            try { e.target.select(); } catch {}
+          }}
+          onKeyDown={onKey}
+          className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+        />
+      </div>
       {abierto && resultados.length > 0 && (
         <ul
           role="listbox"
