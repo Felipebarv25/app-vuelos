@@ -855,7 +855,7 @@ export default function Home() {
           {/* Barra de navegación superior */}
           <div className="flex items-center justify-between gap-4">
             <button type="button" onClick={irAlInicio} aria-label="Viajero 360 — inicio" className="cursor-pointer text-left">
-              <LogoMarca tono={esHero ? "claro" : "marca"} className={esHero ? "drop-shadow" : ""} />
+              <LogoMarca size={esHero ? 56 : 48} animado tono={esHero ? "claro" : "marca"} className={esHero ? "drop-shadow" : ""} />
               <div className={`mt-0.5 hidden text-[13px] sm:block ${esHero ? "text-white/85" : "text-slate-400"}`}>{t("tagline")}</div>
             </button>
             <div className="flex items-center gap-3 lg:gap-4">
@@ -1103,37 +1103,6 @@ export default function Home() {
       {!ciudad && !cargando && (
         <div className="relative z-10 -mt-8 rounded-t-[32px] bg-[#f6f7fb] pt-2 print:hidden dark:bg-slate-900 lg:-mt-12">
         <div className="animar-subir mx-auto max-w-7xl px-4 pb-4 pt-7 lg:px-8">
-          {/* Banner presupuesto: tarjeta blanca con acento verde (a juego con el
-              resto de tarjetas de la página; el verde es el acento de "dinero"). */}
-          <button
-            onClick={() => setMostrarPresupuesto(true)}
-            className="group animar-pop relative mt-6 flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-slate-100 bg-white px-4 py-4 text-left shadow-suave transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-media lg:max-w-2xl lg:px-5 lg:py-5"
-          >
-            {/* Acento de color a la izquierda */}
-            <span className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-emerald-400 to-emerald-600" />
-
-            {/* Tile con icono */}
-            <span className="relative ml-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-[0_6px_16px_-4px_rgba(5,150,105,.55)] transition-transform duration-300 group-hover:scale-105 lg:h-14 lg:w-14">
-              <Icono nombre="wallet" size={26} strokeWidth={2.2} />
-            </span>
-
-            {/* Texto */}
-            <div className="min-w-0 flex-1">
-              <div className="mb-0.5 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-emerald-600">
-                {t("presupEyebrow")}
-              </div>
-              <div className="text-[16.5px] font-extrabold leading-tight tracking-tight text-marca-900 lg:text-[20px]">
-                {t("presupBoton")}
-              </div>
-              <div className="mt-0.5 text-[13px] text-slate-500">{t("presupSub")}</div>
-            </div>
-
-            {/* Flecha */}
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 transition-all duration-300 group-hover:translate-x-0.5 group-hover:bg-emerald-600 group-hover:text-white">
-              <Icono nombre="arrowRight" size={18} />
-            </span>
-          </button>
-
           {/* Mis viajes guardados (en este dispositivo) */}
           {viajesGuardados.length > 0 && (
             <div className="mt-10">
