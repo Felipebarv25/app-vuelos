@@ -10,11 +10,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/lib/AppContext";
 import { Icono } from "./Icono";
+import Feedback from "./Feedback";
+import Toast from "./Toast";
 
 export default function MenuUsuario({ oscuro = false }) {
   const { t, usuario, pro, plan, salir, abrirPaywall } = useApp();
   const [abierto, setAbierto] = useState(false);
   const [alertas, setAlertas] = useState([]);
+  const [mostrarFeedback, setMostrarFeedback] = useState(false);
+  const [graciasFeedback, setGraciasFeedback] = useState(false);
   const ref = useRef(null);
 
   // Cargar contador de alertas cuando se abre el menu (no en cada render).
@@ -174,6 +178,13 @@ export default function MenuUsuario({ oscuro = false }) {
             </a>
             <button
               type="button"
+              onClick={() => { setAbierto(false); setMostrarFeedback(true); }}
+              className="flex w-full items-center gap-2 px-4 py-3 text-left text-[13.5px] font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              <Icono nombre="messageSquare" size={15} /> {t("menuFeedback")}
+            </button>
+            <button
+              type="button"
               onClick={() => { setAbierto(false); salir(); }}
               className="block w-full px-4 py-3 text-left text-[13.5px] font-semibold text-red-600 transition hover:bg-red-50 dark:hover:bg-red-900/20"
             >
@@ -182,6 +193,16 @@ export default function MenuUsuario({ oscuro = false }) {
           </div>
         </div>
       )}
+
+      <Feedback
+        abierto={mostrarFeedback}
+        onCerrar={() => setMostrarFeedback(false)}
+        onEnviado={() => {
+          setGraciasFeedback(true);
+          setTimeout(() => setGraciasFeedback(false), 2800);
+        }}
+      />
+      <Toast mostrar={graciasFeedback} texto={t("feedbackGracias")} icono="check" />
     </div>
   );
 }

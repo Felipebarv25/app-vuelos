@@ -59,6 +59,9 @@ const PATHS = {
   route: (<><circle cx="6" cy="19" r="3" /><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" /><circle cx="18" cy="5" r="3" /></>),
   sliders: (<><path d="M4 6h11M19 6h1M4 12h1M9 12h11M4 18h7M15 18h5" /><circle cx="17" cy="6" r="2" /><circle cx="7" cy="12" r="2" /><circle cx="13" cy="18" r="2" /></>),
   download: (<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></>),
+  // Feedback / comunicación
+  send: (<><path d="m22 2-7 20-4-9-9-4z" /><path d="M22 2 11 13" /></>),
+  messageSquare: (<><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></>),
 };
 
 // Nombre de ícono según el tipo de lugar (museo, restaurante, parque…).

@@ -61,6 +61,8 @@ export async function GET(req) {
     ["GET", "m:afil:total"],
     ["ZREVRANGE", "m:afil:tipo", "0", "9", "WITHSCORES"],
     ["MGET", ...dias.map((d) => `m:afil:${d}`)],
+    ["LRANGE", "feedback:lista", "0", "49"],
+    ["GET", "m:feedback:total"],
   ]);
 
   const visArr = (res[0] || []).map((x) => Number(x) || 0);
@@ -70,6 +72,14 @@ export async function GET(req) {
   const horas = (res[15] || []).map((x, h) => ({ nombre: `${h}h`, valor: Number(x) || 0 }));
   const afilArr = (res[18] || []).map((x) => Number(x) || 0);
   const serieAfil = dias.map((d, i) => ({ dia: d, visitas: afilArr[i] || 0 }));
+
+  // LRANGE devuelve strings JSON — parsearlos a objetos, ignorando los rotos.
+  const feedbackRaw = Array.isArray(res[19]) ? res[19] : [];
+  const feedback = feedbackRaw
+    .map((s) => {
+      try { return JSON.parse(s); } catch { return null; }
+    })
+    .filter(Boolean);
 
   return Response.json({
     serie,
@@ -91,5 +101,7 @@ export async function GET(req) {
     afilTotal: Number(res[16]) || 0,
     afilTipo: pares(res[17]),
     serieAfil,
+    feedback,
+    feedbackTotal: Number(res[20]) || 0,
   });
 }

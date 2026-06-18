@@ -298,10 +298,90 @@ export default function Panel() {
           <Barras titulo="🧳 Reservas por tipo" datos={datos.afilTipo || []} color="bg-amber-500" vacio="Aún no hay clics en botones de reserva" />
         </div>
 
+        {/* Feedback de usuarios (lo escriben desde el menú de usuario) */}
+        <div className="mt-4">
+          <FeedbackPanel feedback={datos.feedback || []} total={datos.feedbackTotal || 0} />
+        </div>
+
         <div className="mt-6 text-center text-[11px] text-slate-400">
           Datos anónimos y agregados · geolocalización aproximada por IP (Vercel)
         </div>
       </div>
     </div>
+  );
+}
+
+// Sección de feedback. Lista de cards con timestamp, los 3 campos y el email
+// (si lo dejaron). Diseño simple: las preguntas que no se contestaron quedan
+// ocultas para no inflar la card.
+function FeedbackPanel({ feedback, total }) {
+  if (!feedback.length) {
+    return (
+      <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
+        <div className="mb-2 text-sm font-bold text-marca-900">💬 Comentarios de usuarios</div>
+        <div className="py-4 text-center text-[13px] text-slate-400">
+          Aún no hay comentarios. Los usuarios pueden enviarlos desde el menú de su perfil.
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="text-sm font-bold text-marca-900">💬 Comentarios de usuarios</div>
+        <div className="text-[12px] font-semibold text-slate-500">
+          {total ? `${total} total · ` : ""}mostrando {feedback.length}
+        </div>
+      </div>
+      <ul className="flex flex-col gap-3">
+        {feedback.map((f, i) => (
+          <FeedbackCard key={i} f={f} />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function FeedbackCard({ f }) {
+  const fecha = f.ts ? new Date(f.ts) : null;
+  const fechaTxt = fecha ? fecha.toLocaleString("es", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+  const banderaPais = f.pais ? bandera(f.pais) : "🌍";
+  return (
+    <li className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+      <div className="mb-2 flex flex-wrap items-center gap-2 text-[11.5px] text-slate-500">
+        <span className="font-bold text-slate-700">{f.nombre || "Anónimo"}</span>
+        {f.email && <span className="rounded bg-white px-1.5 py-0.5 text-marca-700">{f.email}</span>}
+        <span>·</span>
+        <span>{banderaPais}</span>
+        {f.lang && <span className="rounded bg-slate-100 px-1.5 py-0.5">{f.lang.toUpperCase()}</span>}
+        <span>·</span>
+        <span>{fechaTxt}</span>
+      </div>
+      <div className="space-y-1.5">
+        {f.like && (
+          <div className="flex gap-2 text-[13px]">
+            <span className="shrink-0">👍</span>
+            <span className="text-slate-700">{f.like}</span>
+          </div>
+        )}
+        {f.dislike && (
+          <div className="flex gap-2 text-[13px]">
+            <span className="shrink-0">👎</span>
+            <span className="text-slate-700">{f.dislike}</span>
+          </div>
+        )}
+        {f.mejora && (
+          <div className="flex gap-2 text-[13px]">
+            <span className="shrink-0">💡</span>
+            <span className="text-slate-700">{f.mejora}</span>
+          </div>
+        )}
+      </div>
+      {f.url && (
+        <div className="mt-2 truncate text-[11px] text-slate-400">
+          desde <span className="font-mono">{f.url.replace(/^https?:\/\/[^/]+/, "")}</span>
+        </div>
+      )}
+    </li>
   );
 }
