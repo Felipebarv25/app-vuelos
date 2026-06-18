@@ -367,50 +367,50 @@ export default function Bienvenida() {
             {t("landingSocialTit")}
           </h2>
 
-          {/* Contador en vivo (señal de manada real). Solo aparece si KV
-              respondió con un valor ≥1. Si no, se omite — nunca un número
-              inventado. */}
-          {online != null && online >= 1 && (
-            <div className="mt-10 inline-flex items-center gap-3 rounded-2xl bg-emerald-500/15 px-5 py-4 ring-1 ring-emerald-400/40">
-              <span className="relative flex h-3 w-3">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-400" />
-              </span>
-              <div className="text-left">
-                <div className="font-display text-[28px] font-extrabold leading-none text-white sm:text-[32px]">
+          {/* Stack vertical centrado — orden de importancia descendente:
+              (a) social proof real (live counter), (b) ancla de precio con
+              valor concreto, (c) stat de producto de soporte (80+). */}
+          <div className="mt-10 flex flex-col items-center gap-6">
+            {/* Contador en vivo. Solo aparece si KV respondió con ≥1 — cero
+                números inventados. */}
+            {online != null && online >= 1 && (
+              <div className="inline-flex items-center gap-2.5 rounded-full bg-emerald-500/15 px-4 py-2 ring-1 ring-emerald-400/40">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                </span>
+                <span className="text-[13.5px] font-bold">
                   {online}
-                </div>
-                <div className="mt-0.5 text-[12px] font-semibold uppercase tracking-wider text-white/75">
-                  {online === 1 ? t("landingViajeroAhora") : t("landingViajerosAhora")}
-                </div>
+                  <span className="ml-1.5 font-semibold uppercase tracking-wider text-white/80">
+                    {online === 1 ? t("landingViajeroAhora") : t("landingViajerosAhora")}
+                  </span>
+                </span>
+              </div>
+            )}
+
+            {/* Anchor de precio: card protagonista. Es la prueba más fuerte
+                — número concreto + comparación + ahorro estimado. */}
+            <div className="w-full max-w-md rounded-3xl bg-white/10 px-8 py-6 ring-1 ring-white/15 backdrop-blur-md">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/65">
+                {t("landingPrecioEjemplo")}
+              </div>
+              <div className="mt-2 font-display text-[28px] font-extrabold leading-tight sm:text-[32px]">
+                {t("landingPrecioRuta")} <span className="text-acento-400">US$733</span>
+              </div>
+              <div className="mt-2 text-[13.5px] text-white/65 line-through">
+                {t("landingPrecioVs")}
+              </div>
+              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-[12px] font-bold uppercase tracking-wider text-emerald-300">
+                ✓ {t("landingPrecioAhorro")}
               </div>
             </div>
-          )}
 
-          {/* Stats de producto: dato sólido (80+ ciudades). Quitamos "3h" y
-              "100%" porque no son social proof — el "3h" ya está en el chip
-              vivo del hero y "100%" suena vago. */}
-          <div className="mt-10 inline-flex items-baseline gap-3">
-            <span className="font-display text-[44px] font-extrabold text-acento-400">80+</span>
-            <span className="text-[14px] font-semibold uppercase tracking-wider text-white/70">
-              {t("landingStatDestinos")}
-            </span>
-          </div>
-
-          {/* Anchor de precio: precio real + comparación con armarlo por tu
-              cuenta + ahorro estimado. */}
-          <div className="mt-10 inline-flex flex-col items-center rounded-2xl bg-white/10 px-6 py-5 backdrop-blur-md">
-            <div className="text-[12px] font-semibold uppercase tracking-wider text-white/70">
-              {t("landingPrecioEjemplo")}
-            </div>
-            <div className="mt-1 font-display text-[26px] font-extrabold">
-              {t("landingPrecioRuta")} <span className="text-acento-400">US$733</span>
-            </div>
-            <div className="mt-1 text-[13px] text-white/70 line-through">
-              {t("landingPrecioVs")}
-            </div>
-            <div className="mt-1 text-[12px] font-bold uppercase tracking-wider text-emerald-300">
-              ✓ {t("landingPrecioAhorro")}
+            {/* Stat de producto en línea pequeña como caption de soporte. */}
+            <div className="flex items-baseline gap-2.5">
+              <span className="font-display text-[36px] font-extrabold text-acento-400">80+</span>
+              <span className="text-[13px] font-semibold uppercase tracking-wider text-white/70">
+                {t("landingStatDestinos")}
+              </span>
             </div>
           </div>
 
