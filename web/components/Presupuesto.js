@@ -280,12 +280,12 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                 estimados/busqueda en vivo y se le avisa al usuario. */}
             <div>
               <Label>{t("presupSalesDesde")}</Label>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                {/* Selector de pais */}
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {/* Selector de país */}
                 <select
                   value={paisOrigen}
                   onChange={(e) => cambiarPais(e.target.value)}
-                  aria-label={t("presupSalesDesde")}
+                  aria-label={t("presupSalesDesdePais")}
                   className="rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400"
                 >
                   {PAISES_ORDEN.map((cod) => (
@@ -294,29 +294,21 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                     </option>
                   ))}
                 </select>
-                {/* Selector de hub (tarjetas) — se adapta al pais elegido */}
-                <div className="flex flex-1 flex-wrap gap-2">
+                {/* Selector de ciudad (aeropuerto internacional) — se adapta
+                    al país elegido. Si el país tiene un solo hub, igual se
+                    muestra como dropdown para mantener consistencia visual. */}
+                <select
+                  value={origen}
+                  onChange={(e) => cambiarOrigen(e.target.value)}
+                  aria-label={t("presupSalesDesdeCiudad")}
+                  className="rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400"
+                >
                   {hubsPais.map((o) => (
-                    <button
-                      key={o.iata}
-                      type="button"
-                      onClick={() => cambiarOrigen(o.iata)}
-                      className={`flex-1 rounded-xl border-2 px-3 py-2.5 text-left transition ${
-                        origen === o.iata
-                          ? "border-marca-500 bg-marca-50 text-marca-900 shadow-sm dark:bg-marca-900/30 dark:text-marca-300"
-                          : "border-slate-200 bg-white text-slate-700 hover:border-marca-200"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">🛫</span>
-                        <div>
-                          <div className="text-[14px] font-bold leading-tight">{o.ciudad}</div>
-                          <div className="text-[11px] uppercase tracking-wide text-slate-500">{o.iata}</div>
-                        </div>
-                      </div>
-                    </button>
+                    <option key={o.iata} value={o.iata}>
+                      🛫 {o.ciudad} ({o.iata})
+                    </option>
                   ))}
-                </div>
+                </select>
               </div>
               {detectorCubre ? (
                 <div className="mt-1.5 text-[11px] text-slate-500">
