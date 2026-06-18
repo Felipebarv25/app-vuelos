@@ -21,7 +21,7 @@ import { Icono } from "./Icono";
 function Dato({ icono, etiqueta, valor }) {
   if (!valor) return null;
   return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5">
+    <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5 dark:border-slate-700 dark:bg-slate-800">
       <div className="inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide text-slate-400">
         <Icono nombre={icono} size={12} /> {etiqueta}
       </div>
@@ -31,10 +31,10 @@ function Dato({ icono, etiqueta, valor }) {
 }
 
 const TONO = {
-  emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  amber: "border-amber-200 bg-amber-50 text-amber-800",
-  rose: "border-rose-200 bg-rose-50 text-rose-700",
-  slate: "border-slate-200 bg-slate-50 text-slate-600",
+  emerald: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300",
+  amber: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300",
+  rose: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-300",
+  slate: "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400",
 };
 
 // Panel de "Requisitos de entrada" al país destino: visa (según tu pasaporte),
@@ -79,7 +79,7 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
   const propina = pcl ? t("prop_" + pcl) : "";
 
   return (
-    <div className="mb-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave">
+    <div className="mb-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave dark:border-slate-700 dark:bg-slate-800">
       <button
         onClick={() => setAbierto((v) => !v)}
         className="flex w-full items-center justify-between px-4 py-3 text-left"
@@ -136,7 +136,7 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
 
           {/* Pasaporte + Fiebre amarilla */}
           <div className="grid gap-2 sm:grid-cols-2">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-600">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
               <div className="text-[11px] font-bold uppercase tracking-wide opacity-70">{t("reqPasaporte")}</div>
               <div className="mt-0.5 text-[13.5px] font-semibold">{t("reqPasaporteNota")}</div>
             </div>
@@ -167,7 +167,7 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
             </div>
           </div>
 
-          <div className="rounded-lg bg-amber-50 p-2.5 text-[11.5px] leading-snug text-amber-700">
+          <div className="rounded-lg bg-amber-50 p-2.5 text-[11.5px] leading-snug text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
             <span className="inline-flex items-start gap-1.5"><Icono nombre="alert" size={13} className="mt-0.5 shrink-0" /> {t("reqDisclaimer")}</span>
           </div>
           <div className="px-0.5 text-[10.5px] text-slate-400">

@@ -156,7 +156,7 @@ function PlanCard({ activo, precio, periodo, ahorro, destacado, ventajas, onEleg
       onClick={onElegir}
       className={`cursor-pointer rounded-2xl border-2 p-4 transition ${
         activo
-          ? "border-marca-500 bg-marca-50 shadow-md"
+          ? "border-marca-500 bg-marca-50 shadow-md dark:bg-marca-900/30"
           : "border-slate-200 bg-white hover:border-marca-200"
       }`}
     >

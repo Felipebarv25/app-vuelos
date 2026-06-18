@@ -185,7 +185,7 @@ function Chips({ opciones }) {
         <button
           key={i}
           onClick={o.run}
-          className="rounded-full border border-marca-200 bg-marca-50 px-3.5 py-2 text-[13px] font-semibold text-marca-700 transition hover:bg-marca-100"
+          className="rounded-full border border-marca-200 bg-marca-50 px-3.5 py-2 text-[13px] font-semibold text-marca-700 transition hover:bg-marca-100 dark:border-marca-800 dark:bg-marca-900/30 dark:text-marca-300 dark:hover:bg-marca-900/40"
         >
           {o.label}
         </button>

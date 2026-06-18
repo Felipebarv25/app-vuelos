@@ -224,9 +224,9 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
                   const loc = gratis ? null : costoLocal(tr.usd[0], tr.usd[1], moneda);
                   const claseBase = `flex items-center gap-3 rounded-xl border p-3 transition ${
                     modoSel === tr.modo
-                      ? "border-marca-500 bg-marca-50"
+                      ? "border-marca-500 bg-marca-50 dark:bg-marca-900/30"
                       : tr.recomendado
-                      ? "border-emerald-200 bg-emerald-50"
+                      ? "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20"
                       : "border-slate-100 bg-white"
                   }`;
                   const cuerpo = (
@@ -274,13 +274,13 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
 
               <div className="mt-2 text-[11px] text-slate-400">{t("aproxAviso")}</div>
               {!origen && (
-                <div className="mt-2 rounded-[10px] bg-amber-50 p-2.5 text-[12px] leading-snug text-amber-700">
+                <div className="mt-2 rounded-[10px] bg-amber-50 p-2.5 text-[12px] leading-snug text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
                   <span className="inline-flex items-start gap-1.5"><Icono nombre="pin" size={13} className="mt-0.5 shrink-0" /> {t("activaGps")}</span>
                 </div>
               )}
             </>
           ) : (
-            <div className="rounded-[10px] bg-amber-100 p-3 text-[13px] leading-snug text-amber-800">
+            <div className="rounded-[10px] bg-amber-100 p-3 text-[13px] leading-snug text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
               <span className="inline-flex items-start gap-1.5"><Icono nombre="pin" size={13} className="mt-0.5 shrink-0" /> {t("activaGps")}</span>
             </div>
           )}

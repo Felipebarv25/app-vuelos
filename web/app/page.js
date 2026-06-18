@@ -1328,7 +1328,7 @@ export default function Home() {
                 {plan.some((d) => d.paradas.length > 0) && (
                   <button
                     onClick={() => requierePro("compartir", compartirPlan)}
-                    className="rounded-xl border-[1.5px] border-marca-100 bg-white px-3 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-marca-50"
+                    className="rounded-xl border-[1.5px] border-marca-100 bg-white px-3 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-marca-50 dark:border-slate-700 dark:bg-slate-800 dark:text-marca-400 dark:hover:bg-slate-700"
                   >
                     <span className="inline-flex items-center gap-1.5">
                       <Icono nombre={copiado ? "check" : "share"} size={15} />
@@ -1340,7 +1340,7 @@ export default function Home() {
                   <button
                     onClick={() => requierePro("pdf", descargarPDF)}
                     title={t("descargarPDF")}
-                    className="rounded-xl border-[1.5px] border-marca-100 bg-white px-3 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-marca-50"
+                    className="rounded-xl border-[1.5px] border-marca-100 bg-white px-3 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-marca-50 dark:border-slate-700 dark:bg-slate-800 dark:text-marca-400 dark:hover:bg-slate-700"
                   >
                     <span className="inline-flex items-center gap-1.5">
                       <Icono nombre="download" size={15} />
@@ -1413,7 +1413,7 @@ export default function Home() {
                   </select>
                 </label>
                 <button onClick={() => reconstruir()}
-                  className="ml-auto rounded-xl border-[1.5px] border-marca-100 bg-white px-4 py-2.5 text-sm font-bold text-marca-600 transition hover:bg-marca-50">
+                  className="ml-auto rounded-xl border-[1.5px] border-marca-100 bg-white px-4 py-2.5 text-sm font-bold text-marca-600 transition hover:bg-marca-50 dark:border-slate-700 dark:bg-slate-800 dark:text-marca-400 dark:hover:bg-slate-700">
                   <span className="inline-flex items-center gap-1.5"><Icono nombre="refresh" size={15} /> {t("recalcular")}</span>
                 </button>
               </div>
@@ -1516,7 +1516,7 @@ export default function Home() {
                     {lugaresBase.map((l) => {
                       const enPlan = plan[diaVisible]?.paradas?.some((p) => p.id === l.id);
                       return (
-                        <div key={l.id} className="flex items-center gap-2 border-b border-slate-50 px-3 py-2.5 last:border-0">
+                        <div key={l.id} className="flex items-center gap-2 border-b border-slate-50 px-3 py-2.5 last:border-0 dark:border-slate-700/50">
                           <button
                             onClick={() => { setRutaTrazada(null); setDetalle(l); }}
                             className="min-w-0 flex-1 text-left"

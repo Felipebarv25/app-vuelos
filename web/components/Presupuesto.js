@@ -303,7 +303,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                       onClick={() => cambiarOrigen(o.iata)}
                       className={`flex-1 rounded-xl border-2 px-3 py-2.5 text-left transition ${
                         origen === o.iata
-                          ? "border-marca-500 bg-marca-50 text-marca-900 shadow-sm"
+                          ? "border-marca-500 bg-marca-50 text-marca-900 shadow-sm dark:bg-marca-900/30 dark:text-marca-300"
                           : "border-slate-200 bg-white text-slate-700 hover:border-marca-200"
                       }`}
                     >
@@ -323,7 +323,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   {t("presupSalesDesdeNota")}
                 </div>
               ) : (
-                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11.5px] leading-snug text-amber-800">
+                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11.5px] leading-snug text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
                   <b>⚠️ {t("presupCoberturaTitulo")}</b>{" "}
                   {t("presupCoberturaAviso").replace("{pais}", paisActual.nombre)}
                 </div>
@@ -413,7 +413,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                     className={`rounded-full px-3.5 py-2 text-[13px] font-semibold transition ${
                       region === k
                         ? "bg-marca-600 text-white shadow"
-                        : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-marca-300"
+                        : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-marca-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600"
                     }`}
                   >
                     {nombre}
@@ -468,7 +468,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
           {modo === "ruta" && (
             <div className="mt-5">
               {!ruta || ruta.ciudades.length === 0 ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-800">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
                   {t("presupNoRuta")}
                 </div>
               ) : (
@@ -486,7 +486,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                           className={`rounded-full px-3 py-1.5 text-[12px] font-bold transition ${
                             ritmo === k
                               ? "bg-marca-600 text-white shadow"
-                              : "text-slate-500 hover:bg-white"
+                              : "text-slate-500 hover:bg-white dark:text-slate-400 dark:hover:bg-slate-700"
                           }`}
                         >
                           {label}
@@ -536,7 +536,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
           {/* ---------- MODO DESTINO ---------- */}
           {modo === "destino" && (
             <div className="mt-5">
-              <div className="flex items-center justify-between rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 px-4 py-3.5">
+              <div className="flex items-center justify-between rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 px-4 py-3.5 dark:border-emerald-800 dark:from-emerald-900/20 dark:to-teal-900/20">
                 <div>
                   <div className="text-2xl font-extrabold text-emerald-700">{caben.length}</div>
                   <div className="text-xs text-slate-500">{t("presupDestinos")}</div>
@@ -565,7 +565,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   <div
                     key={llaveCiudad(d)}
                     className={`rounded-2xl border bg-white p-3.5 transition ${
-                      d.cabe ? "border-emerald-200" : "border-slate-100 opacity-60"
+                      d.cabe ? "border-emerald-200 dark:border-emerald-800" : "border-slate-100 opacity-60"
                     }`}
                   >
                     <div
@@ -588,7 +588,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                         </div>
                         <div className="text-[11px] text-slate-400">{fmtLocal(d.total)}</div>
                         {d.esReal ? (
-                          <div className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-emerald-700">
+                          <div className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
                             <Icono nombre="flame" size={9} /> {t("presupPrecioReal")}
                           </div>
                         ) : (
@@ -604,7 +604,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                         del detector (compara los precios reales que el sistema
                         ya tiene escaneados) y empuja la propuesta de valor. */}
                     {d.ahorroDesde && (
-                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-[12px] font-semibold text-amber-800">
+                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-[12px] font-semibold text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
                         <span>💡</span>
                         <span>
                           {t("presupAhorroDesde").replace("{origen}", nombreDeIATA(d.ahorroDesde.origen))}
@@ -679,7 +679,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                                   href={linkVuelos({ ciudad: d.ciudad, pais: d.pais })}
                                   target="_blank"
                                   rel="sponsored noopener"
-                                  className="flex-1 rounded-xl border-[1.5px] border-amber-200 bg-amber-50 py-2.5 text-center text-[12.5px] font-bold text-amber-800 transition hover:bg-amber-100"
+                                  className="flex-1 rounded-xl border-[1.5px] border-amber-200 bg-amber-50 py-2.5 text-center text-[12.5px] font-bold text-amber-800 transition hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300"
                                 >
                                   <span className="inline-flex items-center justify-center gap-1.5">
                                     <Icono nombre="plane" size={14} /> {t("presupVerAviasales")}
@@ -689,7 +689,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                                   href={linkGoogleFlights({ ciudad: d.ciudad, pais: d.pais })}
                                   target="_blank"
                                   rel="noopener"
-                                  className="flex-1 rounded-xl border-[1.5px] border-blue-200 bg-blue-50 py-2.5 text-center text-[12.5px] font-bold text-blue-800 transition hover:bg-blue-100"
+                                  className="flex-1 rounded-xl border-[1.5px] border-blue-200 bg-blue-50 py-2.5 text-center text-[12.5px] font-bold text-blue-800 transition hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
                                 >
                                   <span className="inline-flex items-center justify-center gap-1.5">
                                     <Icono nombre="search" size={14} /> {t("presupVerGoogle")}
@@ -699,7 +699,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                             ) : (
                               <button
                                 onClick={() => pedirVivo(d)}
-                                className="w-full rounded-xl border-[1.5px] border-emerald-200 bg-emerald-50 py-2.5 text-[13px] font-bold text-emerald-700 transition hover:bg-emerald-100"
+                                className="w-full rounded-xl border-[1.5px] border-emerald-200 bg-emerald-50 py-2.5 text-[13px] font-bold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300"
                               >
                                 <span className="inline-flex items-center justify-center gap-1.5"><Icono nombre="refresh" size={14} /> {t("presupBuscarReal")}</span>
                               </button>
@@ -759,7 +759,7 @@ function Fila({ nombre, valor, badge = null, badgeReal = false, accion = null })
         {badge && (
           <span
             className={`rounded-full px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide ${
-              badgeReal ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+              badgeReal ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300" : "bg-slate-100 text-slate-500"
             }`}
           >
             {badge}
@@ -789,7 +789,7 @@ function RutaCard({
 }) {
   const { ciudades, desglose, total, cabe, sobra, diasTotales } = ruta;
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-suave">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-suave dark:border-slate-700 dark:bg-slate-800">
       {/* Encabezado de la ruta */}
       <div className="border-b border-slate-100 px-4 pb-3 pt-4">
         <div className="flex items-center justify-between">
@@ -884,7 +884,7 @@ function RutaCard({
             ) : (
               <button
                 onClick={onPedirVivoEntrada}
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11.5px] font-bold text-emerald-700 transition hover:bg-emerald-100"
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11.5px] font-bold text-emerald-700 transition hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300"
               >
                 <Icono nombre="refresh" size={11} /> {t("presupBuscarReal")}
               </button>
@@ -929,7 +929,7 @@ function RutaCard({
       </div>
 
       {/* Total */}
-      <div className={`flex items-center justify-between px-4 py-3 ${cabe ? "bg-emerald-50" : "bg-red-50"}`}>
+      <div className={`flex items-center justify-between px-4 py-3 ${cabe ? "bg-emerald-50 dark:bg-emerald-900/20" : "bg-red-50 dark:bg-red-900/20"}`}>
         <div>
           <div className="text-[11px] uppercase tracking-wide text-slate-500">Total</div>
           <div className={`text-xl font-extrabold ${cabe ? "text-emerald-700" : "text-red-600"}`}>
@@ -950,7 +950,7 @@ function RutaCard({
       <div className="flex gap-2 border-t border-slate-100 p-3">
         <button
           onClick={onOtra}
-          className="flex-1 rounded-xl border-[1.5px] border-marca-100 bg-white py-3 text-sm font-bold text-marca-700 transition hover:bg-marca-50"
+          className="flex-1 rounded-xl border-[1.5px] border-marca-100 bg-white py-3 text-sm font-bold text-marca-700 transition hover:bg-marca-50 dark:border-slate-700 dark:bg-slate-700 dark:text-marca-300 dark:hover:bg-slate-600"
         >
           <span className="inline-flex items-center justify-center gap-1.5"><Icono nombre="refresh" size={15} /> {t("presupOtraRuta")}</span>
         </button>

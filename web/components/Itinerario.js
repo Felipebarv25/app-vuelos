@@ -183,7 +183,7 @@ export default function Itinerario({
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
-                    className="rounded-[10px] bg-marca-50 px-3 py-2 text-[13px] font-semibold text-marca-600 transition hover:bg-marca-100"
+                    className="rounded-[10px] bg-marca-50 px-3 py-2 text-[13px] font-semibold text-marca-600 transition hover:bg-marca-100 dark:bg-marca-900/30 dark:text-marca-300"
                     onClick={() => onVerLugar?.(p)}
                   >
                     <span className="inline-flex items-center gap-1.5"><Icono nombre="camera" size={14} /> {t("verFoto")}</span>

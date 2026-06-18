@@ -238,7 +238,7 @@ export default function Bienvenida() {
                 key={i}
                 className="group rounded-3xl border border-slate-100 bg-white p-6 shadow-suave transition hover:-translate-y-1 hover:border-marca-200 hover:shadow-media"
               >
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-marca-50 text-2xl">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-marca-50 text-2xl dark:bg-marca-900/30">
                   {f.emoji}
                 </div>
                 <h3 className="mt-4 text-[19px] font-extrabold text-marca-900">{t(f.titKey)}</h3>
@@ -390,7 +390,7 @@ export default function Bienvenida() {
                   </div>
                   <button
                     onClick={elegirEmailEnDialogo}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-marca-200 bg-marca-50 py-3.5 text-[15px] font-bold text-marca-700 transition hover:bg-marca-100"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-marca-200 bg-marca-50 py-3.5 text-[15px] font-bold text-marca-700 transition hover:bg-marca-100 dark:border-marca-800 dark:bg-marca-900/30 dark:text-marca-300"
                   >
                     ✉️ {t("authEntrarEmail")}
                   </button>
@@ -398,7 +398,7 @@ export default function Bienvenida() {
               )}
 
               {!authConfig.google && !authConfig.magicCode && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12.5px] text-amber-800">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12.5px] text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
                   Estamos configurando el acceso. Vuelve en unos minutos.
                 </div>
               )}
@@ -425,7 +425,7 @@ export default function Bienvenida() {
                 <div className="mt-2.5 grid grid-cols-2 gap-2">
                   <button
                     onClick={() => entrarDemo("pro")}
-                    className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-[12.5px] font-bold text-emerald-700 transition hover:bg-emerald-100"
+                    className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-[12.5px] font-bold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300"
                   >
                     ★ {t("demoPro")}
                   </button>
