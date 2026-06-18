@@ -176,7 +176,7 @@ export default function Bienvenida() {
           <div className="drop-shadow-[0_8px_20px_rgba(0,0,0,0.3)]"><Logo size={180} animado tono="claro" /></div>
 
           {/* Chip "precios actualizados ahora" — livelyness real */}
-          <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-wider backdrop-blur-md">
+          <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-wider backdrop-blur-md">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
             {t("landingChipVivo")}
           </div>
