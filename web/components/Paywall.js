@@ -94,6 +94,21 @@ export default function Paywall({
         </div>
 
         <div className="px-5 py-5">
+          {/* Escasez de fundador: empujón final justo antes de las cards. La
+              copy es honesta (estática "primeros 100" — sin contador inventado
+              hasta que LemonSqueezy esté wireado y podamos contar lifetime
+              vendidos via webhook). */}
+          <div className="mb-3 flex items-center gap-2.5 rounded-2xl border border-acento-200 bg-gradient-to-br from-acento-50 to-amber-50 px-3.5 py-2.5 dark:border-acento-700 dark:from-acento-900/20 dark:to-amber-900/20">
+            <span className="text-2xl" aria-hidden>⏳</span>
+            <div className="min-w-0">
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-acento-700 dark:text-acento-300">
+                {t("paywallFundadorTit")}
+              </div>
+              <div className="text-[12.5px] font-semibold text-slate-700 dark:text-slate-200">
+                {t("paywallFundadorSub")}
+              </div>
+            </div>
+          </div>
           <div className="space-y-2.5">
             <PlanCard
               tipo="anual"
