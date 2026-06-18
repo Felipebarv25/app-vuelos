@@ -30,13 +30,17 @@ export default async function OgDestino({ params }) {
           flexDirection: "column",
           justifyContent: "center",
           padding: "80px",
-          background: "linear-gradient(135deg, #312e81 0%, #0f766e 100%)",
+          background: "linear-gradient(135deg, #0c5f58 0%, #0f766e 60%, #134e4a 100%)",
           color: "white",
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ fontSize: 28, letterSpacing: 8, textTransform: "uppercase", opacity: 0.8 }}>
-          Viajero 360 · Viaja a
+        {/* Eyebrow con marca: "Viajero" blanco, "360" coral — igual que el
+            wordmark en la app. */}
+        <div style={{ fontSize: 28, letterSpacing: 6, textTransform: "uppercase", opacity: 0.9, display: "flex", alignItems: "baseline" }}>
+          <span>Viajero</span>
+          <span style={{ color: "#ff9d7a", marginLeft: 10 }}>360</span>
+          <span style={{ marginLeft: 18, opacity: 0.7 }}>· Viaja a</span>
         </div>
         <div style={{ fontSize: 130, marginTop: 10 }}>{bandera}</div>
         <div style={{ fontSize: 90, fontWeight: 800, lineHeight: 1.05, marginTop: 8 }}>
