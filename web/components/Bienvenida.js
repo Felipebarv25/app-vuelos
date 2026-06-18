@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useApp } from "@/lib/AppContext";
 import { IDIOMAS } from "@/lib/idiomas";
-import { Logo } from "@/components/Logo";
+import { Logo, LogoMarca } from "@/components/Logo";
 
 // Landing pre-login: scrolleable, full-screen, con propuesta de valor antes
 // del formulario de auth. Aplica behavioral econ / neuromarketing: loss
@@ -173,7 +173,12 @@ export default function Bienvenida() {
 
         {/* Contenido hero centrado */}
         <div className="relative mx-auto flex min-h-[80vh] max-w-3xl flex-col items-center justify-center px-6 py-12 text-center text-white">
-          <div className="drop-shadow-[0_8px_20px_rgba(0,0,0,0.3)]"><Logo size={180} animado tono="claro" /></div>
+          <div className="flex flex-col items-center drop-shadow-[0_8px_20px_rgba(0,0,0,0.3)]">
+            <LogoMarca size={120} animado tono="claro" />
+            <div className="mt-2 text-[12px] font-bold uppercase tracking-[0.3em] text-white/85 sm:text-[13px]">
+              {t("tagline")}
+            </div>
+          </div>
 
           {/* Chip "precios actualizados ahora" — livelyness real */}
           <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-wider backdrop-blur-md">

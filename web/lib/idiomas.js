@@ -12,7 +12,7 @@ export const IDIOMAS = {
 const T = {
   es: {
     // Cabecera y búsqueda
-    tagline: "Tu itinerario perfecto en cualquier ciudad del mundo",
+    tagline: "Descubre · Planea · Viaja",
     buscarPlaceholder: "Ciudad, País (ej. Madrid, España)",
     buscar: "Buscar",
     // Inicio
@@ -440,7 +440,7 @@ const T = {
   },
 
   en: {
-    tagline: "Your perfect itinerary in any city in the world",
+    tagline: "Discover · Plan · Travel",
     buscarPlaceholder: "City, Country (e.g. Madrid, Spain)",
     buscar: "Search",
     heroTitulo: "Your trip, planned in seconds",
@@ -850,7 +850,7 @@ const T = {
   },
 
   pt: {
-    tagline: "Seu roteiro perfeito em qualquer cidade do mundo",
+    tagline: "Descubra · Planeje · Viaje",
     buscarPlaceholder: "Cidade, País (ex. Madri, Espanha)",
     buscar: "Buscar",
     heroTitulo: "Sua viagem, planejada em segundos",
@@ -1260,7 +1260,7 @@ const T = {
   },
 
   fr: {
-    tagline: "Votre itinéraire parfait dans n'importe quelle ville du monde",
+    tagline: "Découvrez · Planifiez · Voyagez",
     buscarPlaceholder: "Ville, Pays (ex. Madrid, Espagne)",
     buscar: "Rechercher",
     heroTitulo: "Votre voyage, planifié en quelques secondes",
