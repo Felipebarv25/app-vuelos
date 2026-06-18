@@ -48,14 +48,31 @@ function norm(s) {
 
 // Filtra y rankea. Devuelve hasta `limite` matches ordenados por score.
 function buscar(catalogo, q, limite = 20) {
-  const t = norm(q.trim());
+  // Stripear los paréntesis "(IATA)" — cuando el input muestra la etiqueta
+  // formateada "Ciudad (XXX)", el query incluye los paréntesis. Sin esto,
+  // un usuario que enfoca el campo con un valor pre-seleccionado nunca
+  // vería resultados (el texto literal no matchea ninguna ciudad).
+  const limpio = q.replace(/\s*\([^)]*\)\s*/g, " ").trim();
+  const t = norm(limpio);
   if (!t) return [];
+  // Si el query original mencionaba un IATA entre paréntesis (ej. "Bogotá
+  // (BOG)"), aprovechamos ese hint para subir su match.
+  const hintIata = (q.match(/\(([A-Za-z]{3})\)/) || [])[1]?.toUpperCase();
   // IATA exacto = match prioritario.
   if (t.length === 3) {
     const ex = catalogo.find((a) => a.iata.toLowerCase() === t);
     if (ex) {
       const resto = catalogo
         .filter((a) => a !== ex && (norm(a.ciudadLower).startsWith(t) || norm(a.nombreLower).includes(t)))
+        .slice(0, limite - 1);
+      return [ex, ...resto];
+    }
+  }
+  if (hintIata) {
+    const ex = catalogo.find((a) => a.iata === hintIata);
+    if (ex) {
+      const resto = catalogo
+        .filter((a) => a !== ex && (norm(a.ciudadLower).includes(t) || norm(a.nombreLower).includes(t)))
         .slice(0, limite - 1);
       return [ex, ...resto];
     }
@@ -164,7 +181,13 @@ export default function SelectorAeropuerto({
           setAbierto(true);
           setResaltado(0);
         }}
-        onFocus={() => setAbierto(true)}
+        onFocus={(e) => {
+          setAbierto(true);
+          // Selecciona todo el texto al enfocar — así si el campo ya tiene
+          // un aeropuerto elegido ("New York (JFK)"), tipear lo reemplaza
+          // inmediato sin que el usuario tenga que borrar manualmente.
+          try { e.target.select(); } catch {}
+        }}
         onKeyDown={onKey}
         className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
       />
