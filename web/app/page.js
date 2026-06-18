@@ -855,7 +855,7 @@ export default function Home() {
           {/* Barra de navegación superior */}
           <div className="flex items-center justify-between gap-4">
             <button type="button" onClick={irAlInicio} aria-label="Viajero 360 — inicio" className="cursor-pointer text-left">
-              <LogoMarca size={esHero ? 56 : 48} animado tono={esHero ? "claro" : "marca"} className={esHero ? "drop-shadow" : ""} />
+              <LogoMarca size={esHero ? 72 : 60} animado tono={esHero ? "claro" : "marca"} className={esHero ? "drop-shadow" : ""} />
               <div className={`mt-0.5 hidden text-[11px] font-bold uppercase tracking-[0.28em] sm:block sm:text-[12px] ${esHero ? "text-white/85" : "text-slate-500"}`}>{t("tagline")}</div>
             </button>
             <div className="flex items-center gap-3 lg:gap-4">

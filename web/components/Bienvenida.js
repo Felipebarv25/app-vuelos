@@ -157,7 +157,7 @@ export default function Bienvenida() {
         <div className="relative z-10 flex items-center justify-between gap-3 px-5 pt-4 sm:px-8">
           {/* Marca discreta arriba izquierda */}
           <div className="hidden sm:block">
-            <LogoMarca size={40} animado tono="claro" />
+            <LogoMarca size={40} tono="claro" />
             <div className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.28em] text-white/85">
               {t("tagline")}
             </div>
@@ -197,7 +197,11 @@ export default function Bienvenida() {
 
         {/* Contenido hero centrado */}
         <div className="relative mx-auto flex min-h-[80vh] max-w-3xl flex-col items-center justify-center px-6 py-12 text-center text-white">
-          <div className="drop-shadow-[0_8px_20px_rgba(0,0,0,0.3)]">
+          {/* El SVG del logo tiene viewBox 200x200 pero el contenido visible
+              llega solo hasta y≈150 (clipPath corta ahí), dejando ~25% de
+              altura vacía abajo. mb-[-40px] absorbe ese hueco para que el
+              chip de abajo quede pegado a la curva del planeta. */}
+          <div className="drop-shadow-[0_8px_20px_rgba(0,0,0,0.3)] mb-[-40px]">
             <Logo size={180} animado tono="claro" />
           </div>
 
