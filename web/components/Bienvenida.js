@@ -157,8 +157,8 @@ export default function Bienvenida() {
         <div className="relative z-10 flex items-center justify-between gap-3 px-5 pt-4 sm:px-8">
           {/* Marca discreta arriba izquierda */}
           <div className="hidden sm:block">
-            <LogoMarca size={40} tono="claro" />
-            <div className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.28em] text-white/85">
+            <LogoMarca size={60} tono="claro" />
+            <div className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.28em] text-white/85">
               {t("tagline")}
             </div>
           </div>
@@ -446,12 +446,17 @@ export default function Bienvenida() {
             className="w-full max-w-sm rounded-3xl bg-white p-7 shadow-2xl animar-subir dark:bg-slate-800"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between">
-              <div className="text-marca-600"><Logo size={56} animado /></div>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <LogoMarca size={44} animado />
+                <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.28em] text-slate-500 dark:text-slate-400">
+                  {t("tagline")}
+                </div>
+              </div>
               <button
                 onClick={() => setMostrarLogin(false)}
                 aria-label="Cerrar"
-                className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
