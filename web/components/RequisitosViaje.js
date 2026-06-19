@@ -14,6 +14,8 @@ import {
   estacionesClave,
   aguaClave,
   propinaClave,
+  mejorEpoca,
+  autorizacionElectronica,
 } from "@/lib/requisitos";
 import { Icono } from "./Icono";
 
@@ -77,6 +79,10 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
   const agua = acl ? t("agua_" + acl) : "";
   const pcl = propinaClave(destinoIso);
   const propina = pcl ? t("prop_" + pcl) : "";
+  // QW3: mejor época para viajar (por país, con fallback por hemisferio).
+  const epoca = mejorEpoca(destinoIso, dp.lat);
+  // QW4: autorización electrónica previa según pasaporte + destino.
+  const autoriz = autorizacionElectronica(destinoIso, nacionalidad);
 
   return (
     <div className="mb-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave dark:border-slate-700 dark:bg-slate-800">
@@ -133,6 +139,55 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
               </a>
             </div>
           </div>
+
+          {/* QW4 — Autorización electrónica previa (ETIAS / ESTA / eTA / etc.).
+              Solo aparece si la combinación pasaporte+destino la requiere.
+              Tono ámbar para que destaque como acción requerida antes del viaje. */}
+          {autoriz && (
+            <div className={`rounded-xl border p-3 ${TONO.amber}`}>
+              <div className="text-[11px] font-bold uppercase tracking-wide opacity-70">
+                {t("reqAutorizTit")}
+              </div>
+              <div className="mt-0.5 text-[15px] font-extrabold">
+                {autoriz.tipo} <span className="font-medium opacity-80">· {t("reqAutorizRequerida")}</span>
+              </div>
+              <div className="mt-1 text-[12.5px] leading-snug opacity-90">{autoriz.nombre}</div>
+              {autoriz.nota && (
+                <div className="mt-1 text-[12px] opacity-80">{autoriz.nota}</div>
+              )}
+              <div className="mt-2 text-[12px] font-bold">
+                <a href={autoriz.url} target="_blank" rel="noopener" className="underline-offset-2 hover:underline">
+                  {t("reqVerSitioOficial")} ↗
+                </a>
+              </div>
+            </div>
+          )}
+
+          {/* QW3 — Mejor época para viajar (clima, temporada alta/baja).
+              Datos orientativos por país; fallback por hemisferio. */}
+          {epoca && (
+            <div className="rounded-xl border border-marca-100 bg-marca-50/50 p-3 text-marca-900 dark:border-marca-800 dark:bg-marca-900/20 dark:text-marca-300">
+              <div className="text-[11px] font-bold uppercase tracking-wide opacity-70">
+                {t("reqMejorEpoca")}
+              </div>
+              <div className="mt-1 grid gap-1.5 text-[12.5px] sm:grid-cols-[auto_1fr] sm:gap-x-3">
+                <span className="font-bold opacity-80">✨ {t("reqMejorMes")}</span>
+                <span>{epoca.mejor}</span>
+                {epoca.evitar && (
+                  <>
+                    <span className="font-bold opacity-80">🚫 {t("reqEvitarMes")}</span>
+                    <span>{epoca.evitar}</span>
+                  </>
+                )}
+                {epoca.clima && (
+                  <>
+                    <span className="font-bold opacity-80">☀️ {t("reqClimaGeneral")}</span>
+                    <span>{epoca.clima}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Pasaporte + Fiebre amarilla */}
           <div className="grid gap-2 sm:grid-cols-2">
