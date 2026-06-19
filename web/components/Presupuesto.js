@@ -751,13 +751,31 @@ function fmtFechaCorta(iso) {
   return `${d} ${MESES_CORTOS[m] || ""}`;
 }
 
-// Línea "Oferta para 12 mar – 20 mar" bajo el precio de vuelo cuando es real.
+// "visto hace X" del timestamp del último escaneo. Compartido con Ofertas.js.
+function fmtHaceCorto(iso, t) {
+  if (!iso) return "";
+  const ms = Date.now() - new Date(iso).getTime();
+  if (Number.isNaN(ms) || ms < 0) return "";
+  const min = Math.round(ms / 60000);
+  if (min < 60) return t("ofertasHaceMin").replace("{n}", Math.max(1, min));
+  const h = Math.round(min / 60);
+  if (h < 24) return t("ofertasHaceHoras").replace("{n}", h);
+  const d = Math.round(h / 24);
+  return t("ofertasHaceDias").replace("{n}", d);
+}
+
+// Línea "Oferta para 12 mar – 20 mar · visto hace 3h" bajo el precio cuando
+// es real. QW2: añadimos sello de frescura adyacente al precio para que
+// nadie vea una cifra sin saber cuándo fue verificada.
 function FechasOferta({ vueloReal, t }) {
   if (!vueloReal || (!vueloReal.fecha_ida && !vueloReal.fecha_vuelta)) return null;
+  const visto = vueloReal.visto || vueloReal.generado;
+  const hace = visto ? fmtHaceCorto(visto, t) : "";
   return (
     <div className="-mt-0.5 mb-1 pl-0.5 text-[11px] font-medium text-emerald-700">
       {t("presupOfertaPara")} {fmtFechaCorta(vueloReal.fecha_ida)}
       {vueloReal.fecha_vuelta ? ` – ${fmtFechaCorta(vueloReal.fecha_vuelta)}` : ""}
+      {hace && <span className="ml-1.5 font-normal text-emerald-700/70">· {hace}</span>}
     </div>
   );
 }

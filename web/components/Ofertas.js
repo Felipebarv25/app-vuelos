@@ -242,10 +242,13 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
               <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-700 dark:text-slate-400">
                 {r.aerolinea}
               </span>
-              {r.visto && (
+              {/* QW2: frescura del precio. Si la oferta tiene `visto` propio,
+                  lo usamos; si no, caemos al timestamp global del archivo
+                  (data.generado). Así NUNCA mostramos un precio sin frescura. */}
+              {(r.visto || data.generado) && (
                 <>
                   <span className="text-slate-300">·</span>
-                  <span className="inline-flex items-center gap-1 text-[11px] text-slate-400"><Icono nombre="clock" size={11} /> {fmtHace(r.visto)}</span>
+                  <span className="inline-flex items-center gap-1 text-[11px] text-slate-400"><Icono nombre="clock" size={11} /> {fmtHace(r.visto || data.generado)}</span>
                 </>
               )}
             </div>
