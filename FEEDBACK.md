@@ -30,6 +30,63 @@ a 360px"). Prioriza impacto. No repitas lo ya resuelto. Felicita lo que sí qued
 
 ## 📋 Hallazgos
 
+### 2026-06-19 — Quick Wins del prompt "nuevas funcionalidades" (QW1–QW5)
+
+Prompt del desarrollador con 12 ítems (QW1-5, F1-4, M1-3). Esta sesión cierra
+los 5 Quick Wins de "alto impacto / bajo esfuerzo". F y M quedan en backlog.
+
+- ✅ 🔴 **QW1 — Estado de apertura "abierto ahora" en POIs**. Capturamos
+  `opening_hours` de OSM en `lib/osm.js procesarElementos` (campo `horario`
+  del lugar). Nuevo `lib/horarioOSM.js` con parser simplificado (cubre
+  formatos comunes: `Mo-Fr 09:00-18:00`, `24/7`, periodos con coma, reglas
+  separadas por `;`, fail silent en formatos exóticos). Calcula hora local
+  del destino con el offset del país (`infoPais().husos[0]`). Nuevo
+  componente `BadgeApertura` integrado en `Itinerario.js` (al lado del
+  badge Wiki/Notable de cada parada) y en `DetalleLugar.js` (arriba de los
+  datos OSM). Tres estados: 🟢 abierto (con hora de cierre), 🟢 24h,
+  🔴 cerrado (con hora de apertura si la hay hoy).
+  Pendiente: en `lib/itinerario.js` deprioritizar POIs cerrados al estimar
+  visita — queda en backlog porque requiere conocer hora de cada parada.
+- ✅ 🔴 **QW2 — Frescura de precio + nota de tasa**. En `Ofertas.js`, la
+  línea "visto hace Xh" por oferta ahora SIEMPRE aparece — antes solo si
+  `r.visto` estaba presente; ahora cae a `data.generado` como fallback.
+  En `Presupuesto.js FechasOferta`, se añadió "· visto hace X" después de
+  las fechas de la oferta. Las notas "tasa de hoy" / "aprox." ya existían
+  adyacentes a la conversión USD/COP/MXN/EUR y no se duplicaron.
+- ✅ 🔴 **QW3 — Mejor época por destino**. Nuevo `mejorEpoca(iso, lat)` en
+  `lib/requisitos.js`: tabla de ~40 países top + fallback por hemisferio
+  (norte/sur/tropical usando la latitud que ya existe en `paisesISO`).
+  Bloque nuevo en `RequisitosViaje.js` arriba del grid de datos, con
+  Mejor / Evitar / Clima. Datos orientativos referenciales (no llamamos
+  API de clima). i18n × 4 idiomas (reqMejorEpoca/reqMejorMes/reqEvitarMes/
+  reqClimaGeneral). La landing /destino YA mostraba mejorEpoca vía
+  seoDestinos.js (no requirió cambio).
+- ✅ 🔴 **QW4 — Autorización electrónica (ETIAS / ESTA / eTA / etc.)**.
+  Nuevo `autorizacionElectronica(destinoIso, nacIso)` en
+  `lib/requisitos.js`. Reglas para 6 destinos/sistemas: Schengen (ETIAS),
+  US (ESTA), Canadá (eTA), UK (UK ETA), Australia (ETA/eVisitor), Nueva
+  Zelanda (NZeTA). Cada sistema con su lista de nacionalidades aplicables
+  y enlace a fuente oficial (.gov.uk, esta.cbp.dhs.gov, etc.). Renderiza
+  banner ámbar prominente en `RequisitosViaje.js` arriba de Pasaporte +
+  Salud. i18n × 4 (reqAutorizTit, reqAutorizRequerida, reqVerSitioOficial).
+- ✅ 🟡 **QW5 — Datos OSM en DetalleLugar**. `lib/osm.js procesarElementos`
+  ahora captura también: `web` (website / contact:website), `tel` (phone /
+  contact:phone), `precio` ($/$$/$$$/$$$$ desde `price_level`) y `cocina`
+  (ya existía). `DetalleLugar.js` los muestra como chips inline cuando
+  existen. `out center` cambiado a `out center tags` en `api/lugares/route.js`
+  para que el servidor incluya los tags (necesario para que estos campos
+  lleguen al cliente). `API_VER` bumped 30→31 para invalidar caché vieja
+  sin estos campos.
+
+Lo que **NO** se aplicó en esta sesión (queda en backlog del prompt):
+- F1 drag&drop de paradas, F2 score popularidad real, F3 checklist
+  equipaje + PDFs, F4 hospedaje real en presupuesto (depende de Booking
+  API), M1 Asesor IA (depende de ANTHROPIC_API_KEY), M2 ritmo de rutas
+  largas (ya hay control "más días por ciudad" desde el sprint anterior),
+  M3 línea del día + clustering en mapa.
+
+SW v33 → v34.
+
 ### 2026-06-18 — Landing pre-login + paywall orientados a conversión
 
 Prompt del desarrollador (4 prioridades). Estado de cada uno tras esta sesión:
