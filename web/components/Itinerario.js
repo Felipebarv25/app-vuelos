@@ -4,6 +4,7 @@ import { Boton } from "./ui";
 import { fotoDeLugar } from "@/lib/imagenes";
 import { fmtMin, resumenDia } from "@/lib/itinerario";
 import { estadoTiempo, textoEstado } from "@/lib/reloj";
+import BadgeApertura from "./BadgeApertura";
 import { Icono, iconoCategoria } from "./Icono";
 import { nombreLocalizado } from "@/lib/nombres";
 import { linkTourCerca } from "@/lib/afiliados";
@@ -52,6 +53,7 @@ export default function Itinerario({
   gps,
   ciudad,
   fechaInicio,
+  husoDestino, // QW1: zona horaria del destino para el badge "abierto ahora"
   lang = "es",
   t = (k) => k,
 }) {
@@ -180,6 +182,10 @@ export default function Itinerario({
                       <Icono nombre="star" size={11} /> {t("itinBadgeNotable")}
                     </span>
                   ) : null}
+                  {/* QW1 — Badge "Abierto ahora · cierra a las X" / "Cerrado".
+                      Solo aparece si OSM trajo opening_hours y conocemos el
+                      huso del destino. */}
+                  <BadgeApertura lugar={p} huso={husoDestino} t={t} />
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button

@@ -6,6 +6,7 @@ import { traducirLoteWD, nombreLocalizado } from "@/lib/nombres";
 import { compartirEnlace } from "@/lib/compartir";
 import { getDestinoPorSlug } from "@/lib/destinos";
 import { construirItinerario, agregarLugarADia, fmtMin } from "@/lib/itinerario";
+import { isoDesdeNombre, infoPais } from "@/lib/requisitos";
 import { CIUDADES_POPULARES } from "@/lib/ciudadesPopulares";
 import { sugerirCiudades } from "@/lib/autocompletar";
 import { useGeo } from "@/lib/useGeo";
@@ -1508,6 +1509,10 @@ export default function Home() {
                 gps={gps}
                 ciudad={ciudad?.nombre}
                 fechaInicio={fechaInicio}
+                husoDestino={(() => {
+                  const iso = isoDesdeNombre(ciudad?.pais);
+                  return iso ? infoPais(iso)?.husos?.[0] : null;
+                })()}
                 t={t}
                 lang={lang}
                 onCambiarParada={(idx) => cambiarParada(diaVisible, idx)}
@@ -1594,12 +1599,18 @@ export default function Home() {
         </div>
       )}
 
-      {/* Detalle del lugar (dentro de la app) */}
+      {/* Detalle del lugar (dentro de la app). Le pasamos el huso del país
+          destino (cuando lo conocemos) para que el badge "Abierto ahora"
+          calcule con la hora local correcta. */}
       {detalle && (
         <DetalleLugar
           lugar={detalle}
           ciudad={ciudad}
           origen={gps}
+          husoDestino={(() => {
+            const iso = isoDesdeNombre(ciudad?.pais);
+            return iso ? infoPais(iso)?.husos?.[0] : null;
+          })()}
           t={t}
           lang={lang}
           onCerrar={() => setDetalle(null)}
