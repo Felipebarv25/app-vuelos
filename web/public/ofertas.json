@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-19T19:51:08",
+  "generado": "2026-06-19T22:04:54",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -148,8 +148,8 @@
       "fecha_vuelta": "2026-07-13",
       "aerolinea": "JA",
       "umbral": 450,
-      "mediana": 198,
-      "descuento": 12,
+      "mediana": 180,
+      "descuento": 3,
       "esGanga": true,
       "visto": "2026-06-19T04:12:58",
       "link": "https://www.aviasales.com/search/SCL1007BUE13071",
@@ -1522,18 +1522,18 @@
       "pais": "Italia",
       "bandera": "🇮🇹",
       "q": "Roma, Italia",
-      "precio": 822,
+      "precio": 820,
       "moneda": "USD",
-      "fecha_ida": "2026-11-06",
+      "fecha_ida": "2026-11-11",
       "fecha_vuelta": "2026-11-28",
       "aerolinea": "AC",
       "umbral": 800,
       "mediana": 840,
       "descuento": 2,
       "esGanga": false,
-      "visto": "2026-06-19T04:12:03",
-      "link": "https://www.aviasales.com/search/BOG0611ROM28111",
-      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Roma%202026-11-06%202026-11-28"
+      "visto": "2026-06-19T22:02:58",
+      "link": "https://www.aviasales.com/search/BOG1111ROM28111",
+      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Roma%202026-11-11%202026-11-28"
     },
     {
       "origen": "BOG",
