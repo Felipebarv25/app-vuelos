@@ -30,6 +30,28 @@ a 360px"). Prioriza impacto. No repitas lo ya resuelto. Felicita lo que sí qued
 
 ## 📋 Hallazgos
 
+### 2026-06-16 — Ronda 7 (PRICING / behavioral econ)
+
+Auditoría de tarifas + ajustes de framing aplicados (sin cambiar el monto que
+cobra Lemon Squeezy, solo el display y la psicología de precio):
+- ✅ 🔴 **Fuente única de precios** (`web/lib/precios.js`): `/pro` y el Paywall ya
+  no hardcodean los montos por separado. Comentario claro: si cambia un número,
+  hay que actualizar el producto en Lemon Squeezy o se cobra distinto a lo mostrado.
+- ✅ 🔴 **Anual sin "60% off"**: el descuento gigante devaluaba el mensual y se leía
+  como trampa. Reemplazado por framing de centavos: "Solo ~US$2/mes · facturado al
+  año" (es/en/pt/fr).
+- ✅ 🟡 **Ancla del Lifetime**: "primeros 100 (luego US$99)" → urgencia sin cambiar
+  el cobro de lanzamiento (US$39).
+- ✅ 🟡 **Framing de valor** (anclar contra el ahorro, no las features): "💡 Una sola
+  oferta de vuelo que caces puede pagar años de Pro." en `/pro` y en el Paywall.
+- ✅ 🟡 **Precio local aproximado** (`web/components/PrecioLocal.js`): bajo el precio
+  USD se muestra "≈ $X COP · tasa aprox." según país del visitante (geo + FX en
+  vivo). Solo display; el cobro sigue en USD. Degrada elegante si no hay tasa.
+
+**Pendiente (requiere acción en Lemon Squeezy, no solo código):** subir el anual a
+~US$29–34 (reducir la brecha con el mensual) y el lifetime regular a ~US$99; pricing
+por poder adquisitivo (PPP) para US/EU; tier Familia/Grupo como ancla alta.
+
 ### 2026-06-01 — Ronda 6 (OPTIMIZACIÓN técnica) — del 7/10 al ~9/10
 
 El agente crítico auditó rendimiento/robustez. Aplicado:
