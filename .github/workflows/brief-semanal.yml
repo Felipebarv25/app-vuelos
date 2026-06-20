@@ -1,6 +1,6 @@
 name: Brief ejecutivo semanal
 
-# Genera el INFORME EJECUTIVO 360 cada semana (lunes 12:00 UTC ≈ 7:00 a.m.
+# Genera el INFORME EJECUTIVO 360 cada semana (sábado 15:00 UTC = 10:00 a.m.
 # Colombia) y lo guarda en informes/ como Markdown + PDF. Si está configurado
 # el secret ANTHROPIC_API_KEY, la IA refresca el contenido con investigación web
 # (competencia, mercado, consumidor) antes de renderizar. También se puede lanzar
@@ -8,7 +8,7 @@ name: Brief ejecutivo semanal
 
 on:
   schedule:
-    - cron: "0 12 * * 1"
+    - cron: "0 15 * * 6"
   workflow_dispatch:
 
 permissions:
