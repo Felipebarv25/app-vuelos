@@ -61,12 +61,11 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
   const nacNombre = nombrePais(nacionalidad);
   const paises = listaPaises();
 
-  // Verificación en fuente oficial: una búsqueda dirigida (siempre válida) a los
-  // requisitos reales según el pasaporte del usuario. Los datos del panel son
-  // referenciales (Passport Index); esto lleva a confirmarlos.
-  const buscar = (q) => `https://www.google.com/search?q=${encodeURIComponent(q)}`;
-  const urlOficial = buscar(`requisitos de visa para viajar a ${paisNombre} con pasaporte de ${nacNombre}`);
-  const urlSalud = buscar(`vacunas y salud recomendadas para viajar a ${paisNombre}`);
+  // Página interna /requisitos/<iso> con visa + salud + emergencias.
+  // Antes redirigíamos a Google search; ahora todo vive on-site (la info
+  // de salud se refresca mensualmente con scripts/actualizar-salud.mjs).
+  const urlOficial = `/requisitos/${destinoIso.toLowerCase()}`;
+  const urlSalud = `${urlOficial}#salud`;
   const dp = infoPais(destinoIso) || {};
   const conduccion = dp.conduccion === "left" ? t("reqIzquierda") : dp.conduccion === "right" ? t("reqDerecha") : "";
   const moneda = dp.moneda ? `${dp.moneda.nombre}${dp.moneda.sim ? ` (${dp.moneda.sim})` : ""}` : "";
@@ -129,13 +128,13 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
               <div className="mt-0.5 text-[14px] font-semibold">{t("req_desconocido")}</div>
             )}
             <div className="mt-1 text-[12px] opacity-80">{t("reqVisaNota")}</div>
-            {/* Verificación en fuente oficial (los datos del panel son referenciales) */}
+            {/* Ficha interna completa (visa + salud + emergencias) */}
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px] font-bold">
-              <a href={urlOficial} target="_blank" rel="noopener" className="underline-offset-2 hover:underline">
-                {t("reqVerOficial")} ↗
+              <a href={urlOficial} className="underline-offset-2 hover:underline">
+                {t("reqVerOficial")} →
               </a>
-              <a href={urlSalud} target="_blank" rel="noopener" className="underline-offset-2 hover:underline">
-                {t("reqVerSalud")} ↗
+              <a href={urlSalud} className="underline-offset-2 hover:underline">
+                {t("reqVerSalud")} →
               </a>
             </div>
           </div>

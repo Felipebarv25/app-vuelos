@@ -1,0 +1,33 @@
+name: Actualizar info de salud por pais
+
+# Refresca web/data/salud-paises.json consultando Wikipedia "Health in <X>"
+# y CDC Travel Health Notices. Mensual: las recomendaciones cambian despacio
+# (brotes, políticas sanitarias). Tambien se puede lanzar a mano.
+on:
+  schedule:
+    - cron: "0 7 1 * *" # día 1 de cada mes, 07:00 UTC (1h después de requisitos.yml)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Refrescar dataset de salud
+        run: node scripts/actualizar-salud.mjs
+
+      - name: Guardar cambios (si los hay)
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add web/data/salud-paises.json
+          git commit -m "chore: refrescar salud-paises.json (cron mensual)" || echo "Sin cambios"
+          git push
