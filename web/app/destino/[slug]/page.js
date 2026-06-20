@@ -49,9 +49,9 @@ export async function generateMetadata({ params }) {
   if (!d) return { title: "Destino no encontrado · Viajero 360" };
 
   const nombre = nombreDestino(d);
-  const title = `Viaje a ${d.ciudad} desde Colombia · Itinerario y precios`;
+  const title = `Viaje a ${d.ciudad} · Itinerario, vuelos y presupuesto`;
   const description =
-    `Planea tu viaje a ${nombre}: vuelos desde Bogotá y Medellín desde US$${d.vuelo}, ` +
+    `Planea tu viaje a ${nombre}: vuelo i/v aprox. US$${d.vuelo}, ` +
     `presupuesto diario aprox. US$${d.dia}, top lugares para visitar y ruta día a día. ` +
     `Itinerario gratis con Viajero 360.`;
   const url = `${SITIO}/destino/${slug}`;
@@ -134,7 +134,7 @@ export default async function PaginaDestino({ params }) {
     "@context": "https://schema.org",
     "@type": "TouristDestination",
     name: nombre,
-    description: `Información de viaje a ${nombre} desde Colombia: vuelos, lugares para visitar y presupuesto sugerido.`,
+    description: `Información de viaje a ${nombre}: vuelos, lugares para visitar y presupuesto sugerido.`,
     url: `${SITIO}/destino/${slug}`,
     geo: { "@type": "GeoCoordinates", latitude: d.lat, longitude: d.lon },
     address: { "@type": "PostalAddress", addressCountry: d.pais },
@@ -208,7 +208,7 @@ export default async function PaginaDestino({ params }) {
               <span>Viaja a {d.pais}</span>
             </div>
             <h1 className="mt-2 text-4xl font-extrabold tracking-tight drop-shadow-md sm:text-5xl">
-              Viaje a {d.ciudad} desde Colombia
+              Viaje a {d.ciudad}
             </h1>
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <Link
@@ -236,7 +236,7 @@ export default async function PaginaDestino({ params }) {
             <FavToggle slug={slug} />
           </div>
           <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300 sm:text-5xl">
-            Viaje a {d.ciudad} desde Colombia
+            Viaje a {d.ciudad}
           </h1>
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <Link
@@ -265,7 +265,7 @@ export default async function PaginaDestino({ params }) {
       {/* Datos clave */}
       <section className="mx-auto max-w-4xl px-6 py-6">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Dato titulo="Vuelo i/v desde Colombia" valor={`US$ ${d.vuelo}`} sub="aprox." />
+          <Dato titulo="Vuelo i/v aprox." valor={`US$ ${d.vuelo}`} sub="referencial" />
           <Dato titulo="Costo diario aprox." valor={`US$ ${d.dia}`} sub="por persona" />
           <Dato titulo="Días recomendados" valor={diasSugeridos} sub="ideal" />
           <Dato titulo="Presupuesto sugerido" valor={`US$ ${presupuestoSugerido}`} sub={`${diasSugeridos} días, 1 persona`} />
@@ -337,7 +337,7 @@ export default async function PaginaDestino({ params }) {
             </div>
             <p className="mt-2 text-[14px] leading-relaxed text-slate-600">
               Todavía estamos recopilando datos de precios para vuelos a{" "}
-              <b className="text-marca-700 dark:text-marca-300">{d.ciudad}</b> desde Colombia. Nuestro
+              <b className="text-marca-700 dark:text-marca-300">{d.ciudad}</b>. Nuestro
               detector consulta esta ruta cada 3 horas; en cuanto haya muestras
               suficientes verás aquí la mediana mes a mes y la mejor temporada
               para volar.
@@ -354,7 +354,7 @@ export default async function PaginaDestino({ params }) {
             Cuándo viajar más barato a {d.ciudad}
           </h2>
           <p className="mt-1 text-slate-500">
-            Precio mediano de vuelo i/v desde Colombia por mes de salida según
+            Precio mediano de vuelo i/v por mes de salida según
             nuestro detector (últimos 90 días).
           </p>
 
@@ -463,7 +463,7 @@ export default async function PaginaDestino({ params }) {
             Reserva tu viaje a {d.ciudad}
           </h2>
           <p className="mt-1 text-[14px] text-slate-500">
-            Tours, hospedaje y vuelos desde Colombia — todo de proveedores que
+            Tours, hospedaje y vuelos — todo de proveedores que
             usamos nosotros.
           </p>
           <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
@@ -579,7 +579,7 @@ export default async function PaginaDestino({ params }) {
           </h2>
           <p className="mt-2 max-w-2xl text-white/85">
             Te repartimos los lugares día por día, con tiempos reales de transporte,
-            fotos, y precios en vivo de vuelos desde Colombia. Sin instalar nada.
+            fotos, y precios en vivo de vuelos. Sin instalar nada.
           </p>
           <Link
             href={`/?destino=${slug}`}

@@ -137,7 +137,7 @@ export default async function PaginaViajeCompartido({ params }) {
           </h2>
           <p className="mt-2 text-white/85">
             Crea tu propio itinerario gratis con mapa, GPS, transporte, fotos y
-            precios de vuelos desde Colombia.
+            precios de vuelos en vivo.
           </p>
           <Link
             href={`/?q=${encodeURIComponent(`${ciudad.nombre}, ${ciudad.pais}`)}`}

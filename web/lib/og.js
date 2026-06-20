@@ -82,7 +82,7 @@ export function renderOg() {
               lineHeight: 1.32,
             }}
           >
-            Itinerarios día a día · Vuelos baratos desde Colombia · Presupuesto
+            Itinerarios día a día · Vuelos baratos en vivo · Presupuesto
             por país
           </div>
         </div>

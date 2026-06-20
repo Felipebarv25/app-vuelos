@@ -4,9 +4,9 @@ import { Icono } from "./Icono";
 import { obtenerTasas } from "@/lib/fx";
 import AlertaPrecio from "./AlertaPrecio";
 
-// Tablero de "vuelos baratos desde Colombia": lee web/public/ofertas.json
+// Tablero de "vuelos baratos detectados": lee web/public/ofertas.json
 // (generado por el detector de precios) y muestra las mejores ofertas
-// vigentes desde Bogotá y Medellín, con opción de planear el viaje.
+// vigentes desde los hubs trackeados, con opción de planear el viaje.
 // Construye un deep-link de Aviasales para las fechas que eligió el usuario,
 // reutilizando el marker de afiliado que ya viene en el enlace de la oferta.
 function ddmm(iso) {

@@ -75,7 +75,7 @@ const PLANES = [
 const FAQS = [
   {
     q: "¿Necesito Pro para usar Viajero 360?",
-    a: "No. Lo más útil es gratis: buscar ciudades, armar itinerario, ver precios reales de vuelo desde Colombia, 1 viaje guardado, 1 alerta de precio. Pro es para quienes quieren más viajes en simultáneo, PDF, compartir y alertas ilimitadas.",
+    a: "No. Lo más útil es gratis: buscar ciudades, armar itinerario, ver precios reales de vuelo desde tu aeropuerto, 1 viaje guardado, 1 alerta de precio. Pro es para quienes quieren más viajes en simultáneo, PDF, compartir y alertas ilimitadas.",
   },
   {
     q: "¿Cómo pago?",
@@ -119,7 +119,7 @@ export default function PaginaPro() {
             <p className="mt-3 max-w-2xl text-[17px] text-white/85">
               Pro te da viajes ilimitados sincronizados, export PDF para llevarte tu plan
               offline, alertas de precio ilimitadas y todo el historial mes a mes.
-              Construyendo para colombianos, abierto al mundo.
+              Construido para viajeros independientes en cualquier país.
             </p>
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function PaginaPro() {
             <tbody className="text-slate-700">
               {[
                 ["Buscar ciudades y mapa", "✓", "✓"],
-                ["Precio real de vuelo desde Colombia", "✓", "✓"],
+                ["Precio real de vuelo según tu origen", "✓", "✓"],
                 ["Calculadora de presupuesto multi-país", "✓", "✓"],
                 ["Armar itinerario día por día", "✓", "✓"],
                 ["80+ landing pages SEO", "✓", "✓"],

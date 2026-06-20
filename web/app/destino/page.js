@@ -1,7 +1,7 @@
 // Página índice /destino: cataloga los 80+ destinos del SEO agrupados por
 // región, con filtros y enlace directo a cada landing. Fortalece el linking
 // interno (todas las /destino/<slug> son alcanzables desde una página) y
-// mejora rankeo en Google ("dónde viajar desde Colombia", "destinos baratos").
+// mejora rankeo en Google ("dónde viajar barato", "destinos baratos").
 import Link from "next/link";
 import { DESTINOS_SEO } from "@/lib/destinos";
 import IndiceFavoritos from "./IndiceFavoritos";
@@ -18,18 +18,18 @@ const REGIONES_META = {
 };
 
 export const metadata = {
-  title: "Destinos para viajar desde Colombia · Viajero 360",
+  title: "Destinos internacionales · Itinerarios, vuelos y presupuesto · Viajero 360",
   description:
-    "80 destinos en Sudamérica, Europa, Asia, África y Oceanía con vuelos desde Bogotá y Medellín, presupuesto diario aproximado y los mejores lugares para visitar. Planea tu viaje gratis.",
+    "80 destinos en Sudamérica, Europa, Asia, África y Oceanía con vuelo i/v aproximado, presupuesto diario y los mejores lugares para visitar. Planea tu viaje gratis.",
   alternates: { canonical: `${SITIO}/destino` },
   openGraph: {
-    title: "Destinos para viajar desde Colombia · Viajero 360",
+    title: "Destinos internacionales · Itinerarios y presupuesto · Viajero 360",
     description:
-      "Catálogo de 80 destinos con vuelos desde Colombia, presupuesto sugerido y top lugares.",
+      "Catálogo de 80 destinos con vuelo i/v aproximado, presupuesto sugerido y top lugares.",
     url: `${SITIO}/destino`,
     siteName: "Viajero 360",
     type: "website",
-    locale: "es_CO",
+    locale: "es",
   },
 };
 
@@ -51,10 +51,10 @@ export default function IndiceDestinos() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "Destinos para viajar desde Colombia",
+    name: "Destinos internacionales",
     url: `${SITIO}/destino`,
     description:
-      "Catálogo de destinos internacionales para viajar desde Colombia con presupuesto y lugares destacados.",
+      "Catálogo de destinos internacionales con presupuesto, vuelo i/v aproximado y lugares destacados.",
     mainEntity: {
       "@type": "ItemList",
       numberOfItems: total,
@@ -87,10 +87,10 @@ export default function IndiceDestinos() {
           Catálogo
         </div>
         <h1 className="mt-1 text-4xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300 sm:text-5xl">
-          {total} destinos para viajar desde Colombia
+          {total} destinos para tu próximo viaje
         </h1>
         <p className="mt-3 max-w-3xl text-lg text-slate-600">
-          Vuelos desde Bogotá y Medellín, presupuesto diario aproximado y los mejores
+          Vuelo i/v aproximado, presupuesto diario y los mejores
           lugares para visitar. Toca cualquier destino para ver el itinerario completo.
         </p>
         <Link
@@ -179,7 +179,7 @@ export default function IndiceDestinos() {
       </section>
 
       <footer className="mx-auto max-w-6xl px-6 pb-10 text-center text-[12px] text-slate-400">
-        Datos de OpenStreetMap y Wikipedia · Precios orientativos en USD desde Colombia.
+        Datos de OpenStreetMap y Wikipedia · Precios orientativos en USD.
       </footer>
     </main>
   );

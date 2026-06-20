@@ -47,7 +47,7 @@ export default async function OgDestino({ params }) {
           {d?.ciudad || "Tu destino"}
         </div>
         <div style={{ fontSize: 36, opacity: 0.92, marginTop: 14 }}>
-          {d?.pais ? `${d.pais} · Itinerario desde Colombia` : "Itinerario y precios"}
+          {d?.pais ? `${d.pais} · Itinerario y precios` : "Itinerario y precios"}
         </div>
       </div>
     ),

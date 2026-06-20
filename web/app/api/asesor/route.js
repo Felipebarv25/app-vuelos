@@ -24,8 +24,15 @@ function catalogoTexto() {
     .join("\n");
 }
 
-function systemPrompt() {
-  return `Eres "Brújula", la asesora de viajes de Viajero 360, una app que arma itinerarios y rutas por presupuesto desde Colombia (Bogotá/Medellín) hacia el mundo.
+function systemPrompt({ paisUsuario, ciudadUsuario, iataOrigen } = {}) {
+  const ctxOrigen = paisUsuario
+    ? `El viajero te escribe desde ${ciudadUsuario ? `${ciudadUsuario}, ` : ""}${paisUsuario}${iataOrigen ? ` (aeropuerto cercano: ${iataOrigen})` : ""}. Adapta las recomendaciones a su origen real, no asumas Bogotá/Medellín. Los costos del catálogo son una referencia tomada desde varios hubs (Bogotá, Medellín, Ciudad de México, Lima, Madrid, Miami, etc.); si el origen real del viajero es muy distinto, dile que el vuelo puede variar ±30% y que use el detector con su aeropuerto.`
+    : `Si todavía no sabes desde qué ciudad/país viaja el usuario, pregúntale primero (es lo que más cambia el costo del vuelo). NO asumas Colombia ni ningún país por defecto.`;
+
+  return `Eres "Brújula", la asesora de viajes de Viajero 360, una app que arma itinerarios y rutas por presupuesto para viajeros de cualquier país.
+
+Contexto del viajero:
+${ctxOrigen}
 
 Tu rol:
 - Recomendar destinos, rutas multiciudad y planes según el presupuesto, fechas, gustos y compañía del viajero.
@@ -37,10 +44,10 @@ FORMATO (importante): el chat muestra TEXTO PLANO, NO renderiza Markdown. Por es
 - Mantén las respuestas cortas y fáciles de leer en un chat móvil.
 - Responde SIEMPRE en el mismo idioma del usuario.
 - Cuando propongas un viaje, sugiere usar las funciones de la app: "Ruta multiciudad por presupuesto", "Un destino" y el itinerario día a día con mapa.
-- Usa el catálogo de abajo como referencia de costos (son estimados orientativos, vuelos i/v desde Colombia). Aclara que los precios reales se confirman con el detector de vuelos de la app.
+- Usa el catálogo de abajo como referencia de costos (son estimados orientativos). Aclara que los precios reales se confirman con el detector de vuelos de la app desde el aeropuerto del viajero.
 
 Límites:
-- No des asesoría legal de visados ni consejos financieros/de inversión; sugiere verificar requisitos oficiales.
+- No des asesoría legal de visados ni consejos financieros/de inversión; sugiere verificar requisitos oficiales (la app tiene una sección /requisitos).
 - No inventes precios muy alejados del catálogo. Si no sabes algo, dilo y ofrece una alternativa.
 
 CATÁLOGO DE REFERENCIA (ciudad, país, vuelo i/v aprox., costo por día aprox.):
@@ -54,9 +61,20 @@ export async function POST(req) {
   }
 
   let mensajes;
+  let contextoOrigen = {};
   try {
     const body = await req.json();
     mensajes = body.mensajes;
+    // Contexto opcional para que Brújula NO asuma Colombia. El cliente lo manda
+    // si tiene el dato (geo + selección del modal de Presupuesto).
+    if (body.origen && typeof body.origen === "object") {
+      const o = body.origen;
+      contextoOrigen = {
+        paisUsuario: typeof o.pais === "string" ? o.pais.slice(0, 60) : undefined,
+        ciudadUsuario: typeof o.ciudad === "string" ? o.ciudad.slice(0, 60) : undefined,
+        iataOrigen: typeof o.iata === "string" ? o.iata.slice(0, 5).toUpperCase() : undefined,
+      };
+    }
   } catch {
     return Response.json({ error: "json" }, { status: 400 });
   }
@@ -82,7 +100,7 @@ export async function POST(req) {
     model: MODELO,
     max_tokens: 800, // respuestas concisas = menor costo de salida (lo más caro)
     system: [
-      { type: "text", text: systemPrompt(), cache_control: { type: "ephemeral" } },
+      { type: "text", text: systemPrompt(contextoOrigen), cache_control: { type: "ephemeral" } },
     ],
     messages: limpios,
   });

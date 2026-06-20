@@ -115,7 +115,7 @@ export default function ComparadorCliente() {
           </thead>
           <tbody className="text-slate-700">
             <Fila
-              titulo="Vuelo i/v desde Colombia"
+              titulo="Vuelo i/v aprox."
               valores={destinos.map((d) => (d ? `US$ ${d.vuelo}` : "—"))}
               destacar={destinos.map((d) => d?.vuelo === minVuelo && minVuelo != null)}
             />

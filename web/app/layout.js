@@ -30,7 +30,7 @@ const HERO_IMG =
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70";
 
 const DESC =
-  "Itinerarios día a día con mapa, GPS, transporte y los mejores lugares y restaurantes de cualquier ciudad del mundo. Rutas por presupuesto y ofertas de vuelos desde Colombia.";
+  "Itinerarios día a día con mapa, GPS, transporte y los mejores lugares y restaurantes de cualquier ciudad del mundo. Rutas por presupuesto y precios de vuelos en vivo.";
 
 export const metadata = {
   metadataBase: new URL("https://app-vuelos-mfos.vercel.app"),

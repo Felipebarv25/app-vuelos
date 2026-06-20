@@ -8,7 +8,7 @@
 // - datosSeoDe(d, lang) y faqsDe(d, lang) devuelven la version localizada.
 // - lang default = "es" (mercado principal).
 
-// Mejores meses por región para volar barato/clima ok desde Colombia.
+// Mejores meses por región para volar barato/clima ok (heurística general).
 const TEMPORADA_REGION = {
   es: {
     sudamerica: { mejor: "marzo a junio y septiembre a noviembre", evitar: "diciembre a febrero (verano austral, alta temporada en Argentina/Chile)" },
@@ -112,7 +112,7 @@ const DATOS_POR_LANG = {
       platos: ["NY pizza slice", "Bagels", "Cheesecake", "Pastrami sandwich"],
     },
     "ciudad-de-mexico-mexico": {
-      intro: "CDMX es una megaurbe vibrante: ruinas aztecas en el centro, los murales de Diego Rivera, mercados, mezcalerías de barrio y una de las gastronomías más reconocidas por la UNESCO. Vuelos baratísimos desde Colombia.",
+      intro: "CDMX es una megaurbe vibrante: ruinas aztecas en el centro, los murales de Diego Rivera, mercados, mezcalerías de barrio y una de las gastronomías más reconocidas por la UNESCO. Hub de conexión barato para casi toda Latinoamérica.",
       idioma: "Español",
       moneda: "Peso mexicano (MXN)",
       dato: "CDMX está construida sobre un lago: por eso se hunde cerca de 40 cm al año en algunas zonas.",
@@ -175,7 +175,7 @@ const DATOS_POR_LANG = {
       platos: ["Goulash", "Knedlíky", "Svíčková", "Trdelník", "Pilsner"],
     },
     "miami-estados-unidos": {
-      intro: "Miami es Latinoamérica con poder adquisitivo gringo: playas de South Beach, vida nocturna en Wynwood, compras en Aventura y el portal a Cuba/Bahamas. Hay vuelos directos baratos desde Colombia.",
+      intro: "Miami es Latinoamérica con poder adquisitivo gringo: playas de South Beach, vida nocturna en Wynwood, compras en Aventura y el portal a Cuba/Bahamas. Hub de conexión barato y directo desde gran parte del continente.",
       idioma: "Inglés y español",
       moneda: "Dólar estadounidense (USD)",
       dato: "Miami es la única gran ciudad de EE.UU. donde más del 70% de la población habla español en casa.",
@@ -748,9 +748,9 @@ function generico(d, lang) {
   return {
     intro:
       `Un destino fascinante en ${region}. ${d.ciudad} combina cultura, gastronomía y ` +
-      `experiencias únicas. Es alcanzable desde Colombia con vuelos i/v aproximados de ` +
-      `US$${d.vuelo} desde Bogotá o Medellín, y el presupuesto diario para un turista de ` +
-      `gama media ronda los US$${d.dia} por persona (hospedaje, comida, transporte y actividades).`,
+      `experiencias únicas. El vuelo i/v ronda los US$${d.vuelo} (referencial; varía según ` +
+      `tu aeropuerto de origen y la temporada), y el presupuesto diario para un turista de ` +
+      `gama media es de US$${d.dia} por persona (hospedaje, comida, transporte y actividades).`,
     idioma: pais.idioma || "Consulta el idioma local",
     moneda: pais.moneda || "Consulta la moneda local",
     dato: null,
@@ -839,12 +839,12 @@ export function faqsDe(d, lang = "es") {
 
   return [
     {
-      q: `¿Cuánto cuesta un viaje a ${d.ciudad} desde Colombia?`,
-      a: `Una semana en ${d.ciudad} cuesta aproximadamente US$${presupSemana} por persona (US$${d.vuelo} de vuelo ida y vuelta + US$${d.dia * 7} de estadía). Dos semanas suben a US$${presupDosSem}. Estos valores son orientativos para un turista de gama media; con Viajero 360 puedes ver el precio real del vuelo en vivo.`,
+      q: `¿Cuánto cuesta un viaje a ${d.ciudad}?`,
+      a: `Una semana en ${d.ciudad} cuesta aproximadamente US$${presupSemana} por persona (US$${d.vuelo} de vuelo ida y vuelta + US$${d.dia * 7} de estadía). Dos semanas suben a US$${presupDosSem}. Estos valores son orientativos para un turista de gama media y el vuelo varía según tu aeropuerto de origen; con Viajero 360 puedes ver el precio real en vivo según el aeropuerto que elijas.`,
     },
     {
       q: `¿Cuándo es la mejor época para viajar a ${d.ciudad}?`,
-      a: `La mejor temporada para viajar a ${d.ciudad} desde Colombia es ${datos.mejorEpoca}. ${datos.evitarEpoca ? `Es recomendable evitar ${datos.evitarEpoca}.` : ""}`.trim(),
+      a: `La mejor temporada para visitar ${d.ciudad} es ${datos.mejorEpoca}. ${datos.evitarEpoca ? `Es recomendable evitar ${datos.evitarEpoca}.` : ""}`.trim(),
     },
     {
       q: `¿Cuántos días recomendables para visitar ${d.ciudad}?`,
