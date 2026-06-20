@@ -71,6 +71,11 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
       setAbierto(true);
       return;
     }
+    // BUG FIX: si el componente quedó con estado "auth" de un click anterior
+    // (cuando el usuario no estaba logueado), reseteamos al modo form normal.
+    // Sin esto, el usuario que se loguea con Demo Free veía "Necesitas tu
+    // email" aunque ya hubiera entrado.
+    setEstado(null);
     setAbierto(true);
   }
 
@@ -80,10 +85,13 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
     setCargando(true);
     setEstado(null);
     try {
-      // Pasar token Bearer si hay (sesion email magic code).
+      // Pasar token Bearer si hay (sesion email magic code o Demo).
+      // BUG FIX: leer también de sessionStorage. Las sesiones Demo se guardan
+      // ahí (no en localStorage), y antes el POST iba sin Authorization.
       const headers = { "Content-Type": "application/json" };
       try {
-        const tk = localStorage.getItem("v360_auth_token");
+        const tk = localStorage.getItem("v360_auth_token")
+                || sessionStorage.getItem("v360_auth_token");
         if (tk) headers.Authorization = `Bearer ${tk}`;
       } catch {}
 

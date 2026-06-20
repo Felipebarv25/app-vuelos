@@ -117,8 +117,10 @@ export function AppProvider({ children }) {
     try {
       let headers = { "Content-Type": "application/json" };
       // Si tenemos token email, lo pasamos para identificar al usuario.
+      // BUG FIX: leer también de sessionStorage (sesiones Demo viven ahí).
       try {
-        const tk = localStorage.getItem("v360_auth_token");
+        const tk = localStorage.getItem("v360_auth_token")
+                || sessionStorage.getItem("v360_auth_token");
         if (tk) headers.Authorization = `Bearer ${tk}`;
       } catch {}
       const r = await fetch("/api/me", { headers });
@@ -224,7 +226,10 @@ export function AppProvider({ children }) {
     if (session) signOut({ callbackUrl: "/" });
     // Cerrar sesion server-side del email si existe.
     let token;
-    try { token = localStorage.getItem("v360_auth_token"); } catch {}
+    try {
+      token = localStorage.getItem("v360_auth_token")
+           || sessionStorage.getItem("v360_auth_token");
+    } catch {}
     if (token) {
       try {
         await fetch("/api/auth/sesion", {
