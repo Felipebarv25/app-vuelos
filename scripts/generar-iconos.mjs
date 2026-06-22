@@ -40,8 +40,10 @@ const PUBLIC = path.join(RAIZ, "web", "public");
 // El SVG teal del logo (versión para fondos claros). Lo renderizamos sobre
 // un fondo teal para el ícono de la app — así no se ve transparente en
 // fondos blancos del launcher.
-const SVG_TEAL = path.join(PUBLIC, "anduve-icon.svg");
-const SVG_WHITE = path.join(PUBLIC, "anduve-icon-white.svg");
+// SVG redondo del rebrand Anduve (mismo que sirve como favicon).
+const SVG_REDONDO = path.join(PUBLIC, "icono.svg");
+const SVG_TEAL = SVG_REDONDO;
+const SVG_WHITE = SVG_REDONDO;
 
 // Fondo de los íconos PWA — coincide con --azul / marca-600 del sistema (rebrand Anduve).
 const BG_TEAL = "#0c5f58";
@@ -74,32 +76,35 @@ async function renderear(svgPath, tamano, salida, opts = {}) {
 }
 
 async function main() {
-  console.log("Generando íconos PWA desde el logo v5…");
+  console.log("Generando íconos PWA desde el logo Anduve (icono.svg redondo)…");
 
-  // PNG estándar 192 — usado por Android home-screen.
-  // Fondo teal opaco para que se vea sólido en cualquier launcher.
-  await renderear(SVG_WHITE, 192, path.join(PUBLIC, "icono-192.png"), {
-    padding: 16,
+  // La SVG fuente YA es redonda y tiene su propio fondo teal + borde
+  // coral, así que renderizamos a tamaño completo sin padding extra.
+
+  // PNG estándar 192 — Android home-screen.
+  await renderear(SVG_REDONDO, 192, path.join(PUBLIC, "icono-192.png"), {
+    padding: 0,
     fondo: BG_TEAL,
   });
 
-  // PNG estándar 512 — usado por PWA installer / splash en algunos Android.
-  await renderear(SVG_WHITE, 512, path.join(PUBLIC, "icono-512.png"), {
-    padding: 40,
+  // PNG estándar 512 — PWA installer / splash.
+  await renderear(SVG_REDONDO, 512, path.join(PUBLIC, "icono-512.png"), {
+    padding: 0,
     fondo: BG_TEAL,
   });
 
-  // Maskable — Android Q+ aplica una máscara circular/squircle. El safe
-  // zone es el 80% central del ícono, así que dejamos 10% de padding por
-  // lado (~52 px en 512) para que el ícono no quede recortado.
-  await renderear(SVG_WHITE, 512, path.join(PUBLIC, "icono-maskable.png"), {
-    padding: 70,
+  // Maskable — Android Q+ aplica máscara circular/squircle. El safe-zone
+  // central (80%) debe contener todo el contenido importante. Como el
+  // logo YA es circular, lo escalamos al 80% (~10% padding por lado)
+  // sobre el fondo teal para que la máscara no recorte la silueta.
+  await renderear(SVG_REDONDO, 512, path.join(PUBLIC, "icono-maskable.png"), {
+    padding: 52,
     fondo: BG_TEAL,
   });
 
-  // Apple touch icon — iOS espera un cuadrado opaco 180×180 (no transparencia).
-  await renderear(SVG_WHITE, 180, path.join(PUBLIC, "apple-touch-icon.png"), {
-    padding: 16,
+  // Apple touch icon — iOS recorta a squircle automáticamente.
+  await renderear(SVG_REDONDO, 180, path.join(PUBLIC, "apple-touch-icon.png"), {
+    padding: 0,
     fondo: BG_TEAL,
   });
 

@@ -158,13 +158,12 @@ a:focus:not(:focus-visible) {
 }
 
 /* ============================================================
-   Anduve Logo v2 (rebrand 2026-06-21) — keyframes globales para
-   AnduveIcon. Antes vivían dentro de un <style> inline en cada
-   SVG, pero algunos navegadores no procesan @keyframes inline
-   en SVG con consistencia. Aquí están garantizados.
+   Anduve Logo (rebrand 2026-06-21, SVG real del ZIP del usuario)
+   — keyframes globales para AnduveIcon. Valores EXACTOS de
+   Anduve-Logo-Animado.html (no inventados).
    ============================================================ */
 @keyframes vj-spin { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
-@keyframes vj-bob  { 0%,50%,100% { transform: translateY(1.2px); } 25%,75% { transform: translateY(0); } }
+@keyframes vj-bob  { 0%,100% { transform: translateY(1.2px); } 50% { transform: translateY(0); } }
 @keyframes vj-sway { 0%,100% { transform: rotate(-13deg); } 50% { transform: rotate(-8deg); } }
 @keyframes vj-arma { 0%,100% { transform: rotate(26deg); }  50% { transform: rotate(-26deg); } }
 @keyframes vj-armb { 0%,100% { transform: rotate(-26deg); } 50% { transform: rotate(26deg); } }
@@ -172,7 +171,7 @@ a:focus:not(:focus-visible) {
 @keyframes vj-legb { 0%,100% { transform: rotate(-21deg); } 50% { transform: rotate(23deg); } }
 @keyframes vj-kneef { 0% { transform: rotate(10deg); } 25% { transform: rotate(52deg); } 45% { transform: rotate(8deg); } 55% { transform: rotate(3deg); } 80% { transform: rotate(6deg); } 100% { transform: rotate(10deg); } }
 @keyframes vj-kneeb { 0% { transform: rotate(3deg); }  30% { transform: rotate(6deg); } 50% { transform: rotate(7deg); } 75% { transform: rotate(52deg); } 92% { transform: rotate(12deg); } 100% { transform: rotate(3deg); } }
-@keyframes vj-pop  { 0% { transform: scale(1.2); } 8% { transform: scale(0.92); } 17% { transform: scale(0.48); } 50% { transform: scale(0.44); } 83% { transform: scale(0.48); } 92% { transform: scale(0.92); } 100% { transform: scale(1.2); } }
+@keyframes vj-pop  { 0% { transform: scale(2.8); } 10% { transform: scale(1.9); } 20% { transform: scale(1.0); } 50% { transform: scale(1.0); } 80% { transform: scale(1.0); } 90% { transform: scale(1.9); } 100% { transform: scale(2.8); } }
 
 @media (prefers-reduced-motion: reduce) {
   svg [style*="vj-spin"],
