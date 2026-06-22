@@ -3,7 +3,7 @@ import { Plus_Jakarta_Sans, Fraunces, Sora } from "next/font/google";
 import Providers from "./providers";
 
 // Cuerpo/UI: Plus Jakarta Sans (legible). Titulares: Fraunces (display editorial
-// con carácter). Wordmark "Viajero 360": Sora (parte del sistema de identidad
+// con carácter). Wordmark "Anduve": Sora (parte del sistema de identidad
 // del logo v5). Las tres auto-hospedadas por Next (sin @import bloqueante).
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -34,11 +34,11 @@ const DESC =
 
 export const metadata = {
   metadataBase: new URL("https://app-vuelos-mfos.vercel.app"),
-  title: "Viajero 360 · Planea tu viaje perfecto",
+  title: "Anduve · Planea tu viaje perfecto",
   description: DESC,
   manifest: "/manifest.json",
-  applicationName: "Viajero 360",
-  appleWebApp: { capable: true, statusBarStyle: "default", title: "Viajero 360" },
+  applicationName: "Anduve",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Anduve" },
   icons: { icon: "/icono-192.png", apple: "/apple-touch-icon.png" },
   // Google Search Console verification: cuando registres el sitio en Search
   // Console te dan un meta tag con un codigo unico. En vez de pegarlo a mano,
@@ -50,21 +50,21 @@ export const metadata = {
   // og:image y twitter:image los genera la convención de archivos
   // app/opengraph-image.js y app/twitter-image.js (tarjeta 1200x630).
   openGraph: {
-    title: "Viajero 360 · Planea tu viaje perfecto",
+    title: "Anduve · Planea tu viaje perfecto",
     description: DESC,
     type: "website",
     url: "https://app-vuelos-mfos.vercel.app/",
-    siteName: "Viajero 360",
+    siteName: "Anduve",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Viajero 360 · Planea tu viaje perfecto",
+    title: "Anduve · Planea tu viaje perfecto",
     description: DESC,
   },
 };
 
 export const viewport = {
-  themeColor: "#0f766e",
+  themeColor: "#0c5f58",
   width: "device-width",
   initialScale: 1,
 };
@@ -73,13 +73,15 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es" className={`${jakarta.variable} ${fraunces.variable} ${sora.variable}`}>
       <head>
-        {/* Script anti-FOUC: aplica la clase 'dark' al <html> ANTES de que
-            React hidrate. Sin esto habría un parpadeo blanco al cargar en
-            modo oscuro (el server renderiza sin clase, el cliente la añade
-            solo tras montar el componente). */}
+        {/* Script de boot: (1) migra claves de localStorage del prefijo viejo
+            v360_* al nuevo anduve_* (rebrand 2026-06-21) y luego (2) aplica la
+            clase 'dark' al <html> ANTES de que React hidrate (anti-FOUC: sin
+            esto habría parpadeo blanco al cargar en modo oscuro). La migración
+            se hace una sola vez por dispositivo y es transparente al usuario:
+            no relog, no perder viajes/favoritos/preferencias. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var p=localStorage.getItem('v360_dark');var os=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;if(p!==null?p==='1':os){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+            __html: `(function(){var VIEJO='v360_';function mig(s){for(var i=s.length-1;i>=0;i--){var k=s.key(i);if(k&&k.indexOf(VIEJO)===0){var nk='anduve_'+k.slice(VIEJO.length);if(s.getItem(nk)===null){s.setItem(nk,s.getItem(k));}s.removeItem(k);}}}try{var ls=window.localStorage;if(!ls.getItem('anduve_migrated')){mig(ls);try{mig(window.sessionStorage);}catch(e){}ls.setItem('anduve_migrated','1');}}catch(e){}try{var p=localStorage.getItem('anduve_dark');var os=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;if(p!==null?p==='1':os){document.documentElement.classList.add('dark');}}catch(e){}})();`,
           }}
         />
         {/* Conexiones tempranas a los dominios de imágenes (acelera la 1ª foto) */}
@@ -96,7 +98,7 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         {/* Schema.org: Organization + WebSite con SearchAction. Ayuda a Google
             a entender la marca y muestra un sitelinks searchbox en la SERP
-            (campo de busqueda Viajero 360 directamente en Google). */}
+            (campo de busqueda Anduve directamente en Google). */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -106,7 +108,7 @@ export default function RootLayout({ children }) {
                 {
                   "@type": "Organization",
                   "@id": "https://app-vuelos-mfos.vercel.app/#organization",
-                  name: "Viajero 360",
+                  name: "Anduve",
                   url: "https://app-vuelos-mfos.vercel.app/",
                   logo: "https://app-vuelos-mfos.vercel.app/icono-192.png",
                   description: "Planificador de viajes personalizado: itinerarios por presupuesto, precios reales de vuelos y recomendaciones globales.",
@@ -115,7 +117,7 @@ export default function RootLayout({ children }) {
                 {
                   "@type": "TravelAgency",
                   "@id": "https://app-vuelos-mfos.vercel.app/#agency",
-                  name: "Viajero 360",
+                  name: "Anduve",
                   url: "https://app-vuelos-mfos.vercel.app/",
                   description: "Itinerarios día a día, presupuestos por país, alertas de precios y planificación multiciudad para 80+ destinos.",
                   areaServed: { "@type": "Country", name: "Worldwide" },
@@ -125,7 +127,7 @@ export default function RootLayout({ children }) {
                   "@type": "WebSite",
                   "@id": "https://app-vuelos-mfos.vercel.app/#website",
                   url: "https://app-vuelos-mfos.vercel.app/",
-                  name: "Viajero 360",
+                  name: "Anduve",
                   publisher: { "@id": "https://app-vuelos-mfos.vercel.app/#organization" },
                   inLanguage: ["es", "en", "pt", "fr"],
                   potentialAction: {

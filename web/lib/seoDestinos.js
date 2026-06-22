@@ -790,7 +790,7 @@ export function faqsDe(d, lang = "es") {
     return [
       {
         q: `How much does a trip to ${d.ciudad} cost?`,
-        a: `A week in ${d.ciudad} costs about US$${presupSemana} per person (US$${d.vuelo} round-trip flight + US$${d.dia * 7} for stay). Two weeks rise to US$${presupDosSem}. These are guideline values for a mid-range traveler; with Viajero 360 you can see the live flight price.`,
+        a: `A week in ${d.ciudad} costs about US$${presupSemana} per person (US$${d.vuelo} round-trip flight + US$${d.dia * 7} for stay). Two weeks rise to US$${presupDosSem}. These are guideline values for a mid-range traveler; with Anduve you can see the live flight price.`,
       },
       {
         q: `When is the best time to visit ${d.ciudad}?`,
@@ -798,7 +798,7 @@ export function faqsDe(d, lang = "es") {
       },
       {
         q: `How many days are recommended to visit ${d.ciudad}?`,
-        a: `To explore ${d.ciudad} without rushing, we recommend between 5 and 10 days. The main sights can be seen in 4-5 days; with 7-10 you can include nearby excursions. With Viajero 360 you build a day-by-day itinerary based on your time available.`,
+        a: `To explore ${d.ciudad} without rushing, we recommend between 5 and 10 days. The main sights can be seen in 4-5 days; with 7-10 you can include nearby excursions. With Anduve you build a day-by-day itinerary based on your time available.`,
       },
     ];
   }
@@ -807,7 +807,7 @@ export function faqsDe(d, lang = "es") {
     return [
       {
         q: `Quanto custa uma viagem para ${d.ciudad}?`,
-        a: `Uma semana em ${d.ciudad} custa aproximadamente US$${presupSemana} por pessoa (US$${d.vuelo} de voo ida e volta + US$${d.dia * 7} de estadia). Duas semanas sobem para US$${presupDosSem}. Valores orientativos para um turista de médio porte; com o Viajero 360 você vê o preço ao vivo.`,
+        a: `Uma semana em ${d.ciudad} custa aproximadamente US$${presupSemana} por pessoa (US$${d.vuelo} de voo ida e volta + US$${d.dia * 7} de estadia). Duas semanas sobem para US$${presupDosSem}. Valores orientativos para um turista de médio porte; com o Anduve você vê o preço ao vivo.`,
       },
       {
         q: `Quando é a melhor época para visitar ${d.ciudad}?`,
@@ -815,7 +815,7 @@ export function faqsDe(d, lang = "es") {
       },
       {
         q: `Quantos dias são recomendados para visitar ${d.ciudad}?`,
-        a: `Para conhecer ${d.ciudad} sem correria, recomendamos entre 5 e 10 dias. Os principais pontos podem ser vistos em 4-5 dias; com 7-10 dias você inclui excursões próximas. Com o Viajero 360 você monta um roteiro dia a dia.`,
+        a: `Para conhecer ${d.ciudad} sem correria, recomendamos entre 5 e 10 dias. Os principais pontos podem ser vistos em 4-5 dias; com 7-10 dias você inclui excursões próximas. Com o Anduve você monta um roteiro dia a dia.`,
       },
     ];
   }
@@ -824,7 +824,7 @@ export function faqsDe(d, lang = "es") {
     return [
       {
         q: `Combien coûte un voyage à ${d.ciudad} ?`,
-        a: `Une semaine à ${d.ciudad} coûte environ US$${presupSemana} par personne (US$${d.vuelo} de vol A/R + US$${d.dia * 7} de séjour). Deux semaines montent à US$${presupDosSem}. Valeurs indicatives pour un voyageur de gamme moyenne ; avec Viajero 360 vous voyez le prix en direct.`,
+        a: `Une semaine à ${d.ciudad} coûte environ US$${presupSemana} par personne (US$${d.vuelo} de vol A/R + US$${d.dia * 7} de séjour). Deux semaines montent à US$${presupDosSem}. Valeurs indicatives pour un voyageur de gamme moyenne ; avec Anduve vous voyez le prix en direct.`,
       },
       {
         q: `Quelle est la meilleure période pour visiter ${d.ciudad} ?`,
@@ -832,7 +832,7 @@ export function faqsDe(d, lang = "es") {
       },
       {
         q: `Combien de jours sont recommandés pour ${d.ciudad} ?`,
-        a: `Pour découvrir ${d.ciudad} sans courir, nous recommandons entre 5 et 10 jours. Les principaux sites se voient en 4-5 jours ; avec 7-10 vous ajoutez des excursions. Avec Viajero 360 vous bâtissez un itinéraire jour par jour.`,
+        a: `Pour découvrir ${d.ciudad} sans courir, nous recommandons entre 5 et 10 jours. Les principaux sites se voient en 4-5 jours ; avec 7-10 vous ajoutez des excursions. Avec Anduve vous bâtissez un itinéraire jour par jour.`,
       },
     ];
   }
@@ -840,7 +840,7 @@ export function faqsDe(d, lang = "es") {
   return [
     {
       q: `¿Cuánto cuesta un viaje a ${d.ciudad}?`,
-      a: `Una semana en ${d.ciudad} cuesta aproximadamente US$${presupSemana} por persona (US$${d.vuelo} de vuelo ida y vuelta + US$${d.dia * 7} de estadía). Dos semanas suben a US$${presupDosSem}. Estos valores son orientativos para un turista de gama media y el vuelo varía según tu aeropuerto de origen; con Viajero 360 puedes ver el precio real en vivo según el aeropuerto que elijas.`,
+      a: `Una semana en ${d.ciudad} cuesta aproximadamente US$${presupSemana} por persona (US$${d.vuelo} de vuelo ida y vuelta + US$${d.dia * 7} de estadía). Dos semanas suben a US$${presupDosSem}. Estos valores son orientativos para un turista de gama media y el vuelo varía según tu aeropuerto de origen; con Anduve puedes ver el precio real en vivo según el aeropuerto que elijas.`,
     },
     {
       q: `¿Cuándo es la mejor época para viajar a ${d.ciudad}?`,
@@ -848,7 +848,7 @@ export function faqsDe(d, lang = "es") {
     },
     {
       q: `¿Cuántos días recomendables para visitar ${d.ciudad}?`,
-      a: `Para conocer ${d.ciudad} sin correr, recomendamos entre 5 y 10 días. Los principales lugares se pueden ver en 4-5 días; con 7-10 días puedes incluir excursiones cercanas. Con Viajero 360 armas un itinerario día por día según el tiempo que tengas.`,
+      a: `Para conocer ${d.ciudad} sin correr, recomendamos entre 5 y 10 días. Los principales lugares se pueden ver en 4-5 días; con 7-10 días puedes incluir excursiones cercanas. Con Anduve armas un itinerario día por día según el tiempo que tengas.`,
     },
   ];
 }

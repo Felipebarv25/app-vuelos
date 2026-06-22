@@ -1,16 +1,15 @@
 "use client";
-// Logo de marca v5 — viajero estilo Liam sobre planeta que rota mostrando
-// paisajes (ciudad, montañas, árboles, monumentos, museo, playa, sol). Diseño
-// proporcionado por el usuario el 2026-06-17, viewBox 200x200, autocontenido
-// (SVG inline + @keyframes), themeable por variant (teal/white).
+// Logo de marca Anduve (rebrand 2026-06-21) — mismo viajero estilo Liam sobre
+// planeta que rota; teal base #0c5f58, wordmark "ANDU" + "VE" coral.
+// Autocontenido (SVG inline + @keyframes), themeable por variant (teal/white).
 //
 // Mantenemos los exports antiguos `Logo` y `LogoMarca` como adaptadores para
 // no tener que tocar todos los call-sites de la app. Mapean `tono` ("claro"
 // vs "marca") al nuevo `variant` ("white" vs "teal"). En modo oscuro
 // `tono="marca"` cambia automáticamente a variant blanco para legibilidad.
 import { useApp } from "@/lib/AppContext";
-import Viajero360Icon from "./Viajero360Icon";
-import Viajero360Logo from "./Viajero360Logo";
+import AnduveIcon from "./AnduveIcon";
+import AnduveLogo from "./AnduveLogo";
 
 function variantPara(tono, darkMode) {
   if (tono === "claro") return "white";
@@ -25,7 +24,7 @@ function variantPara(tono, darkMode) {
 export function Logo({ size = 32, className = "", animado = false, tono = "marca" }) {
   const { darkMode } = useApp();
   return (
-    <Viajero360Icon
+    <AnduveIcon
       size={size}
       variant={variantPara(tono, darkMode)}
       animate={animado}
@@ -35,13 +34,12 @@ export function Logo({ size = 32, className = "", animado = false, tono = "marca
 }
 
 // API antigua: <LogoMarca tono size animado className />. Lockup ícono + texto
-// "Viajero 360". El "360" siempre en coral; la palabra "Viajero" cambia de
-// color según variant.
+// "ANDUVE". La "VE" siempre en coral; "ANDU" cambia de color según variant.
 export function LogoMarca({ tono = "marca", size = 32, className = "", animado = false }) {
   const { darkMode } = useApp();
   return (
     <span className={className}>
-      <Viajero360Logo
+      <AnduveLogo
         variant={variantPara(tono, darkMode)}
         iconSize={size}
         fontSize={Math.round(size * 0.62)}

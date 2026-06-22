@@ -2,10 +2,10 @@
 // que sale al compartir el sitio en WhatsApp/Twitter/etc.
 //
 // Diseño v2 (2026-06-18): alineado con la identidad de marca v5 — wordmark
-// "Viajero 360" en Sora-equivalent con "360" en coral, planeta + viajero
+// "Anduve" en Sora-equivalent con "360" en coral, planeta + viajero
 // estilizado evocando el ícono, slogan "Descubre · Planea · Viaja".
 //
-// El ícono nuevo (Viajero360Icon) es demasiado complejo para Satori (que es
+// El ícono nuevo (AnduveIcon) es demasiado complejo para Satori (que es
 // el motor detrás de ImageResponse) — incluye animaciones, drop-shadows y
 // rotaciones que el motor no soporta bien. Reconstruimos la silueta esencial
 // (medio planeta + walker simplificado + landmarks) con primitivas SVG que
@@ -15,12 +15,11 @@ import { ImageResponse } from "next/og";
 
 export const ogSize = { width: 1200, height: 630 };
 export const ogContentType = "image/png";
-export const ogAlt = "Viajero 360 · Descubre · Planea · Viaja";
+export const ogAlt = "Anduve · Descubre · Planea · Viaja";
 
-// Marca: teal principal #0F766E, coral acento #F4734D (alineado con el
-// sistema del logo v5).
-const TEAL = "#0f766e";
-const TEAL_OSC = "#0c5f58";
+// Marca: teal principal #0C5F58 (Anduve), coral acento #F4734D.
+const TEAL = "#0c5f58";
+const TEAL_OSC = "#052b28";
 const CORAL = "#ff9d7a";
 
 export function renderOg() {
@@ -58,20 +57,20 @@ export function renderOg() {
           >
             Descubre · Planea · Viaja
           </div>
-          {/* Wordmark grande, "360" en coral igual que en la marca */}
+          {/* Wordmark grande, "VE" en coral igual que en el logo */}
           <div
             style={{
-              fontSize: 110,
+              fontSize: 130,
               fontWeight: 800,
-              letterSpacing: -2,
+              letterSpacing: -3,
               marginTop: 18,
               lineHeight: 1,
               display: "flex",
               alignItems: "baseline",
             }}
           >
-            <span style={{ color: "white" }}>Viajero</span>
-            <span style={{ color: CORAL, marginLeft: 18 }}>360</span>
+            <span style={{ color: "white" }}>ANDU</span>
+            <span style={{ color: CORAL }}>VE</span>
           </div>
           <div
             style={{

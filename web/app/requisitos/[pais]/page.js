@@ -23,17 +23,17 @@ export async function generateMetadata({ params }) {
   const { pais } = await params;
   const iso = pais?.toUpperCase();
   const info = salud[iso];
-  if (!info) return { title: "Requisitos de viaje · Viajero 360" };
+  if (!info) return { title: "Requisitos de viaje · Anduve" };
   const nombre = info.pais;
   return {
-    title: `Requisitos para viajar a ${nombre} · Visa, vacunas y salud · Viajero 360`,
+    title: `Requisitos para viajar a ${nombre} · Visa, vacunas y salud · Anduve`,
     description: `Información completa para viajar a ${nombre}: visa según tu pasaporte, vacunas recomendadas, riesgos sanitarios, calidad del agua y números de emergencia.`,
     alternates: { canonical: `${SITIO}/requisitos/${iso.toLowerCase()}` },
     openGraph: {
       title: `Requisitos para viajar a ${nombre}`,
       description: `Visa, vacunas, salud y emergencias para tu viaje a ${nombre}. Información referencial actualizada.`,
       url: `${SITIO}/requisitos/${iso.toLowerCase()}`,
-      siteName: "Viajero 360",
+      siteName: "Anduve",
       type: "website",
     },
   };

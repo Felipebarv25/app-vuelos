@@ -1,5 +1,5 @@
 // Genera los PNGs del PWA + apple-touch-icon a partir de los SVGs del logo
-// v5 (web/public/viajero360-icon.svg / -white.svg).
+// v5 (web/public/anduve-icon.svg / -white.svg).
 //
 // Uso (una sola vez tras cambios al logo):
 //   1) Instala el render de SVG → PNG (no se persiste como dep del proyecto):
@@ -40,11 +40,11 @@ const PUBLIC = path.join(RAIZ, "web", "public");
 // El SVG teal del logo (versión para fondos claros). Lo renderizamos sobre
 // un fondo teal para el ícono de la app — así no se ve transparente en
 // fondos blancos del launcher.
-const SVG_TEAL = path.join(PUBLIC, "viajero360-icon.svg");
-const SVG_WHITE = path.join(PUBLIC, "viajero360-icon-white.svg");
+const SVG_TEAL = path.join(PUBLIC, "anduve-icon.svg");
+const SVG_WHITE = path.join(PUBLIC, "anduve-icon-white.svg");
 
-// Fondo de los íconos PWA — coincide con --azul / teal-700 del sistema.
-const BG_TEAL = "#0f766e";
+// Fondo de los íconos PWA — coincide con --azul / marca-600 del sistema (rebrand Anduve).
+const BG_TEAL = "#0c5f58";
 
 async function renderear(svgPath, tamano, salida, opts = {}) {
   const { padding = 0, fondo = "transparent" } = opts;

@@ -16,9 +16,9 @@ export async function generateMetadata({ params }) {
   const { id } = await params;
   const v = await obtenerViaje(id);
   if (!v?.ciudad) {
-    return { title: "Itinerario no encontrado · Viajero 360" };
+    return { title: "Itinerario no encontrado · Anduve" };
   }
-  const titulo = `Itinerario en ${v.ciudad.nombre} · Viajero 360`;
+  const titulo = `Itinerario en ${v.ciudad.nombre} · Anduve`;
   return {
     title: titulo,
     description: `Plan de viaje a ${v.ciudad.nombre} con paradas día por día.`,
@@ -149,7 +149,7 @@ export default async function PaginaViajeCompartido({ params }) {
       </section>
 
       <footer className="mx-auto max-w-3xl px-6 pb-10 text-center text-[12px] text-slate-400">
-        Viajero 360 · Datos de OpenStreetMap y Wikipedia
+        Anduve · Datos de OpenStreetMap y Wikipedia
       </footer>
     </main>
   );

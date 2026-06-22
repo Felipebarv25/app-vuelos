@@ -46,14 +46,14 @@ async function topLugares(slug, n = 10) {
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const d = getDestinoPorSlug(slug);
-  if (!d) return { title: "Destino no encontrado · Viajero 360" };
+  if (!d) return { title: "Destino no encontrado · Anduve" };
 
   const nombre = nombreDestino(d);
   const title = `Viaje a ${d.ciudad} · Itinerario, vuelos y presupuesto`;
   const description =
     `Planea tu viaje a ${nombre}: vuelo i/v aprox. US$${d.vuelo}, ` +
     `presupuesto diario aprox. US$${d.dia}, top lugares para visitar y ruta día a día. ` +
-    `Itinerario gratis con Viajero 360.`;
+    `Itinerario gratis con Anduve.`;
   const url = `${SITIO}/destino/${slug}`;
   const urlEn = `${SITIO}/en/destino/${slug}`;
 
@@ -86,7 +86,7 @@ export async function generateMetadata({ params }) {
       title,
       description,
       url,
-      siteName: "Viajero 360",
+      siteName: "Anduve",
       type: "website",
       locale: "es_CO",
     },

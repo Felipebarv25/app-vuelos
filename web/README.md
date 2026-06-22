@@ -1,4 +1,4 @@
-# 🌍 Viajero 360
+# 🌍 Anduve
 
 App de viajes "todo en uno" hecha con **Next.js**. Planea itinerarios día a día
 para **cualquier ciudad del mundo**, con mapa, GPS, transporte y los mejores

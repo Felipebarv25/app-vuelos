@@ -103,7 +103,7 @@ const TERMINOS_PHOTON = {
 
 // User-Agent identificable: varias APIs gratuitas (Photon/Nominatim/Overpass)
 // rechazan peticiones sin UA, sobre todo desde IPs de datacenter como Vercel.
-const UA = "Viajero360/1.0 (https://app-vuelos-mfos.vercel.app)";
+const UA = "Anduve/1.0 (https://app-vuelos-mfos.vercel.app)";
 
 function carrera(query) {
   const cuerpo = "data=" + encodeURIComponent(query);

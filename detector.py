@@ -44,7 +44,7 @@ def notificar_alertas_web(origen, destino, precio, fecha_ida, fecha_vuelta,
             headers={
                 "X-Alert-Secret": ALERTS_SECRET,
                 "Content-Type": "application/json",
-                "User-Agent": "Viajero360-Detector/1.0",
+                "User-Agent": "Anduve-Detector/1.0",
             },
             json={
                 "origen": origen,

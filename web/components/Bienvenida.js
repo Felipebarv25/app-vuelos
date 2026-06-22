@@ -431,7 +431,7 @@ export default function Bienvenida() {
           <span className="text-white/30">·</span>
           <a href="/terminos" className="hover:text-white/80">{t("footerTerminos")}</a>
         </div>
-        <div className="mt-3">© {new Date().getFullYear()} Viajero 360 · {t("footer")}</div>
+        <div className="mt-3">© {new Date().getFullYear()} Anduve · {t("footer")}</div>
       </footer>
 
       {/* ============== DIÁLOGO LOGIN ============== */}

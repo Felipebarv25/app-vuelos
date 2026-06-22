@@ -8,7 +8,7 @@ import ProCheckoutBoton from "./ProCheckoutBoton";
 const SITIO = "https://app-vuelos-mfos.vercel.app";
 
 export const metadata = {
-  title: "Viajero 360 Pro · planes y precios",
+  title: "Anduve Pro · planes y precios",
   description:
     "Hazte Pro: viajes ilimitados sincronizados, export PDF, alertas de precios y compartir. Desde US$ 4.99/mes o US$ 24/año. Oferta lanzamiento Lifetime US$ 39.",
   alternates: {
@@ -19,11 +19,11 @@ export const metadata = {
     },
   },
   openGraph: {
-    title: "Viajero 360 Pro",
+    title: "Anduve Pro",
     description:
       "Viajes ilimitados, export PDF, alertas y más. Desde US$ 4.99/mes.",
     url: `${SITIO}/pro`,
-    siteName: "Viajero 360",
+    siteName: "Anduve",
     type: "website",
     locale: "es_CO",
   },
@@ -74,7 +74,7 @@ const PLANES = [
 
 const FAQS = [
   {
-    q: "¿Necesito Pro para usar Viajero 360?",
+    q: "¿Necesito Pro para usar Anduve?",
     a: "No. Lo más útil es gratis: buscar ciudades, armar itinerario, ver precios reales de vuelo desde tu aeropuerto, 1 viaje guardado, 1 alerta de precio. Pro es para quienes quieren más viajes en simultáneo, PDF, compartir y alertas ilimitadas.",
   },
   {
@@ -111,7 +111,7 @@ export default function PaginaPro() {
           </nav>
           <div className="mt-6 max-w-3xl">
             <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/85">
-              Viajero 360 Pro
+              Anduve Pro
             </div>
             <h1 className="mt-2 text-4xl font-extrabold tracking-tight sm:text-5xl">
               Tu viaje, sin límites.

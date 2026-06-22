@@ -18,16 +18,16 @@ const REGIONES_META = {
 };
 
 export const metadata = {
-  title: "Destinos internacionales · Itinerarios, vuelos y presupuesto · Viajero 360",
+  title: "Destinos internacionales · Itinerarios, vuelos y presupuesto · Anduve",
   description:
     "80 destinos en Sudamérica, Europa, Asia, África y Oceanía con vuelo i/v aproximado, presupuesto diario y los mejores lugares para visitar. Planea tu viaje gratis.",
   alternates: { canonical: `${SITIO}/destino` },
   openGraph: {
-    title: "Destinos internacionales · Itinerarios y presupuesto · Viajero 360",
+    title: "Destinos internacionales · Itinerarios y presupuesto · Anduve",
     description:
       "Catálogo de 80 destinos con vuelo i/v aproximado, presupuesto sugerido y top lugares.",
     url: `${SITIO}/destino`,
-    siteName: "Viajero 360",
+    siteName: "Anduve",
     type: "website",
     locale: "es",
   },

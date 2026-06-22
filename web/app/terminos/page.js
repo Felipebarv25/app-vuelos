@@ -4,8 +4,8 @@
 // o expansión a más países, conviene revisar con un abogado local.
 
 export const metadata = {
-  title: "Términos y condiciones — Viajero 360",
-  description: "Reglas de uso del servicio Viajero 360.",
+  title: "Términos y condiciones — Anduve",
+  description: "Reglas de uso del servicio Anduve.",
   robots: { index: true, follow: true },
 };
 
@@ -23,7 +23,7 @@ export default function PaginaTerminos() {
       <div className="mt-8 space-y-7 text-[15px] leading-relaxed">
         <Seccion titulo="1. Aceptación de los términos">
           <p>
-            Al usar Viajero 360 (en adelante, el &quot;Servicio&quot;) aceptas estos
+            Al usar Anduve (en adelante, el &quot;Servicio&quot;) aceptas estos
             términos. Si no estás de acuerdo, por favor no uses el Servicio.
           </p>
           <p>
@@ -33,9 +33,9 @@ export default function PaginaTerminos() {
           </p>
         </Seccion>
 
-        <Seccion titulo="2. Qué es Viajero 360">
+        <Seccion titulo="2. Qué es Anduve">
           <p>
-            Viajero 360 es una herramienta de <b>planificación de viajes y comparación
+            Anduve es una herramienta de <b>planificación de viajes y comparación
             de precios</b>. Mostramos información obtenida de fuentes públicas y
             agregadores (Aviasales/Travelpayouts, OpenStreetMap, Wikipedia, Wikidata) y
             facilitamos itinerarios personalizados.
@@ -117,7 +117,7 @@ export default function PaginaTerminos() {
 
         <Seccion titulo="7. Propiedad intelectual">
           <p>
-            La marca &quot;Viajero 360&quot;, el logo, el diseño y el código son
+            La marca &quot;Anduve&quot;, el logo, el diseño y el código son
             propiedad de su autor. La información agregada (precios de vuelos, fotos
             de Wikipedia, datos de OpenStreetMap) pertenece a sus respectivos titulares
             y se muestra bajo sus licencias.

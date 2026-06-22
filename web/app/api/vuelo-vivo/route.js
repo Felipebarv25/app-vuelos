@@ -16,7 +16,7 @@ const BASE = "https://api.travelpayouts.com/aviasales/v3/prices_for_dates";
 // (CSV de IATAs), se respeta esa lista en lugar del default. Asi un viajero
 // en Mexico puede pedir MEX+CUN, uno en Ecuador puede pedir UIO+GYE, etc.
 const ORIGENES_DEFAULT = ["BOG", "MDE"];
-const UA = "Viajero360/1.0 (https://app-vuelos-mfos.vercel.app)";
+const UA = "Anduve/1.0 (https://app-vuelos-mfos.vercel.app)";
 
 function mesISO(d) {
   const y = d.getFullYear();

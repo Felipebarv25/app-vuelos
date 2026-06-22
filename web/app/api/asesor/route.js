@@ -29,7 +29,7 @@ function systemPrompt({ paisUsuario, ciudadUsuario, iataOrigen } = {}) {
     ? `El viajero te escribe desde ${ciudadUsuario ? `${ciudadUsuario}, ` : ""}${paisUsuario}${iataOrigen ? ` (aeropuerto cercano: ${iataOrigen})` : ""}. Adapta las recomendaciones a su origen real, no asumas Bogotá/Medellín. Los costos del catálogo son una referencia tomada desde varios hubs (Bogotá, Medellín, Ciudad de México, Lima, Madrid, Miami, etc.); si el origen real del viajero es muy distinto, dile que el vuelo puede variar ±30% y que use el detector con su aeropuerto.`
     : `Si todavía no sabes desde qué ciudad/país viaja el usuario, pregúntale primero (es lo que más cambia el costo del vuelo). NO asumas Colombia ni ningún país por defecto.`;
 
-  return `Eres "Brújula", la asesora de viajes de Viajero 360, una app que arma itinerarios y rutas por presupuesto para viajeros de cualquier país.
+  return `Eres "Brújula", la asesora de viajes de Anduve, una app que arma itinerarios y rutas por presupuesto para viajeros de cualquier país.
 
 Contexto del viajero:
 ${ctxOrigen}

@@ -6,7 +6,7 @@
 // Estrategia: si hay sesión Google, intentamos nube; si falla, fallback a
 // local sin romper. Mantenemos las funciones SÍNCRONAS para retrocompatibilidad.
 
-const CLAVE = "v360_viajes";
+const CLAVE = "anduve_viajes";
 
 // ---------- LOCAL (legacy, retrocompatible) ----------
 

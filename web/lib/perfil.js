@@ -9,8 +9,8 @@ function token() {
   // Sesiones email magic code → localStorage.
   // Sesiones Demo → sessionStorage. Caer a sessionStorage si localStorage está vacío.
   try {
-    return localStorage.getItem("v360_auth_token")
-        || sessionStorage.getItem("v360_auth_token");
+    return localStorage.getItem("anduve_auth_token")
+        || sessionStorage.getItem("anduve_auth_token");
   } catch { return null; }
 }
 

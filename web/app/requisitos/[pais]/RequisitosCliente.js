@@ -40,7 +40,7 @@ export default function RequisitosCliente({ destinoIso, destinoNombre }) {
   // RequisitosViaje.js de la home, así no se pierde la preferencia).
   useEffect(() => {
     try {
-      const guardada = localStorage.getItem("v360_nac");
+      const guardada = localStorage.getItem("anduve_nac");
       if (guardada) setNacionalidad(guardada);
     } catch {}
   }, []);
@@ -49,7 +49,7 @@ export default function RequisitosCliente({ destinoIso, destinoNombre }) {
   // de la home la próxima vez).
   function cambiarNacionalidad(cc) {
     setNacionalidad(cc);
-    try { localStorage.setItem("v360_nac", cc); } catch {}
+    try { localStorage.setItem("anduve_nac", cc); } catch {}
   }
 
   // Cargar el dataset de visas (645 KB) bajo demanda.

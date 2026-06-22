@@ -83,7 +83,7 @@ export default function Paywall({
             <Icono nombre="x" size={16} />
           </button>
           <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/85">
-            Viajero 360 Pro
+            Anduve Pro
           </div>
           <h2 className="mt-1 text-2xl font-extrabold tracking-tight">
             {t("paywallTitulo")}

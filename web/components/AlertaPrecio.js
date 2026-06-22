@@ -90,8 +90,8 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
       // ahí (no en localStorage), y antes el POST iba sin Authorization.
       const headers = { "Content-Type": "application/json" };
       try {
-        const tk = localStorage.getItem("v360_auth_token")
-                || sessionStorage.getItem("v360_auth_token");
+        const tk = localStorage.getItem("anduve_auth_token")
+                || sessionStorage.getItem("anduve_auth_token");
         if (tk) headers.Authorization = `Bearer ${tk}`;
       } catch {}
 

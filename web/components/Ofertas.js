@@ -48,13 +48,13 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
   const [monedaVista, setMonedaVista] = useState("USD");
   useEffect(() => {
     try {
-      const g = localStorage.getItem("v360_moneda_vista");
+      const g = localStorage.getItem("anduve_moneda_vista");
       if (g === "USD" || g === "COP") setMonedaVista(g);
     } catch {}
   }, []);
   function cambiarMonedaVista(m) {
     setMonedaVista(m);
-    try { localStorage.setItem("v360_moneda_vista", m); } catch {}
+    try { localStorage.setItem("anduve_moneda_vista", m); } catch {}
   }
 
   useEffect(() => {

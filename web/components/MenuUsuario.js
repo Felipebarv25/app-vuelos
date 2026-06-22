@@ -27,8 +27,8 @@ export default function MenuUsuario({ oscuro = false }) {
     let vivo = true;
     const headers = {};
     try {
-      const tk = localStorage.getItem("v360_auth_token")
-              || sessionStorage.getItem("v360_auth_token");
+      const tk = localStorage.getItem("anduve_auth_token")
+              || sessionStorage.getItem("anduve_auth_token");
       if (tk) headers.Authorization = `Bearer ${tk}`;
     } catch {}
     fetch("/api/alertas", { headers })
@@ -60,8 +60,8 @@ export default function MenuUsuario({ oscuro = false }) {
   async function borrarAlerta(id) {
     const headers = {};
     try {
-      const tk = localStorage.getItem("v360_auth_token")
-              || sessionStorage.getItem("v360_auth_token");
+      const tk = localStorage.getItem("anduve_auth_token")
+              || sessionStorage.getItem("anduve_auth_token");
       if (tk) headers.Authorization = `Bearer ${tk}`;
     } catch {}
     await fetch(`/api/alertas?id=${id}`, { method: "DELETE", headers });

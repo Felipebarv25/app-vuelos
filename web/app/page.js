@@ -319,7 +319,7 @@ export default function Home() {
   useEffect(() => {
     let vivo = true;
     try {
-      const cache = sessionStorage.getItem("v360_pais_nombre");
+      const cache = sessionStorage.getItem("anduve_pais_nombre");
       if (cache) { setPaisVisitante(cache); return; }
     } catch {}
     fetch("/api/geo")
@@ -328,7 +328,7 @@ export default function Home() {
         if (!vivo) return;
         const nombre = (g?.pais && PAIS_GENTILICIO[g.pais]) || "Colombia";
         setPaisVisitante(nombre);
-        try { sessionStorage.setItem("v360_pais_nombre", nombre); } catch {}
+        try { sessionStorage.setItem("anduve_pais_nombre", nombre); } catch {}
       })
       .catch(() => {});
     return () => { vivo = false; };
@@ -379,10 +379,10 @@ export default function Home() {
     // ventanas son dos "viajeros" — fiel a la idea de "lo que esta abierto".
     let sid;
     try {
-      sid = sessionStorage.getItem("v360_sid");
+      sid = sessionStorage.getItem("anduve_sid");
       if (!sid) {
         sid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-        sessionStorage.setItem("v360_sid", sid);
+        sessionStorage.setItem("anduve_sid", sid);
       }
     } catch {
       sid = `tmp-${Math.random().toString(36).slice(2, 10)}`;
@@ -478,13 +478,13 @@ export default function Home() {
   // Nacionalidad (pasaporte) para los requisitos de entrada: recordar la elección.
   useEffect(() => {
     try {
-      const g = localStorage.getItem("v360_nac");
+      const g = localStorage.getItem("anduve_nac");
       if (g) setNacionalidad(g);
     } catch {}
   }, []);
   function cambiarNacionalidad(cc) {
     setNacionalidad(cc);
-    try { localStorage.setItem("v360_nac", cc); } catch {}
+    try { localStorage.setItem("anduve_nac", cc); } catch {}
   }
 
   // --- Mis viajes (guardado local o nube según usuario) ---
@@ -796,7 +796,7 @@ export default function Home() {
   function descargarPDF() {
     if (!ciudad) return;
     track("descargar_pdf", { ciudad: ciudad.nombre });
-    const titulo = `Viajero 360 - ${ciudad.nombre}${ciudad.pais ? `, ${ciudad.pais}` : ""}`;
+    const titulo = `Anduve - ${ciudad.nombre}${ciudad.pais ? `, ${ciudad.pais}` : ""}`;
     const original = typeof document !== "undefined" ? document.title : "";
     if (typeof document !== "undefined") document.title = titulo;
     // Pequeño delay para que el navegador refleje el title antes de abrir el diálogo.
@@ -831,7 +831,7 @@ export default function Home() {
       try {
         if (navigator.share) {
           await navigator.share({
-            title: `Viaje a ${ciudad.nombre} · Viajero 360`,
+            title: `Viaje a ${ciudad.nombre} · Anduve`,
             text: `${t("miViajeA")} ${ciudad.nombre}`,
             url,
           });
@@ -845,7 +845,7 @@ export default function Home() {
     }
 
     // 2) Fallback: texto plano (sin KV configurado).
-    let txt = `🗺️ ${t("miViajeA")} ${ciudad.nombre}, ${ciudad.pais} — Viajero 360\n`;
+    let txt = `🗺️ ${t("miViajeA")} ${ciudad.nombre}, ${ciudad.pais} — Anduve\n`;
     let n = 0;
     plan.forEach((d) => {
       if (!d.paradas.length) return;
@@ -855,10 +855,10 @@ export default function Home() {
         txt += `  ${i + 1}. ${nombreLocalizado(p, lang)} (${fmtMin(p.minutos)})\n`;
       });
     });
-    txt += `\n${t("hechoCon")} Viajero 360 · https://app-vuelos-mfos.vercel.app/`;
+    txt += `\n${t("hechoCon")} Anduve · https://app-vuelos-mfos.vercel.app/`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: "Viajero 360", text: txt });
+        await navigator.share({ title: "Anduve", text: txt });
       } else {
         await navigator.clipboard.writeText(txt);
         setCopiado(true);
@@ -906,7 +906,7 @@ export default function Home() {
         <div className={`relative mx-auto max-w-7xl px-4 lg:px-8 ${esHero ? "pt-5 pb-16 lg:pb-24" : "pt-3 pb-3"}`}>
           {/* Barra de navegación superior */}
           <div className="flex items-center justify-between gap-4">
-            <button type="button" onClick={irAlInicio} aria-label="Viajero 360 — inicio" className="cursor-pointer text-left">
+            <button type="button" onClick={irAlInicio} aria-label="Anduve — inicio" className="cursor-pointer text-left">
               <LogoMarca size={esHero ? 72 : 60} animado tono={esHero ? "claro" : "marca"} className={esHero ? "drop-shadow" : ""} />
               <div className={`mt-0.5 hidden text-[11px] font-bold uppercase tracking-[0.28em] sm:block sm:text-[12px] ${esHero ? "text-white/85" : "text-slate-500"}`}>{t("tagline")}</div>
             </button>
@@ -1633,7 +1633,7 @@ export default function Home() {
           Renderiza TODOS los dias del plan (no solo el visible) en formato sobrio. */}
       {ciudad && plan.length > 0 && (
         <div className="solo-imprimir hidden print:block px-8 py-6">
-          <h1>Viajero 360 — {ciudad.nombre}</h1>
+          <h1>Anduve — {ciudad.nombre}</h1>
           <div className="meta">
             {ciudad.pais}
             {fechaInicio && fechaFin
@@ -1656,7 +1656,7 @@ export default function Home() {
             ) : null
           ))}
           <div className="meta" style={{ marginTop: "20pt" }}>
-            Generado en Viajero 360 · app-vuelos-mfos.vercel.app
+            Generado en Anduve · app-vuelos-mfos.vercel.app
           </div>
         </div>
       )}
@@ -1672,7 +1672,7 @@ export default function Home() {
             Comparar destinos
           </a>
         </div>
-        <div>{t("footer")} · Viajero 360</div>
+        <div>{t("footer")} · Anduve</div>
         <div className="mt-1 text-[11px] text-slate-400">
           Datos de lugares: ©{" "}
           <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" className="underline hover:text-marca-600">

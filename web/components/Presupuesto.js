@@ -50,8 +50,8 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
     let paisGuardado = null;
     let hubGuardado = null;
     try {
-      paisGuardado = localStorage.getItem("v360_pais_origen");
-      hubGuardado = localStorage.getItem("v360_hub_origen");
+      paisGuardado = localStorage.getItem("anduve_pais_origen");
+      hubGuardado = localStorage.getItem("anduve_hub_origen");
     } catch {}
 
     // Acepta CUALQUIER ISO 2-letras como pais guardado (no solo los de
@@ -92,15 +92,15 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
     const primerHub = PAISES_ORIGEN[codigo].hubs[0].iata;
     setOrigen(primerHub);
     try {
-      localStorage.setItem("v360_pais_origen", codigo);
-      localStorage.setItem("v360_hub_origen", primerHub);
+      localStorage.setItem("anduve_pais_origen", codigo);
+      localStorage.setItem("anduve_hub_origen", primerHub);
     } catch {}
     track("pais_origen", { pais: codigo, hub: primerHub });
   }
 
   function cambiarOrigen(v) {
     setOrigen(v);
-    try { localStorage.setItem("v360_hub_origen", v); } catch {}
+    try { localStorage.setItem("anduve_hub_origen", v); } catch {}
     track("origen_cambiado", { origen: v, pais: paisOrigen });
   }
 
@@ -113,14 +113,14 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   function elegirAeropuerto(a) {
     if (!a) {
       setOrigen("");
-      try { localStorage.removeItem("v360_hub_origen"); } catch {}
+      try { localStorage.removeItem("anduve_hub_origen"); } catch {}
       return;
     }
     setPaisOrigen(a.pais);
     setOrigen(a.iata);
     try {
-      localStorage.setItem("v360_pais_origen", a.pais);
-      localStorage.setItem("v360_hub_origen", a.iata);
+      localStorage.setItem("anduve_pais_origen", a.pais);
+      localStorage.setItem("anduve_hub_origen", a.iata);
     } catch {}
     track("aeropuerto_origen", { pais: a.pais, iata: a.iata, ciudad: a.ciudad });
   }
@@ -277,7 +277,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
           <div className="flex items-start justify-between">
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">
-                Viajero 360
+                Anduve
               </div>
               <div className="mt-0.5 text-xl font-extrabold tracking-tight">{t("presupTitulo")}</div>
             </div>

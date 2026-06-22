@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 :root {
-  /* Primario "océano" (teal) — antes índigo. Nombres se conservan por compatibilidad. */
-  --azul: #0f766e;
-  --azul-osc: #0f3d3a;
-  --azul-claro: #1d9690;
-  --acento: #f4633f;
+  /* Primario "océano" (teal) — base de marca Anduve (rebrand 2026-06-21). Nombres se conservan por compatibilidad. */
+  --azul: #0c5f58;
+  --azul-osc: #052b28;
+  --azul-claro: #1c948e;
+  --acento: #f4734d;
   --verde: #059669;
   --naranja: #ea580c;
   --rosa: #ec4899;

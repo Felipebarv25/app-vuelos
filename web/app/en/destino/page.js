@@ -7,7 +7,7 @@ import { DESTINOS_SEO } from "@/lib/destinos";
 const SITIO = "https://app-vuelos-mfos.vercel.app";
 
 export const metadata = {
-  title: "All destinations · Viajero 360",
+  title: "All destinations · Anduve",
   description:
     "Explore 80 destinations with rough flight prices and suggested daily budget. Plan your trip in 5 minutes.",
   alternates: {

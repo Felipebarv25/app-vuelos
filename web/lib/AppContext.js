@@ -43,7 +43,7 @@ export function AppProvider({ children }) {
     // Leer preferencia de modo oscuro (el script anti-FOUC ya aplicó la clase
     // al <html>; aquí sólo sincronizamos el estado React).
     try {
-      const prefer = localStorage.getItem("v360_dark");
+      const prefer = localStorage.getItem("anduve_dark");
       const prefersOS = typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
       const esDark = prefer !== null ? prefer === "1" : prefersOS;
       setDarkMode(esDark);
@@ -58,8 +58,8 @@ export function AppProvider({ children }) {
     let vivo = true;
     let token;
     try {
-      token = localStorage.getItem("v360_auth_token")
-           || sessionStorage.getItem("v360_auth_token");
+      token = localStorage.getItem("anduve_auth_token")
+           || sessionStorage.getItem("anduve_auth_token");
     } catch {}
     if (!token) { setListoEmail(true); return; }
     fetch("/api/auth/sesion", { headers: { Authorization: `Bearer ${token}` } })
@@ -71,8 +71,8 @@ export function AppProvider({ children }) {
         } else {
           // Token invalido (expirado, revocado): limpiar ambos stores.
           try {
-            localStorage.removeItem("v360_auth_token");
-            sessionStorage.removeItem("v360_auth_token");
+            localStorage.removeItem("anduve_auth_token");
+            sessionStorage.removeItem("anduve_auth_token");
           } catch {}
         }
       })
@@ -103,7 +103,7 @@ export function AppProvider({ children }) {
     const nuevo = !darkMode;
     setDarkMode(nuevo);
     try {
-      localStorage.setItem("v360_dark", nuevo ? "1" : "0");
+      localStorage.setItem("anduve_dark", nuevo ? "1" : "0");
     } catch {}
     if (typeof document !== "undefined") {
       document.documentElement.classList.toggle("dark", nuevo);
@@ -119,8 +119,8 @@ export function AppProvider({ children }) {
       // Si tenemos token email, lo pasamos para identificar al usuario.
       // BUG FIX: leer también de sessionStorage (sesiones Demo viven ahí).
       try {
-        const tk = localStorage.getItem("v360_auth_token")
-                || sessionStorage.getItem("v360_auth_token");
+        const tk = localStorage.getItem("anduve_auth_token")
+                || sessionStorage.getItem("anduve_auth_token");
         if (tk) headers.Authorization = `Bearer ${tk}`;
       } catch {}
       const r = await fetch("/api/me", { headers });
@@ -189,11 +189,11 @@ export function AppProvider({ children }) {
     }
     try {
       if (recordar) {
-        localStorage.setItem("v360_auth_token", data.token);
-        sessionStorage.removeItem("v360_auth_token");
+        localStorage.setItem("anduve_auth_token", data.token);
+        sessionStorage.removeItem("anduve_auth_token");
       } else {
-        sessionStorage.setItem("v360_auth_token", data.token);
-        localStorage.removeItem("v360_auth_token");
+        sessionStorage.setItem("anduve_auth_token", data.token);
+        localStorage.removeItem("anduve_auth_token");
       }
     } catch {}
     setUsuarioEmail({ ...data.usuario, token: data.token, email_login: true });
@@ -216,7 +216,7 @@ export function AppProvider({ children }) {
     });
     const data = await r.json().catch(() => ({}));
     if (!data?.ok || !data?.token) return { ok: false, motivo: data?.motivo || "error" };
-    try { sessionStorage.setItem("v360_auth_token", data.token); } catch {}
+    try { sessionStorage.setItem("anduve_auth_token", data.token); } catch {}
     setUsuarioEmail({ ...data.usuario, token: data.token, email_login: true, demo: true });
     return { ok: true };
   }
@@ -227,8 +227,8 @@ export function AppProvider({ children }) {
     // Cerrar sesion server-side del email si existe.
     let token;
     try {
-      token = localStorage.getItem("v360_auth_token")
-           || sessionStorage.getItem("v360_auth_token");
+      token = localStorage.getItem("anduve_auth_token")
+           || sessionStorage.getItem("anduve_auth_token");
     } catch {}
     if (token) {
       try {
@@ -242,8 +242,8 @@ export function AppProvider({ children }) {
     setUsuarioLocal(null);
     try {
       localStorage.removeItem("usuario");
-      localStorage.removeItem("v360_auth_token");
-      sessionStorage.removeItem("v360_auth_token");
+      localStorage.removeItem("anduve_auth_token");
+      sessionStorage.removeItem("anduve_auth_token");
     } catch {}
   }
 

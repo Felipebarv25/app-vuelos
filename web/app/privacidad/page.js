@@ -6,8 +6,8 @@
 // menores, retención, derechos del titular).
 
 export const metadata = {
-  title: "Política de privacidad — Viajero 360",
-  description: "Cómo recolectamos, usamos y protegemos tu información en Viajero 360.",
+  title: "Política de privacidad — Anduve",
+  description: "Cómo recolectamos, usamos y protegemos tu información en Anduve.",
   robots: { index: true, follow: true },
 };
 
@@ -25,7 +25,7 @@ export default function PaginaPrivacidad() {
       <div className="mt-8 space-y-7 text-[15px] leading-relaxed">
         <Seccion titulo="1. Quiénes somos">
           <p>
-            Viajero 360 es un servicio operado de manera independiente desde Colombia.
+            Anduve es un servicio operado de manera independiente desde Colombia.
             Esta política explica qué datos recolectamos cuando usas la aplicación
             web disponible en{" "}
             <a href="https://app-vuelos-mfos.vercel.app/" className="text-marca-700 underline dark:text-marca-300">

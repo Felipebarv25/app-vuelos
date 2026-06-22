@@ -5,7 +5,7 @@ import ComparadorCliente from "./ComparadorCliente";
 const SITIO = "https://app-vuelos-mfos.vercel.app";
 
 export const metadata = {
-  title: "Comparar destinos lado a lado · Viajero 360",
+  title: "Comparar destinos lado a lado · Anduve",
   description:
     "Compara hasta 3 destinos: vuelo i/v aproximado, costo diario, presupuesto sugerido y lo que ofrece cada ciudad. Decide a dónde viajar con datos.",
   alternates: { canonical: `${SITIO}/comparar` },
@@ -14,7 +14,7 @@ export const metadata = {
     description:
       "Vuelo, presupuesto, idioma y comida — todo lado a lado para elegir tu próximo viaje.",
     url: `${SITIO}/comparar`,
-    siteName: "Viajero 360",
+    siteName: "Anduve",
     type: "website",
     locale: "es",
   },

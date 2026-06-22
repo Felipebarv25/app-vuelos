@@ -4,7 +4,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 
-const CLAVE_LOCAL = "v360_favoritos";
+const CLAVE_LOCAL = "anduve_favoritos";
 
 function leerLocal() {
   try {

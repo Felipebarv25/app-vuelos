@@ -149,10 +149,10 @@ export default function Panel() {
       if (!r.ok) {
         setError(d.error || "No se pudo cargar.");
         setDatos(null);
-        if (r.status === 401) sessionStorage.removeItem("v360_panel");
+        if (r.status === 401) sessionStorage.removeItem("anduve_panel");
       } else {
         setDatos(d);
-        sessionStorage.setItem("v360_panel", c);
+        sessionStorage.setItem("anduve_panel", c);
       }
     } catch {
       setError("Error de red.");
@@ -162,7 +162,7 @@ export default function Panel() {
   }
 
   useEffect(() => {
-    const c = sessionStorage.getItem("v360_panel");
+    const c = sessionStorage.getItem("anduve_panel");
     if (c) {
       setClave(c);
       cargar(c);
@@ -175,7 +175,7 @@ export default function Panel() {
       <div className="flex min-h-screen items-center justify-center bg-[#f6f7fb] px-4">
         <div className="w-full max-w-sm rounded-2xl border border-slate-100 bg-white p-6 shadow-media">
           <div className="text-center text-2xl font-extrabold tracking-tight text-marca-900">📊 Panel</div>
-          <p className="mt-1 text-center text-[13px] text-slate-500">Métricas de Viajero 360</p>
+          <p className="mt-1 text-center text-[13px] text-slate-500">Métricas de Anduve</p>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -215,11 +215,11 @@ export default function Panel() {
         <div className="mb-5 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-marca-900">📊 Panel de métricas</h1>
-            <p className="text-[13px] text-slate-500">Viajero 360 · solo para ti</p>
+            <p className="text-[13px] text-slate-500">Anduve · solo para ti</p>
           </div>
           <button
             onClick={() => {
-              sessionStorage.removeItem("v360_panel");
+              sessionStorage.removeItem("anduve_panel");
               setDatos(null);
               setClave("");
             }}
