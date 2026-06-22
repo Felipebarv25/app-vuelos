@@ -39,16 +39,16 @@ export const metadata = {
   manifest: "/manifest.json",
   applicationName: "Anduve",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Anduve" },
-  // SVG primero (nítido a cualquier tamaño); fallback PNG para navegadores
-  // que no soporten SVG en favicon (raros hoy). Apple-touch sigue siendo PNG.
+  // SVG favicon viene de app/icon.svg (Next auto-fingerprinta el URL con
+  // ?<hash> en build, cache-busting garantizado al deploy). Aquí solo
+  // declaramos los PNG fallback (Android, iOS) que no necesitan fingerprint
+  // porque viven en /public y los browsers actualizan al revalidar.
   icons: {
     icon: [
-      { url: "/icono.svg", type: "image/svg+xml" },
       { url: "/icono-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icono-512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: "/apple-touch-icon.png",
-    shortcut: "/icono.svg",
   },
   // Google Search Console verification: cuando registres el sitio en Search
   // Console te dan un meta tag con un codigo unico. En vez de pegarlo a mano,
