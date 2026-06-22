@@ -39,7 +39,17 @@ export const metadata = {
   manifest: "/manifest.json",
   applicationName: "Anduve",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Anduve" },
-  icons: { icon: "/icono-192.png", apple: "/apple-touch-icon.png" },
+  // SVG primero (nítido a cualquier tamaño); fallback PNG para navegadores
+  // que no soporten SVG en favicon (raros hoy). Apple-touch sigue siendo PNG.
+  icons: {
+    icon: [
+      { url: "/icono.svg", type: "image/svg+xml" },
+      { url: "/icono-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icono-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+    shortcut: "/icono.svg",
+  },
   // Google Search Console verification: cuando registres el sitio en Search
   // Console te dan un meta tag con un codigo unico. En vez de pegarlo a mano,
   // pones el valor en la env var GOOGLE_SITE_VERIFICATION en Vercel y Next
