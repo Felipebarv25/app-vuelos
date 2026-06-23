@@ -19,3 +19,17 @@ resultado.txt
 
 # Config local de Claude Code (no debe trackearse)
 .claude/
+
+# Entregas/extracciones del usuario (no son fuente; los componentes ya viven
+# en web/components/ y los SVGs en web/public/).
+/_logo_nuevo/
+/Viajero 360 Logo Design.zip
+/ANDUVE Logo Design.zip
+/_anduve_unpack/
+/web/build_out.txt
+
+# Dependencias de scripts puntuales (sharp, etc.) instaladas con --no-save
+# en la raíz para correr generar-iconos.mjs / generar-requisitos.mjs.
+/node_modules/
+/package-lock.json
+/package.json

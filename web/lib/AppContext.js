@@ -16,6 +16,7 @@ const Ctx = createContext(null);
 export function AppProvider({ children }) {
   const { data: session, status } = useSession();
   const [lang, setLang] = useState("es");
+  const [darkMode, setDarkMode] = useState(false);
   const [usuarioLocal, setUsuarioLocal] = useState(null);
   const [usuarioEmail, setUsuarioEmail] = useState(null);
   const [listoLocal, setListoLocal] = useState(false);
@@ -32,12 +33,20 @@ export function AppProvider({ children }) {
   // viendo este estado; cualquier feature gateada llama abrirPaywall("pdf").
   const [paywall, setPaywall] = useState({ abierto: false, motivo: null });
 
-  // Cargar idioma y usuario LOCAL guardados al iniciar.
+  // Cargar idioma, tema oscuro y usuario LOCAL guardados al iniciar.
   useEffect(() => {
     setLang(idiomaInicial());
     try {
       const u = localStorage.getItem("usuario");
       if (u) setUsuarioLocal(JSON.parse(u));
+    } catch {}
+    // Leer preferencia de modo oscuro (el script anti-FOUC ya aplicó la clase
+    // al <html>; aquí sólo sincronizamos el estado React).
+    try {
+      const prefer = localStorage.getItem("anduve_dark");
+      const prefersOS = typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const esDark = prefer !== null ? prefer === "1" : prefersOS;
+      setDarkMode(esDark);
     } catch {}
     setListoLocal(true);
   }, []);
@@ -49,8 +58,8 @@ export function AppProvider({ children }) {
     let vivo = true;
     let token;
     try {
-      token = localStorage.getItem("v360_auth_token")
-           || sessionStorage.getItem("v360_auth_token");
+      token = localStorage.getItem("anduve_auth_token")
+           || sessionStorage.getItem("anduve_auth_token");
     } catch {}
     if (!token) { setListoEmail(true); return; }
     fetch("/api/auth/sesion", { headers: { Authorization: `Bearer ${token}` } })
@@ -62,8 +71,8 @@ export function AppProvider({ children }) {
         } else {
           // Token invalido (expirado, revocado): limpiar ambos stores.
           try {
-            localStorage.removeItem("v360_auth_token");
-            sessionStorage.removeItem("v360_auth_token");
+            localStorage.removeItem("anduve_auth_token");
+            sessionStorage.removeItem("anduve_auth_token");
           } catch {}
         }
       })
@@ -90,6 +99,17 @@ export function AppProvider({ children }) {
     } catch {}
   }
 
+  function toggleDark() {
+    const nuevo = !darkMode;
+    setDarkMode(nuevo);
+    try {
+      localStorage.setItem("anduve_dark", nuevo ? "1" : "0");
+    } catch {}
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.toggle("dark", nuevo);
+    }
+  }
+
   // Refresca el estado Pro/creditos desde /api/me. Se llama cuando el usuario
   // cambia de identidad (login/logout) o cuando volvemos al foco tras un
   // checkout (el webhook puede haber actualizado KV).
@@ -97,8 +117,10 @@ export function AppProvider({ children }) {
     try {
       let headers = { "Content-Type": "application/json" };
       // Si tenemos token email, lo pasamos para identificar al usuario.
+      // BUG FIX: leer también de sessionStorage (sesiones Demo viven ahí).
       try {
-        const tk = localStorage.getItem("v360_auth_token");
+        const tk = localStorage.getItem("anduve_auth_token")
+                || sessionStorage.getItem("anduve_auth_token");
         if (tk) headers.Authorization = `Bearer ${tk}`;
       } catch {}
       const r = await fetch("/api/me", { headers });
@@ -167,11 +189,11 @@ export function AppProvider({ children }) {
     }
     try {
       if (recordar) {
-        localStorage.setItem("v360_auth_token", data.token);
-        sessionStorage.removeItem("v360_auth_token");
+        localStorage.setItem("anduve_auth_token", data.token);
+        sessionStorage.removeItem("anduve_auth_token");
       } else {
-        sessionStorage.setItem("v360_auth_token", data.token);
-        localStorage.removeItem("v360_auth_token");
+        sessionStorage.setItem("anduve_auth_token", data.token);
+        localStorage.removeItem("anduve_auth_token");
       }
     } catch {}
     setUsuarioEmail({ ...data.usuario, token: data.token, email_login: true });
@@ -183,12 +205,31 @@ export function AppProvider({ children }) {
     signIn("google");
   }
 
+  // Login DEMO instantaneo: crea sesion para una cuenta demo predefinida sin
+  // pasar por codigo email ni Google. `plan` = "pro" muestra la app con todas
+  // las features Pro; `plan` = "free" la muestra con paywall normal.
+  async function entrarDemo(plan = "pro") {
+    const r = await fetch("/api/auth/demo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!data?.ok || !data?.token) return { ok: false, motivo: data?.motivo || "error" };
+    try { sessionStorage.setItem("anduve_auth_token", data.token); } catch {}
+    setUsuarioEmail({ ...data.usuario, token: data.token, email_login: true, demo: true });
+    return { ok: true };
+  }
+
   // Salir: cierra Google + sesion email + limpia el local.
   async function salir() {
     if (session) signOut({ callbackUrl: "/" });
     // Cerrar sesion server-side del email si existe.
     let token;
-    try { token = localStorage.getItem("v360_auth_token"); } catch {}
+    try {
+      token = localStorage.getItem("anduve_auth_token")
+           || sessionStorage.getItem("anduve_auth_token");
+    } catch {}
     if (token) {
       try {
         await fetch("/api/auth/sesion", {
@@ -201,8 +242,8 @@ export function AppProvider({ children }) {
     setUsuarioLocal(null);
     try {
       localStorage.removeItem("usuario");
-      localStorage.removeItem("v360_auth_token");
-      sessionStorage.removeItem("v360_auth_token");
+      localStorage.removeItem("anduve_auth_token");
+      sessionStorage.removeItem("anduve_auth_token");
     } catch {}
   }
 
@@ -238,10 +279,13 @@ export function AppProvider({ children }) {
       value={{
         lang,
         cambiarIdioma,
+        darkMode,
+        toggleDark,
         t,
         usuario,
         entrar,
         entrarGoogle,
+        entrarDemo,
         pedirCodigoEmail,
         verificarCodigoEmail,
         salir,

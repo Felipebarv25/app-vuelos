@@ -33,12 +33,12 @@ async function topLugares(slug, n = 10) {
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const d = getDestinoPorSlug(slug);
-  if (!d) return { title: "Destino não encontrado · Viajero 360" };
+  if (!d) return { title: "Destino não encontrado · Anduve" };
   const nombre = nombreDestino(d);
   const title = `Viagem para ${d.ciudad} · roteiro, preços e dicas`;
   const description =
     `Planeje sua viagem para ${nombre}: voos desde US$${d.vuelo}, orçamento diário ~US$${d.dia}/dia, ` +
-    `principais pontos para visitar e roteiro dia a dia. Planejador gratuito Viajero 360.`;
+    `principais pontos para visitar e roteiro dia a dia. Planejador gratuito Anduve.`;
   const url = `${SITIO}/pt/destino/${slug}`;
   const urlEs = `${SITIO}/destino/${slug}`;
   const urlEn = `${SITIO}/en/destino/${slug}`;
@@ -49,7 +49,7 @@ export async function generateMetadata({ params }) {
       canonical: url,
       languages: { "es-CO": urlEs, "es": urlEs, "en": urlEn, "en-US": urlEn, "pt": url, "pt-BR": url, "fr": urlFr, "x-default": urlEs },
     },
-    openGraph: { title, description, url, siteName: "Viajero 360", type: "website", locale: "pt_BR" },
+    openGraph: { title, description, url, siteName: "Anduve", type: "website", locale: "pt_BR" },
     twitter: { card: "summary_large_image", title, description },
   };
 }

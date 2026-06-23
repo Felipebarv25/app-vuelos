@@ -209,7 +209,7 @@ export async function geocodificar(consulta) {
 // v25: ciudades TOP servidas desde precálculo estático (WDQS) → instantáneo y con
 // los íconos garantizados (Eiffel, Sagrada Familia, Coliseo…). El motor en vivo
 // queda como respaldo liviano para ciudades no precalculadas. Invalida cachés.
-const API_VER = "30";
+const API_VER = "31";
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.
@@ -287,7 +287,7 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
     const cuerpoFiltros = cat.filtros
       .map((f) => `${f}(around:${radio},${lat},${lon});`)
       .join("\n");
-    const query = `[out:json][timeout:10];(${cuerpoFiltros});out center ${limite + 10};`;
+    const query = `[out:json][timeout:10];(${cuerpoFiltros});out center tags ${limite + 10};`;
     datos = await consultarOverpass(query);
   }
 
@@ -355,6 +355,21 @@ function procesarElementos(datos, categoria, lat, lon, limite, catNombre, precal
       (typeof el.id === "string" && /^Q\d+$/.test(el.id) && el.id) ||
       null;
 
+    // Datos opcionales de OSM (QW5 + QW1): web, teléfono, nivel de precio
+    // ($/$$/$$$/$$$$), tipo de cocina y horario de apertura. Capturados aquí
+    // una sola vez para que tanto Itinerario como DetalleLugar los muestren
+    // sin re-fetchear. Los campos faltantes quedan undefined.
+    const web = t.website || t["contact:website"] || null;
+    const tel = t.phone || t["contact:phone"] || null;
+    // OSM usa `price_level` (1-4 = $ a $$$$) o `payment:*` sin nivel.
+    const precioRaw = t.price_level || t["price_level:from"] || null;
+    let precio = null;
+    if (precioRaw) {
+      const n = parseInt(precioRaw, 10);
+      if (n >= 1 && n <= 4) precio = "$".repeat(n);
+    }
+    const horario = t.opening_hours || null;
+
     lugares.push({
       id: `${el.type}/${el.id}`,
       nombre,
@@ -366,6 +381,10 @@ function procesarElementos(datos, categoria, lat, lon, limite, catNombre, precal
       wiki: !!t.wikipedia,
       score,
       cocina,
+      web,
+      tel,
+      precio,
+      horario,
       minutos: sugerirMinutos(categoria, tipoRaw),
     });
   }

@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 :root {
-  /* Primario "océano" (teal) — antes índigo. Nombres se conservan por compatibilidad. */
-  --azul: #0f766e;
-  --azul-osc: #0f3d3a;
-  --azul-claro: #1d9690;
-  --acento: #f4633f;
+  /* Primario "océano" (teal) — base de marca Anduve (rebrand 2026-06-21). Nombres se conservan por compatibilidad. */
+  --azul: #0c5f58;
+  --azul-osc: #052b28;
+  --azul-claro: #1c948e;
+  --acento: #f4734d;
   --verde: #059669;
   --naranja: #ea580c;
   --rosa: #ec4899;
@@ -157,6 +157,37 @@ a:focus:not(:focus-visible) {
   }
 }
 
+/* ============================================================
+   Anduve Logo (rebrand 2026-06-21, SVG real del ZIP del usuario)
+   — keyframes globales para AnduveIcon. Valores EXACTOS de
+   Anduve-Logo-Animado.html (no inventados).
+   ============================================================ */
+@keyframes vj-spin { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+@keyframes vj-bob  { 0%,100% { transform: translateY(1.2px); } 50% { transform: translateY(0); } }
+@keyframes vj-sway { 0%,100% { transform: rotate(-13deg); } 50% { transform: rotate(-8deg); } }
+@keyframes vj-arma { 0%,100% { transform: rotate(26deg); }  50% { transform: rotate(-26deg); } }
+@keyframes vj-armb { 0%,100% { transform: rotate(-26deg); } 50% { transform: rotate(26deg); } }
+@keyframes vj-legf { 0%,100% { transform: rotate(23deg); }  50% { transform: rotate(-21deg); } }
+@keyframes vj-legb { 0%,100% { transform: rotate(-21deg); } 50% { transform: rotate(23deg); } }
+@keyframes vj-kneef { 0% { transform: rotate(10deg); } 25% { transform: rotate(52deg); } 45% { transform: rotate(8deg); } 55% { transform: rotate(3deg); } 80% { transform: rotate(6deg); } 100% { transform: rotate(10deg); } }
+@keyframes vj-kneeb { 0% { transform: rotate(3deg); }  30% { transform: rotate(6deg); } 50% { transform: rotate(7deg); } 75% { transform: rotate(52deg); } 92% { transform: rotate(12deg); } 100% { transform: rotate(3deg); } }
+@keyframes vj-pop  { 0% { transform: scale(2.8); } 10% { transform: scale(1.9); } 20% { transform: scale(1.0); } 50% { transform: scale(1.0); } 80% { transform: scale(1.0); } 90% { transform: scale(1.9); } 100% { transform: scale(2.8); } }
+
+@media (prefers-reduced-motion: reduce) {
+  svg [style*="vj-spin"],
+  svg [style*="vj-bob"],
+  svg [style*="vj-sway"],
+  svg [style*="vj-arma"],
+  svg [style*="vj-armb"],
+  svg [style*="vj-legf"],
+  svg [style*="vj-legb"],
+  svg [style*="vj-kneef"],
+  svg [style*="vj-kneeb"],
+  svg [style*="vj-pop"] {
+    animation: none !important;
+  }
+}
+
 /* Toast: aparece desde arriba con un toque de bounce y se queda. */
 @keyframes toast-in {
   0% {
@@ -291,3 +322,82 @@ button:active {
     margin: 14mm;
   }
 }
+
+/* ====== MODO OSCURO ====== */
+/* Variables: los componentes que usan var() se actualizan solos.
+   Los que usan clases Tailwind (bg-white, text-slate-*) se cubren
+   con las reglas específicas de abajo (especificidad 2-clase > 1-clase). */
+.dark {
+  --texto: #e2e8f0;
+  --texto-sec: #94a3b8;
+  --borde: #1e293b;
+  --gris: #1e293b;
+  --gris-med: #334155;
+  --sombra: 0 1px 3px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --sombra-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --sombra-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.dark body {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+/* Fondos blancos y claros (opacidad-variants como bg-white/95 son clases
+   distintas en Tailwind → no se ven afectadas, lo que es correcto). */
+.dark .bg-white { background-color: #1e293b; }
+.dark .bg-slate-50 { background-color: #162032; }
+.dark .bg-slate-100 { background-color: #1e293b; }
+
+/* Texto oscuro → claro en modo oscuro */
+.dark .text-slate-900 { color: #f1f5f9; }
+.dark .text-slate-800 { color: #e2e8f0; }
+.dark .text-slate-700 { color: #cbd5e1; }
+.dark .text-slate-600 { color: #94a3b8; }
+.dark .text-slate-500 { color: #64748b; }
+.dark .text-slate-400 { color: #475569; }
+.dark .text-marca-900 { color: #d7f0ee; }
+.dark .text-marca-700 { color: #79cbc5; }
+
+/* Bordes → más oscuros */
+.dark .border-slate-100 { border-color: #1e293b; }
+.dark .border-slate-200 { border-color: #334155; }
+
+/* Scrollbars */
+.dark ::-webkit-scrollbar-thumb { background: #334155; }
+
+/* Inputs y selects: sólo si no tienen una clase bg-* explícita del componente */
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="date"],
+.dark input[type="number"],
+.dark select {
+  background-color: #1e293b;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+/* Placeholder más suave en oscuro */
+.dark ::placeholder { color: #475569; }
+
+/* Spin (loading ring) más visible en fondo oscuro */
+.dark .spin {
+  border-color: #334155;
+  border-top-color: var(--azul-claro);
+}
+
+/* Leaflet popup en oscuro */
+.dark .leaflet-popup-content-wrapper,
+.dark .leaflet-popup-tip {
+  background: #1e293b;
+  color: #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.dark .leaflet-popup-content a { color: #79cbc5; }
+
+/* Skeleton loaders: ajustar el gradiente de shimmer */
+.dark .skeleton-shimmer {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+}
+
+/* Selección de texto */
+.dark ::selection { background: rgba(29, 150, 144, 0.3); }

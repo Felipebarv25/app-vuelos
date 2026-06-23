@@ -10,7 +10,7 @@ import { PRECIOS, fmtUsd } from "@/lib/precios";
 const SITIO = "https://app-vuelos-mfos.vercel.app";
 
 export const metadata = {
-  title: "Viajero 360 Pro · planes y precios",
+  title: "Anduve Pro · planes y precios",
   description:
     "Hazte Pro: viajes ilimitados sincronizados, export PDF, alertas de precios y compartir. Desde US$ 4.99/mes o US$ 24/año. Oferta lanzamiento Lifetime US$ 39.",
   alternates: {
@@ -21,11 +21,11 @@ export const metadata = {
     },
   },
   openGraph: {
-    title: "Viajero 360 Pro",
+    title: "Anduve Pro",
     description:
       "Viajes ilimitados, export PDF, alertas y más. Desde US$ 4.99/mes.",
     url: `${SITIO}/pro`,
-    siteName: "Viajero 360",
+    siteName: "Anduve",
     type: "website",
     locale: "es_CO",
   },
@@ -79,8 +79,8 @@ const PLANES = [
 
 const FAQS = [
   {
-    q: "¿Necesito Pro para usar Viajero 360?",
-    a: "No. Lo más útil es gratis: buscar ciudades, armar itinerario, ver precios reales de vuelo desde Colombia, 1 viaje guardado, 1 alerta de precio. Pro es para quienes quieren más viajes en simultáneo, PDF, compartir y alertas ilimitadas.",
+    q: "¿Necesito Pro para usar Anduve?",
+    a: "No. Lo más útil es gratis: buscar ciudades, armar itinerario, ver precios reales de vuelo desde tu aeropuerto, 1 viaje guardado, 1 alerta de precio. Pro es para quienes quieren más viajes en simultáneo, PDF, compartir y alertas ilimitadas.",
   },
   {
     q: "¿Cómo pago?",
@@ -100,7 +100,7 @@ const FAQS = [
   },
   {
     q: "¿Comparten mi información?",
-    a: "No vendemos datos. Lo único que guardamos para Pro es tu email asociado a tu suscripción. Para más, revisa nuestra política de privacidad.",
+    a: "No vendemos datos. Lo único que guardamos para Pro es tu email asociado a tu suscripción. Para más, revisa nuestra política de privacidad en /privacidad.",
   },
 ];
 
@@ -116,7 +116,7 @@ export default function PaginaPro() {
           </nav>
           <div className="mt-6 max-w-3xl">
             <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/85">
-              Viajero 360 Pro
+              Anduve Pro
             </div>
             <h1 className="mt-2 text-4xl font-extrabold tracking-tight sm:text-5xl">
               Tu viaje, sin límites.
@@ -124,7 +124,7 @@ export default function PaginaPro() {
             <p className="mt-3 max-w-2xl text-[17px] text-white/85">
               Pro te da viajes ilimitados sincronizados, export PDF para llevarte tu plan
               offline, alertas de precio ilimitadas y todo el historial mes a mes.
-              Construyendo para colombianos, abierto al mundo.
+              Construido para viajeros independientes en cualquier país.
             </p>
           </div>
         </div>
@@ -134,19 +134,19 @@ export default function PaginaPro() {
       <section className="mx-auto max-w-5xl px-6 py-10">
         <div className="overflow-x-auto rounded-3xl border border-slate-100 bg-white shadow-suave">
           <table className="w-full text-left text-[14px]">
-            <thead className="border-b border-slate-100 bg-slate-50/60">
+            <thead className="border-b border-slate-100 bg-slate-50/60 dark:bg-slate-800/60">
               <tr>
                 <th className="px-5 py-3 text-[12px] font-bold uppercase tracking-wide text-slate-500">
                   Funcionalidad
                 </th>
                 <th className="px-5 py-3 text-[12px] font-bold uppercase tracking-wide text-slate-500">Gratis</th>
-                <th className="px-5 py-3 text-[12px] font-bold uppercase tracking-wide text-marca-600">Pro ★</th>
+                <th className="px-5 py-3 text-[12px] font-bold uppercase tracking-wide text-marca-600 dark:text-marca-300">Pro ★</th>
               </tr>
             </thead>
             <tbody className="text-slate-700">
               {[
                 ["Buscar ciudades y mapa", "✓", "✓"],
-                ["Precio real de vuelo desde Colombia", "✓", "✓"],
+                ["Precio real de vuelo según tu origen", "✓", "✓"],
                 ["Calculadora de presupuesto multi-país", "✓", "✓"],
                 ["Armar itinerario día por día", "✓", "✓"],
                 ["80+ landing pages SEO", "✓", "✓"],
@@ -160,7 +160,7 @@ export default function PaginaPro() {
                 <tr key={i} className="border-t border-slate-100">
                   <td className="px-5 py-3 font-semibold text-slate-600">{fn}</td>
                   <td className="px-5 py-3 text-slate-500">{gratis}</td>
-                  <td className="px-5 py-3 font-bold text-marca-700">{pro}</td>
+                  <td className="px-5 py-3 font-bold text-marca-700 dark:text-marca-300">{pro}</td>
                 </tr>
               ))}
             </tbody>
@@ -170,7 +170,7 @@ export default function PaginaPro() {
 
       {/* Planes */}
       <section className="mx-auto max-w-5xl px-6 py-6">
-        <h2 className="text-2xl font-extrabold tracking-tight text-marca-900 sm:text-3xl">
+        <h2 className="text-2xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300 sm:text-3xl">
           Elige tu plan
         </h2>
         <p className="mt-2 max-w-2xl text-slate-600">
@@ -190,8 +190,8 @@ export default function PaginaPro() {
               key={p.tipo}
               className={`relative rounded-2xl border-2 p-6 ${
                 p.destacado
-                  ? "border-emerald-400 bg-emerald-50/40 shadow-lg"
-                  : "border-slate-200 bg-white shadow-suave"
+                  ? "border-emerald-400 bg-emerald-50/40 shadow-lg dark:border-emerald-700 dark:bg-emerald-900/20"
+                  : "border-slate-200 bg-white shadow-suave dark:border-slate-700"
               }`}
             >
               {p.destacado && (
@@ -199,15 +199,15 @@ export default function PaginaPro() {
                   Más popular
                 </span>
               )}
-              <div className="text-[12px] font-bold uppercase tracking-[0.18em] text-marca-600">
+              <div className="text-[12px] font-bold uppercase tracking-[0.18em] text-marca-600 dark:text-marca-400">
                 {p.nombre}
               </div>
               <div className="mt-2 flex items-end gap-2">
-                <span className="text-3xl font-extrabold tracking-tight text-marca-900">{p.precio}</span>
+                <span className="text-3xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">{p.precio}</span>
                 <span className="pb-1 text-[13px] font-semibold text-slate-500">{p.periodo}</span>
               </div>
               {p.ahorro && (
-                <div className={`mt-1 text-[12px] font-bold uppercase tracking-wide ${p.destacado ? "text-emerald-600" : "text-amber-600"}`}>
+                <div className={`mt-1 text-[12px] font-bold uppercase tracking-wide ${p.destacado ? "text-emerald-600 dark:text-emerald-300" : "text-amber-600 dark:text-amber-300"}`}>
                   {p.ahorro}
                 </div>
               )}
@@ -215,7 +215,7 @@ export default function PaginaPro() {
               <ul className="mt-4 space-y-1.5 text-[13.5px] text-slate-600">
                 {p.ventajas.map((v, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <span className="text-emerald-500">✓</span>
+                    <span className="text-emerald-500 dark:text-emerald-400">✓</span>
                     <span>{v}</span>
                   </li>
                 ))}
@@ -232,7 +232,7 @@ export default function PaginaPro() {
 
       {/* FAQ */}
       <section className="mx-auto max-w-3xl px-6 py-12">
-        <h2 className="text-2xl font-extrabold tracking-tight text-marca-900 sm:text-3xl">
+        <h2 className="text-2xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300 sm:text-3xl">
           Preguntas frecuentes
         </h2>
         <div className="mt-4 space-y-2.5">
@@ -241,7 +241,7 @@ export default function PaginaPro() {
               key={i}
               className="group rounded-2xl border border-slate-100 bg-white p-4 shadow-suave open:shadow-media"
             >
-              <summary className="cursor-pointer list-none text-base font-bold text-marca-900">
+              <summary className="cursor-pointer list-none text-base font-bold text-marca-900 dark:text-marca-300">
                 <span className="inline-flex items-center gap-2">
                   <span className="text-marca-600 transition group-open:rotate-90">▸</span>
                   {f.q}
@@ -272,7 +272,7 @@ export default function PaginaPro() {
       <section className="mx-auto max-w-3xl px-6 pb-6 text-center">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-[14px] font-bold text-marca-700 transition hover:bg-marca-50"
+          className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-[14px] font-bold text-marca-700 transition hover:bg-marca-50 dark:text-marca-300 dark:hover:bg-marca-900/30"
         >
           ← Seguir explorando gratis
         </Link>

@@ -8,7 +8,7 @@
 import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Viajero 360 · Plan your perfect trip from anywhere",
+  title: "Anduve · Plan your perfect trip from anywhere",
   description:
     "How much do you have to spend? We tell you where to go, when it's cheaper, and build your day-by-day plan. Live flight prices and tailored recommendations.",
   alternates: {

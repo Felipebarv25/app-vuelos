@@ -4,6 +4,7 @@ import { Boton } from "./ui";
 import { fotoDeLugar } from "@/lib/imagenes";
 import { fmtMin, resumenDia } from "@/lib/itinerario";
 import { estadoTiempo, textoEstado } from "@/lib/reloj";
+import BadgeApertura from "./BadgeApertura";
 import { Icono, iconoCategoria } from "./Icono";
 import { nombreLocalizado } from "@/lib/nombres";
 import { linkTourCerca } from "@/lib/afiliados";
@@ -52,6 +53,7 @@ export default function Itinerario({
   gps,
   ciudad,
   fechaInicio,
+  husoDestino, // QW1: zona horaria del destino para el badge "abierto ahora"
   lang = "es",
   t = (k) => k,
 }) {
@@ -81,7 +83,7 @@ export default function Itinerario({
   return (
     <div className="animar-aparecer">
       {/* Resumen del día */}
-      <div className="mb-3 rounded-2xl border border-marca-100 bg-gradient-to-br from-marca-50 to-violet-50 p-4 shadow-suave">
+      <div className="mb-3 rounded-2xl border border-marca-100 bg-gradient-to-br from-marca-50 to-violet-50 p-4 shadow-suave dark:border-marca-900 dark:from-slate-800 dark:to-slate-800">
         <div className="flex flex-wrap justify-between gap-2">
           <div>
             <div className="text-[19px] font-extrabold tracking-tight text-marca-900">
@@ -140,10 +142,10 @@ export default function Itinerario({
           )}
 
           <div
-            className={`mb-1 rounded-2xl border bg-white p-4 transition ${
+            className={`mb-1 rounded-2xl border p-4 transition dark:bg-slate-800 ${
               seguimiento && i === paradaActual
-                ? "border-emerald-400 shadow-[0_0_0_2px_rgba(16,185,129,.7),0_2px_10px_rgba(15,23,42,.06)]"
-                : "border-slate-100 shadow-suave"
+                ? "border-emerald-400 bg-white shadow-[0_0_0_2px_rgba(16,185,129,.7),0_2px_10px_rgba(15,23,42,.06)]"
+                : "border-slate-100 bg-white shadow-suave dark:border-slate-700"
             }`}
           >
             <div className="flex gap-3">
@@ -166,15 +168,28 @@ export default function Itinerario({
                   <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11.5px] font-semibold text-slate-500">
                     <Icono nombre="clock" size={11} /> {fmtMin(p.minutos)}
                   </span>
-                  {p.notable && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11.5px] font-semibold text-amber-800">
-                      <Icono nombre="star" size={11} /> Top
+                  {p.wiki ? (
+                    /* Lugar con articulo de Wikipedia = senal de calidad verificable.
+                       Es la prueba mas fuerte (la auditoria pidio que el usuario vea
+                       POR QUE este lugar esta en la lista, no solo "Top" generico). */
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11.5px] font-semibold text-amber-800" title={t("itinSenalWikipedia")}>
+                      <Icono nombre="star" size={11} /> {t("itinBadgeWikipedia")}
                     </span>
-                  )}
+                  ) : p.notable ? (
+                    /* Tiene entrada en Wikidata pero sin articulo de Wikipedia:
+                       relevante pero menos famoso. */
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11.5px] font-semibold text-slate-700" title={t("itinSenalNotable")}>
+                      <Icono nombre="star" size={11} /> {t("itinBadgeNotable")}
+                    </span>
+                  ) : null}
+                  {/* QW1 — Badge "Abierto ahora · cierra a las X" / "Cerrado".
+                      Solo aparece si OSM trajo opening_hours y conocemos el
+                      huso del destino. */}
+                  <BadgeApertura lugar={p} huso={husoDestino} t={t} />
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
-                    className="rounded-[10px] bg-marca-50 px-3 py-2 text-[13px] font-semibold text-marca-600 transition hover:bg-marca-100"
+                    className="rounded-[10px] bg-marca-50 px-3 py-2 text-[13px] font-semibold text-marca-600 transition hover:bg-marca-100 dark:bg-marca-900/30 dark:text-marca-300"
                     onClick={() => onVerLugar?.(p)}
                   >
                     <span className="inline-flex items-center gap-1.5"><Icono nombre="camera" size={14} /> {t("verFoto")}</span>
@@ -227,7 +242,7 @@ export default function Itinerario({
 
 function Stat({ num, lbl, ico }) {
   return (
-    <div className="min-w-[64px] rounded-xl bg-white/70 px-3 py-2 text-center">
+    <div className="min-w-[64px] rounded-xl bg-white/70 px-3 py-2 text-center dark:bg-slate-700/60">
       <div className="text-sm font-extrabold text-marca-900">{num}</div>
       <div className="mt-px inline-flex items-center gap-1 text-[10.5px] text-slate-500">
         {ico && <Icono nombre={ico} size={11} />} {lbl}
@@ -239,7 +254,7 @@ function Stat({ num, lbl, ico }) {
 function PanelTiempo({ estado, paradaActual, total, onSiguiente, onParar, t = (k) => k }) {
   const est = estado ? textoEstado(estado, t) : null;
   return (
-    <div className="rounded-xl border border-slate-100 bg-white p-3">
+    <div className="rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
       <div className="flex items-center justify-between">
         <div className="font-bold" style={{ color: est?.color }}>
           {est?.emoji} {est?.texto}

@@ -1,7 +1,7 @@
 // Página índice /destino: cataloga los 80+ destinos del SEO agrupados por
 // región, con filtros y enlace directo a cada landing. Fortalece el linking
 // interno (todas las /destino/<slug> son alcanzables desde una página) y
-// mejora rankeo en Google ("dónde viajar desde Colombia", "destinos baratos").
+// mejora rankeo en Google ("dónde viajar barato", "destinos baratos").
 import Link from "next/link";
 import { DESTINOS_SEO } from "@/lib/destinos";
 import IndiceFavoritos from "./IndiceFavoritos";
@@ -18,18 +18,18 @@ const REGIONES_META = {
 };
 
 export const metadata = {
-  title: "Destinos para viajar desde Colombia · Viajero 360",
+  title: "Destinos internacionales · Itinerarios, vuelos y presupuesto · Anduve",
   description:
-    "80 destinos en Sudamérica, Europa, Asia, África y Oceanía con vuelos desde Bogotá y Medellín, presupuesto diario aproximado y los mejores lugares para visitar. Planea tu viaje gratis.",
+    "80 destinos en Sudamérica, Europa, Asia, África y Oceanía con vuelo i/v aproximado, presupuesto diario y los mejores lugares para visitar. Planea tu viaje gratis.",
   alternates: { canonical: `${SITIO}/destino` },
   openGraph: {
-    title: "Destinos para viajar desde Colombia · Viajero 360",
+    title: "Destinos internacionales · Itinerarios y presupuesto · Anduve",
     description:
-      "Catálogo de 80 destinos con vuelos desde Colombia, presupuesto sugerido y top lugares.",
+      "Catálogo de 80 destinos con vuelo i/v aproximado, presupuesto sugerido y top lugares.",
     url: `${SITIO}/destino`,
-    siteName: "Viajero 360",
+    siteName: "Anduve",
     type: "website",
-    locale: "es_CO",
+    locale: "es",
   },
 };
 
@@ -51,10 +51,10 @@ export default function IndiceDestinos() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "Destinos para viajar desde Colombia",
+    name: "Destinos internacionales",
     url: `${SITIO}/destino`,
     description:
-      "Catálogo de destinos internacionales para viajar desde Colombia con presupuesto y lugares destacados.",
+      "Catálogo de destinos internacionales con presupuesto, vuelo i/v aproximado y lugares destacados.",
     mainEntity: {
       "@type": "ItemList",
       numberOfItems: total,
@@ -78,24 +78,24 @@ export default function IndiceDestinos() {
 
       <nav className="mx-auto max-w-6xl px-6 pt-6 text-[13px] text-slate-500">
         <Link href="/" className="hover:text-marca-600">Inicio</Link>
-        <span className="mx-1.5 text-slate-300">/</span>
-        <span className="font-semibold text-marca-700">Destinos</span>
+        <span className="mx-1.5 text-slate-300 dark:text-slate-600">/</span>
+        <span className="font-semibold text-marca-700 dark:text-marca-300">Destinos</span>
       </nav>
 
       <header className="mx-auto max-w-6xl px-6 pb-2 pt-6">
-        <div className="text-[12px] font-semibold uppercase tracking-[0.22em] text-marca-500">
+        <div className="text-[12px] font-semibold uppercase tracking-[0.22em] text-marca-500 dark:text-marca-400">
           Catálogo
         </div>
-        <h1 className="mt-1 text-4xl font-extrabold tracking-tight text-marca-900 sm:text-5xl">
-          {total} destinos para viajar desde Colombia
+        <h1 className="mt-1 text-4xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300 sm:text-5xl">
+          {total} destinos para tu próximo viaje
         </h1>
         <p className="mt-3 max-w-3xl text-lg text-slate-600">
-          Vuelos desde Bogotá y Medellín, presupuesto diario aproximado y los mejores
+          Vuelo i/v aproximado, presupuesto diario y los mejores
           lugares para visitar. Toca cualquier destino para ver el itinerario completo.
         </p>
         <Link
           href="/comparar"
-          className="mt-4 inline-flex items-center gap-1.5 rounded-xl border-[1.5px] border-marca-200 bg-white px-4 py-2 text-[13.5px] font-bold text-marca-700 transition hover:bg-marca-50"
+          className="mt-4 inline-flex items-center gap-1.5 rounded-xl border-[1.5px] border-marca-200 bg-white px-4 py-2 text-[13.5px] font-bold text-marca-700 transition hover:bg-marca-50 dark:border-marca-800 dark:text-marca-300 dark:hover:bg-marca-900/30"
         >
           ⚖️ Comparar destinos lado a lado →
         </Link>
@@ -112,7 +112,7 @@ export default function IndiceDestinos() {
                 <a
                   key={r}
                   href={`#${r}`}
-                  className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-4 py-2 text-[13.5px] font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:ring-marca-300"
+                  className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-4 py-2 text-[13.5px] font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:ring-marca-300 dark:ring-slate-700 dark:hover:ring-marca-600"
                 >
                   <span>{meta.emoji}</span> {meta.titulo}
                   <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-500">
@@ -131,7 +131,7 @@ export default function IndiceDestinos() {
           const meta = REGIONES_META[r];
           return (
             <section key={r} id={r} className="mx-auto max-w-6xl px-6 py-6">
-              <h2 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-marca-900">
+              <h2 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
                 <span>{meta.emoji}</span> {meta.titulo}
               </h2>
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -143,14 +143,14 @@ export default function IndiceDestinos() {
                   >
                     <span className="text-3xl">{d.bandera}</span>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-base font-extrabold text-marca-900 group-hover:text-marca-600">
+                      <div className="truncate text-base font-extrabold text-marca-900 group-hover:text-marca-600 dark:text-marca-300 dark:group-hover:text-marca-400">
                         {d.ciudad}
                       </div>
                       <div className="truncate text-[12.5px] text-slate-500">{d.pais}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-[12px] font-semibold text-slate-400">desde</div>
-                      <div className="text-[14px] font-extrabold text-marca-700">US$ {d.vuelo}</div>
+                      <div className="text-[14px] font-extrabold text-marca-700 dark:text-marca-300">US$ {d.vuelo}</div>
                     </div>
                   </Link>
                 ))}
@@ -179,7 +179,7 @@ export default function IndiceDestinos() {
       </section>
 
       <footer className="mx-auto max-w-6xl px-6 pb-10 text-center text-[12px] text-slate-400">
-        Datos de OpenStreetMap y Wikipedia · Precios orientativos en USD desde Colombia.
+        Datos de OpenStreetMap y Wikipedia · Precios orientativos en USD.
       </footer>
     </main>
   );

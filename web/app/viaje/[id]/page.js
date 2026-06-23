@@ -16,9 +16,9 @@ export async function generateMetadata({ params }) {
   const { id } = await params;
   const v = await obtenerViaje(id);
   if (!v?.ciudad) {
-    return { title: "Itinerario no encontrado · Viajero 360" };
+    return { title: "Itinerario no encontrado · Anduve" };
   }
-  const titulo = `Itinerario en ${v.ciudad.nombre} · Viajero 360`;
+  const titulo = `Itinerario en ${v.ciudad.nombre} · Anduve`;
   return {
     title: titulo,
     description: `Plan de viaje a ${v.ciudad.nombre} con paradas día por día.`,
@@ -43,7 +43,7 @@ export default async function PaginaViajeCompartido({ params }) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-20 text-center">
         <div className="text-6xl">🧳</div>
-        <h1 className="mt-3 text-3xl font-extrabold text-marca-900">
+        <h1 className="mt-3 text-3xl font-extrabold text-marca-900 dark:text-marca-300">
           Itinerario no disponible
         </h1>
         <p className="mt-2 text-slate-600">
@@ -96,12 +96,12 @@ export default async function PaginaViajeCompartido({ params }) {
       {/* Lista de paradas */}
       <section className="mx-auto max-w-3xl px-6 py-8">
         {totalParadas === 0 ? (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-800">
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
             Este itinerario no tiene paradas guardadas.
           </div>
         ) : (
           <>
-            <h2 className="text-xl font-extrabold tracking-tight text-marca-900">
+            <h2 className="text-xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
               Paradas seleccionadas
             </h2>
             <ol className="mt-4 space-y-2.5">
@@ -114,7 +114,7 @@ export default async function PaginaViajeCompartido({ params }) {
                     {i + 1}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="font-bold text-marca-900">{p.nombre}</div>
+                    <div className="font-bold text-marca-900 dark:text-marca-300">{p.nombre}</div>
                     {p.categoria && (
                       <div className="mt-0.5 text-[12.5px] text-slate-500">
                         {p.categoria}
@@ -137,7 +137,7 @@ export default async function PaginaViajeCompartido({ params }) {
           </h2>
           <p className="mt-2 text-white/85">
             Crea tu propio itinerario gratis con mapa, GPS, transporte, fotos y
-            precios de vuelos desde Colombia.
+            precios de vuelos en vivo.
           </p>
           <Link
             href={`/?q=${encodeURIComponent(`${ciudad.nombre}, ${ciudad.pais}`)}`}
@@ -149,7 +149,7 @@ export default async function PaginaViajeCompartido({ params }) {
       </section>
 
       <footer className="mx-auto max-w-3xl px-6 pb-10 text-center text-[12px] text-slate-400">
-        Viajero 360 · Datos de OpenStreetMap y Wikipedia
+        Anduve · Datos de OpenStreetMap y Wikipedia
       </footer>
     </main>
   );

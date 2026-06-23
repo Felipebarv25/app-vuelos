@@ -5,7 +5,7 @@ import { ImageResponse } from "next/og";
 import { getDestinoPorSlug, nombreDestino, TODOS_SLUGS } from "@/lib/destinos";
 
 export const runtime = "edge";
-export const alt = "Viajero 360";
+export const alt = "Anduve";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -17,7 +17,7 @@ export async function generateStaticParams() {
 export default async function OgDestino({ params }) {
   const { slug } = await params;
   const d = getDestinoPorSlug(slug);
-  const nombre = d ? nombreDestino(d) : "Viajero 360";
+  const nombre = d ? nombreDestino(d) : "Anduve";
   const bandera = d?.bandera || "🌍";
 
   return new ImageResponse(
@@ -30,20 +30,24 @@ export default async function OgDestino({ params }) {
           flexDirection: "column",
           justifyContent: "center",
           padding: "80px",
-          background: "linear-gradient(135deg, #312e81 0%, #0f766e 100%)",
+          background: "linear-gradient(135deg, #0c5f58 0%, #0a4d48 60%, #073a36 100%)",
           color: "white",
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ fontSize: 28, letterSpacing: 8, textTransform: "uppercase", opacity: 0.8 }}>
-          Viajero 360 · Viaja a
+        {/* Eyebrow con marca: "ANDU" blanco, "VE" coral — igual que el
+            wordmark en la app. */}
+        <div style={{ fontSize: 28, letterSpacing: 6, textTransform: "uppercase", opacity: 0.9, display: "flex", alignItems: "baseline" }}>
+          <span>ANDU</span>
+          <span style={{ color: "#ff9d7a" }}>VE</span>
+          <span style={{ marginLeft: 18, opacity: 0.7 }}>· Viaja a</span>
         </div>
         <div style={{ fontSize: 130, marginTop: 10 }}>{bandera}</div>
         <div style={{ fontSize: 90, fontWeight: 800, lineHeight: 1.05, marginTop: 8 }}>
           {d?.ciudad || "Tu destino"}
         </div>
         <div style={{ fontSize: 36, opacity: 0.92, marginTop: 14 }}>
-          {d?.pais ? `${d.pais} · Itinerario desde Colombia` : "Itinerario y precios"}
+          {d?.pais ? `${d.pais} · Itinerario y precios` : "Itinerario y precios"}
         </div>
       </div>
     ),

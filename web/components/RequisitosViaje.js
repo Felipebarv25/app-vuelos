@@ -14,6 +14,8 @@ import {
   estacionesClave,
   aguaClave,
   propinaClave,
+  mejorEpoca,
+  autorizacionElectronica,
 } from "@/lib/requisitos";
 import { Icono } from "./Icono";
 
@@ -21,7 +23,7 @@ import { Icono } from "./Icono";
 function Dato({ icono, etiqueta, valor }) {
   if (!valor) return null;
   return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5">
+    <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5 dark:border-slate-700 dark:bg-slate-800">
       <div className="inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide text-slate-400">
         <Icono nombre={icono} size={12} /> {etiqueta}
       </div>
@@ -31,10 +33,10 @@ function Dato({ icono, etiqueta, valor }) {
 }
 
 const TONO = {
-  emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  amber: "border-amber-200 bg-amber-50 text-amber-800",
-  rose: "border-rose-200 bg-rose-50 text-rose-700",
-  slate: "border-slate-200 bg-slate-50 text-slate-600",
+  emerald: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300",
+  amber: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300",
+  rose: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-300",
+  slate: "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400",
 };
 
 // Panel de "Requisitos de entrada" al país destino: visa (según tu pasaporte),
@@ -59,12 +61,11 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
   const nacNombre = nombrePais(nacionalidad);
   const paises = listaPaises();
 
-  // Verificación en fuente oficial: una búsqueda dirigida (siempre válida) a los
-  // requisitos reales según el pasaporte del usuario. Los datos del panel son
-  // referenciales (Passport Index); esto lleva a confirmarlos.
-  const buscar = (q) => `https://www.google.com/search?q=${encodeURIComponent(q)}`;
-  const urlOficial = buscar(`requisitos de visa para viajar a ${paisNombre} con pasaporte de ${nacNombre}`);
-  const urlSalud = buscar(`vacunas y salud recomendadas para viajar a ${paisNombre}`);
+  // Página interna /requisitos/<iso> con visa + salud + emergencias.
+  // Antes redirigíamos a Google search; ahora todo vive on-site (la info
+  // de salud se refresca mensualmente con scripts/actualizar-salud.mjs).
+  const urlOficial = `/requisitos/${destinoIso.toLowerCase()}`;
+  const urlSalud = `${urlOficial}#salud`;
   const dp = infoPais(destinoIso) || {};
   const conduccion = dp.conduccion === "left" ? t("reqIzquierda") : dp.conduccion === "right" ? t("reqDerecha") : "";
   const moneda = dp.moneda ? `${dp.moneda.nombre}${dp.moneda.sim ? ` (${dp.moneda.sim})` : ""}` : "";
@@ -77,9 +78,13 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
   const agua = acl ? t("agua_" + acl) : "";
   const pcl = propinaClave(destinoIso);
   const propina = pcl ? t("prop_" + pcl) : "";
+  // QW3: mejor época para viajar (por país, con fallback por hemisferio).
+  const epoca = mejorEpoca(destinoIso, dp.lat);
+  // QW4: autorización electrónica previa según pasaporte + destino.
+  const autoriz = autorizacionElectronica(destinoIso, nacionalidad);
 
   return (
-    <div className="mb-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave">
+    <div className="mb-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave dark:border-slate-700 dark:bg-slate-800">
       <button
         onClick={() => setAbierto((v) => !v)}
         className="flex w-full items-center justify-between px-4 py-3 text-left"
@@ -123,20 +128,69 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
               <div className="mt-0.5 text-[14px] font-semibold">{t("req_desconocido")}</div>
             )}
             <div className="mt-1 text-[12px] opacity-80">{t("reqVisaNota")}</div>
-            {/* Verificación en fuente oficial (los datos del panel son referenciales) */}
+            {/* Ficha interna completa (visa + salud + emergencias) */}
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px] font-bold">
-              <a href={urlOficial} target="_blank" rel="noopener" className="underline-offset-2 hover:underline">
-                {t("reqVerOficial")} ↗
+              <a href={urlOficial} className="underline-offset-2 hover:underline">
+                {t("reqVerOficial")} →
               </a>
-              <a href={urlSalud} target="_blank" rel="noopener" className="underline-offset-2 hover:underline">
-                {t("reqVerSalud")} ↗
+              <a href={urlSalud} className="underline-offset-2 hover:underline">
+                {t("reqVerSalud")} →
               </a>
             </div>
           </div>
 
+          {/* QW4 — Autorización electrónica previa (ETIAS / ESTA / eTA / etc.).
+              Solo aparece si la combinación pasaporte+destino la requiere.
+              Tono ámbar para que destaque como acción requerida antes del viaje. */}
+          {autoriz && (
+            <div className={`rounded-xl border p-3 ${TONO.amber}`}>
+              <div className="text-[11px] font-bold uppercase tracking-wide opacity-70">
+                {t("reqAutorizTit")}
+              </div>
+              <div className="mt-0.5 text-[15px] font-extrabold">
+                {autoriz.tipo} <span className="font-medium opacity-80">· {t("reqAutorizRequerida")}</span>
+              </div>
+              <div className="mt-1 text-[12.5px] leading-snug opacity-90">{autoriz.nombre}</div>
+              {autoriz.nota && (
+                <div className="mt-1 text-[12px] opacity-80">{autoriz.nota}</div>
+              )}
+              <div className="mt-2 text-[12px] font-bold">
+                <a href={autoriz.url} target="_blank" rel="noopener" className="underline-offset-2 hover:underline">
+                  {t("reqVerSitioOficial")} ↗
+                </a>
+              </div>
+            </div>
+          )}
+
+          {/* QW3 — Mejor época para viajar (clima, temporada alta/baja).
+              Datos orientativos por país; fallback por hemisferio. */}
+          {epoca && (
+            <div className="rounded-xl border border-marca-100 bg-marca-50/50 p-3 text-marca-900 dark:border-marca-800 dark:bg-marca-900/20 dark:text-marca-300">
+              <div className="text-[11px] font-bold uppercase tracking-wide opacity-70">
+                {t("reqMejorEpoca")}
+              </div>
+              <div className="mt-1 grid gap-1.5 text-[12.5px] sm:grid-cols-[auto_1fr] sm:gap-x-3">
+                <span className="font-bold opacity-80">✨ {t("reqMejorMes")}</span>
+                <span>{epoca.mejor}</span>
+                {epoca.evitar && (
+                  <>
+                    <span className="font-bold opacity-80">🚫 {t("reqEvitarMes")}</span>
+                    <span>{epoca.evitar}</span>
+                  </>
+                )}
+                {epoca.clima && (
+                  <>
+                    <span className="font-bold opacity-80">☀️ {t("reqClimaGeneral")}</span>
+                    <span>{epoca.clima}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Pasaporte + Fiebre amarilla */}
           <div className="grid gap-2 sm:grid-cols-2">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-600">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
               <div className="text-[11px] font-bold uppercase tracking-wide opacity-70">{t("reqPasaporte")}</div>
               <div className="mt-0.5 text-[13.5px] font-semibold">{t("reqPasaporteNota")}</div>
             </div>
@@ -167,7 +221,7 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
             </div>
           </div>
 
-          <div className="rounded-lg bg-amber-50 p-2.5 text-[11.5px] leading-snug text-amber-700">
+          <div className="rounded-lg bg-amber-50 p-2.5 text-[11.5px] leading-snug text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
             <span className="inline-flex items-start gap-1.5"><Icono nombre="alert" size={13} className="mt-0.5 shrink-0" /> {t("reqDisclaimer")}</span>
           </div>
           <div className="px-0.5 text-[10.5px] text-slate-400">

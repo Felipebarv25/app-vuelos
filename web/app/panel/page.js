@@ -149,10 +149,10 @@ export default function Panel() {
       if (!r.ok) {
         setError(d.error || "No se pudo cargar.");
         setDatos(null);
-        if (r.status === 401) sessionStorage.removeItem("v360_panel");
+        if (r.status === 401) sessionStorage.removeItem("anduve_panel");
       } else {
         setDatos(d);
-        sessionStorage.setItem("v360_panel", c);
+        sessionStorage.setItem("anduve_panel", c);
       }
     } catch {
       setError("Error de red.");
@@ -162,7 +162,7 @@ export default function Panel() {
   }
 
   useEffect(() => {
-    const c = sessionStorage.getItem("v360_panel");
+    const c = sessionStorage.getItem("anduve_panel");
     if (c) {
       setClave(c);
       cargar(c);
@@ -175,7 +175,7 @@ export default function Panel() {
       <div className="flex min-h-screen items-center justify-center bg-[#f6f7fb] px-4">
         <div className="w-full max-w-sm rounded-2xl border border-slate-100 bg-white p-6 shadow-media">
           <div className="text-center text-2xl font-extrabold tracking-tight text-marca-900">📊 Panel</div>
-          <p className="mt-1 text-center text-[13px] text-slate-500">Métricas de Viajero 360</p>
+          <p className="mt-1 text-center text-[13px] text-slate-500">Métricas de Anduve</p>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -215,11 +215,11 @@ export default function Panel() {
         <div className="mb-5 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-marca-900">📊 Panel de métricas</h1>
-            <p className="text-[13px] text-slate-500">Viajero 360 · solo para ti</p>
+            <p className="text-[13px] text-slate-500">Anduve · solo para ti</p>
           </div>
           <button
             onClick={() => {
-              sessionStorage.removeItem("v360_panel");
+              sessionStorage.removeItem("anduve_panel");
               setDatos(null);
               setClave("");
             }}
@@ -298,10 +298,90 @@ export default function Panel() {
           <Barras titulo="🧳 Reservas por tipo" datos={datos.afilTipo || []} color="bg-amber-500" vacio="Aún no hay clics en botones de reserva" />
         </div>
 
+        {/* Feedback de usuarios (lo escriben desde el menú de usuario) */}
+        <div className="mt-4">
+          <FeedbackPanel feedback={datos.feedback || []} total={datos.feedbackTotal || 0} />
+        </div>
+
         <div className="mt-6 text-center text-[11px] text-slate-400">
           Datos anónimos y agregados · geolocalización aproximada por IP (Vercel)
         </div>
       </div>
     </div>
+  );
+}
+
+// Sección de feedback. Lista de cards con timestamp, los 3 campos y el email
+// (si lo dejaron). Diseño simple: las preguntas que no se contestaron quedan
+// ocultas para no inflar la card.
+function FeedbackPanel({ feedback, total }) {
+  if (!feedback.length) {
+    return (
+      <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
+        <div className="mb-2 text-sm font-bold text-marca-900">💬 Comentarios de usuarios</div>
+        <div className="py-4 text-center text-[13px] text-slate-400">
+          Aún no hay comentarios. Los usuarios pueden enviarlos desde el menú de su perfil.
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="text-sm font-bold text-marca-900">💬 Comentarios de usuarios</div>
+        <div className="text-[12px] font-semibold text-slate-500">
+          {total ? `${total} total · ` : ""}mostrando {feedback.length}
+        </div>
+      </div>
+      <ul className="flex flex-col gap-3">
+        {feedback.map((f, i) => (
+          <FeedbackCard key={i} f={f} />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function FeedbackCard({ f }) {
+  const fecha = f.ts ? new Date(f.ts) : null;
+  const fechaTxt = fecha ? fecha.toLocaleString("es", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+  const banderaPais = f.pais ? bandera(f.pais) : "🌍";
+  return (
+    <li className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+      <div className="mb-2 flex flex-wrap items-center gap-2 text-[11.5px] text-slate-500">
+        <span className="font-bold text-slate-700">{f.nombre || "Anónimo"}</span>
+        {f.email && <span className="rounded bg-white px-1.5 py-0.5 text-marca-700">{f.email}</span>}
+        <span>·</span>
+        <span>{banderaPais}</span>
+        {f.lang && <span className="rounded bg-slate-100 px-1.5 py-0.5">{f.lang.toUpperCase()}</span>}
+        <span>·</span>
+        <span>{fechaTxt}</span>
+      </div>
+      <div className="space-y-1.5">
+        {f.like && (
+          <div className="flex gap-2 text-[13px]">
+            <span className="shrink-0">👍</span>
+            <span className="text-slate-700">{f.like}</span>
+          </div>
+        )}
+        {f.dislike && (
+          <div className="flex gap-2 text-[13px]">
+            <span className="shrink-0">👎</span>
+            <span className="text-slate-700">{f.dislike}</span>
+          </div>
+        )}
+        {f.mejora && (
+          <div className="flex gap-2 text-[13px]">
+            <span className="shrink-0">💡</span>
+            <span className="text-slate-700">{f.mejora}</span>
+          </div>
+        )}
+      </div>
+      {f.url && (
+        <div className="mt-2 truncate text-[11px] text-slate-400">
+          desde <span className="font-mono">{f.url.replace(/^https?:\/\/[^/]+/, "")}</span>
+        </div>
+      )}
+    </li>
   );
 }

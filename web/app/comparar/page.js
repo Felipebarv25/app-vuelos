@@ -5,18 +5,18 @@ import ComparadorCliente from "./ComparadorCliente";
 const SITIO = "https://app-vuelos-mfos.vercel.app";
 
 export const metadata = {
-  title: "Comparar destinos para viajar desde Colombia · Viajero 360",
+  title: "Comparar destinos lado a lado · Anduve",
   description:
-    "Compara hasta 3 destinos lado a lado: vuelo desde Colombia, costo diario, presupuesto sugerido y lo que ofrece cada ciudad. Decide a dónde viajar con datos.",
+    "Compara hasta 3 destinos: vuelo i/v aproximado, costo diario, presupuesto sugerido y lo que ofrece cada ciudad. Decide a dónde viajar con datos.",
   alternates: { canonical: `${SITIO}/comparar` },
   openGraph: {
-    title: "Comparar destinos para viajar desde Colombia",
+    title: "Comparar destinos lado a lado",
     description:
       "Vuelo, presupuesto, idioma y comida — todo lado a lado para elegir tu próximo viaje.",
     url: `${SITIO}/comparar`,
-    siteName: "Viajero 360",
+    siteName: "Anduve",
     type: "website",
-    locale: "es_CO",
+    locale: "es",
   },
 };
 

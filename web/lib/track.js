@@ -18,8 +18,8 @@ export function trackVisita(lang) {
   const extra = { lang: lang || null, hora: new Date().getHours() };
   try {
     if (typeof sessionStorage === "undefined") return track("visita", extra);
-    if (sessionStorage.getItem("v360_visita")) return;
-    sessionStorage.setItem("v360_visita", "1");
+    if (sessionStorage.getItem("anduve_visita")) return;
+    sessionStorage.setItem("anduve_visita", "1");
     track("visita", extra);
   } catch {
     track("visita", extra);

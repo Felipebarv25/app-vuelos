@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: "class",
   content: [
     "./app/**/*.{js,jsx}",
     "./components/**/*.{js,jsx}",
@@ -7,18 +8,18 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Primario: teal/petróleo "océano" (confianza de viaje, distintivo).
+        // Primario: teal Anduve (rebrand 2026-06-21, base #0c5f58).
         marca: {
-          50: "#f0faf9",
-          100: "#d7f0ee",
-          200: "#aee1dd",
-          300: "#79cbc5",
-          400: "#43b0aa",
-          500: "#1d9690",
-          600: "#0f766e",
-          700: "#115e59",
-          800: "#134e4a",
-          900: "#0f3d3a",
+          50: "#eff9f8",
+          100: "#d4f1ef",
+          200: "#a9e3df",
+          300: "#74cdc5",
+          400: "#3fb1a8",
+          500: "#1c948e",
+          600: "#0c5f58",
+          700: "#0a4d48",
+          800: "#073a36",
+          900: "#052b28",
         },
         // Acento: coral cálido (calidez latina, para CTAs puntuales).
         acento: {
@@ -41,7 +42,7 @@ module.exports = {
       boxShadow: {
         suave: "0 1px 2px rgba(15,23,42,.04), 0 2px 8px rgba(15,23,42,.05)",
         media: "0 4px 16px rgba(15,23,42,.1)",
-        marca: "0 8px 22px rgba(15,118,110,.32)",
+        marca: "0 8px 22px rgba(12,95,88,.32)",
       },
       borderRadius: {
         xl2: "18px",

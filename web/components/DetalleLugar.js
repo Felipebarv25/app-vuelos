@@ -8,6 +8,7 @@ import { monedaDePais, costoLocal, costoUsd } from "@/lib/monedasPais";
 import { obtenerTasas } from "@/lib/fx";
 import { BotonTourLugar } from "./Afiliados";
 import { Icono, iconoCategoria } from "./Icono";
+import BadgeApertura from "./BadgeApertura";
 import { nombreLocalizado } from "@/lib/nombres";
 
 // Distancia legible (m / km).
@@ -25,7 +26,7 @@ function gmapsModo(modo) {
 // Panel/modal que muestra TODO sobre un lugar SIN salir de la app:
 // foto, descripción, y cómo llegar desde la ubicación del usuario
 // (transporte, tiempo, costo y ruta dibujada en nuestro mapa).
-export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazarRuta, onAgregar, t = (k) => k, lang = "es" }) {
+export default function DetalleLugar({ lugar, ciudad, origen, husoDestino, onCerrar, onTrazarRuta, onAgregar, t = (k) => k, lang = "es" }) {
   const nombreLug = nombreLocalizado(lugar, lang);
   const [foto, setFoto] = useState(null);
   const [cargandoFoto, setCargandoFoto] = useState(true);
@@ -99,7 +100,7 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
       onClick={onCerrar}
     >
       <div
-        className="max-h-[92vh] w-full max-w-[560px] overflow-y-auto rounded-t-[20px] bg-white shadow-[0_-8px_30px_rgba(0,0,0,.3)] animar-subir"
+        className="max-h-[92vh] w-full max-w-[560px] overflow-y-auto rounded-t-[20px] bg-white shadow-[0_-8px_30px_rgba(0,0,0,.3)] animar-subir dark:bg-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Asa para arrastrar (estética móvil) */}
@@ -186,6 +187,51 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
             <BotonTourLugar lugar={lugar} ciudad={ciudad} t={t} />
           </div>
 
+          {/* QW1 — Estado de apertura. Solo aparece si el POI tiene
+              opening_hours en OSM y conocemos la zona horaria del destino. */}
+          {lugar.horario && husoDestino && (
+            <div className="mb-3 -mt-1">
+              <BadgeApertura lugar={lugar} huso={husoDestino} t={t} />
+            </div>
+          )}
+
+          {/* QW5 — Datos del lugar desde OSM (cuando existen): web, teléfono,
+              nivel de precio, tipo de cocina. Si OSM no tiene estos tags
+              para el POI, esta sección no se renderiza. */}
+          {(lugar.web || lugar.tel || lugar.precio || lugar.cocina) && (
+            <div className="mb-3.5 flex flex-wrap gap-2 text-[12.5px]">
+              {lugar.web && (
+                <a
+                  href={lugar.web}
+                  target="_blank"
+                  rel="noopener nofollow"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-semibold text-marca-700 hover:bg-marca-50 dark:border-slate-700 dark:bg-slate-800 dark:text-marca-300 dark:hover:bg-marca-900/30"
+                  title={lugar.web}
+                >
+                  🌐 Sitio web
+                </a>
+              )}
+              {lugar.tel && (
+                <a
+                  href={`tel:${lugar.tel.replace(/[^\d+]/g, "")}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                >
+                  📞 {lugar.tel}
+                </a>
+              )}
+              {lugar.precio && (
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 font-bold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
+                  {lugar.precio}
+                </span>
+              )}
+              {lugar.cocina && (
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 font-semibold capitalize text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                  🍽️ {lugar.cocina}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Descripción (de Wikipedia), expandible */}
           {foto?.extracto && (
             <p className="mb-3.5 text-sm leading-relaxed text-slate-700">
@@ -224,9 +270,9 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
                   const loc = gratis ? null : costoLocal(tr.usd[0], tr.usd[1], moneda);
                   const claseBase = `flex items-center gap-3 rounded-xl border p-3 transition ${
                     modoSel === tr.modo
-                      ? "border-marca-500 bg-marca-50"
+                      ? "border-marca-500 bg-marca-50 dark:bg-marca-900/30"
                       : tr.recomendado
-                      ? "border-emerald-200 bg-emerald-50"
+                      ? "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20"
                       : "border-slate-100 bg-white"
                   }`;
                   const cuerpo = (
@@ -274,13 +320,13 @@ export default function DetalleLugar({ lugar, ciudad, origen, onCerrar, onTrazar
 
               <div className="mt-2 text-[11px] text-slate-400">{t("aproxAviso")}</div>
               {!origen && (
-                <div className="mt-2 rounded-[10px] bg-amber-50 p-2.5 text-[12px] leading-snug text-amber-700">
+                <div className="mt-2 rounded-[10px] bg-amber-50 p-2.5 text-[12px] leading-snug text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
                   <span className="inline-flex items-start gap-1.5"><Icono nombre="pin" size={13} className="mt-0.5 shrink-0" /> {t("activaGps")}</span>
                 </div>
               )}
             </>
           ) : (
-            <div className="rounded-[10px] bg-amber-100 p-3 text-[13px] leading-snug text-amber-800">
+            <div className="rounded-[10px] bg-amber-100 p-3 text-[13px] leading-snug text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
               <span className="inline-flex items-start gap-1.5"><Icono nombre="pin" size={13} className="mt-0.5 shrink-0" /> {t("activaGps")}</span>
             </div>
           )}

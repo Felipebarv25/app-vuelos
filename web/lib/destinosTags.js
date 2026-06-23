@@ -8,12 +8,14 @@
 //  - Ordenar destinos sugeridos en la home.
 //
 // Categorias soportadas: playa, ciudad, historia, naturaleza, montana,
-// gastronomia, lujo, economico, aventura, nocturna, romantico, familiar.
+// gastronomia, lujo, economico, aventura, nocturna, romantico, familiar,
+// asia, desierto, invierno. Las últimas 3 (asia/desierto/invierno) activan
+// los temas de fondo nuevos del hero — ver HERO_IMGS_POR_TEMA en page.js.
 
 export const CATEGORIAS_GUSTO = [
   "playa", "ciudad", "historia", "naturaleza", "montana",
   "gastronomia", "lujo", "economico", "aventura", "nocturna",
-  "romantico", "familiar",
+  "romantico", "familiar", "asia", "desierto", "invierno",
 ];
 
 // Diccionario por ciudad (minusculas, sin tildes). Si una ciudad no aparece,
@@ -45,15 +47,15 @@ export const TAGS_POR_CIUDAD = {
   "atenas": ["historia", "ciudad", "gastronomia"],
   "estambul": ["historia", "ciudad", "gastronomia"],
   // --- Asia ---
-  "tokio": ["ciudad", "gastronomia", "nocturna", "lujo"],
-  "kioto": ["historia", "naturaleza", "romantico"],
-  "bangkok": ["ciudad", "gastronomia", "economico", "nocturna"],
-  "bali": ["playa", "naturaleza", "romantico", "aventura"],
-  "phuket": ["playa", "lujo", "romantico", "aventura"],
-  "dubai": ["lujo", "ciudad", "playa", "aventura"],
-  "singapur": ["ciudad", "lujo", "gastronomia", "familiar"],
-  "hong kong": ["ciudad", "gastronomia", "nocturna"],
-  "seul": ["ciudad", "gastronomia", "nocturna"],
+  "tokio": ["ciudad", "gastronomia", "nocturna", "lujo", "asia"],
+  "kioto": ["historia", "naturaleza", "romantico", "asia"],
+  "bangkok": ["ciudad", "gastronomia", "economico", "nocturna", "asia"],
+  "bali": ["playa", "naturaleza", "romantico", "aventura", "asia"],
+  "phuket": ["playa", "lujo", "romantico", "aventura", "asia"],
+  "dubai": ["lujo", "ciudad", "playa", "aventura", "desierto"],
+  "singapur": ["ciudad", "lujo", "gastronomia", "familiar", "asia"],
+  "hong kong": ["ciudad", "gastronomia", "nocturna", "asia"],
+  "seul": ["ciudad", "gastronomia", "nocturna", "asia"],
   // --- Latinoamerica ---
   "ciudad de mexico": ["ciudad", "historia", "gastronomia", "economico"],
   "buenos aires": ["ciudad", "gastronomia", "nocturna", "historia"],
@@ -67,7 +69,45 @@ export const TAGS_POR_CIUDAD = {
   "nueva york": ["ciudad", "lujo", "gastronomia", "nocturna"],
   "los angeles": ["ciudad", "playa", "lujo", "nocturna"],
   "san francisco": ["ciudad", "gastronomia", "naturaleza"],
-  "las vegas": ["nocturna", "lujo", "ciudad"],
+  "las vegas": ["nocturna", "lujo", "ciudad", "desierto"],
+  // --- Más Asia (cobertura adicional para activar tema "asia") ---
+  "kuala lumpur": ["ciudad", "gastronomia", "asia"],
+  "yakarta": ["ciudad", "asia", "economico"],
+  "jakarta": ["ciudad", "asia", "economico"],
+  "manila": ["ciudad", "asia", "economico"],
+  "ho chi minh": ["ciudad", "gastronomia", "asia", "economico"],
+  "saigon": ["ciudad", "gastronomia", "asia", "economico"],
+  "hanoi": ["ciudad", "historia", "asia", "economico"],
+  "taipei": ["ciudad", "gastronomia", "asia"],
+  "beijing": ["ciudad", "historia", "asia"],
+  "pekin": ["ciudad", "historia", "asia"],
+  "shanghai": ["ciudad", "lujo", "asia"],
+  "delhi": ["ciudad", "historia", "asia"],
+  "nueva delhi": ["ciudad", "historia", "asia"],
+  "mumbai": ["ciudad", "asia", "economico"],
+  "bombay": ["ciudad", "asia", "economico"],
+  // --- Desierto / África ---
+  "marrakech": ["historia", "ciudad", "gastronomia", "desierto"],
+  "casablanca": ["ciudad", "playa", "desierto"],
+  "el cairo": ["historia", "ciudad", "desierto"],
+  "cairo": ["historia", "ciudad", "desierto"],
+  "doha": ["lujo", "ciudad", "desierto"],
+  "abu dabi": ["lujo", "ciudad", "desierto"],
+  "abu dhabi": ["lujo", "ciudad", "desierto"],
+  "riad": ["ciudad", "desierto"],
+  "phoenix": ["ciudad", "desierto", "familiar"],
+  // --- Invierno / Norte frío ---
+  "reikiavik": ["naturaleza", "aventura", "invierno"],
+  "reykjavik": ["naturaleza", "aventura", "invierno"],
+  "oslo": ["ciudad", "naturaleza", "invierno"],
+  "estocolmo": ["ciudad", "historia", "invierno"],
+  "helsinki": ["ciudad", "naturaleza", "invierno"],
+  "copenhague": ["ciudad", "gastronomia", "invierno"],
+  "moscu": ["ciudad", "historia", "invierno"],
+  "zurich": ["ciudad", "naturaleza", "lujo", "invierno"],
+  "ginebra": ["ciudad", "lujo", "invierno"],
+  "montreal": ["ciudad", "gastronomia", "familiar", "invierno"],
+  "sapporo": ["naturaleza", "gastronomia", "invierno", "asia"],
   "toronto": ["ciudad", "gastronomia", "familiar"],
   // --- Naturaleza / Aventura ---
   "machu picchu": ["historia", "montana", "aventura", "naturaleza"],
@@ -83,7 +123,7 @@ export const TAGS_POR_CIUDAD = {
 // Fallback por region: si no encontramos la ciudad arriba.
 export const TAGS_POR_REGION = {
   europa: ["ciudad", "historia", "gastronomia"],
-  asia: ["ciudad", "gastronomia"],
+  asia: ["ciudad", "gastronomia", "asia"],
   norteamerica: ["ciudad", "playa"],
   sudamerica: ["ciudad", "naturaleza", "economico"],
   africa: ["aventura", "naturaleza", "historia"],

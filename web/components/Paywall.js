@@ -2,8 +2,6 @@
 import { useEffect, useState } from "react";
 import { Icono } from "./Icono";
 import { track } from "@/lib/track";
-import { PRECIOS, fmtUsd } from "@/lib/precios";
-import PrecioLocal from "./PrecioLocal";
 
 // Paywall modal. Se abre desde cualquier feature gateada (PDF, 2do viaje,
 // 2da alerta, grafico de precios). Muestra los 3 precios con el plan anual
@@ -72,7 +70,7 @@ export default function Paywall({
       onClick={onCerrar}
     >
       <div
-        className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl animar-subir"
+        className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl animar-subir dark:bg-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative bg-gradient-to-br from-marca-600 via-marca-700 to-marca-900 px-6 pb-7 pt-6 text-white">
@@ -85,7 +83,7 @@ export default function Paywall({
             <Icono nombre="x" size={16} />
           </button>
           <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/85">
-            Viajero 360 Pro
+            Anduve Pro
           </div>
           <h2 className="mt-1 text-2xl font-extrabold tracking-tight">
             {t("paywallTitulo")}
@@ -96,17 +94,26 @@ export default function Paywall({
         </div>
 
         <div className="px-5 py-5">
-          {/* Framing de valor: el precio se ancla contra el ahorro real (una
-              oferta de vuelo), no contra la lista de features. */}
-          <div className="mb-3 rounded-xl bg-emerald-50 px-3 py-2 text-center text-[12.5px] font-semibold text-emerald-700">
-            {t("paywallValor")}
+          {/* Escasez de fundador: empujón final justo antes de las cards. La
+              copy es honesta (estática "primeros 100" — sin contador inventado
+              hasta que LemonSqueezy esté wireado y podamos contar lifetime
+              vendidos via webhook). */}
+          <div className="mb-3 flex items-center gap-2.5 rounded-2xl border border-acento-200 bg-gradient-to-br from-acento-50 to-amber-50 px-3.5 py-2.5 dark:border-acento-700 dark:from-acento-900/20 dark:to-amber-900/20">
+            <span className="text-2xl" aria-hidden>⏳</span>
+            <div className="min-w-0">
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-acento-700 dark:text-acento-300">
+                {t("paywallFundadorTit")}
+              </div>
+              <div className="text-[12.5px] font-semibold text-slate-700 dark:text-slate-200">
+                {t("paywallFundadorSub")}
+              </div>
+            </div>
           </div>
           <div className="space-y-2.5">
             <PlanCard
               tipo="anual"
               activo={planFocado === "anual"}
-              precio={fmtUsd(PRECIOS.anual.usd)}
-              usd={PRECIOS.anual.usd}
+              precio="US$ 24"
               periodo={t("paywallAnio")}
               ahorro={t("paywallAhorroAnual")}
               destacado={true}
@@ -114,13 +121,11 @@ export default function Paywall({
               onElegir={() => setPlanFocado("anual")}
               onComprar={() => abrirCheckout("anual")}
               btnLabel={t("paywallEmpezar")}
-              t={t}
             />
             <PlanCard
               tipo="mensual"
               activo={planFocado === "mensual"}
-              precio={fmtUsd(PRECIOS.mensual.usd)}
-              usd={PRECIOS.mensual.usd}
+              precio="US$ 4.99"
               periodo={t("paywallMes")}
               ahorro={null}
               destacado={false}
@@ -128,13 +133,11 @@ export default function Paywall({
               onElegir={() => setPlanFocado("mensual")}
               onComprar={() => abrirCheckout("mensual")}
               btnLabel={t("paywallEmpezar")}
-              t={t}
             />
             <PlanCard
               tipo="lifetime"
               activo={planFocado === "lifetime"}
-              precio={fmtUsd(PRECIOS.lifetime.usd)}
-              usd={PRECIOS.lifetime.usd}
+              precio="US$ 39"
               periodo={t("paywallUnaSolaVez")}
               ahorro={t("paywallLifetime100")}
               destacado={false}
@@ -142,7 +145,6 @@ export default function Paywall({
               onElegir={() => setPlanFocado("lifetime")}
               onComprar={() => abrirCheckout("lifetime")}
               btnLabel={t("paywallEmpezar")}
-              t={t}
             />
           </div>
 
@@ -163,13 +165,13 @@ export default function Paywall({
   );
 }
 
-function PlanCard({ activo, precio, usd, periodo, ahorro, destacado, ventajas, onElegir, onComprar, btnLabel, t = (k) => k }) {
+function PlanCard({ activo, precio, periodo, ahorro, destacado, ventajas, onElegir, onComprar, btnLabel }) {
   return (
     <div
       onClick={onElegir}
       className={`cursor-pointer rounded-2xl border-2 p-4 transition ${
         activo
-          ? "border-marca-500 bg-marca-50 shadow-md"
+          ? "border-marca-500 bg-marca-50 shadow-md dark:bg-marca-900/30"
           : "border-slate-200 bg-white hover:border-marca-200"
       }`}
     >
@@ -184,7 +186,6 @@ function PlanCard({ activo, precio, usd, periodo, ahorro, destacado, ventajas, o
               {ahorro}
             </div>
           )}
-          <PrecioLocal usd={usd} nota={t("paywallTasaAprox")} className="mt-0.5" />
         </div>
         {destacado && (
           <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10.5px] font-extrabold uppercase tracking-wide text-emerald-700">

@@ -12,9 +12,10 @@ import {
   MONEDAS,
 } from "@/lib/presupuesto";
 import { obtenerPreciosReales, buscarVueloEnVivo } from "@/lib/preciosVuelos";
-import { linkVuelos, linkGoogleFlights } from "@/lib/afiliados";
+import { linkVuelos, linkGoogleFlights, linkHoteles } from "@/lib/afiliados";
 import { obtenerTasas, aUsdDe } from "@/lib/fx";
 import { PAISES_ORIGEN, PAISES_ORDEN, PAIS_DEFAULT, paisValido, nombreDeIATA } from "@/lib/paisesOrigen";
+import SelectorAeropuerto, { banderaDePais } from "./SelectorAeropuerto";
 
 // Módulo "¿Adónde puedo ir con mi presupuesto?".
 // Dos modos:
@@ -49,15 +50,19 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
     let paisGuardado = null;
     let hubGuardado = null;
     try {
-      paisGuardado = localStorage.getItem("v360_pais_origen");
-      hubGuardado = localStorage.getItem("v360_hub_origen");
+      paisGuardado = localStorage.getItem("anduve_pais_origen");
+      hubGuardado = localStorage.getItem("anduve_hub_origen");
     } catch {}
 
-    if (paisGuardado && paisValido(paisGuardado)) {
+    // Acepta CUALQUIER ISO 2-letras como pais guardado (no solo los de
+    // PAISES_ORIGEN), porque el combobox de aeropuertos permite elegir
+    // países fuera del catálogo curado. Si tenemos hub guardado, lo
+    // respetamos; si no, intentamos primer hub del país (si está en
+    // catálogo) y si no, dejamos el campo vacío para que el combobox
+    // pida selección.
+    if (paisGuardado && /^[A-Z]{2}$/.test(paisGuardado) && hubGuardado) {
       setPaisOrigen(paisGuardado);
-      const hubs = PAISES_ORIGEN[paisGuardado].hubs;
-      const hub = hubs.find((h) => h.iata === hubGuardado) || hubs[0];
-      setOrigen(hub.iata);
+      setOrigen(hubGuardado);
       setGeoListo(true);
       return;
     }
@@ -87,27 +92,59 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
     const primerHub = PAISES_ORIGEN[codigo].hubs[0].iata;
     setOrigen(primerHub);
     try {
-      localStorage.setItem("v360_pais_origen", codigo);
-      localStorage.setItem("v360_hub_origen", primerHub);
+      localStorage.setItem("anduve_pais_origen", codigo);
+      localStorage.setItem("anduve_hub_origen", primerHub);
     } catch {}
     track("pais_origen", { pais: codigo, hub: primerHub });
   }
 
   function cambiarOrigen(v) {
     setOrigen(v);
-    try { localStorage.setItem("v360_hub_origen", v); } catch {}
+    try { localStorage.setItem("anduve_hub_origen", v); } catch {}
     track("origen_cambiado", { origen: v, pais: paisOrigen });
   }
 
+  // Cuando el usuario elige un aeropuerto del combobox, fijamos país e IATA
+  // a la vez. Soporta cualquier país del mundo (incluso uno que no esté en
+  // PAISES_ORIGEN — en ese caso, paisActual cae al fallback "sin detector").
+  // Si a === null, significa que el usuario cambió el filtro de país y el
+  // aeropuerto previo ya no era válido — limpiamos origen pero mantenemos
+  // paisOrigen (lo seteó el combobox via su propio estado).
+  function elegirAeropuerto(a) {
+    if (!a) {
+      setOrigen("");
+      try { localStorage.removeItem("anduve_hub_origen"); } catch {}
+      return;
+    }
+    setPaisOrigen(a.pais);
+    setOrigen(a.iata);
+    try {
+      localStorage.setItem("anduve_pais_origen", a.pais);
+      localStorage.setItem("anduve_hub_origen", a.iata);
+    } catch {}
+    track("aeropuerto_origen", { pais: a.pais, iata: a.iata, ciudad: a.ciudad });
+  }
+
   // Para el chip "💡 Desde X ahorras..." y los disclaimers, calculamos el pais
-  // actual y si su detector tiene cobertura real.
-  const paisActual = PAISES_ORIGEN[paisOrigen] || PAISES_ORIGEN[PAIS_DEFAULT];
+  // actual y si su detector tiene cobertura real. Si el usuario eligió un
+  // país fuera del catálogo curado, generamos un placeholder con bandera real
+  // pero sin detector — el banner ámbar se muestra correctamente.
+  const paisActual = PAISES_ORIGEN[paisOrigen] || {
+    bandera: banderaDePais(paisOrigen),
+    nombre: paisOrigen || "",
+    hubs: [],
+    tieneDetector: false,
+  };
   const hubsPais = paisActual.hubs;
   const detectorCubre = paisActual.tieneDetector;
 
   // Ruta
   const [inicio, setInicio] = useState(""); // llaveCiudad de la ciudad de salida
   const [semilla, setSemilla] = useState(0);
+  // Ritmo de la ruta multiciudad: "normal" rellena con tantas ciudades como
+  // quepan (2 dias/ciudad min); "tranquilo" deja 3 dias/ciudad min, menos
+  // ciudades pero mas tiempo en cada una. Default normal.
+  const [ritmo, setRitmo] = useState("normal");
 
   // Modo destino: buscador de texto.
   const [buscarDestino, setBuscarDestino] = useState("");
@@ -132,7 +169,12 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
     // Evita relanzar si ya está buscando o si ya tiene datos en preciosReales.
     if (vivoEstado[k] === "buscando" || vivoEstado[k] === "ok") return;
     setVivoEstado((s) => ({ ...s, [k]: "buscando" }));
-    const iatasUsuario = hubsPais.map((h) => h.iata);
+    // Prioriza el IATA elegido por el usuario, y como fallback usa los hubs
+    // curados del país (si está en catálogo). Si el país no está en
+    // PAISES_ORIGEN, hubsPais=[] y solo se intenta `origen`.
+    const iatasUsuario = origen
+      ? [origen, ...hubsPais.map((h) => h.iata).filter((x) => x !== origen)]
+      : hubsPais.map((h) => h.iata);
     const r = await buscarVueloEnVivo(d.ciudad, d.pais, iatasUsuario);
     if (r) {
       // Lo guardamos en el shape nuevo (porOrigen + mejor) para que el resto
@@ -197,8 +239,8 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
 
   const ruta = useMemo(
     () =>
-      construirRuta({ presupuestoUsd, dias, personas, region, inicio, semilla, excluir: excluidos, preciosReales, origen }),
-    [presupuestoUsd, dias, personas, region, inicio, semilla, excluidos, preciosReales, origen]
+      construirRuta({ presupuestoUsd, dias, personas, region, inicio, semilla, excluir: excluidos, preciosReales, origen, ritmo }),
+    [presupuestoUsd, dias, personas, region, inicio, semilla, excluidos, preciosReales, origen, ritmo]
   );
 
   // Modo RUTA: cuando hay ruta y la entrada todavía no tiene precio real,
@@ -229,13 +271,13 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
 
   return (
     <div className="fixed inset-0 z-[4000] flex items-end justify-center bg-slate-900/60 backdrop-blur-sm">
-      <div className="animar-subir flex max-h-[94vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-slate-50 shadow-[0_-12px_40px_rgba(0,0,0,.35)]">
+      <div className="animar-subir flex max-h-[94vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-slate-50 shadow-[0_-12px_40px_rgba(0,0,0,.35)] dark:bg-slate-900">
         {/* Cabecera */}
         <div className="bg-gradient-to-br from-marca-600 via-marca-700 to-marca-900 px-5 pb-4 pt-5 text-white">
           <div className="flex items-start justify-between">
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">
-                Viajero 360
+                Anduve
               </div>
               <div className="mt-0.5 text-xl font-extrabold tracking-tight">{t("presupTitulo")}</div>
             </div>
@@ -276,50 +318,23 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                 estimados/busqueda en vivo y se le avisa al usuario. */}
             <div>
               <Label>{t("presupSalesDesde")}</Label>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                {/* Selector de pais */}
-                <select
-                  value={paisOrigen}
-                  onChange={(e) => cambiarPais(e.target.value)}
-                  aria-label={t("presupSalesDesde")}
-                  className="rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400"
-                >
-                  {PAISES_ORDEN.map((cod) => (
-                    <option key={cod} value={cod}>
-                      {PAISES_ORIGEN[cod].bandera} {PAISES_ORIGEN[cod].nombre}
-                    </option>
-                  ))}
-                </select>
-                {/* Selector de hub (tarjetas) — se adapta al pais elegido */}
-                <div className="flex flex-1 flex-wrap gap-2">
-                  {hubsPais.map((o) => (
-                    <button
-                      key={o.iata}
-                      type="button"
-                      onClick={() => cambiarOrigen(o.iata)}
-                      className={`flex-1 rounded-xl border-2 px-3 py-2.5 text-left transition ${
-                        origen === o.iata
-                          ? "border-marca-500 bg-marca-50 text-marca-900 shadow-sm"
-                          : "border-slate-200 bg-white text-slate-700 hover:border-marca-200"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">🛫</span>
-                        <div>
-                          <div className="text-[14px] font-bold leading-tight">{o.ciudad}</div>
-                          <div className="text-[11px] uppercase tracking-wide text-slate-500">{o.iata}</div>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Combobox con typeahead sobre catálogo IATA completo (~7000
+                  aeropuertos del mundo, /aeropuertos.json cargado bajo
+                  demanda). El usuario puede escribir ciudad, nombre de
+                  aeropuerto o IATA. Setea país + IATA juntos. */}
+              <SelectorAeropuerto
+                value={origen}
+                paisInicial={paisOrigen}
+                onChange={elegirAeropuerto}
+                placeholder={t("presupSalesDesdePlaceholder")}
+                ariaLabel={t("presupSalesDesde")}
+              />
               {detectorCubre ? (
                 <div className="mt-1.5 text-[11px] text-slate-500">
                   {t("presupSalesDesdeNota")}
                 </div>
               ) : (
-                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11.5px] leading-snug text-amber-800">
+                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11.5px] leading-snug text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
                   <b>⚠️ {t("presupCoberturaTitulo")}</b>{" "}
                   {t("presupCoberturaAviso").replace("{pais}", paisActual.nombre)}
                 </div>
@@ -409,7 +424,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                     className={`rounded-full px-3.5 py-2 text-[13px] font-semibold transition ${
                       region === k
                         ? "bg-marca-600 text-white shadow"
-                        : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-marca-300"
+                        : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-marca-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600"
                     }`}
                   >
                     {nombre}
@@ -464,10 +479,32 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
           {modo === "ruta" && (
             <div className="mt-5">
               {!ruta || ruta.ciudades.length === 0 ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-800">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
                   {t("presupNoRuta")}
                 </div>
               ) : (
+                <>
+                  {/* Toggle de ritmo: feedback de la auditoria + agente critico
+                      ronda 1. 2 dias/ciudad en rutas largas se siente apretado;
+                      tranquilo da 3 dias min (menos ciudades, mas tiempo). */}
+                  <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl bg-slate-50 p-2">
+                    <span className="px-2 text-[12px] font-semibold text-slate-600">{t("presupRitmoTit")}</span>
+                    <div className="flex gap-1">
+                      {[["normal", t("presupRitmoNormal")], ["tranquilo", t("presupRitmoTranquilo")]].map(([k, label]) => (
+                        <button
+                          key={k}
+                          onClick={() => setRitmo(k)}
+                          className={`rounded-full px-3 py-1.5 text-[12px] font-bold transition ${
+                            ritmo === k
+                              ? "bg-marca-600 text-white shadow"
+                              : "text-slate-500 hover:bg-white dark:text-slate-400 dark:hover:bg-slate-700"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 <RutaCard
                   ruta={ruta}
                   t={t}
@@ -484,6 +521,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   vivoEstadoEntrada={vivoEstado[llaveCiudad(ruta.entrada)] || null}
                   onPedirVivoEntrada={() => pedirVivo(ruta.entrada)}
                 />
+                </>
               )}
 
               {/* Ciudades excluidas: fichas para volver a incluirlas */}
@@ -509,7 +547,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
           {/* ---------- MODO DESTINO ---------- */}
           {modo === "destino" && (
             <div className="mt-5">
-              <div className="flex items-center justify-between rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 px-4 py-3.5">
+              <div className="flex items-center justify-between rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 px-4 py-3.5 dark:border-emerald-800 dark:from-emerald-900/20 dark:to-teal-900/20">
                 <div>
                   <div className="text-2xl font-extrabold text-emerald-700">{caben.length}</div>
                   <div className="text-xs text-slate-500">{t("presupDestinos")}</div>
@@ -538,7 +576,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   <div
                     key={llaveCiudad(d)}
                     className={`rounded-2xl border bg-white p-3.5 transition ${
-                      d.cabe ? "border-emerald-200" : "border-slate-100 opacity-60"
+                      d.cabe ? "border-emerald-200 dark:border-emerald-800" : "border-slate-100 opacity-60"
                     }`}
                   >
                     <div
@@ -561,7 +599,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                         </div>
                         <div className="text-[11px] text-slate-400">{fmtLocal(d.total)}</div>
                         {d.esReal ? (
-                          <div className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-emerald-700">
+                          <div className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
                             <Icono nombre="flame" size={9} /> {t("presupPrecioReal")}
                           </div>
                         ) : (
@@ -577,7 +615,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                         del detector (compara los precios reales que el sistema
                         ya tiene escaneados) y empuja la propuesta de valor. */}
                     {d.ahorroDesde && (
-                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-[12px] font-semibold text-amber-800">
+                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-[12px] font-semibold text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
                         <span>💡</span>
                         <span>
                           {t("presupAhorroDesde").replace("{origen}", nombreDeIATA(d.ahorroDesde.origen))}
@@ -596,7 +634,21 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                           badgeReal={d.esReal}
                         />
                         {d.esReal && <FechasOferta vueloReal={d.vueloReal} t={t} />}
-                        <Fila nombre={t("presupHospedaje")} valor={fmtUsd(d.desglose.hospedaje)} />
+                        <Fila
+                          nombre={t("presupHospedaje")}
+                          valor={fmtUsd(d.desglose.hospedaje)}
+                          accion={
+                            <a
+                              href={linkHoteles({ ciudad: d.ciudad })}
+                              target="_blank"
+                              rel="sponsored noopener"
+                              className="text-[11px] font-bold text-marca-600 hover:underline"
+                              title={t("presupBuscarHoteles")}
+                            >
+                              {t("presupBuscarHoteles")} ↗
+                            </a>
+                          }
+                        />
                         <Fila nombre={t("presupComida")} valor={fmtUsd(d.desglose.comida)} />
                         <Fila nombre={t("presupTransporte")} valor={fmtUsd(d.desglose.transporte)} />
                         <Fila nombre={t("presupExtras")} valor={fmtUsd(d.desglose.extras)} />
@@ -638,7 +690,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                                   href={linkVuelos({ ciudad: d.ciudad, pais: d.pais })}
                                   target="_blank"
                                   rel="sponsored noopener"
-                                  className="flex-1 rounded-xl border-[1.5px] border-amber-200 bg-amber-50 py-2.5 text-center text-[12.5px] font-bold text-amber-800 transition hover:bg-amber-100"
+                                  className="flex-1 rounded-xl border-[1.5px] border-amber-200 bg-amber-50 py-2.5 text-center text-[12.5px] font-bold text-amber-800 transition hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300"
                                 >
                                   <span className="inline-flex items-center justify-center gap-1.5">
                                     <Icono nombre="plane" size={14} /> {t("presupVerAviasales")}
@@ -648,7 +700,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                                   href={linkGoogleFlights({ ciudad: d.ciudad, pais: d.pais })}
                                   target="_blank"
                                   rel="noopener"
-                                  className="flex-1 rounded-xl border-[1.5px] border-blue-200 bg-blue-50 py-2.5 text-center text-[12.5px] font-bold text-blue-800 transition hover:bg-blue-100"
+                                  className="flex-1 rounded-xl border-[1.5px] border-blue-200 bg-blue-50 py-2.5 text-center text-[12.5px] font-bold text-blue-800 transition hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
                                 >
                                   <span className="inline-flex items-center justify-center gap-1.5">
                                     <Icono nombre="search" size={14} /> {t("presupVerGoogle")}
@@ -658,7 +710,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                             ) : (
                               <button
                                 onClick={() => pedirVivo(d)}
-                                className="w-full rounded-xl border-[1.5px] border-emerald-200 bg-emerald-50 py-2.5 text-[13px] font-bold text-emerald-700 transition hover:bg-emerald-100"
+                                className="w-full rounded-xl border-[1.5px] border-emerald-200 bg-emerald-50 py-2.5 text-[13px] font-bold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300"
                               >
                                 <span className="inline-flex items-center justify-center gap-1.5"><Icono nombre="refresh" size={14} /> {t("presupBuscarReal")}</span>
                               </button>
@@ -699,18 +751,36 @@ function fmtFechaCorta(iso) {
   return `${d} ${MESES_CORTOS[m] || ""}`;
 }
 
-// Línea "Oferta para 12 mar – 20 mar" bajo el precio de vuelo cuando es real.
+// "visto hace X" del timestamp del último escaneo. Compartido con Ofertas.js.
+function fmtHaceCorto(iso, t) {
+  if (!iso) return "";
+  const ms = Date.now() - new Date(iso).getTime();
+  if (Number.isNaN(ms) || ms < 0) return "";
+  const min = Math.round(ms / 60000);
+  if (min < 60) return t("ofertasHaceMin").replace("{n}", Math.max(1, min));
+  const h = Math.round(min / 60);
+  if (h < 24) return t("ofertasHaceHoras").replace("{n}", h);
+  const d = Math.round(h / 24);
+  return t("ofertasHaceDias").replace("{n}", d);
+}
+
+// Línea "Oferta para 12 mar – 20 mar · visto hace 3h" bajo el precio cuando
+// es real. QW2: añadimos sello de frescura adyacente al precio para que
+// nadie vea una cifra sin saber cuándo fue verificada.
 function FechasOferta({ vueloReal, t }) {
   if (!vueloReal || (!vueloReal.fecha_ida && !vueloReal.fecha_vuelta)) return null;
+  const visto = vueloReal.visto || vueloReal.generado;
+  const hace = visto ? fmtHaceCorto(visto, t) : "";
   return (
     <div className="-mt-0.5 mb-1 pl-0.5 text-[11px] font-medium text-emerald-700">
       {t("presupOfertaPara")} {fmtFechaCorta(vueloReal.fecha_ida)}
       {vueloReal.fecha_vuelta ? ` – ${fmtFechaCorta(vueloReal.fecha_vuelta)}` : ""}
+      {hace && <span className="ml-1.5 font-normal text-emerald-700/70">· {hace}</span>}
     </div>
   );
 }
 
-function Fila({ nombre, valor, badge = null, badgeReal = false }) {
+function Fila({ nombre, valor, badge = null, badgeReal = false, accion = null }) {
   return (
     <div className="flex items-center justify-between py-1 text-[13px] text-slate-600">
       <span className="flex items-center gap-1.5">
@@ -718,14 +788,17 @@ function Fila({ nombre, valor, badge = null, badgeReal = false }) {
         {badge && (
           <span
             className={`rounded-full px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide ${
-              badgeReal ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+              badgeReal ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300" : "bg-slate-100 text-slate-500"
             }`}
           >
             {badge}
           </span>
         )}
       </span>
-      <b className="text-slate-800">{valor}</b>
+      <span className="flex items-center gap-2">
+        {accion}
+        <b className="text-slate-800">{valor}</b>
+      </span>
     </div>
   );
 }
@@ -745,7 +818,7 @@ function RutaCard({
 }) {
   const { ciudades, desglose, total, cabe, sobra, diasTotales } = ruta;
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-suave">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-suave dark:border-slate-700 dark:bg-slate-800">
       {/* Encabezado de la ruta */}
       <div className="border-b border-slate-100 px-4 pb-3 pt-4">
         <div className="flex items-center justify-between">
@@ -840,7 +913,7 @@ function RutaCard({
             ) : (
               <button
                 onClick={onPedirVivoEntrada}
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11.5px] font-bold text-emerald-700 transition hover:bg-emerald-100"
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11.5px] font-bold text-emerald-700 transition hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300"
               >
                 <Icono nombre="refresh" size={11} /> {t("presupBuscarReal")}
               </button>
@@ -885,7 +958,7 @@ function RutaCard({
       </div>
 
       {/* Total */}
-      <div className={`flex items-center justify-between px-4 py-3 ${cabe ? "bg-emerald-50" : "bg-red-50"}`}>
+      <div className={`flex items-center justify-between px-4 py-3 ${cabe ? "bg-emerald-50 dark:bg-emerald-900/20" : "bg-red-50 dark:bg-red-900/20"}`}>
         <div>
           <div className="text-[11px] uppercase tracking-wide text-slate-500">Total</div>
           <div className={`text-xl font-extrabold ${cabe ? "text-emerald-700" : "text-red-600"}`}>
@@ -906,7 +979,7 @@ function RutaCard({
       <div className="flex gap-2 border-t border-slate-100 p-3">
         <button
           onClick={onOtra}
-          className="flex-1 rounded-xl border-[1.5px] border-marca-100 bg-white py-3 text-sm font-bold text-marca-700 transition hover:bg-marca-50"
+          className="flex-1 rounded-xl border-[1.5px] border-marca-100 bg-white py-3 text-sm font-bold text-marca-700 transition hover:bg-marca-50 dark:border-slate-700 dark:bg-slate-700 dark:text-marca-300 dark:hover:bg-slate-600"
         >
           <span className="inline-flex items-center justify-center gap-1.5"><Icono nombre="refresh" size={15} /> {t("presupOtraRuta")}</span>
         </button>

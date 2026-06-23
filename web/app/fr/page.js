@@ -2,7 +2,7 @@
 import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Viajero 360 · Planifiez votre voyage parfait",
+  title: "Anduve · Planifiez votre voyage parfait",
   description:
     "Combien pouvez-vous dépenser ? Nous vous disons où aller, quand c'est moins cher et planifions chaque jour. Prix de vols en direct et recommandations personnalisées.",
   alternates: {

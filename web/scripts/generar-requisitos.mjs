@@ -13,7 +13,7 @@ import { dirname, join } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const RAIZ = join(__dirname, "..");
-const UA = "Viajero360/1.0 (https://app-vuelos-mfos.vercel.app)";
+const UA = "Anduve/1.0 (https://app-vuelos-mfos.vercel.app)";
 
 const PI_URL =
   "https://raw.githubusercontent.com/ilyankou/passport-index-dataset/master/passport-index-tidy-iso2.csv";

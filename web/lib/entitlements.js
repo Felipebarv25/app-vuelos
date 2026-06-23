@@ -13,10 +13,29 @@
 
 import { kv, kvActivo } from "./kv";
 
+// Emails que tienen Pro automatico SIN pasar por checkout. Util para:
+//   - Owner / admin (felipebarv@gmail.com).
+//   - Cuentas demo que ensenan toda la app sin restricciones (demo@viajero360.app).
+//   - Beta testers / influencers que reciben acceso de cortesia.
+// Se configura via env var PRO_EMAILS (coma-separated). Si la env var no esta,
+// la lista esta vacia y todos los usuarios se rigen por KV (pago real).
+function emailsConProAutomatico() {
+  const raw = process.env.PRO_EMAILS || "";
+  return raw.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+}
+
 // Lee el registro Pro del usuario. Si no existe o expiro, devuelve null.
 export async function leerPro(email) {
-  if (!kvActivo() || !email) return null;
-  const k = `pro:${String(email).toLowerCase()}`;
+  if (!email) return null;
+  // Override: si el email esta en la lista PRO_EMAILS, devolvemos un registro
+  // sintetico "lifetime cortesia". Tiene precedencia sobre KV — no se puede
+  // "rebajar" un email de la lista cancelandolo via webhook.
+  const lower = String(email).toLowerCase();
+  if (emailsConProAutomatico().includes(lower)) {
+    return { plan: "lifetime", until: null, productId: "cortesia", activado: 0, cortesia: true };
+  }
+  if (!kvActivo()) return null;
+  const k = `pro:${lower}`;
   try {
     const raw = await kv(["GET", k]);
     if (!raw) return null;

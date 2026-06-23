@@ -103,7 +103,7 @@ const TERMINOS_PHOTON = {
 
 // User-Agent identificable: varias APIs gratuitas (Photon/Nominatim/Overpass)
 // rechazan peticiones sin UA, sobre todo desde IPs de datacenter como Vercel.
-const UA = "Viajero360/1.0 (https://app-vuelos-mfos.vercel.app)";
+const UA = "Anduve/1.0 (https://app-vuelos-mfos.vercel.app)";
 
 function carrera(query) {
   const cuerpo = "data=" + encodeURIComponent(query);
@@ -480,7 +480,7 @@ export async function GET(req) {
   const construir = (filtros, r, lim) =>
     `[out:json][timeout:15];(${filtros
       .map((f) => `${f}(around:${r},${lat},${lon});`)
-      .join("")});out center ${lim};`;
+      .join("")});out center tags ${lim};`;
 
   // DOS consultas a Overpass EN PARALELO (la lección clave de rendimiento):
   //  · CERCANA: área pequeña (≤25 km). Es la crítica y la RÁPIDA (~5s). En áreas

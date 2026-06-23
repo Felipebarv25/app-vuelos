@@ -3,34 +3,39 @@ import { useState } from "react";
 import { useApp } from "@/lib/AppContext";
 import { IDIOMAS } from "@/lib/idiomas";
 
-// Botoncito de idioma + menú, para cambiar el idioma desde la cabecera.
 export default function SelectorIdioma({ oscuro = true }) {
   const { lang, cambiarIdioma } = useApp();
   const [abierto, setAbierto] = useState(false);
 
   return (
-    <div style={{ position: "relative" }}>
-      <button onClick={() => setAbierto((v) => !v)} style={oscuro ? btn : btnClaro}>
+    <div className="relative">
+      <button
+        onClick={() => setAbierto((v) => !v)}
+        className={oscuro
+          ? "rounded-lg border-0 bg-white/20 px-2.5 py-1.5 text-[15px] text-white"
+          : "rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1.5 text-[15px] text-marca-700 dark:border-slate-700 dark:bg-slate-800 dark:text-marca-300"
+        }
+      >
         {lang?.toUpperCase()} ▾
       </button>
       {abierto && (
         <>
-          <div style={tapa} onClick={() => setAbierto(false)} />
-          <div style={menu} className="animar-subir">
+          <div className="fixed inset-0 z-[1500]" onClick={() => setAbierto(false)} />
+          <div className="animar-subir absolute right-0 top-[110%] z-[1600] min-w-[160px] overflow-hidden rounded-xl bg-white shadow-[0_8px_24px_rgba(0,0,0,.2)] dark:bg-slate-800 dark:shadow-[0_8px_24px_rgba(0,0,0,.5)]">
             {Object.entries(IDIOMAS).map(([cod, info]) => (
               <button
                 key={cod}
-                onClick={() => {
-                  cambiarIdioma(cod);
-                  setAbierto(false);
-                }}
-                style={{
-                  ...item,
-                  background: lang === cod ? "#eff6ff" : "#fff",
-                  fontWeight: lang === cod ? 700 : 500,
-                }}
+                onClick={() => { cambiarIdioma(cod); setAbierto(false); }}
+                className={`flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-[14px] transition ${
+                  lang === cod
+                    ? "bg-marca-50 font-bold text-marca-700 dark:bg-marca-900/40 dark:text-marca-300"
+                    : "font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700"
+                }`}
               >
-                <span style={{ fontSize: 11, fontWeight: 700, background: "#f1f5f9", color: "#475569", borderRadius: 4, padding: "2px 5px" }}>{cod.toUpperCase()}</span> {info.nombre}
+                <span className="rounded bg-slate-100 px-1 py-0.5 text-[11px] font-bold text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                  {cod.toUpperCase()}
+                </span>
+                {info.nombre}
               </button>
             ))}
           </div>
@@ -39,45 +44,3 @@ export default function SelectorIdioma({ oscuro = true }) {
     </div>
   );
 }
-
-const btn = {
-  background: "rgba(255,255,255,.2)",
-  color: "#fff",
-  border: "none",
-  borderRadius: 8,
-  padding: "6px 10px",
-  fontSize: 15,
-};
-// Variante para fondo claro (cinta blanca tipo tarjeta).
-const btnClaro = {
-  background: "#f1f5f9",
-  color: "#4f46e5",
-  border: "1px solid #e2e8f0",
-  borderRadius: 8,
-  padding: "6px 10px",
-  fontSize: 15,
-};
-const tapa = { position: "fixed", inset: 0, zIndex: 1500 };
-const menu = {
-  position: "absolute",
-  top: "110%",
-  right: 0,
-  background: "#fff",
-  borderRadius: 12,
-  boxShadow: "0 8px 24px rgba(0,0,0,.2)",
-  overflow: "hidden",
-  zIndex: 1600,
-  minWidth: 160,
-};
-const item = {
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  width: "100%",
-  padding: "11px 14px",
-  border: "none",
-  fontSize: 14,
-  color: "var(--texto)",
-  textAlign: "left",
-  cursor: "pointer",
-};

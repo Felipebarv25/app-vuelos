@@ -6,7 +6,12 @@
 // para anonimos.
 
 function token() {
-  try { return localStorage.getItem("v360_auth_token"); } catch { return null; }
+  // Sesiones email magic code → localStorage.
+  // Sesiones Demo → sessionStorage. Caer a sessionStorage si localStorage está vacío.
+  try {
+    return localStorage.getItem("anduve_auth_token")
+        || sessionStorage.getItem("anduve_auth_token");
+  } catch { return null; }
 }
 
 // Envia un evento de gusto al servidor (no bloquea ni rompe si falla).

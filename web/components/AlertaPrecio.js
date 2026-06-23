@@ -71,6 +71,11 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
       setAbierto(true);
       return;
     }
+    // BUG FIX: si el componente quedó con estado "auth" de un click anterior
+    // (cuando el usuario no estaba logueado), reseteamos al modo form normal.
+    // Sin esto, el usuario que se loguea con Demo Free veía "Necesitas tu
+    // email" aunque ya hubiera entrado.
+    setEstado(null);
     setAbierto(true);
   }
 
@@ -80,10 +85,13 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
     setCargando(true);
     setEstado(null);
     try {
-      // Pasar token Bearer si hay (sesion email magic code).
+      // Pasar token Bearer si hay (sesion email magic code o Demo).
+      // BUG FIX: leer también de sessionStorage. Las sesiones Demo se guardan
+      // ahí (no en localStorage), y antes el POST iba sin Authorization.
       const headers = { "Content-Type": "application/json" };
       try {
-        const tk = localStorage.getItem("v360_auth_token");
+        const tk = localStorage.getItem("anduve_auth_token")
+                || sessionStorage.getItem("anduve_auth_token");
         if (tk) headers.Authorization = `Bearer ${tk}`;
       } catch {}
 
@@ -127,7 +135,7 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
           <div
             role="dialog"
             aria-modal="true"
-            className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl animar-subir"
+            className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl animar-subir dark:bg-slate-800"
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
           >
@@ -180,7 +188,7 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
               ) : (
                 <form onSubmit={crear}>
                   <div className="text-[13px] font-bold text-slate-600">{t("alertaUmbral")}</div>
-                  <div className="mt-2 flex items-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-3.5 py-3 focus-within:border-amber-400">
+                  <div className="mt-2 flex items-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-3.5 py-3 focus-within:border-amber-400 dark:border-slate-600 dark:bg-slate-700">
                     <span className="text-[16px] font-bold text-slate-500">US$</span>
                     <input
                       type="number"

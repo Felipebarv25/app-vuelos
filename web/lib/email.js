@@ -12,7 +12,7 @@
 // Si RESEND_API_KEY no esta, las funciones devuelven { ok:false, motivo:
 // "no-configurado" } y el endpoint llamador se encarga de avisar.
 
-const FROM_DEFAULT = "Viajero 360 <onboarding@resend.dev>";
+const FROM_DEFAULT = "Anduve <onboarding@resend.dev>";
 
 export function emailDisponible() {
   return !!process.env.RESEND_API_KEY;
@@ -52,32 +52,32 @@ async function enviar({ to, subject, html, text }) {
 // Se traduce por idioma del cliente; default ES.
 const PLANTILLAS = {
   es: {
-    subject: (codigo) => `${codigo} es tu codigo de Viajero 360`,
+    subject: (codigo) => `${codigo} es tu codigo de Anduve`,
     saludo: "Hola viajero,",
-    intro: "Este es tu codigo para entrar a Viajero 360:",
+    intro: "Este es tu codigo para entrar a Anduve:",
     expira: "El codigo expira en 10 minutos. Si no fuiste tu, ignora este mensaje.",
-    firma: "Equipo Viajero 360",
+    firma: "Equipo Anduve",
   },
   en: {
-    subject: (codigo) => `${codigo} is your Viajero 360 code`,
+    subject: (codigo) => `${codigo} is your Anduve code`,
     saludo: "Hi traveler,",
-    intro: "Here is your code to sign in to Viajero 360:",
+    intro: "Here is your code to sign in to Anduve:",
     expira: "The code expires in 10 minutes. If this wasn't you, ignore this email.",
-    firma: "Viajero 360 Team",
+    firma: "Anduve Team",
   },
   pt: {
-    subject: (codigo) => `${codigo} é seu código do Viajero 360`,
+    subject: (codigo) => `${codigo} é seu código do Anduve`,
     saludo: "Olá viajante,",
-    intro: "Aqui está seu código para entrar no Viajero 360:",
+    intro: "Aqui está seu código para entrar no Anduve:",
     expira: "O código expira em 10 minutos. Se não foi você, ignore este email.",
-    firma: "Equipe Viajero 360",
+    firma: "Equipe Anduve",
   },
   fr: {
-    subject: (codigo) => `${codigo} est votre code Viajero 360`,
+    subject: (codigo) => `${codigo} est votre code Anduve`,
     saludo: "Bonjour voyageur,",
-    intro: "Voici votre code pour entrer dans Viajero 360 :",
+    intro: "Voici votre code pour entrer dans Anduve :",
     expira: "Le code expire dans 10 minutes. Si ce n'était pas vous, ignorez ce message.",
-    firma: "L'équipe Viajero 360",
+    firma: "L'équipe Anduve",
   },
 };
 
@@ -95,7 +95,7 @@ const PLANTILLAS_ALERTA = {
     cta: "Ver el vuelo",
     aviso: "Los precios pueden cambiar en minutos. Si lo quieres, reserva ya.",
     extra: "Es buena practica verificar el precio final en Google Vuelos antes de comprar.",
-    firma: "Equipo Viajero 360",
+    firma: "Equipo Anduve",
   },
   en: {
     subject: (ciudad, precio) => `🔥 ${ciudad} US$${precio} — your price alert`,
@@ -107,7 +107,7 @@ const PLANTILLAS_ALERTA = {
     cta: "View the flight",
     aviso: "Prices change fast. Book now if it works for you.",
     extra: "Good practice: verify the final price on Google Flights before buying.",
-    firma: "Viajero 360 Team",
+    firma: "Anduve Team",
   },
   pt: {
     subject: (ciudad, precio) => `🔥 ${ciudad} US$${precio} — seu alerta de preço`,
@@ -119,7 +119,7 @@ const PLANTILLAS_ALERTA = {
     cta: "Ver o voo",
     aviso: "Os preços mudam rápido. Reserve agora se servir.",
     extra: "Boa prática: confirme o preço final no Google Voos.",
-    firma: "Equipe Viajero 360",
+    firma: "Equipe Anduve",
   },
   fr: {
     subject: (ciudad, precio) => `🔥 ${ciudad} US$${precio} — votre alerte prix`,
@@ -131,7 +131,7 @@ const PLANTILLAS_ALERTA = {
     cta: "Voir le vol",
     aviso: "Les prix changent vite. Réservez maintenant si c'est bon pour vous.",
     extra: "Bonne pratique : vérifiez le prix final sur Google Flights.",
-    firma: "L'équipe Viajero 360",
+    firma: "L'équipe Anduve",
   },
 };
 
@@ -162,18 +162,18 @@ export async function enviarAlertaPrecio({
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:18px;padding:32px;box-shadow:0 4px 16px rgba(15,23,42,.06);">
         <tr><td>
-          <div style="font-size:13px;font-weight:700;letter-spacing:.18em;color:#0f766e;text-transform:uppercase;">Viajero 360</div>
-          <h1 style="margin:8px 0 24px 0;font-size:22px;color:#0f3d3a;">${T.saludo}</h1>
+          <div style="font-size:13px;font-weight:700;letter-spacing:.18em;color:#0c5f58;text-transform:uppercase;">Anduve</div>
+          <h1 style="margin:8px 0 24px 0;font-size:22px;color:#052b28;">${T.saludo}</h1>
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.55;color:#334155;">${T.intro(ciudad, precio, umbral, origen)}</p>
 
-          <div style="margin:24px 0;padding:24px;background:linear-gradient(135deg,#0f766e,#1d9690);border-radius:14px;text-align:center;color:#ffffff;">
+          <div style="margin:24px 0;padding:24px;background:linear-gradient(135deg,#0c5f58,#1c948e);border-radius:14px;text-align:center;color:#ffffff;">
             <div style="font-size:32px;font-weight:800;letter-spacing:-.5px;">US$ ${precio}</div>
             <div style="font-size:13px;opacity:.85;margin-top:6px;">${ciudad}${pais ? ", " + pais : ""}${aerolinea ? " · " + aerolinea : ""}</div>
             ${fecha_ida ? `<div style="font-size:13px;opacity:.85;margin-top:4px;">${fecha_ida}${fecha_vuelta ? " → " + fecha_vuelta : ""}</div>` : ""}
             ${ahorro > 0 ? `<div style="display:inline-block;margin-top:12px;padding:4px 10px;background:rgba(16,185,129,.25);border-radius:999px;font-size:12px;font-weight:700;">Ahorras US$ ${ahorro}</div>` : ""}
           </div>
 
-          ${link ? `<a href="${link}" target="_blank" style="display:inline-block;padding:14px 28px;background:#f4633f;color:#ffffff;text-decoration:none;border-radius:14px;font-size:15px;font-weight:700;">${T.cta} →</a>` : ""}
+          ${link ? `<a href="${link}" target="_blank" style="display:inline-block;padding:14px 28px;background:#f4734d;color:#ffffff;text-decoration:none;border-radius:14px;font-size:15px;font-weight:700;">${T.cta} →</a>` : ""}
 
           <p style="margin:24px 0 6px 0;font-size:13px;line-height:1.5;color:#64748b;">${T.aviso}</p>
           <p style="margin:0 0 20px 0;font-size:12px;line-height:1.5;color:#94a3b8;">${T.extra}</p>
@@ -205,10 +205,10 @@ export async function enviarCodigoLogin({ to, codigo, lang = "es" }) {
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border-radius:18px;padding:32px;box-shadow:0 4px 16px rgba(15,23,42,.06);">
         <tr><td>
-          <div style="font-size:13px;font-weight:700;letter-spacing:.18em;color:#0f766e;text-transform:uppercase;">Viajero 360</div>
-          <h1 style="margin:8px 0 24px 0;font-size:22px;color:#0f3d3a;">${T.saludo}</h1>
+          <div style="font-size:13px;font-weight:700;letter-spacing:.18em;color:#0c5f58;text-transform:uppercase;">Anduve</div>
+          <h1 style="margin:8px 0 24px 0;font-size:22px;color:#052b28;">${T.saludo}</h1>
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.5;color:#334155;">${T.intro}</p>
-          <div style="margin:24px 0;padding:24px;background:linear-gradient(135deg,#0f766e,#1d9690);border-radius:14px;text-align:center;">
+          <div style="margin:24px 0;padding:24px;background:linear-gradient(135deg,#0c5f58,#1c948e);border-radius:14px;text-align:center;">
             <div style="font-size:36px;font-weight:800;letter-spacing:.4em;color:#ffffff;font-family:'Courier New',monospace;">${codigo}</div>
           </div>
           <p style="margin:0 0 20px 0;font-size:13px;line-height:1.5;color:#64748b;">${T.expira}</p>

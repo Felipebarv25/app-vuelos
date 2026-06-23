@@ -4,7 +4,7 @@
 //   · La consulta cae al wiki español primero; si no hay, al inglés.
 // Si todo falla, devuelve null y el componente usa el gradiente como fallback.
 
-const UA = "Viajero360/1.0 (https://app-vuelos-mfos.vercel.app)";
+const UA = "Anduve/1.0 (https://app-vuelos-mfos.vercel.app)";
 const TTL = 60 * 60 * 24 * 30; // 30 días en segundos
 
 async function pedirWiki(wiki, titulo) {

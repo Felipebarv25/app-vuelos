@@ -6,6 +6,7 @@ import { traducirLoteWD, nombreLocalizado } from "@/lib/nombres";
 import { compartirEnlace } from "@/lib/compartir";
 import { getDestinoPorSlug } from "@/lib/destinos";
 import { construirItinerario, agregarLugarADia, fmtMin } from "@/lib/itinerario";
+import { isoDesdeNombre, infoPais } from "@/lib/requisitos";
 import { CIUDADES_POPULARES } from "@/lib/ciudadesPopulares";
 import { sugerirCiudades } from "@/lib/autocompletar";
 import { useGeo } from "@/lib/useGeo";
@@ -57,47 +58,95 @@ const DESTINOS_DESTACADOS = [
 // que es una mezcla. Rotan cada ~10s con crossfade suave.
 const HERO_IMGS_POR_TEMA = {
   playa: [
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70", // playa caribena
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70", // playa caribeña
     "https://images.unsplash.com/photo-1480796927426-f609979314bd?auto=format&fit=crop&w=1600&q=70", // playa con olas
-    "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1600&q=70", // playa tropical aerea
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70",
+    "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1600&q=70", // playa tropical aérea
+    "https://images.unsplash.com/photo-1505228395891-9a51e7e86bf6?auto=format&fit=crop&w=1600&q=70", // playa palmeras
+    "https://images.unsplash.com/photo-1493558103817-58b2924bce98?auto=format&fit=crop&w=1600&q=70", // Cancún
+    "https://images.unsplash.com/photo-1499002238440-d264edd596ec?auto=format&fit=crop&w=1600&q=70", // Bali playa
+    "https://images.unsplash.com/photo-1505881402582-c5bc11054f91?auto=format&fit=crop&w=1600&q=70", // Maldivas overwater
   ],
   ciudad: [
-    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1600&q=70", // Paris/Torre Eiffel
-    "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1600&q=70", // ciudad NY noche
+    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1600&q=70", // París / Torre Eiffel
+    "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1600&q=70", // NY noche
     "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1600&q=70", // ciudad europea
+    "https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=1600&q=70", // NY skyline
+    "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1600&q=70", // Tokio
   ],
   historia: [
     "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1600&q=70", // Coliseo Roma
-    "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=1600&q=70", // Acropolis Atenas
-    "https://images.unsplash.com/photo-1543589077-47d81606c1bf?auto=format&fit=crop&w=1600&q=70", // arquitectura clasica
+    "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=1600&q=70", // Acrópolis Atenas
+    "https://images.unsplash.com/photo-1492571350019-22de08371fd3?auto=format&fit=crop&w=1600&q=70", // templo asiático
+    "https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?auto=format&fit=crop&w=1600&q=70", // Marrakech
   ],
   naturaleza: [
-    "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=70", // montanas lago
+    "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=70", // montañas lago
     "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=70", // bosque verde
     "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=70", // panorama natural
+    "https://images.unsplash.com/photo-1426604966848-d7adac402bff?auto=format&fit=crop&w=1600&q=70", // sendero en el bosque
+    "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=1600&q=70", // bosque con rayos de luz
+    "https://images.unsplash.com/photo-1500964757637-c85e8a162699?auto=format&fit=crop&w=1600&q=70", // cataratas / selva
   ],
   montana: [
-    "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=70", // alpes amanecer
+    "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=70", // Alpes amanecer
     "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?auto=format&fit=crop&w=1600&q=70", // sierra
-    "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1600&q=70", // valle montanas
+    "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1600&q=70", // valle montañas
+    "https://images.unsplash.com/photo-1483653364400-eedcfb9f1f88?auto=format&fit=crop&w=1600&q=70", // cabaña en la montaña
+    "https://images.unsplash.com/photo-1495344517868-8ebaf0a2044a?auto=format&fit=crop&w=1600&q=70", // camping con vista
   ],
   gastronomia: [
-    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1600&q=70", // restaurante calido
+    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1600&q=70", // restaurante cálido
     "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=70", // mesa con comida
     "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=70", // plato gourmet
   ],
   lujo: [
     "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1600&q=70", // piscina infinity
     "https://images.unsplash.com/photo-1455587734955-081b22074882?auto=format&fit=crop&w=1600&q=70", // resort lujo
+    "https://images.unsplash.com/photo-1505881402582-c5bc11054f91?auto=format&fit=crop&w=1600&q=70", // Maldivas overwater
   ],
   nocturna: [
-    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=70", // bar coctel
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=70", // bar cóctel
     "https://images.unsplash.com/photo-1535079859068-2f9b3fa4d4ca?auto=format&fit=crop&w=1600&q=70", // ciudad de noche
+    "https://images.unsplash.com/photo-1534430480872-3498386e7856?auto=format&fit=crop&w=1600&q=70", // skyline nocturno
+    "https://images.unsplash.com/photo-1444723121867-7a241cacace9?auto=format&fit=crop&w=1600&q=70", // luces de ciudad
   ],
   romantico: [
     "https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1600&q=70", // Santorini atardecer
-    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1600&q=70", // Paris romantico
+    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1600&q=70", // París romántico
+    "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=1600&q=70", // París atardecer
+    "https://images.unsplash.com/photo-1473625247510-8ceb1760943f?auto=format&fit=crop&w=1600&q=70", // Mykonos
+  ],
+  // ==== TEMAS NUEVOS ====
+  // Aventura: lo activan TAGS_POR_REGION (África y Oceanía empiezan con
+  // "aventura"). Cubre safari, selva y deportes extremos.
+  aventura: [
+    "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1600&q=70", // safari elefantes
+    "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1600&q=70", // safari
+    "https://images.unsplash.com/photo-1547036967-23d11aacaee0?auto=format&fit=crop&w=1600&q=70", // cebras África
+    "https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=1600&q=70", // selva profunda
+    "https://images.unsplash.com/photo-1469041797191-50ace28483c3?auto=format&fit=crop&w=1600&q=70", // camellos
+  ],
+  // Invierno / nieve. Para destinos fríos (Suiza, Noruega, Canadá, Japón
+  // en invierno). Por ahora solo se activa si manualmente seteas tema o si
+  // luego ampliamos destinosTags.js.
+  invierno: [
+    "https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?auto=format&fit=crop&w=1600&q=70", // montañas nevadas
+    "https://images.unsplash.com/photo-1418985991508-e47386d96a71?auto=format&fit=crop&w=1600&q=70", // ski
+    "https://images.unsplash.com/photo-1542401886-65d6c61db217?auto=format&fit=crop&w=1600&q=70", // ski montaña
+    "https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=1600&q=70", // bosque invierno
+  ],
+  // Desierto. Para Dubái, Marruecos, Egipto, etc.
+  desierto: [
+    "https://images.unsplash.com/photo-1473580044384-7ba9967e16a0?auto=format&fit=crop&w=1600&q=70", // Sáhara
+    "https://images.unsplash.com/photo-1493514789931-586cb221d7a7?auto=format&fit=crop&w=1600&q=70", // dunas
+    "https://images.unsplash.com/photo-1469041797191-50ace28483c3?auto=format&fit=crop&w=1600&q=70", // camellos
+  ],
+  // Asia / Oriente. Templos, ciudades asiáticas, naturaleza tropical.
+  asia: [
+    "https://images.unsplash.com/photo-1492571350019-22de08371fd3?auto=format&fit=crop&w=1600&q=70", // templo
+    "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1600&q=70", // Tokio
+    "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?auto=format&fit=crop&w=1600&q=70", // Bali templo
+    "https://images.unsplash.com/photo-1437846972679-9e6e537be46e?auto=format&fit=crop&w=1600&q=70", // cuevas tropicales
   ],
   general: [
     "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70",
@@ -105,6 +154,9 @@ const HERO_IMGS_POR_TEMA = {
     "https://images.unsplash.com/photo-1503917988258-f87a78e3c995?auto=format&fit=crop&w=1600&q=70",
     "https://images.unsplash.com/photo-1480796927426-f609979314bd?auto=format&fit=crop&w=1600&q=70",
     "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1600&q=70",
+    "https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=1600&q=70", // NY
+    "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1600&q=70", // Tokio
+    "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1600&q=70", // mapa vintage
   ],
 };
 const HERO_IMG = HERO_IMGS_POR_TEMA.general[0];
@@ -178,7 +230,29 @@ function saludoEmoji() {
 }
 
 export default function Home() {
-  const { t, lang, usuario, salir, listo, pro, paywall, abrirPaywall, cerrarPaywall, requierePro } = useApp();
+  const { t, lang, usuario, salir, listo, pro, paywall, abrirPaywall, cerrarPaywall, requierePro, darkMode, toggleDark } = useApp();
+
+  // ResizeObserver: medimos la altura REAL del <header> y la exponemos como
+  // CSS var `--v360-header-h`. Antes el mapa sticky usaba `top-[150px]` y
+  // `calc(100vh-172px)` hardcoded — si el header cambiaba de alto (idioma
+  // con texto mas largo, wrap en pantalla angosta, etc.) el mapa se
+  // desalineaba. Ahora se ajusta solo. El +88 cubre el sub-header de ciudad
+  // que va entre el header global y el mapa sticky.
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof ResizeObserver === "undefined") return;
+    const header = document.querySelector("header");
+    if (!header) return;
+    const aplicar = () => {
+      const h = header.getBoundingClientRect().height;
+      document.documentElement.style.setProperty("--v360-header-h", `${Math.round(h + 88)}px`);
+    };
+    aplicar();
+    const ro = new ResizeObserver(aplicar);
+    ro.observe(header);
+    window.addEventListener("resize", aplicar);
+    return () => { ro.disconnect(); window.removeEventListener("resize", aplicar); };
+  }, []);
+
   const [consulta, setConsulta] = useState("");
   const [sugerencias, setSugerencias] = useState([]);
   const [mostrarSug, setMostrarSug] = useState(false);
@@ -245,7 +319,7 @@ export default function Home() {
   useEffect(() => {
     let vivo = true;
     try {
-      const cache = sessionStorage.getItem("v360_pais_nombre");
+      const cache = sessionStorage.getItem("anduve_pais_nombre");
       if (cache) { setPaisVisitante(cache); return; }
     } catch {}
     fetch("/api/geo")
@@ -254,7 +328,7 @@ export default function Home() {
         if (!vivo) return;
         const nombre = (g?.pais && PAIS_GENTILICIO[g.pais]) || "Colombia";
         setPaisVisitante(nombre);
-        try { sessionStorage.setItem("v360_pais_nombre", nombre); } catch {}
+        try { sessionStorage.setItem("anduve_pais_nombre", nombre); } catch {}
       })
       .catch(() => {});
     return () => { vivo = false; };
@@ -305,10 +379,10 @@ export default function Home() {
     // ventanas son dos "viajeros" — fiel a la idea de "lo que esta abierto".
     let sid;
     try {
-      sid = sessionStorage.getItem("v360_sid");
+      sid = sessionStorage.getItem("anduve_sid");
       if (!sid) {
         sid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-        sessionStorage.setItem("v360_sid", sid);
+        sessionStorage.setItem("anduve_sid", sid);
       }
     } catch {
       sid = `tmp-${Math.random().toString(36).slice(2, 10)}`;
@@ -404,13 +478,13 @@ export default function Home() {
   // Nacionalidad (pasaporte) para los requisitos de entrada: recordar la elección.
   useEffect(() => {
     try {
-      const g = localStorage.getItem("v360_nac");
+      const g = localStorage.getItem("anduve_nac");
       if (g) setNacionalidad(g);
     } catch {}
   }, []);
   function cambiarNacionalidad(cc) {
     setNacionalidad(cc);
-    try { localStorage.setItem("v360_nac", cc); } catch {}
+    try { localStorage.setItem("anduve_nac", cc); } catch {}
   }
 
   // --- Mis viajes (guardado local o nube según usuario) ---
@@ -722,7 +796,7 @@ export default function Home() {
   function descargarPDF() {
     if (!ciudad) return;
     track("descargar_pdf", { ciudad: ciudad.nombre });
-    const titulo = `Viajero 360 - ${ciudad.nombre}${ciudad.pais ? `, ${ciudad.pais}` : ""}`;
+    const titulo = `Anduve - ${ciudad.nombre}${ciudad.pais ? `, ${ciudad.pais}` : ""}`;
     const original = typeof document !== "undefined" ? document.title : "";
     if (typeof document !== "undefined") document.title = titulo;
     // Pequeño delay para que el navegador refleje el title antes de abrir el diálogo.
@@ -757,7 +831,7 @@ export default function Home() {
       try {
         if (navigator.share) {
           await navigator.share({
-            title: `Viaje a ${ciudad.nombre} · Viajero 360`,
+            title: `Viaje a ${ciudad.nombre} · Anduve`,
             text: `${t("miViajeA")} ${ciudad.nombre}`,
             url,
           });
@@ -771,7 +845,7 @@ export default function Home() {
     }
 
     // 2) Fallback: texto plano (sin KV configurado).
-    let txt = `🗺️ ${t("miViajeA")} ${ciudad.nombre}, ${ciudad.pais} — Viajero 360\n`;
+    let txt = `🗺️ ${t("miViajeA")} ${ciudad.nombre}, ${ciudad.pais} — Anduve\n`;
     let n = 0;
     plan.forEach((d) => {
       if (!d.paradas.length) return;
@@ -781,10 +855,10 @@ export default function Home() {
         txt += `  ${i + 1}. ${nombreLocalizado(p, lang)} (${fmtMin(p.minutos)})\n`;
       });
     });
-    txt += `\n${t("hechoCon")} Viajero 360 · https://app-vuelos-mfos.vercel.app/`;
+    txt += `\n${t("hechoCon")} Anduve · https://app-vuelos-mfos.vercel.app/`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: "Viajero 360", text: txt });
+        await navigator.share({ title: "Anduve", text: txt });
       } else {
         await navigator.clipboard.writeText(txt);
         setCopiado(true);
@@ -804,9 +878,9 @@ export default function Home() {
   const esHero = !ciudad && !cargando;
 
   return (
-    <div className="min-h-screen pb-10">
+    <div className="min-h-screen pb-10 dark:bg-slate-900">
       {/* Cabecera: HERO con foto de viaje en el inicio; cinta blanca en la ciudad */}
-      <header className={`relative z-[1000] print:hidden ${esHero ? "text-white" : "sticky top-0 border-b border-slate-200 bg-white/95 text-slate-700 shadow-suave backdrop-blur"}`}>
+      <header className={`relative z-[1000] print:hidden ${esHero ? "text-white" : "sticky top-0 border-b border-slate-200 bg-white/95 text-slate-700 shadow-suave backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200"}`}>
         {esHero && (
           <>
             <div className="absolute inset-0 bg-gradient-to-br from-marca-700 to-marca-900" />
@@ -832,9 +906,9 @@ export default function Home() {
         <div className={`relative mx-auto max-w-7xl px-4 lg:px-8 ${esHero ? "pt-5 pb-16 lg:pb-24" : "pt-3 pb-3"}`}>
           {/* Barra de navegación superior */}
           <div className="flex items-center justify-between gap-4">
-            <button type="button" onClick={irAlInicio} aria-label="Viajero 360 — inicio" className="cursor-pointer text-left">
-              <LogoMarca tono={esHero ? "claro" : "marca"} className={esHero ? "drop-shadow" : ""} />
-              <div className={`mt-0.5 hidden text-[13px] sm:block ${esHero ? "text-white/85" : "text-slate-400"}`}>{t("tagline")}</div>
+            <button type="button" onClick={irAlInicio} aria-label="Anduve — inicio" className="cursor-pointer text-left">
+              <LogoMarca size={esHero ? 72 : 60} animado tono={esHero ? "claro" : "marca"} className={esHero ? "drop-shadow" : ""} />
+              <div className={`mt-3 hidden text-[11px] font-bold uppercase tracking-[0.28em] sm:block sm:text-[12px] ${esHero ? "text-white/85" : "text-slate-500"}`}>{t("tagline")}</div>
             </button>
             <div className="flex items-center gap-3 lg:gap-4">
               {ciudad && (
@@ -851,6 +925,19 @@ export default function Home() {
                 </a>
               )}
               <MenuUsuario oscuro={esHero} />
+              <button
+                type="button"
+                onClick={toggleDark}
+                aria-label={darkMode ? "Modo claro" : "Modo oscuro"}
+                title={darkMode ? "Modo claro" : "Modo oscuro"}
+                className={`flex h-8 w-8 items-center justify-center rounded-full border text-[16px] transition ${
+                  esHero
+                    ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-marca-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                }`}
+              >
+                {darkMode ? "☀️" : "🌙"}
+              </button>
               <SelectorIdioma oscuro={esHero} />
             </div>
           </div>
@@ -1055,7 +1142,7 @@ export default function Home() {
 
       {error && (
         <div className="mx-auto mt-3.5 max-w-7xl px-4 print:hidden lg:px-8">
-          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-red-100 bg-red-50 p-4 text-red-800 shadow-suave">
+          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-red-100 bg-red-50 p-4 text-red-800 shadow-suave dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300">
             <span className="text-2xl">😕</span>
             <p className="flex-1 text-sm">{error}</p>
             <button onClick={reintentar} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:brightness-110">
@@ -1066,39 +1153,8 @@ export default function Home() {
       )}
 
       {!ciudad && !cargando && (
-        <div className="relative z-10 -mt-8 rounded-t-[32px] bg-[#f6f7fb] pt-2 print:hidden lg:-mt-12">
+        <div className="relative z-10 -mt-8 rounded-t-[32px] bg-[#f6f7fb] pt-2 print:hidden dark:bg-slate-900 lg:-mt-12">
         <div className="animar-subir mx-auto max-w-7xl px-4 pb-4 pt-7 lg:px-8">
-          {/* Banner presupuesto: tarjeta blanca con acento verde (a juego con el
-              resto de tarjetas de la página; el verde es el acento de "dinero"). */}
-          <button
-            onClick={() => setMostrarPresupuesto(true)}
-            className="group animar-pop relative mt-6 flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-slate-100 bg-white px-4 py-4 text-left shadow-suave transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-media lg:max-w-2xl lg:px-5 lg:py-5"
-          >
-            {/* Acento de color a la izquierda */}
-            <span className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-emerald-400 to-emerald-600" />
-
-            {/* Tile con icono */}
-            <span className="relative ml-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-[0_6px_16px_-4px_rgba(5,150,105,.55)] transition-transform duration-300 group-hover:scale-105 lg:h-14 lg:w-14">
-              <Icono nombre="wallet" size={26} strokeWidth={2.2} />
-            </span>
-
-            {/* Texto */}
-            <div className="min-w-0 flex-1">
-              <div className="mb-0.5 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-emerald-600">
-                {t("presupEyebrow")}
-              </div>
-              <div className="text-[16.5px] font-extrabold leading-tight tracking-tight text-marca-900 lg:text-[20px]">
-                {t("presupBoton")}
-              </div>
-              <div className="mt-0.5 text-[13px] text-slate-500">{t("presupSub")}</div>
-            </div>
-
-            {/* Flecha */}
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 transition-all duration-300 group-hover:translate-x-0.5 group-hover:bg-emerald-600 group-hover:text-white">
-              <Icono nombre="arrowRight" size={18} />
-            </span>
-          </button>
-
           {/* Mis viajes guardados (en este dispositivo) */}
           {viajesGuardados.length > 0 && (
             <div className="mt-10">
@@ -1115,7 +1171,7 @@ export default function Home() {
               </h2>
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {viajesGuardados.map((v) => (
-                  <div key={v.id} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3.5 shadow-suave">
+                  <div key={v.id} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3.5 shadow-suave dark:border-slate-700 dark:bg-slate-800">
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-[15px] font-extrabold text-marca-900">{v.ciudad?.nombre}</div>
                       <div className="truncate text-[12.5px] text-slate-500">
@@ -1293,7 +1349,7 @@ export default function Home() {
                 {plan.some((d) => d.paradas.length > 0) && (
                   <button
                     onClick={() => requierePro("compartir", compartirPlan)}
-                    className="rounded-xl border-[1.5px] border-marca-100 bg-white px-3 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-marca-50"
+                    className="rounded-xl border-[1.5px] border-marca-100 bg-white px-3 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-marca-50 dark:border-slate-700 dark:bg-slate-800 dark:text-marca-400 dark:hover:bg-slate-700"
                   >
                     <span className="inline-flex items-center gap-1.5">
                       <Icono nombre={copiado ? "check" : "share"} size={15} />
@@ -1305,7 +1361,7 @@ export default function Home() {
                   <button
                     onClick={() => requierePro("pdf", descargarPDF)}
                     title={t("descargarPDF")}
-                    className="rounded-xl border-[1.5px] border-marca-100 bg-white px-3 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-marca-50"
+                    className="rounded-xl border-[1.5px] border-marca-100 bg-white px-3 py-2 text-[13px] font-bold text-marca-600 transition hover:bg-marca-50 dark:border-slate-700 dark:bg-slate-800 dark:text-marca-400 dark:hover:bg-slate-700"
                   >
                     <span className="inline-flex items-center gap-1.5">
                       <Icono nombre="download" size={15} />
@@ -1331,7 +1387,7 @@ export default function Home() {
             />
 
             {/* Configuración del viaje (colapsable: deja el itinerario más arriba) */}
-            <details open className="mb-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave">
+            <details open className="mb-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-suave dark:border-slate-700 dark:bg-slate-800">
               <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-bold text-marca-900">
                 <span className="inline-flex items-center gap-1.5"><Icono nombre="sliders" size={16} /> {t("ajustarViaje")}</span>
                 <span className="text-slate-400">▾</span>
@@ -1339,7 +1395,7 @@ export default function Home() {
               <div className="px-4 pb-4">
               {/* Rango de fechas del viaje (opcional): de aquí salen los días, el
                   itinerario fechado y la búsqueda de vuelos para esas fechas. */}
-              <div className="mb-3 flex flex-wrap items-end gap-3 rounded-xl bg-marca-50/60 p-3">
+              <div className="mb-3 flex flex-wrap items-end gap-3 rounded-xl bg-marca-50/60 p-3 dark:bg-slate-700/40">
                 <label className="flex flex-col gap-1 text-[13px] font-semibold text-slate-600">
                   <span className="inline-flex items-center gap-1.5"><Icono nombre="planeTakeoff" size={15} /> {t("fechaIda")}</span>
                   <input type="date" value={fechaInicio} min={new Date().toISOString().slice(0, 10)}
@@ -1378,7 +1434,7 @@ export default function Home() {
                   </select>
                 </label>
                 <button onClick={() => reconstruir()}
-                  className="ml-auto rounded-xl border-[1.5px] border-marca-100 bg-white px-4 py-2.5 text-sm font-bold text-marca-600 transition hover:bg-marca-50">
+                  className="ml-auto rounded-xl border-[1.5px] border-marca-100 bg-white px-4 py-2.5 text-sm font-bold text-marca-600 transition hover:bg-marca-50 dark:border-slate-700 dark:bg-slate-800 dark:text-marca-400 dark:hover:bg-slate-700">
                   <span className="inline-flex items-center gap-1.5"><Icono nombre="refresh" size={15} /> {t("recalcular")}</span>
                 </button>
               </div>
@@ -1453,6 +1509,10 @@ export default function Home() {
                 gps={gps}
                 ciudad={ciudad?.nombre}
                 fechaInicio={fechaInicio}
+                husoDestino={(() => {
+                  const iso = isoDesdeNombre(ciudad?.pais);
+                  return iso ? infoPais(iso)?.husos?.[0] : null;
+                })()}
                 t={t}
                 lang={lang}
                 onCambiarParada={(idx) => cambiarParada(diaVisible, idx)}
@@ -1481,7 +1541,7 @@ export default function Home() {
                     {lugaresBase.map((l) => {
                       const enPlan = plan[diaVisible]?.paradas?.some((p) => p.id === l.id);
                       return (
-                        <div key={l.id} className="flex items-center gap-2 border-b border-slate-50 px-3 py-2.5 last:border-0">
+                        <div key={l.id} className="flex items-center gap-2 border-b border-slate-50 px-3 py-2.5 last:border-0 dark:border-slate-700/50">
                           <button
                             onClick={() => { setRutaTrazada(null); setDetalle(l); }}
                             className="min-w-0 flex-1 text-left"
@@ -1512,7 +1572,7 @@ export default function Home() {
             )}
 
             {/* GPS toggle */}
-            <label className={`mt-3.5 flex cursor-pointer items-center gap-2.5 rounded-2xl border border-slate-100 p-4 shadow-suave transition ${gpsOn ? "bg-emerald-50" : "bg-white"}`}>
+            <label className={`mt-3.5 flex cursor-pointer items-center gap-2.5 rounded-2xl border border-slate-100 p-4 shadow-suave transition dark:border-slate-700 ${gpsOn ? "bg-emerald-50 dark:bg-emerald-900/20" : "bg-white dark:bg-slate-800"}`}>
               <input type="checkbox" checked={gpsOn} onChange={(e) => setGpsOn(e.target.checked)} />
               <span className="inline-flex items-center gap-1.5 text-sm">
                 <Icono nombre="pin" size={15} className="text-marca-600" /> {t("activarGps")}
@@ -1523,8 +1583,8 @@ export default function Home() {
 
           {/* Panel derecho: mapa (arriba en móvil, fijo a la derecha en escritorio) */}
           <div className="order-1 lg:order-2 lg:w-[44%] lg:shrink-0">
-            <div className="lg:sticky lg:top-[150px]">
-              <div className="h-[42vh] min-h-[260px] overflow-hidden lg:h-[calc(100vh-172px)] lg:rounded-2xl lg:shadow-media">
+            <div className="lg:sticky lg:top-[var(--v360-header-h,150px)]">
+              <div className="h-[42vh] min-h-[260px] overflow-hidden lg:h-[calc(100vh-var(--v360-header-h,150px)-22px)] lg:rounded-2xl lg:shadow-media">
                 <Mapa
                   centro={[ciudad.lat, ciudad.lon]}
                   lugares={lugaresDelDia}
@@ -1539,12 +1599,18 @@ export default function Home() {
         </div>
       )}
 
-      {/* Detalle del lugar (dentro de la app) */}
+      {/* Detalle del lugar (dentro de la app). Le pasamos el huso del país
+          destino (cuando lo conocemos) para que el badge "Abierto ahora"
+          calcule con la hora local correcta. */}
       {detalle && (
         <DetalleLugar
           lugar={detalle}
           ciudad={ciudad}
           origen={gps}
+          husoDestino={(() => {
+            const iso = isoDesdeNombre(ciudad?.pais);
+            return iso ? infoPais(iso)?.husos?.[0] : null;
+          })()}
           t={t}
           lang={lang}
           onCerrar={() => setDetalle(null)}
@@ -1567,7 +1633,7 @@ export default function Home() {
           Renderiza TODOS los dias del plan (no solo el visible) en formato sobrio. */}
       {ciudad && plan.length > 0 && (
         <div className="solo-imprimir hidden print:block px-8 py-6">
-          <h1>Viajero 360 — {ciudad.nombre}</h1>
+          <h1>Anduve — {ciudad.nombre}</h1>
           <div className="meta">
             {ciudad.pais}
             {fechaInicio && fechaFin
@@ -1590,12 +1656,12 @@ export default function Home() {
             ) : null
           ))}
           <div className="meta" style={{ marginTop: "20pt" }}>
-            Generado en Viajero 360 · app-vuelos-mfos.vercel.app
+            Generado en Anduve · app-vuelos-mfos.vercel.app
           </div>
         </div>
       )}
 
-      <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-slate-400 print:hidden lg:px-8">
+      <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-slate-400 print:hidden dark:text-slate-500 lg:px-8">
         {/* Enlaces a las landing pages SEO desde la home */}
         <div className="mb-3 flex flex-wrap justify-center gap-3 text-[12.5px] font-semibold text-slate-500">
           <a href="/destino" className="hover:text-marca-600 hover:underline">
@@ -1606,7 +1672,7 @@ export default function Home() {
             Comparar destinos
           </a>
         </div>
-        <div>{t("footer")} · Viajero 360</div>
+        <div>{t("footer")} · Anduve</div>
         <div className="mt-1 text-[11px] text-slate-400">
           Datos de lugares: ©{" "}
           <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" className="underline hover:text-marca-600">

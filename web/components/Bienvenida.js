@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useApp } from "@/lib/AppContext";
 import { IDIOMAS } from "@/lib/idiomas";
-import { Logo } from "@/components/Logo";
+import { Logo, LogoMarca } from "@/components/Logo";
 
 // Landing pre-login: scrolleable, full-screen, con propuesta de valor antes
 // del formulario de auth. Aplica behavioral econ / neuromarketing: loss
@@ -22,6 +22,7 @@ export default function Bienvenida() {
     lang,
     cambiarIdioma,
     entrarGoogle,
+    entrarDemo,
     pedirCodigoEmail,
     verificarCodigoEmail,
   } = useApp();
@@ -30,6 +31,10 @@ export default function Bienvenida() {
   const [recordar, setRecordar] = useState(true);
   const [mostrarLogin, setMostrarLogin] = useState(false);
   const [montado, setMontado] = useState(false);
+  // Social proof real: conteo en vivo desde /api/online. null = aún no lo
+  // sabemos; número = lo que reporta KV. Si la red falla o KV no responde,
+  // queda en null y la UI lo oculta (cero números inventados).
+  const [online, setOnline] = useState(null);
 
   // Auth config (Google / magic code disponibles segun env vars).
   const [authConfig, setAuthConfig] = useState({ google: false, magicCode: false });
@@ -45,6 +50,23 @@ export default function Bienvenida() {
       const params = new URLSearchParams(window.location.search);
       if (params.get("login") === "1") setMostrarLogin(true);
     }
+  }, []);
+
+  // Polling del live counter (cada 45s). El endpoint tiene cache-control 10s
+  // en su edge así que muchos usuarios concurrentes no saturan KV.
+  useEffect(() => {
+    let vivo = true;
+    async function cargar() {
+      try {
+        const r = await fetch("/api/online", { cache: "no-store" });
+        if (!r.ok) return;
+        const d = await r.json();
+        if (vivo && d?.ok && typeof d.online === "number") setOnline(d.online);
+      } catch {}
+    }
+    cargar();
+    const id = setInterval(cargar, 45000);
+    return () => { vivo = false; clearInterval(id); };
   }, []);
 
   // ESC cierra el dialogo de login. Estandar de accesibilidad.
@@ -113,11 +135,16 @@ export default function Bienvenida() {
   }
 
   return (
-    <div className="fixed inset-0 z-[5000] overflow-y-auto bg-slate-50">
+    <div className="fixed inset-0 z-[5000] overflow-y-auto bg-slate-50 dark:bg-slate-900">
       {/* ============== HERO ============== */}
       <section className="relative min-h-[92vh] w-full overflow-hidden">
+        {/* Hero servido desde public/ (no hotlink Unsplash) por 3 razones:
+            1) LCP estable — no depende de la red ni de cambios de URL externa.
+            2) Cache edge de Vercel sirve la imagen siempre rapido.
+            3) Evita que Unsplash limite el sitio si crece el trafico.
+            Foto: vintage travel essentials (mapa + camara + libreta). */}
         <img
-          src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=2000&q=80&auto=format&fit=crop"
+          src="/landing-hero.jpg"
           alt=""
           aria-hidden="true"
           className="absolute inset-0 h-full w-full object-cover"
@@ -129,8 +156,11 @@ export default function Bienvenida() {
         {/* Top nav: idioma + botones de auth */}
         <div className="relative z-10 flex items-center justify-between gap-3 px-5 pt-4 sm:px-8">
           {/* Marca discreta arriba izquierda */}
-          <div className="text-white/85 hidden sm:block">
-            <Logo size={44} animado />
+          <div className="hidden sm:block">
+            <LogoMarca size={60} tono="claro" />
+            <div className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.28em] text-white/85">
+              {t("tagline")}
+            </div>
           </div>
 
           {/* Acciones top-right */}
@@ -167,10 +197,16 @@ export default function Bienvenida() {
 
         {/* Contenido hero centrado */}
         <div className="relative mx-auto flex min-h-[80vh] max-w-3xl flex-col items-center justify-center px-6 py-12 text-center text-white">
-          <div className="text-white drop-shadow-[0_8px_20px_rgba(0,0,0,0.3)]"><Logo size={110} animado /></div>
+          {/* El SVG del logo tiene viewBox 200x200 pero el contenido visible
+              llega solo hasta y≈150 (clipPath corta ahí), dejando ~25% de
+              altura vacía abajo. mb-[-40px] absorbe ese hueco para que el
+              chip de abajo quede pegado a la curva del planeta. */}
+          <div className="drop-shadow-[0_8px_20px_rgba(0,0,0,0.3)] mb-[-40px]">
+            <Logo size={180} animado tono="claro" />
+          </div>
 
           {/* Chip "precios actualizados ahora" — livelyness real */}
-          <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-wider backdrop-blur-md">
+          <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-wider backdrop-blur-md">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
             {t("landingChipVivo")}
           </div>
@@ -210,7 +246,7 @@ export default function Bienvenida() {
       </section>
 
       {/* ============== FEATURES ============== */}
-      <section className="bg-white py-20 px-6">
+      <section className="bg-white py-20 px-6 dark:bg-slate-800">
         <div className="mx-auto max-w-5xl">
           <div className="text-center">
             <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-marca-600">
@@ -232,7 +268,7 @@ export default function Bienvenida() {
                 key={i}
                 className="group rounded-3xl border border-slate-100 bg-white p-6 shadow-suave transition hover:-translate-y-1 hover:border-marca-200 hover:shadow-media"
               >
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-marca-50 text-2xl">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-marca-50 text-2xl dark:bg-marca-900/30">
                   {f.emoji}
                 </div>
                 <h3 className="mt-4 text-[19px] font-extrabold text-marca-900">{t(f.titKey)}</h3>
@@ -244,7 +280,7 @@ export default function Bienvenida() {
       </section>
 
       {/* ============== CÓMO FUNCIONA ============== */}
-      <section className="bg-slate-50 py-20 px-6">
+      <section className="bg-slate-50 py-20 px-6 dark:bg-slate-900">
         <div className="mx-auto max-w-5xl">
           <div className="text-center">
             <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-acento-600">
@@ -269,40 +305,112 @@ export default function Bienvenida() {
         </div>
       </section>
 
-      {/* ============== SOCIAL PROOF (stats honestos) ============== */}
+      {/* ============== PRO UPSELL (sembrado, sin bloquear) ============== */}
+      <section className="bg-gradient-to-br from-marca-50 via-white to-marca-50/60 py-20 px-6 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
+        <div className="mx-auto max-w-5xl">
+          <div className="grid items-stretch gap-6 lg:grid-cols-[1.2fr_1fr]">
+            {/* Card principal: pitch de Pro */}
+            <div className="rounded-3xl border border-marca-100 bg-white p-8 shadow-suave dark:border-slate-700 dark:bg-slate-800">
+              <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-marca-600 dark:text-marca-400">
+                {t("landingProEyebrow")}
+              </div>
+              <h2 className="mt-2 font-display text-[28px] font-extrabold tracking-tight text-marca-900 dark:text-marca-300 sm:text-[34px]">
+                {t("landingProTit")}
+              </h2>
+              <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-slate-600 dark:text-slate-300">
+                {t("landingProSub")}
+              </p>
+              <ul className="mt-5 space-y-2 text-[14px] text-slate-700 dark:text-slate-200">
+                {[1, 2, 3].map((n) => (
+                  <li key={n} className="flex items-start gap-2">
+                    <span className="text-emerald-500 dark:text-emerald-400">✓</span>
+                    <span>{t(`landingProBeneficio${n}`)}</span>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="/pro"
+                className="mt-6 inline-flex items-center gap-1.5 rounded-2xl border-[1.5px] border-marca-300 bg-white px-5 py-3 text-[14.5px] font-bold text-marca-700 transition hover:-translate-y-0.5 hover:border-marca-500 hover:bg-marca-50 dark:border-marca-700 dark:bg-slate-800 dark:text-marca-300 dark:hover:bg-marca-900/30"
+              >
+                {t("landingProVerPlanes")}
+              </a>
+            </div>
+
+            {/* Card lateral: escasez real de fundador (Lifetime) */}
+            <a
+              href="/pro"
+              className="group flex flex-col justify-between rounded-3xl bg-gradient-to-br from-marca-700 via-marca-800 to-marca-900 p-8 text-white shadow-media transition hover:-translate-y-0.5"
+            >
+              <div>
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-acento-500/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-acento-200">
+                  ★ {t("landingProOfertaTit")}
+                </div>
+                <div className="mt-4 font-display text-[36px] font-extrabold leading-tight tracking-tight sm:text-[42px]">
+                  {t("landingProOfertaPrecio")}
+                </div>
+                <div className="mt-1 text-[13.5px] text-white/85">
+                  {t("landingProOfertaSub")}
+                </div>
+              </div>
+              <div className="mt-6 inline-flex items-center gap-1.5 text-[13px] font-bold text-acento-300 transition group-hover:gap-2">
+                {t("landingProVerPlanes")}
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ============== SOCIAL PROOF (live + stats honestos) ============== */}
       <section className="bg-marca-900 py-16 px-6 text-white">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="font-display text-[28px] font-extrabold tracking-tight sm:text-[36px]">
             {t("landingSocialTit")}
           </h2>
-          <div className="mt-10 grid gap-8 sm:grid-cols-3">
-            <div>
-              <div className="font-display text-[44px] font-extrabold text-acento-400">80+</div>
-              <div className="mt-1 text-[14px] font-semibold uppercase tracking-wider text-white/70">
-                {t("landingStatDestinos")}
-              </div>
-            </div>
-            <div>
-              <div className="font-display text-[44px] font-extrabold text-acento-400">3h</div>
-              <div className="mt-1 text-[14px] font-semibold uppercase tracking-wider text-white/70">
-                {t("landingStatFrescura")}
-              </div>
-            </div>
-            <div>
-              <div className="font-display text-[44px] font-extrabold text-acento-400">100%</div>
-              <div className="mt-1 text-[14px] font-semibold uppercase tracking-wider text-white/70">
-                {t("landingStatReales")}
-              </div>
-            </div>
-          </div>
 
-          {/* Anchor de precio real */}
-          <div className="mt-10 inline-flex flex-col items-center rounded-2xl bg-white/10 px-6 py-4 backdrop-blur-md">
-            <div className="text-[12px] font-semibold uppercase tracking-wider text-white/70">
-              {t("landingPrecioEjemplo")}
+          {/* Stack vertical centrado — orden de importancia descendente:
+              (a) social proof real (live counter), (b) ancla de precio con
+              valor concreto, (c) stat de producto de soporte (80+). */}
+          <div className="mt-10 flex flex-col items-center gap-6">
+            {/* Contador en vivo. Solo aparece si KV respondió con ≥1 — cero
+                números inventados. */}
+            {online != null && online >= 1 && (
+              <div className="inline-flex items-center gap-2.5 rounded-full bg-emerald-500/15 px-4 py-2 ring-1 ring-emerald-400/40">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                </span>
+                <span className="text-[13.5px] font-bold">
+                  {online}
+                  <span className="ml-1.5 font-semibold uppercase tracking-wider text-white/80">
+                    {online === 1 ? t("landingViajeroAhora") : t("landingViajerosAhora")}
+                  </span>
+                </span>
+              </div>
+            )}
+
+            {/* Anchor de precio: card protagonista. Es la prueba más fuerte
+                — número concreto + comparación + ahorro estimado. */}
+            <div className="w-full max-w-md rounded-3xl bg-white/10 px-8 py-6 ring-1 ring-white/15 backdrop-blur-md">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/65">
+                {t("landingPrecioEjemplo")}
+              </div>
+              <div className="mt-2 font-display text-[28px] font-extrabold leading-tight sm:text-[32px]">
+                {t("landingPrecioRuta")} <span className="text-acento-400">US$733</span>
+              </div>
+              <div className="mt-2 text-[13.5px] text-white/65 line-through">
+                {t("landingPrecioVs")}
+              </div>
+              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-[12px] font-bold uppercase tracking-wider text-emerald-300">
+                ✓ {t("landingPrecioAhorro")}
+              </div>
             </div>
-            <div className="mt-1 font-display text-[26px] font-extrabold">
-              {t("landingPrecioRuta")} <span className="text-acento-400">US$733</span>
+
+            {/* Stat de producto en línea pequeña como caption de soporte. */}
+            <div className="flex items-baseline gap-2.5">
+              <span className="font-display text-[36px] font-extrabold text-acento-400">80+</span>
+              <span className="text-[13px] font-semibold uppercase tracking-wider text-white/70">
+                {t("landingStatDestinos")}
+              </span>
             </div>
           </div>
 
@@ -318,7 +426,12 @@ export default function Bienvenida() {
 
       {/* ============== FOOTER simple ============== */}
       <footer className="bg-marca-900 px-6 py-8 text-center text-[12.5px] text-white/50">
-        © {new Date().getFullYear()} Viajero 360 · {t("footer")}
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <a href="/privacidad" className="hover:text-white/80">{t("footerPrivacidad")}</a>
+          <span className="text-white/30">·</span>
+          <a href="/terminos" className="hover:text-white/80">{t("footerTerminos")}</a>
+        </div>
+        <div className="mt-3">© {new Date().getFullYear()} Anduve · {t("footer")}</div>
       </footer>
 
       {/* ============== DIÁLOGO LOGIN ============== */}
@@ -330,15 +443,20 @@ export default function Bienvenida() {
           <div
             role="dialog"
             aria-modal="true"
-            className="w-full max-w-sm rounded-3xl bg-white p-7 shadow-2xl animar-subir"
+            className="w-full max-w-sm rounded-3xl bg-white p-7 shadow-2xl animar-subir dark:bg-slate-800"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between">
-              <div className="text-marca-600"><Logo size={56} animado /></div>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <LogoMarca size={44} animado />
+                <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.28em] text-slate-500 dark:text-slate-400">
+                  {t("tagline")}
+                </div>
+              </div>
               <button
                 onClick={() => setMostrarLogin(false)}
                 aria-label="Cerrar"
-                className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -357,8 +475,8 @@ export default function Bienvenida() {
                 disabled={!authConfig.google}
                 className={`flex w-full items-center justify-center gap-3 rounded-2xl border py-3.5 text-[15px] font-bold shadow-suave transition ${
                   authConfig.google
-                    ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:shadow-media"
-                    : "border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed"
+                    ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:shadow-media dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                    : "border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed dark:border-slate-700 dark:bg-slate-700"
                 }`}
               >
                 <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
@@ -379,7 +497,7 @@ export default function Bienvenida() {
                   </div>
                   <button
                     onClick={elegirEmailEnDialogo}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-marca-200 bg-marca-50 py-3.5 text-[15px] font-bold text-marca-700 transition hover:bg-marca-100"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-marca-200 bg-marca-50 py-3.5 text-[15px] font-bold text-marca-700 transition hover:bg-marca-100 dark:border-marca-800 dark:bg-marca-900/30 dark:text-marca-300"
                   >
                     ✉️ {t("authEntrarEmail")}
                   </button>
@@ -387,7 +505,7 @@ export default function Bienvenida() {
               )}
 
               {!authConfig.google && !authConfig.magicCode && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12.5px] text-amber-800">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12.5px] text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
                   Estamos configurando el acceso. Vuelve en unos minutos.
                 </div>
               )}
@@ -405,6 +523,27 @@ export default function Bienvenida() {
               <div className="mt-3 text-center text-[11.5px] text-slate-400">
                 {t("landingLoginPrivacidad")}
               </div>
+
+              {/* Demo accounts: sin crear cuenta real, ver la app entera */}
+              <div className="mt-5 border-t border-slate-100 pt-4 dark:border-slate-700">
+                <div className="text-center text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  {t("demoTitulo")}
+                </div>
+                <div className="mt-2.5 grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => entrarDemo("pro")}
+                    className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-[12.5px] font-bold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300"
+                  >
+                    ★ {t("demoPro")}
+                  </button>
+                  <button
+                    onClick={() => entrarDemo("free")}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[12.5px] font-bold text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                  >
+                    {t("demoFree")}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>,
@@ -421,8 +560,8 @@ function PantallaMagicCode({
   enviarCodigo, verificarCodigo,
 }) {
   return (
-    <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4 bg-gradient-to-br from-marca-500 via-marca-600 to-marca-900">
-      <div className="bg-white rounded-3xl p-7 w-full max-w-sm shadow-[0_24px_60px_rgba(15,118,110,.45)] animar-subir">
+    <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4 bg-gradient-to-br from-marca-500 via-marca-600 to-marca-900 dark:from-slate-900 dark:via-slate-800 dark:to-marca-900">
+      <div className="bg-white rounded-3xl p-7 w-full max-w-sm shadow-[0_24px_60px_rgba(15,118,110,.45)] animar-subir dark:bg-slate-800">
         <div className="flex justify-center text-marca-600"><Logo size={64} animado /></div>
 
         {pasoMagic === 1 && (

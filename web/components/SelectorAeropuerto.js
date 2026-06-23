@@ -1,0 +1,427 @@
+"use client";
+// Combobox doble (país + aeropuerto) sobre el catálogo IATA completo
+// (~7000 aeropuertos del mundo). Ambos campos son typeaheads con filtrado
+// en vivo según lo que el usuario escribe.
+//
+// País: opcional. Si está vacío (Todo el mundo), no filtra. Si tiene un
+// país elegido, el typeahead de aeropuerto solo busca dentro de ese país.
+//
+// Aeropuerto: si el país filtro NO coincide con el aeropuerto pre-elegido,
+// el input se limpia para que el usuario elija otro consistente.
+//
+// Carga el JSON bajo demanda la primera vez que el componente se monta.
+// Singleton compartido entre instancias.
+import { useEffect, useMemo, useRef, useState } from "react";
+
+// Bandera emoji desde código ISO de 2 letras (regional indicators).
+export function banderaDePais(cc) {
+  if (!cc || cc.length !== 2) return "🌍";
+  const base = 0x1f1e6;
+  return String.fromCodePoint(
+    base + (cc.charCodeAt(0) - 65),
+    base + (cc.charCodeAt(1) - 65)
+  );
+}
+
+// Singleton del catálogo cargado.
+let _catalogoPromise = null;
+async function cargarCatalogo() {
+  if (_catalogoPromise) return _catalogoPromise;
+  _catalogoPromise = fetch("/aeropuertos.json")
+    .then((r) => (r.ok ? r.json() : []))
+    .then((arr) =>
+      arr.map((a) => ({
+        iata: a.i,
+        ciudad: a.c,
+        pais: a.p,
+        nombre: a.n,
+        ciudadLower: (a.c || "").toLowerCase(),
+        nombreLower: (a.n || "").toLowerCase(),
+      }))
+    )
+    .catch(() => []);
+  return _catalogoPromise;
+}
+
+// Normaliza para búsqueda: minúsculas + sin tildes.
+function norm(s) {
+  return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+// Helper: nombre legible de un país ISO 2-letras vía Intl.DisplayNames.
+function nombrePais(cc, lang = "es") {
+  try {
+    const dn = new Intl.DisplayNames([lang], { type: "region" });
+    return dn.of(cc) || cc;
+  } catch {
+    return cc;
+  }
+}
+
+// Filtra y rankea aeropuertos. Pool = todo el catálogo si no hay filtro de
+// país, o solo los del país filtrado si lo hay. Si no hay query y SÍ hay
+// filtro, devuelve los primeros 20 del país ordenados alfabéticamente.
+function buscarAeropuertos(catalogo, q, paisFiltro = "", limite = 20) {
+  const limpio = q.replace(/\s*\([^)]*\)\s*/g, " ").trim();
+  const t = norm(limpio);
+  const pool = paisFiltro
+    ? catalogo.filter((a) => a.pais === paisFiltro)
+    : catalogo;
+
+  if (!t && paisFiltro) {
+    return [...pool].sort((a, b) => a.ciudad.localeCompare(b.ciudad, "es")).slice(0, limite);
+  }
+  if (!t) return [];
+
+  const hintIata = (q.match(/\(([A-Za-z]{3})\)/) || [])[1]?.toUpperCase();
+  if (t.length === 3) {
+    const ex = pool.find((a) => a.iata.toLowerCase() === t);
+    if (ex) {
+      const resto = pool
+        .filter((a) => a !== ex && (norm(a.ciudadLower).startsWith(t) || norm(a.nombreLower).includes(t)))
+        .slice(0, limite - 1);
+      return [ex, ...resto];
+    }
+  }
+  if (hintIata) {
+    const ex = pool.find((a) => a.iata === hintIata);
+    if (ex) {
+      const resto = pool
+        .filter((a) => a !== ex && (norm(a.ciudadLower).includes(t) || norm(a.nombreLower).includes(t)))
+        .slice(0, limite - 1);
+      return [ex, ...resto];
+    }
+  }
+  const scored = [];
+  for (const a of pool) {
+    const c = norm(a.ciudadLower);
+    const n = norm(a.nombreLower);
+    let score = 0;
+    if (c === t) score = 100;
+    else if (c.startsWith(t)) score = 80;
+    else if (c.includes(t)) score = 60;
+    else if (n.includes(t)) score = 40;
+    else if (a.iata.toLowerCase().startsWith(t)) score = 50;
+    if (score > 0) scored.push({ a, score });
+    if (scored.length > limite * 6) break;
+  }
+  scored.sort((x, y) => y.score - x.score);
+  return scored.slice(0, limite).map((x) => x.a);
+}
+
+// Filtra países por substring. Devuelve hasta `limite` ordenados por
+// relevancia: empieza por (prioridad) > contiene.
+function buscarPaises(paises, q, limite = 100) {
+  const t = norm(q.trim());
+  if (!t) return paises.slice(0, limite); // sin query: muestra todo (limitado)
+  const empieza = [];
+  const contiene = [];
+  for (const p of paises) {
+    const n = norm(p.nombre);
+    if (n.startsWith(t)) empieza.push(p);
+    else if (n.includes(t)) contiene.push(p);
+    if (empieza.length + contiene.length >= limite * 2) break;
+  }
+  return [...empieza, ...contiene].slice(0, limite);
+}
+
+// Etiqueta visible para el campo de país. Si no hay filtro, muestra texto
+// genérico. Si hay, bandera + nombre localizado.
+function etiquetaPais(codigo, lang) {
+  if (!codigo) return "🌍 Todo el mundo";
+  return `${banderaDePais(codigo)} ${nombrePais(codigo, lang)}`;
+}
+
+export default function SelectorAeropuerto({
+  value, // iata seleccionado (string)
+  paisInicial = "", // ISO 2-letras opcional para pre-filtrar
+  onChange, // (aeropuerto | null) => void
+  placeholder = "Ciudad, aeropuerto o IATA…",
+  ariaLabel,
+  className = "",
+  lang = "es",
+}) {
+  const [catalogo, setCatalogo] = useState([]);
+
+  // ----- Aeropuerto (campo derecho) -----
+  const [texto, setTexto] = useState("");
+  const [abierto, setAbierto] = useState(false);
+  const [resaltado, setResaltado] = useState(0);
+  const inputRef = useRef(null);
+  const cajaAptRef = useRef(null);
+
+  // ----- País (campo izquierdo, también typeahead) -----
+  const [paisFiltro, setPaisFiltro] = useState(paisInicial);
+  const [textoPais, setTextoPais] = useState(""); // lo que el usuario tipea o etiqueta del seleccionado
+  const [abiertoPais, setAbiertoPais] = useState(false);
+  const [resaltadoPais, setResaltadoPais] = useState(0);
+  const paisInputRef = useRef(null);
+  const cajaPaisRef = useRef(null);
+
+  // Carga inicial del catálogo (perezosa, una vez por sesión).
+  useEffect(() => {
+    let vivo = true;
+    cargarCatalogo().then((c) => vivo && setCatalogo(c));
+    return () => { vivo = false; };
+  }, []);
+
+  // Cuando llega value externo (init desde localStorage, etc.), sincroniza
+  // input y país filtro a ese aeropuerto.
+  useEffect(() => {
+    if (!value || !catalogo.length) return;
+    const a = catalogo.find((x) => x.iata === value);
+    if (a) {
+      setTexto(`${a.ciudad} (${a.iata})`);
+      setPaisFiltro(a.pais);
+    }
+  }, [value, catalogo]);
+
+  // Sincroniza el texto del campo país a su etiqueta cuando cambia el
+  // filtro (a menos que el usuario esté tipeando activamente en él).
+  useEffect(() => {
+    if (!abiertoPais) {
+      setTextoPais(etiquetaPais(paisFiltro, lang));
+    }
+  }, [paisFiltro, lang, abiertoPais]);
+
+  // Click afuera cierra ambos dropdowns.
+  useEffect(() => {
+    function onDoc(e) {
+      if (cajaAptRef.current && !cajaAptRef.current.contains(e.target)) setAbierto(false);
+      if (cajaPaisRef.current && !cajaPaisRef.current.contains(e.target)) {
+        setAbiertoPais(false);
+        // Si el usuario cerró sin elegir, revierte el texto a la etiqueta
+        // del país seleccionado actual.
+        setTextoPais(etiquetaPais(paisFiltro, lang));
+      }
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [paisFiltro, lang]);
+
+  // Lista de países disponibles (derivada del catálogo, ordenada por
+  // nombre localizado). Memoizada.
+  const paisesDisponibles = useMemo(() => {
+    if (!catalogo.length) return [];
+    const set = new Set(catalogo.map((a) => a.pais));
+    const arr = [...set].map((cc) => ({ codigo: cc, nombre: nombrePais(cc, lang) }));
+    arr.sort((a, b) => a.nombre.localeCompare(b.nombre, lang));
+    return arr;
+  }, [catalogo, lang]);
+
+  // Países filtrados por lo que el usuario tipea (solo cuando el dropdown
+  // está abierto y el texto no es la etiqueta del país ya elegido).
+  const paisesFiltrados = useMemo(() => {
+    if (!paisesDisponibles.length) return [];
+    const etiquetaActual = etiquetaPais(paisFiltro, lang);
+    // Si lo que está escrito coincide con la etiqueta del país actual,
+    // mostramos toda la lista (para que puedan navegar).
+    const queryReal = textoPais === etiquetaActual ? "" : textoPais.replace(/^[\u{1F1E6}-\u{1F1FF}🌍\s]+/u, "");
+    const base = buscarPaises(paisesDisponibles, queryReal, 100);
+    // Prepend "Todo el mundo" como opción explícita.
+    return [{ codigo: "", nombre: "Todo el mundo" }, ...base];
+  }, [paisesDisponibles, textoPais, paisFiltro, lang]);
+
+  // Aeropuertos filtrados.
+  const resultados = useMemo(
+    () => buscarAeropuertos(catalogo, texto, paisFiltro, 20),
+    [catalogo, texto, paisFiltro]
+  );
+
+  // --- handlers país ---
+  function elegirPais(codigo) {
+    setPaisFiltro(codigo);
+    setTextoPais(etiquetaPais(codigo, lang));
+    setAbiertoPais(false);
+    setResaltadoPais(0);
+
+    // Si el aeropuerto pre-seleccionado NO está en el nuevo país, limpiamos
+    // el input de aeropuerto (y notificamos al padre con null) — así el
+    // usuario sabe que tiene que elegir otro.
+    if (codigo && value) {
+      const apt = catalogo.find((a) => a.iata === value);
+      if (apt && apt.pais !== codigo) {
+        setTexto("");
+        onChange?.(null);
+      }
+    }
+    // Abre el dropdown de aeropuertos y mueve el foco ahí para flujo
+    // continuo.
+    setAbierto(true);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
+  function onKeyPais(e) {
+    if (!abiertoPais && (e.key === "ArrowDown" || e.key === "Enter")) {
+      setAbiertoPais(true);
+      return;
+    }
+    if (!abiertoPais) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setResaltadoPais((i) => Math.min(i + 1, paisesFiltrados.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setResaltadoPais((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const p = paisesFiltrados[resaltadoPais];
+      if (p) elegirPais(p.codigo);
+    } else if (e.key === "Escape") {
+      setAbiertoPais(false);
+      setTextoPais(etiquetaPais(paisFiltro, lang));
+    }
+  }
+
+  // --- handlers aeropuerto ---
+  function elegirAeropuerto(a) {
+    setTexto(`${a.ciudad} (${a.iata})`);
+    setPaisFiltro(a.pais);
+    setTextoPais(etiquetaPais(a.pais, lang));
+    setAbierto(false);
+    onChange?.({ iata: a.iata, ciudad: a.ciudad, pais: a.pais, nombre: a.nombre });
+  }
+
+  function onKeyAeropuerto(e) {
+    if (!abierto && (e.key === "ArrowDown" || e.key === "Enter")) {
+      setAbierto(true);
+      return;
+    }
+    if (!abierto) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setResaltado((i) => Math.min(i + 1, resultados.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setResaltado((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const a = resultados[resaltado];
+      if (a) elegirAeropuerto(a);
+    } else if (e.key === "Escape") {
+      setAbierto(false);
+    }
+  }
+
+  return (
+    <div className={`grid grid-cols-1 gap-2 sm:grid-cols-[1fr_2fr] ${className}`}>
+      {/* ====== Combobox de país ====== */}
+      <div ref={cajaPaisRef} className="relative">
+        <input
+          ref={paisInputRef}
+          type="text"
+          value={textoPais}
+          aria-label="País de salida"
+          aria-autocomplete="list"
+          aria-expanded={abiertoPais}
+          autoComplete="off"
+          onChange={(e) => {
+            setTextoPais(e.target.value);
+            setAbiertoPais(true);
+            setResaltadoPais(0);
+          }}
+          onFocus={(e) => {
+            setAbiertoPais(true);
+            setResaltadoPais(0);
+            try { e.target.select(); } catch {}
+          }}
+          onKeyDown={onKeyPais}
+          className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+        />
+        {abiertoPais && paisesFiltrados.length > 0 && (
+          <ul
+            role="listbox"
+            className="absolute left-0 right-0 top-full z-[6700] mt-1 max-h-[300px] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800"
+          >
+            {paisesFiltrados.map((p, i) => (
+              <li
+                key={p.codigo || "todo"}
+                role="option"
+                aria-selected={i === resaltadoPais}
+                onMouseDown={(e) => { e.preventDefault(); elegirPais(p.codigo); }}
+                onMouseEnter={() => setResaltadoPais(i)}
+                className={`flex cursor-pointer items-center gap-2 px-3 py-2 text-[13.5px] ${
+                  i === resaltadoPais
+                    ? "bg-marca-50 text-marca-900 dark:bg-marca-900/40 dark:text-marca-300"
+                    : "text-slate-700 dark:text-slate-200"
+                }`}
+              >
+                <span className="text-base" aria-hidden>{p.codigo ? banderaDePais(p.codigo) : "🌍"}</span>
+                <span className="truncate font-semibold">{p.nombre}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {abiertoPais && paisesFiltrados.length === 0 && (
+          <div className="absolute left-0 right-0 top-full z-[6700] mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] text-slate-500 shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
+            Ningún país coincide
+          </div>
+        )}
+      </div>
+
+      {/* ====== Combobox de aeropuerto ====== */}
+      <div ref={cajaAptRef} className="relative">
+        <input
+          ref={inputRef}
+          type="text"
+          value={texto}
+          placeholder={paisFiltro ? `Buscar en ${nombrePais(paisFiltro, lang)}…` : placeholder}
+          aria-label={ariaLabel}
+          aria-autocomplete="list"
+          aria-expanded={abierto}
+          autoComplete="off"
+          onChange={(e) => {
+            setTexto(e.target.value);
+            setAbierto(true);
+            setResaltado(0);
+          }}
+          onFocus={(e) => {
+            setAbierto(true);
+            try { e.target.select(); } catch {}
+          }}
+          onKeyDown={onKeyAeropuerto}
+          className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+        />
+        {abierto && resultados.length > 0 && (
+          <ul
+            role="listbox"
+            className="absolute left-0 right-0 top-full z-[6500] mt-1 max-h-[300px] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800"
+          >
+            {resultados.map((a, i) => (
+              <li
+                key={a.iata + a.pais + i}
+                role="option"
+                aria-selected={i === resaltado}
+                onMouseDown={(e) => { e.preventDefault(); elegirAeropuerto(a); }}
+                onMouseEnter={() => setResaltado(i)}
+                className={`flex cursor-pointer items-center gap-2.5 px-3 py-2 text-[13.5px] ${
+                  i === resaltado
+                    ? "bg-marca-50 text-marca-900 dark:bg-marca-900/40 dark:text-marca-300"
+                    : "text-slate-700 dark:text-slate-200"
+                }`}
+              >
+                <span className="text-base" aria-hidden>{banderaDePais(a.pais)}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-semibold">
+                    {a.ciudad} <span className="text-slate-400">·</span> {nombrePais(a.pais, lang)}
+                  </div>
+                  <div className="truncate text-[11.5px] text-slate-500 dark:text-slate-400">
+                    {a.nombre}
+                  </div>
+                </div>
+                <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                  {a.iata}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {abierto && texto.length >= 2 && resultados.length === 0 && catalogo.length > 0 && (
+          <div className="absolute left-0 right-0 top-full z-[6500] mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] text-slate-500 shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
+            Ningún aeropuerto coincide{paisFiltro ? ` en ${nombrePais(paisFiltro, lang)}` : ""}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -38,6 +38,18 @@ export default function sitemap() {
       changeFrequency: "monthly",
       priority: 0.85,
     },
+    {
+      url: `${SITIO}/privacidad`,
+      lastModified: ahora,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${SITIO}/terminos`,
+      lastModified: ahora,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
   ];
 
   const langs = ["", "en", "pt", "fr"]; // "" = ES (default, sin prefijo)
