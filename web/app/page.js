@@ -930,7 +930,7 @@ export default function Home() {
                 onClick={toggleDark}
                 aria-label={darkMode ? "Modo claro" : "Modo oscuro"}
                 title={darkMode ? "Modo claro" : "Modo oscuro"}
-                className={`flex h-8 w-8 items-center justify-center rounded-full border text-[16px] transition ${
+                className={`flex h-10 w-10 items-center justify-center rounded-full border text-[16px] transition ${
                   esHero
                     ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
                     : "border-slate-200 bg-white text-slate-600 hover:border-marca-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
@@ -1327,7 +1327,7 @@ export default function Home() {
                 <h1 className="text-2xl font-extrabold tracking-tight text-marca-900 lg:text-3xl">{ciudad.nombre}</h1>
                 <div className="text-[13px] text-slate-500">{ciudad.pais}</div>
               </div>
-              <div className="flex items-center gap-2.5">
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 {plan.some((d) => d.paradas.length > 0) && (
                   <button
                     onClick={() => {
@@ -1342,7 +1342,7 @@ export default function Home() {
                   >
                     <span className="inline-flex items-center gap-1.5">
                       <Icono nombre={guardado ? "check" : "bookmark"} size={15} />
-                      {guardado ? t("guardado") : t("guardarViaje")}
+                      <span className="hidden sm:inline">{guardado ? t("guardado") : t("guardarViaje")}</span>
                     </span>
                   </button>
                 )}
@@ -1353,7 +1353,7 @@ export default function Home() {
                   >
                     <span className="inline-flex items-center gap-1.5">
                       <Icono nombre={copiado ? "check" : "share"} size={15} />
-                      {copiado ? t("copiado") : t("compartir")}
+                      <span className="hidden sm:inline">{copiado ? t("copiado") : t("compartir")}</span>
                     </span>
                   </button>
                 )}

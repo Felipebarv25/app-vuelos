@@ -363,6 +363,26 @@ button:active {
 .dark .border-slate-100 { border-color: #1e293b; }
 .dark .border-slate-200 { border-color: #334155; }
 
+/* Fondos con TINTE de acento: el net de arriba sólo cubre blanco/grises.
+   Estos tintes claros (badges, tarjetas de requisitos, CTAs, chips) se
+   oscurecen para que no "brillen" sobre el fondo oscuro. */
+.dark .bg-marca-50 { background-color: #0e3b38; }
+.dark .bg-marca-100 { background-color: #124a45; }
+.dark .bg-emerald-50 { background-color: #07271d; }
+.dark .bg-amber-50 { background-color: #2a2106; }
+.dark .bg-amber-100 { background-color: #3a2d08; }
+.dark .bg-violet-50 { background-color: #1b1740; }
+.dark .bg-rose-50 { background-color: #2c0f1a; }
+.dark .bg-sky-50 { background-color: #0b2536; }
+.dark .bg-sky-100 { background-color: #11324a; }
+.dark .bg-red-50 { background-color: #2c0f12; }
+/* Texto sobre esos tintes (versión oscura) → tono claro legible */
+.dark .text-amber-800 { color: #fcd9a0; }
+.dark .text-amber-700 { color: #f5c97a; }
+.dark .text-emerald-700 { color: #6ee7b7; }
+.dark .text-emerald-600 { color: #34d399; }
+.dark .text-rose-700 { color: #fda4af; }
+
 /* Scrollbars */
 .dark ::-webkit-scrollbar-thumb { background: #334155; }
 
