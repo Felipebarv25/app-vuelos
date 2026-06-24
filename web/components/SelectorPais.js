@@ -7,6 +7,7 @@
 //   <SelectorPais value="CO" onChange={(iso) => ...} />
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { PAISES_ISO } from "@/lib/paisesISO";
 
 // Lista de países pre-construida una sola vez. Normalizamos el nombre
@@ -44,23 +45,40 @@ export default function SelectorPais({ value, onChange, className = "" }) {
   const [abierto, setAbierto] = useState(false);
   const [q, setQ] = useState("");
   const [iSeleccion, setISeleccion] = useState(0);
+  const [montado, setMontado] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  useEffect(() => { setMontado(true); }, []);
   const ref = useRef(null);
+  const triggerRef = useRef(null);
+  const dropRef = useRef(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
     function onClick(e) {
-      if (!ref.current?.contains(e.target)) setAbierto(false);
+      if (ref.current?.contains(e.target)) return;
+      if (dropRef.current?.contains(e.target)) return;
+      setAbierto(false);
     }
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
   useEffect(() => {
-    if (abierto) {
+    if (abierto && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      // Anchor LEFT del dropdown al LEFT del trigger button.
+      setPos({ top: rect.bottom + 4, left: rect.left });
       setQ("");
       setISeleccion(0);
       setTimeout(() => inputRef.current?.focus(), 0);
     }
+  }, [abierto]);
+
+  useEffect(() => {
+    if (!abierto) return;
+    const onScroll = () => setAbierto(false);
+    window.addEventListener("scroll", onScroll, true);
+    return () => window.removeEventListener("scroll", onScroll, true);
   }, [abierto]);
 
   const resultados = useMemo(() => buscarPaises(q), [q]);
@@ -88,9 +106,54 @@ export default function SelectorPais({ value, onChange, className = "" }) {
     }
   }
 
+  const dropdown = abierto && montado && createPortal(
+    <div
+      ref={dropRef}
+      style={{ position: "fixed", top: pos.top, left: pos.left }}
+      className="z-[100] w-72 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-modal"
+    >
+      <input
+        ref={inputRef}
+        type="text"
+        value={q}
+        onChange={(e) => { setQ(e.target.value); setISeleccion(0); }}
+        onKeyDown={onKey}
+        placeholder="Buscar país (Colombia, ES, France…)"
+        className="w-full border-0 border-b border-slate-100 bg-white px-3 py-2.5 text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
+        autoComplete="off"
+      />
+      <ul role="listbox" className="max-h-72 overflow-y-auto py-1">
+        {resultados.length === 0 ? (
+          <li className="px-3 py-2.5 text-[13px] text-slate-400">Sin resultados</li>
+        ) : (
+          resultados.map((p, i) => (
+            <li key={p.cc}>
+              <button
+                type="button"
+                onClick={() => elegir(p.cc)}
+                onMouseEnter={() => setISeleccion(i)}
+                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] transition ${
+                  i === iSeleccion
+                    ? "bg-marca-50 text-marca-900"
+                    : "text-slate-700 hover:bg-slate-50"
+                } ${p.cc === value ? "font-bold" : ""}`}
+              >
+                <span className="text-base">{p.bandera}</span>
+                <span className="flex-1 truncate">{p.nombre}</span>
+                <span className="shrink-0 font-mono text-[11px] text-slate-400">{p.cc}</span>
+              </button>
+            </li>
+          ))
+        )}
+      </ul>
+    </div>,
+    document.body
+  );
+
   return (
     <div ref={ref} className={`relative inline-block ${className}`}>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setAbierto((v) => !v)}
         className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[12.5px] font-semibold text-white/85 underline-offset-2 outline-none transition hover:text-white hover:underline"
@@ -102,45 +165,7 @@ export default function SelectorPais({ value, onChange, className = "" }) {
         <span>{paisActual ? `${paisActual.bandera} ${paisActual.nombre}` : "—"}</span>
         <span className="text-[11px] text-white/60">✎</span>
       </button>
-
-      {abierto && (
-        <div className="absolute left-0 top-full z-30 mt-1 w-72 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-modal">
-          <input
-            ref={inputRef}
-            type="text"
-            value={q}
-            onChange={(e) => { setQ(e.target.value); setISeleccion(0); }}
-            onKeyDown={onKey}
-            placeholder="Buscar país (Colombia, ES, France…)"
-            className="w-full border-0 border-b border-slate-100 bg-white px-3 py-2.5 text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
-            autoComplete="off"
-          />
-          <ul role="listbox" className="max-h-72 overflow-y-auto py-1">
-            {resultados.length === 0 ? (
-              <li className="px-3 py-2.5 text-[13px] text-slate-400">Sin resultados</li>
-            ) : (
-              resultados.map((p, i) => (
-                <li key={p.cc}>
-                  <button
-                    type="button"
-                    onClick={() => elegir(p.cc)}
-                    onMouseEnter={() => setISeleccion(i)}
-                    className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] transition ${
-                      i === iSeleccion
-                        ? "bg-marca-50 text-marca-900"
-                        : "text-slate-700 hover:bg-slate-50"
-                    } ${p.cc === value ? "font-bold" : ""}`}
-                  >
-                    <span className="text-base">{p.bandera}</span>
-                    <span className="flex-1 truncate">{p.nombre}</span>
-                    <span className="shrink-0 font-mono text-[11px] text-slate-400">{p.cc}</span>
-                  </button>
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
-      )}
+      {dropdown}
     </div>
   );
 }
