@@ -66,19 +66,16 @@ export default function SelectorPais({ value, onChange, className = "" }) {
   useEffect(() => {
     if (abierto && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      // Anchor LEFT del dropdown al LEFT del trigger button.
-      setPos({ top: rect.bottom + 4, left: rect.left });
+      // position:absolute en document space — robusto ante ancestros
+      // con backdrop-filter/transform que rompen position:fixed.
+      setPos({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+      });
       setQ("");
       setISeleccion(0);
       setTimeout(() => inputRef.current?.focus(), 0);
     }
-  }, [abierto]);
-
-  useEffect(() => {
-    if (!abierto) return;
-    const onScroll = () => setAbierto(false);
-    window.addEventListener("scroll", onScroll, true);
-    return () => window.removeEventListener("scroll", onScroll, true);
   }, [abierto]);
 
   const resultados = useMemo(() => buscarPaises(q), [q]);
@@ -109,7 +106,7 @@ export default function SelectorPais({ value, onChange, className = "" }) {
   const dropdown = abierto && montado && createPortal(
     <div
       ref={dropRef}
-      style={{ position: "fixed", top: pos.top, left: pos.left }}
+      style={{ position: "absolute", top: pos.top, left: pos.left }}
       className="z-[100] w-72 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-modal"
     >
       <input

@@ -19,7 +19,7 @@ export default function SelectorMoneda({ value, onChange, className = "" }) {
   // Posición del dropdown calculada desde el rect del trigger button.
   // Usamos posición fixed para que NO le afecte el overflow:hidden del
   // card que envuelve este componente.
-  const [pos, setPos] = useState({ top: 0, right: 0 });
+  const [pos, setPos] = useState({ top: 0, left: 0 });
   const ref = useRef(null);
   const triggerRef = useRef(null);
   const dropRef = useRef(null);
@@ -36,26 +36,23 @@ export default function SelectorMoneda({ value, onChange, className = "" }) {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  // Cuando se abre, calcular posición + focus al input.
+  // Cuando se abre, calcular posición + focus al input. Usamos
+  // position:absolute en document space (sumando window.scrollY/X) en
+  // lugar de position:fixed para evitar el bug de containing-block
+  // cuando un ancestro tiene backdrop-filter, transform o similar.
   useEffect(() => {
     if (abierto && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
+      // Anclar el RIGHT del dropdown (w=256px) al RIGHT del trigger.
+      const ANCHO = 256;
       setPos({
-        top: rect.bottom + 4,
-        right: window.innerWidth - rect.right,
+        top: rect.bottom + window.scrollY + 4,
+        left: Math.max(8, rect.right + window.scrollX - ANCHO),
       });
       setQ("");
       setISeleccion(0);
       setTimeout(() => inputRef.current?.focus(), 0);
     }
-  }, [abierto]);
-
-  // Cerrar al hacer scroll para que el dropdown no quede flotando lejos.
-  useEffect(() => {
-    if (!abierto) return;
-    const onScroll = () => setAbierto(false);
-    window.addEventListener("scroll", onScroll, true);
-    return () => window.removeEventListener("scroll", onScroll, true);
   }, [abierto]);
 
   const resultados = useMemo(() => buscarMonedas(q), [q]);
@@ -85,7 +82,7 @@ export default function SelectorMoneda({ value, onChange, className = "" }) {
   const dropdown = abierto && montado && createPortal(
     <div
       ref={dropRef}
-      style={{ position: "fixed", top: pos.top, right: pos.right }}
+      style={{ position: "absolute", top: pos.top, left: pos.left }}
       className="z-[100] w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-modal"
     >
       <input
