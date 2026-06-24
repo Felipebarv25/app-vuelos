@@ -94,10 +94,10 @@ export default function AnduveLogo({
   //   `align-items: center` del flex ya centra naturalmente y cualquier
   //   shift adicional lo desbalancea.
   fontSize = Math.round(iconSize * 0.535),
-  // Gap reducido de 0.75 (referencia ZIP) a 0.45: a tamaños chicos del
-  // header el gap proporcional grande dejaba demasiado aire entre walker
-  // y ANDUVE. El usuario lo prefiere mas pegado.
-  gap = Math.round(iconSize * 0.45),
+  // Gap reducido a 0.30 para que ANDUVE quede pegado al walker
+  // (iteración con el usuario — la referencia ZIP era 0.75 pero a
+  // tamaños chicos quedaba con demasiado aire).
+  gap = Math.round(iconSize * 0.30),
   animate = false,
   style = {},
 }) {
@@ -111,6 +111,10 @@ export default function AnduveLogo({
   // walker estático es la composición correcta para uso con texto.
   // El `animate` prop entrante se ignora aquí; usar <AnduveIcon> directo
   // para la versión animada standalone.
+  // Pequeño shift hacia abajo del wordmark — el centro óptico de Sora
+  // en mayúsculas queda visualmente alto vs el walker. 0.06 da un toque
+  // sutil sin desalinear.
+  const textShiftY = Math.round(iconSize * 0.06);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap, ...style }}>
       <AnduveIconStatic size={iconSize} variant={variant} />
@@ -121,6 +125,7 @@ export default function AnduveLogo({
           fontSize,
           letterSpacing: "-0.02em",
           lineHeight: 1,
+          transform: `translateY(${textShiftY}px)`,
         }}
       >
         <span style={{ color: word }}>ANDU</span>
