@@ -55,12 +55,11 @@ function AnduveIconStatic({ size = 60, variant = "teal", className = "", style =
   const html = INNER_STATIC.replace(/%CLIP%/g, uid);
   return (
     <svg
-      // viewBox tightened + preserveAspectRatio="xMinYMid meet" para
-      // alinear el walker a la IZQUIERDA del SVG container (no centrado
-      // horizontalmente). Así el tagline debajo del pill se alinea con
-      // el walker SIN compensar offset interno del SVG.
+      // viewBox tightened. preserveAspectRatio default (xMidYMid meet)
+      // centra el walker en el SVG container — el horizonte del planeta
+      // se ve simétrico a izquierda y derecha (con xMin se veía cortado
+      // a la izquierda porque el walker quedaba pegado al borde izq).
       viewBox="35 -55 130 145"
-      preserveAspectRatio="xMinYMid meet"
       width={size}
       height={size}
       fill="none"
