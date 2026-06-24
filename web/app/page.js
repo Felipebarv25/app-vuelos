@@ -17,6 +17,7 @@ import Bienvenida from "@/components/Bienvenida";
 import SelectorIdioma from "@/components/SelectorIdioma";
 import Presupuesto from "@/components/Presupuesto";
 import SelectorMoneda from "@/components/SelectorMoneda";
+import SelectorPais from "@/components/SelectorPais";
 import { monedaDePais, simboloMoneda } from "@/lib/monedas";
 import CardDestino from "@/components/CardDestino";
 import Ofertas from "@/components/Ofertas";
@@ -314,20 +315,33 @@ export default function Home() {
     trackVisita(lang);
   }, [lang]);
 
-  // Pais del visitante (de /api/geo). Sirve para personalizar el hero:
-  // "Plan tu viaje desde {pais}". Cae a "Colombia" si no se puede detectar.
-  // Detecta una sola vez por sesion (cacheado en sessionStorage).
-  // En la MISMA llamada autodetectamos la moneda nativa del país y la
-  // aplicamos a `monedaHero` (CO→COP, ES→EUR, MX→MXN, etc.).
+  // Pais del visitante. Prioridad:
+  //   1) localStorage `anduve_pais_iso` — elección manual del usuario
+  //      (override del selector "📍 Detectado: X ✎"). Persiste para
+  //      siempre, recordada entre sesiones.
+  //   2) sessionStorage cache de la detección IP previa.
+  //   3) /api/geo (IP geolocation vía Vercel headers, ~95% acierto).
+  //   4) Fallback "CO" / "Colombia".
+  // Guardamos ISO-2 y derivamos nombre via PAIS_GENTILICIO.
+  const [paisIso, setPaisIso] = useState("CO");
   const [paisVisitante, setPaisVisitante] = useState("Colombia");
   useEffect(() => {
     let vivo = true;
     try {
-      const cache = sessionStorage.getItem("anduve_pais_nombre");
+      const manual = localStorage.getItem("anduve_pais_iso");
+      if (manual) {
+        setPaisIso(manual);
+        setPaisVisitante(PAIS_GENTILICIO[manual] || manual);
+        return;
+      }
+      const cacheIso = sessionStorage.getItem("anduve_pais_iso_geo");
+      const cacheNombre = sessionStorage.getItem("anduve_pais_nombre");
       const cacheMoneda = sessionStorage.getItem("anduve_moneda_geo");
-      if (cache) {
-        setPaisVisitante(cache);
-        if (cacheMoneda) setMonedaHero(cacheMoneda);
+      if (cacheIso) {
+        setPaisIso(cacheIso);
+        setPaisVisitante(cacheNombre || cacheIso);
+        const yaTocada = sessionStorage.getItem("anduve_moneda_user_set");
+        if (!yaTocada && cacheMoneda) setMonedaHero(cacheMoneda);
         return;
       }
     } catch {}
@@ -335,15 +349,17 @@ export default function Home() {
       .then((r) => (r.ok ? r.json() : null))
       .then((g) => {
         if (!vivo) return;
-        const iso = g?.pais;
-        const nombre = (iso && PAIS_GENTILICIO[iso]) || "Colombia";
+        const iso = g?.pais || "CO";
+        const nombre = PAIS_GENTILICIO[iso] || "Colombia";
+        setPaisIso(iso);
         setPaisVisitante(nombre);
-        try { sessionStorage.setItem("anduve_pais_nombre", nombre); } catch {}
-        // Auto-set moneda según país del visitante (siempre que el
-        // usuario no haya elegido ya otra cosa en esta sesión).
+        try {
+          sessionStorage.setItem("anduve_pais_iso_geo", iso);
+          sessionStorage.setItem("anduve_pais_nombre", nombre);
+        } catch {}
         try {
           const yaTocada = sessionStorage.getItem("anduve_moneda_user_set");
-          if (!yaTocada && iso) {
+          if (!yaTocada) {
             const code = monedaDePais(iso);
             if (code) {
               setMonedaHero(code);
@@ -355,6 +371,25 @@ export default function Home() {
       .catch(() => {});
     return () => { vivo = false; };
   }, []);
+
+  // Override manual del país: el usuario corrige cuando la IP da algo
+  // raro (VPN, roaming). Persiste en localStorage entre sesiones. Si
+  // no ha tocado la moneda manualmente, también la actualizamos a la
+  // del nuevo país (sin marcarla como "user_set" — sigue siendo
+  // sincronizable).
+  function cambiarPaisManual(iso) {
+    if (!iso) return;
+    setPaisIso(iso);
+    setPaisVisitante(PAIS_GENTILICIO[iso] || iso);
+    try {
+      localStorage.setItem("anduve_pais_iso", iso);
+      const yaTocada = sessionStorage.getItem("anduve_moneda_user_set");
+      if (!yaTocada) {
+        const code = monedaDePais(iso);
+        if (code) setMonedaHero(code);
+      }
+    } catch {}
+  }
 
   // Tema personalizado del hero (playa, ciudad, historia...) — depende del
   // perfil del usuario logueado. Lo trae /api/profile/recomendar; mientras
@@ -1094,6 +1129,14 @@ export default function Home() {
                     {opt.label}
                   </button>
                 ))}
+              </div>
+
+              {/* Indicador "Detectado: X ✎" — el usuario puede corregir si
+                  la IP geolocation dio mal (VPN, roaming). Al cambiar
+                  también re-setea la moneda si no la había tocado manual.
+                  Persiste en localStorage entre sesiones. */}
+              <div className="mx-auto mt-3 flex max-w-xl items-center justify-center">
+                <SelectorPais value={paisIso} onChange={cambiarPaisManual} />
               </div>
 
               {/* Divisor + opcion secundaria: buscar por ciudad. Empieza
