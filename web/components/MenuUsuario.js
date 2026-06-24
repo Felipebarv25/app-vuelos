@@ -94,7 +94,7 @@ export default function MenuUsuario({ oscuro = false }) {
             {inicial}
           </span>
         )}
-        <span className="hidden text-[13px] font-bold sm:inline">{usuario.nombre || "Viajero"}</span>
+        <span className="hidden text-[13px] font-bold sm:inline">{usuario.nombre || t("defaultNombre")}</span>
         {pro && (
           <span className="rounded-full bg-amber-400 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-amber-900">
             ★
@@ -107,7 +107,7 @@ export default function MenuUsuario({ oscuro = false }) {
         <div className="absolute right-0 top-full z-[1200] mt-2 w-[280px] overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">
           <div className="border-b border-slate-100 bg-slate-50/60 px-4 py-3 dark:border-slate-700 dark:bg-slate-700/40">
             <div className="text-[14px] font-extrabold text-marca-900 dark:text-slate-100">
-              {usuario.nombre || "Viajero"}
+              {usuario.nombre || t("defaultNombre")}
             </div>
             {usuario.email && (
               <div className="truncate text-[12px] text-slate-500 dark:text-slate-400">{usuario.email}</div>

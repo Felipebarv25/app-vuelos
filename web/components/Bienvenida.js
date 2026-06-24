@@ -497,7 +497,7 @@ export default function Bienvenida() {
 
               {!authConfig.google && !authConfig.magicCode && (
                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12.5px] text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
-                  Estamos configurando el acceso. Vuelve en unos minutos.
+                  {t("authConfigurando")}
                 </div>
               )}
 
@@ -548,7 +548,7 @@ function PantallaMagicCode({
               autoComplete="email"
               value={emailInput}
               onChange={(e) => setEmailInput(e.target.value)}
-              placeholder="tu@email.com"
+              placeholder={t("authPlaceholderEmail")}
               className="w-full px-3.5 py-3 rounded-xl border border-slate-200 text-base"
               autoFocus
             />
@@ -584,7 +584,7 @@ function PantallaMagicCode({
               maxLength={6}
               value={codigoInput}
               onChange={(e) => setCodigoInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              placeholder="123456"
+              placeholder={t("authPlaceholderCodigo")}
               className="w-full px-3.5 py-3 rounded-xl border-2 border-marca-200 text-center text-2xl font-extrabold tracking-[0.4em] font-mono"
               autoFocus
             />
@@ -592,7 +592,7 @@ function PantallaMagicCode({
             <input
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              placeholder="Felipe…"
+              placeholder={t("authPlaceholderNombre")}
               className="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-base"
             />
 
