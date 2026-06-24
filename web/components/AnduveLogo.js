@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import AnduveIcon from "./AnduveIcon";
 
 /**
  * AnduveLogo — lockup horizontal: ícono + wordmark "ANDU"+"VE".
@@ -96,11 +95,17 @@ export default function AnduveLogo({
   const isWhite = variant === "white";
   const word = isWhite ? "#ffffff" : "#0c5f58";
   const acento = isWhite ? "#ff9d7a" : "#f4734d";
-  const Icon = animate ? AnduveIcon : AnduveIconStatic;
+  // IMPORTANTE: el lockup SIEMPRE usa la versión estática (walker + planeta,
+  // sin landmarks orbitando). Coincide con la referencia del usuario
+  // (Anduve-Logo-Web.html). La versión animada con orbital se ve "ancha"
+  // y descuadrada cuando va junto al wordmark — el orbital satura. El
+  // walker estático es la composición correcta para uso con texto.
+  // El `animate` prop entrante se ignora aquí; usar <AnduveIcon> directo
+  // para la versión animada standalone.
   const textShiftY = Math.round(iconSize * 0.10);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap, ...style }}>
-      <Icon size={iconSize} variant={variant} animate={animate} />
+      <AnduveIconStatic size={iconSize} variant={variant} />
       <span
         style={{
           fontFamily: "var(--font-sora), Sora, system-ui, sans-serif",
