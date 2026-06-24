@@ -94,7 +94,10 @@ export default function AnduveLogo({
   //   `align-items: center` del flex ya centra naturalmente y cualquier
   //   shift adicional lo desbalancea.
   fontSize = Math.round(iconSize * 0.535),
-  gap = Math.round(iconSize * 0.75),
+  // Gap reducido de 0.75 (referencia ZIP) a 0.45: a tamaños chicos del
+  // header el gap proporcional grande dejaba demasiado aire entre walker
+  // y ANDUVE. El usuario lo prefiere mas pegado.
+  gap = Math.round(iconSize * 0.45),
   animate = false,
   style = {},
 }) {
