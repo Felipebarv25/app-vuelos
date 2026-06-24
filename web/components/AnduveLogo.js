@@ -111,10 +111,10 @@ export default function AnduveLogo({
   // walker estático es la composición correcta para uso con texto.
   // El `animate` prop entrante se ignora aquí; usar <AnduveIcon> directo
   // para la versión animada standalone.
-  // Pequeño shift hacia abajo del wordmark — el centro óptico de Sora
-  // en mayúsculas queda visualmente alto vs el walker. 0.06 da un toque
-  // sutil sin desalinear.
-  const textShiftY = Math.round(iconSize * 0.06);
+  // Shift hacia abajo del wordmark — el centro óptico de Sora en
+  // mayúsculas queda visualmente alto vs el walker. 0.10 = iteración
+  // con el usuario.
+  const textShiftY = Math.round(iconSize * 0.10);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap, ...style }}>
       <AnduveIconStatic size={iconSize} variant={variant} />
