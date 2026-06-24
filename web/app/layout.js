@@ -1,22 +1,16 @@
 import "./globals.css";
-import { Plus_Jakarta_Sans, Fraunces, Sora } from "next/font/google";
+import { Plus_Jakarta_Sans, Sora } from "next/font/google";
 import Providers from "./providers";
 
-// Cuerpo/UI: Plus Jakarta Sans (legible). Titulares: Fraunces (display editorial
-// con carácter). Wordmark "Anduve": Sora (parte del sistema de identidad
-// del logo v5). Las tres auto-hospedadas por Next (sin @import bloqueante).
+// Una sola tipografía en todo el sistema: Plus Jakarta Sans (cuerpo, titulares,
+// chips). Sora se mantiene SOLO para el wordmark dentro del logo (es parte
+// del diseño visual del brand mark). Fraunces (serif display) fue removida
+// el 2026-06-23 a pedido del usuario para unificar la identidad tipográfica.
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   display: "swap",
   variable: "--font-jakarta",
-});
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  style: ["normal", "italic"],
-  display: "swap",
-  variable: "--font-fraunces",
 });
 const sora = Sora({
   subsets: ["latin"],
@@ -81,7 +75,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="es" className={`${jakarta.variable} ${fraunces.variable} ${sora.variable}`}>
+    <html lang="es" className={`${jakarta.variable} ${sora.variable}`}>
       <head>
         {/* Script de boot: (1) migra claves de localStorage del prefijo viejo
             v360_* al nuevo anduve_* (rebrand 2026-06-21) y luego (2) aplica la

@@ -990,18 +990,17 @@ export default function Home() {
                   </span>
                 </div>
               )}
-              <div className="mb-2 text-[14px] font-semibold text-white/85">
-                {t(saludoClave())}, {usuario.nombre} 👋
+              {/* Saludo personalizado (solo primer nombre — surnames suelen ser largos
+                  y este es un saludo casual, no formal). */}
+              <div className="mb-3 text-[14px] font-semibold text-white/85">
+                {t(saludoClave())}, {(usuario.nombre || "").split(" ")[0]} 👋
               </div>
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">
-                {t("heroEyebrowBudget").replace("{pais}", paisVisitante)}
-              </div>
+              {/* Eyebrow "PLAN TU VIAJE DESDE …" y subtítulo removidos
+                  2026-06-23: el usuario reportó demasiada densidad de info
+                  en el primer visual. El h1 ya es lo suficientemente claro. */}
               <h1 className="text-[28px] font-extrabold leading-[1.05] tracking-tight drop-shadow-md lg:text-[48px]">
                 {t("heroH1Budget")}
               </h1>
-              <p className="mx-auto mt-3 max-w-xl text-[14px] leading-relaxed text-white/90 lg:text-[17px]">
-                {t("heroSubBudget")}
-              </p>
 
               {/* Form principal: presupuesto + moneda + CTA. Al enviar abre
                   el modal de Presupuesto pre-llenado con esos valores. */}

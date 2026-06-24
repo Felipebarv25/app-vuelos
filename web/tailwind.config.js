@@ -36,8 +36,11 @@ module.exports = {
         },
       },
       fontFamily: {
+        // Una sola familia para todo el sistema (Plus Jakarta Sans).
+        // `display` se mantiene como alias por compatibilidad con
+        // className "font-display" que aun esta en algunos archivos.
         sans: ["var(--font-jakarta)", "system-ui", "sans-serif"],
-        display: ["var(--font-fraunces)", "Georgia", "serif"],
+        display: ["var(--font-jakarta)", "system-ui", "sans-serif"],
       },
       boxShadow: {
         suave: "0 1px 2px rgba(15,23,42,.04), 0 2px 8px rgba(15,23,42,.05)",

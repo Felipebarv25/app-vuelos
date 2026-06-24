@@ -38,10 +38,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Titulares con la tipografía display (Fraunces) = carácter de marca. */
+/* Una sola tipografía en todo el sistema (Plus Jakarta Sans). Los h1/h2
+   heredan del body — antes usaban Fraunces (serif display), removido
+   2026-06-23 a pedido del usuario para unificar typo. */
 h1,
 h2 {
-  font-family: var(--font-fraunces), Georgia, serif;
   letter-spacing: -0.01em;
 }
 
