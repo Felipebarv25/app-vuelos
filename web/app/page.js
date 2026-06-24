@@ -1341,20 +1341,9 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Beneficios */}
-          <div className="mt-9 flex flex-wrap gap-2.5">
-            {[
-              ["calendar", t("benDiaTitulo")],
-              ["pin", t("benGpsTitulo")],
-              ["utensils", t("benComerTitulo")],
-              ["route", t("benLlegarTitulo")],
-            ].map(([ic, tit]) => (
-              <div key={tit} className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-100 bg-white px-3.5 py-2 shadow-suave">
-                <span className="text-marca-600"><Icono nombre={ic} size={16} /></span>
-                <span className="text-[12.5px] font-semibold text-marca-900">{tit}</span>
-              </div>
-            ))}
-          </div>
+          {/* Chips de beneficios removidos del post-login el 2026-06-XX —
+              movidos al landing pre-login con descripciones para atraer
+              usuarios nuevos. Quien ya está logueado conoce las features. */}
 
           {/* ¿Cuándo viajas? Rango de fechas que alimenta vuelos + itinerario. */}
           <div className="mt-10 rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">

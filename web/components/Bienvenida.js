@@ -270,8 +270,46 @@ export default function Bienvenida() {
         </div>
       </section>
 
-      {/* ============== CÓMO FUNCIONA ============== */}
+      {/* ============== TU VIAJE EN DETALLE ==============
+          Las 4 funciones core de Anduve mientras estás en el viaje.
+          Antes eran chips en el post-login (sin contexto); ahora son
+          cards con explicación rich aquí en el landing para atraer
+          al usuario que aún no se registra. */}
       <section className="bg-slate-50 py-20 px-6 dark:bg-slate-900">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center">
+            <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-marca-600">
+              {t("landingDetalleEyebrow")}
+            </div>
+            <h2 className="mt-2 font-display text-[32px] font-extrabold tracking-tight text-marca-900 sm:text-[40px] dark:text-marca-300">
+              {t("landingDetalleTit")}
+            </h2>
+          </div>
+
+          <div className="mt-12 grid gap-5 sm:grid-cols-2">
+            {[
+              { emoji: "📅", titKey: "benDiaTitulo",    subKey: "benDiaTexto" },
+              { emoji: "📍", titKey: "benGpsTitulo",    subKey: "benGpsTexto" },
+              { emoji: "🍴", titKey: "benComerTitulo",  subKey: "benComerTexto" },
+              { emoji: "🧭", titKey: "benLlegarTitulo", subKey: "benLlegarTexto" },
+            ].map((f, i) => (
+              <div
+                key={i}
+                className="rounded-3xl border border-slate-100 bg-white p-6 shadow-suave dark:border-slate-700 dark:bg-slate-800"
+              >
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-marca-50 text-2xl dark:bg-marca-900/30">
+                  {f.emoji}
+                </div>
+                <h3 className="mt-4 text-[19px] font-extrabold text-marca-900 dark:text-marca-300">{t(f.titKey)}</h3>
+                <p className="mt-2 text-[14.5px] leading-relaxed text-slate-600 dark:text-slate-300">{t(f.subKey)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============== CÓMO FUNCIONA ============== */}
+      <section className="bg-white py-20 px-6 dark:bg-slate-800">
         <div className="mx-auto max-w-5xl">
           <div className="text-center">
             <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-acento-600">
