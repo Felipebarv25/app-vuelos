@@ -114,7 +114,7 @@ export default function AnduveLogo({
   // Shift hacia abajo del wordmark — el centro óptico de Sora en
   // mayúsculas queda visualmente alto vs el walker. 0.10 = iteración
   // con el usuario.
-  const textShiftY = Math.round(iconSize * 0.07);
+  const textShiftY = Math.round(iconSize * 0.04);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap, ...style }}>
       <AnduveIconStatic size={iconSize} variant={variant} />
