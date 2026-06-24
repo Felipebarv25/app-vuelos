@@ -69,23 +69,42 @@ input:focus,
 select:focus {
   outline: none;
   border-color: var(--azul-claro);
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+  /* Box-shadow del focus alineado con la paleta nueva (#0c5f58) */
+  box-shadow: 0 0 0 3px rgba(12, 95, 88, 0.18);
 }
 
-/* Selección de texto con color de marca */
+/* Selección de texto con color de marca (paleta nueva) */
 ::selection {
-  background: rgba(15, 118, 110, 0.18);
+  background: rgba(12, 95, 88, 0.20);
+  color: #ffffff;
 }
 
-/* Foco accesible al navegar con teclado (botones, links, tarjetas, chips). */
+/* Foco accesible al navegar con teclado (botones, links, tarjetas, chips).
+   Usa --azul (teal Anduve) actualizado. */
 :focus-visible {
-  outline: 2px solid var(--azul-claro);
+  outline: 2px solid var(--azul);
   outline-offset: 2px;
   border-radius: 8px;
 }
 button:focus:not(:focus-visible),
 a:focus:not(:focus-visible) {
   outline: none;
+}
+
+/* Estado disabled estandarizado: buttons + inputs. Aplicar via
+   className "disabled:opacity-60 disabled:cursor-not-allowed
+   disabled:pointer-events-none" o este selector global como red de
+   seguridad. */
+button:disabled,
+button[aria-disabled="true"],
+input:disabled,
+select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+button:disabled:hover,
+button[aria-disabled="true"]:hover {
+  filter: none;
 }
 
 /* Animaciones de entrada (sensación "viva" y divertida) */

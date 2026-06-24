@@ -1,10 +1,43 @@
 /** @type {import('next').NextConfig} */
 
+// Content Security Policy — allowlist de orígenes confiables.
+// Empieza como Report-Only: el browser REPORTA violaciones pero NO
+// las bloquea. Esto nos deja un periodo de observación donde podemos
+// agregar lo que falte sin romper la app. Cuando estabilice, cambiar
+// el header name a "Content-Security-Policy" (sin -Report-Only).
+const CSP_DIRECTIVES = [
+  "default-src 'self'",
+  // Scripts: self + inline (next/script + el migrador en layout.js)
+  // + Google OAuth/analytics + GTM si lo agregamos.
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://*.googleapis.com",
+  // Styles: self + inline (Tailwind + next/font generan algunos)
+  // + Google Fonts si todavía se usa.
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  // Imgs: self + data: + blob: + las fuentes de fotos que usamos.
+  "img-src 'self' data: blob: https://images.unsplash.com https://*.unsplash.com https://upload.wikimedia.org https://commons.wikimedia.org https://*.tile.openstreetmap.org https://*.googleusercontent.com",
+  // Fonts: self (next/font auto-hosts) + Google Fonts CDN fallback.
+  "font-src 'self' data: https://fonts.gstatic.com",
+  // Conexiones (fetch/XHR/EventSource/WebSocket): self + APIs que usa
+  // la app server-side y client-side.
+  "connect-src 'self' https://api.travelpayouts.com https://aviasales-api.travelpayouts.com https://*.api.travelpayouts.com https://api.exchangerate.host https://open.er-api.com https://nominatim.openstreetmap.org https://*.overpass-api.de https://overpass-api.de https://photon.komoot.io https://wwwnc.cdc.gov https://en.wikipedia.org https://es.wikipedia.org https://*.wikipedia.org https://commons.wikimedia.org https://www.wikidata.org https://*.vercel-insights.com https://va.vercel-scripts.com",
+  // Frames: solo Google OAuth popup.
+  "frame-src 'self' https://accounts.google.com",
+  // Bloquea formas peligrosas que la app no usa.
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self' https://accounts.google.com",
+  // Reporte de violaciones a un endpoint propio para diagnosticar.
+  "report-uri /api/csp-report",
+];
+const CSP_VALUE = CSP_DIRECTIVES.join("; ");
+
 // Headers de seguridad aplicados a TODAS las rutas. Foco: protegerse
 // contra clickjacking, MIME sniffing, downgrade attacks y fuga de
-// referer. CSP se maneja por separado (puede romper cosas; se agrega
-// progresivamente cuando sepamos el inventario completo de orígenes).
+// referer.
 const SECURITY_HEADERS = [
+  // CSP en modo Report-Only: NO bloquea, solo reporta. Una vez
+  // estable migrar a "Content-Security-Policy" (sin -Report-Only).
+  { key: "Content-Security-Policy-Report-Only", value: CSP_VALUE },
   // HTTPS forzado 2 años + subdominios; opt-in al preload list de browsers.
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   // Bloquea que sitios externos embeban nuestro contenido en <iframe>

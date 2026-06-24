@@ -117,6 +117,8 @@ export default function DetalleLugar({ lugar, ciudad, origen, husoDestino, onCer
               src={fotoActualUrl}
               alt={nombreLug}
               loading="lazy"
+              width="640"
+              height="360"
               onError={() => setErrorFoto(true)}
               className="h-full w-full object-cover"
             />
@@ -159,7 +161,7 @@ export default function DetalleLugar({ lugar, ciudad, origen, husoDestino, onCer
                   i === iFoto ? "ring-marca-500" : "ring-transparent hover:ring-slate-300"
                 }`}
               >
-                <img src={u} alt={`${nombreLug} ${i + 1}`} loading="lazy" className="h-full w-full object-cover" />
+                <img src={u} alt={`${nombreLug} ${i + 1}`} loading="lazy" width="78" height="58" className="h-full w-full object-cover" />
               </button>
             ))}
           </div>

@@ -43,9 +43,15 @@ module.exports = {
         display: ["var(--font-jakarta)", "system-ui", "sans-serif"],
       },
       boxShadow: {
+        // Sombras del sistema (los nombres antiguos siguen vigentes
+        // por compatibilidad con código existente).
         suave: "0 1px 2px rgba(15,23,42,.04), 0 2px 8px rgba(15,23,42,.05)",
         media: "0 4px 16px rgba(15,23,42,.1)",
         marca: "0 8px 22px rgba(12,95,88,.32)",
+        // Aliases semánticos nuevos — usar estos en código nuevo:
+        card:  "0 1px 2px rgba(15,23,42,.04), 0 2px 8px rgba(15,23,42,.05)",
+        modal: "0 24px 60px rgba(15,23,42,.18), 0 8px 24px rgba(15,23,42,.10)",
+        cta:   "0 8px 22px rgba(12,95,88,.32)",
       },
       borderRadius: {
         xl2: "18px",

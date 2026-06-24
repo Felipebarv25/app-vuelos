@@ -31,7 +31,7 @@ function FotoMini({ nombre, ciudad, onClick }) {
       className="h-[60px] w-[60px] shrink-0 overflow-hidden rounded-xl bg-slate-100"
     >
       {url ? (
-        <img src={url} alt={nombre} loading="lazy" onError={() => setUrl(null)} className="h-full w-full object-cover" />
+        <img src={url} alt={nombre} loading="lazy" width="60" height="60" onError={() => setUrl(null)} className="h-full w-full object-cover" />
       ) : (
         <div className="flex h-full w-full items-center justify-center text-slate-300">
           {cargando ? <span className="spin" /> : <Icono nombre="image" size={20} />}

@@ -277,6 +277,11 @@ export default function Panel() {
           />
         </div>
 
+        {/* Web Vitals (LCP + CLS) — métricas reales de campo */}
+        <div className="mt-4">
+          <VitalsPanel />
+        </div>
+
         {/* Audiencia: idioma, dispositivo, hora */}
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <Barras titulo="🗣️ Idioma de los usuarios" datos={datos.idiomas || []} formato={nombreIdioma} color="bg-sky-500" />
@@ -383,5 +388,81 @@ function FeedbackCard({ f }) {
         </div>
       )}
     </li>
+  );
+}
+
+// ===========================================================
+// VitalsPanel — Web Vitals (LCP + CLS) de campo real
+// ===========================================================
+function VitalsPanel() {
+  const [v, setV] = useState(null);
+  const [err, setErr] = useState(null);
+  useEffect(() => {
+    let vivo = true;
+    fetch("/api/vitals")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!vivo) return;
+        if (d.ok) setV(d);
+        else setErr(d.error || "error");
+      })
+      .catch(() => vivo && setErr("network"));
+    return () => { vivo = false; };
+  }, []);
+
+  if (err) return null; // silencioso si KV no está
+  if (!v) return null;
+
+  function colorLcp(ms) {
+    if (ms == null) return "text-slate-400";
+    if (ms <= 2500) return "text-emerald-600";
+    if (ms <= 4000) return "text-amber-600";
+    return "text-rose-600";
+  }
+  function colorCls(v) {
+    if (v == null) return "text-slate-400";
+    if (v <= 0.1) return "text-emerald-600";
+    if (v <= 0.25) return "text-amber-600";
+    return "text-rose-600";
+  }
+  function fmtMs(n) { return n == null ? "—" : Math.round(n) + "ms"; }
+  function fmtCls(n) { return n == null ? "—" : n.toFixed(3); }
+
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
+      <div className="mb-3 flex items-baseline justify-between">
+        <h2 className="text-[15px] font-extrabold text-marca-900">⚡ Web Vitals (campo real)</h2>
+        <span className="text-[11px] text-slate-400">{v.muestras} muestras recientes</span>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {/* LCP */}
+        <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+          <div className="flex items-baseline justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">LCP</span>
+            <span className="text-[10px] text-slate-400">bueno &lt;{v.lcp.bueno}ms</span>
+          </div>
+          <div className="mt-1.5 grid grid-cols-3 gap-1.5 text-center">
+            <div><div className={`text-lg font-extrabold ${colorLcp(v.lcp.p50)}`}>{fmtMs(v.lcp.p50)}</div><div className="text-[10px] text-slate-400">p50</div></div>
+            <div><div className={`text-lg font-extrabold ${colorLcp(v.lcp.p75)}`}>{fmtMs(v.lcp.p75)}</div><div className="text-[10px] text-slate-400">p75</div></div>
+            <div><div className={`text-lg font-extrabold ${colorLcp(v.lcp.p90)}`}>{fmtMs(v.lcp.p90)}</div><div className="text-[10px] text-slate-400">p90</div></div>
+          </div>
+        </div>
+        {/* CLS */}
+        <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+          <div className="flex items-baseline justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">CLS</span>
+            <span className="text-[10px] text-slate-400">bueno &lt;{v.cls.bueno}</span>
+          </div>
+          <div className="mt-1.5 grid grid-cols-3 gap-1.5 text-center">
+            <div><div className={`text-lg font-extrabold ${colorCls(v.cls.p50)}`}>{fmtCls(v.cls.p50)}</div><div className="text-[10px] text-slate-400">p50</div></div>
+            <div><div className={`text-lg font-extrabold ${colorCls(v.cls.p75)}`}>{fmtCls(v.cls.p75)}</div><div className="text-[10px] text-slate-400">p75</div></div>
+            <div><div className={`text-lg font-extrabold ${colorCls(v.cls.p90)}`}>{fmtCls(v.cls.p90)}</div><div className="text-[10px] text-slate-400">p90</div></div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-2 text-[10.5px] text-slate-400">
+        Datos enviados por usuarios reales vía VitalsReporter en cada visita. Verde = bueno · ámbar = mejorable · rojo = malo.
+      </div>
+    </div>
   );
 }

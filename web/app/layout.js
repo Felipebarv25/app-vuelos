@@ -1,6 +1,7 @@
 import "./globals.css";
 import { Plus_Jakarta_Sans, Sora } from "next/font/google";
 import Providers from "./providers";
+import VitalsReporter from "@/components/VitalsReporter";
 
 // Una sola tipografía en todo el sistema: Plus Jakarta Sans (cuerpo, titulares,
 // chips). Sora se mantiene SOLO para el wordmark dentro del logo (es parte
@@ -150,6 +151,10 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <Providers>{children}</Providers>
+        {/* Reporter de Web Vitals (LCP + CLS) — envía métricas reales
+            de campo a /api/vitals para construir el dashboard en /panel.
+            Lazy: solo corre en cliente, no afecta SSR. */}
+        <VitalsReporter />
         {/* Registra el service worker para que la app sea instalable y rápida */}
         <script
           dangerouslySetInnerHTML={{
