@@ -149,7 +149,7 @@ export default function Bienvenida() {
           {/* Marca discreta arriba izquierda */}
           <div className="hidden sm:block">
             <LogoMarca size={60} tono="claro" />
-            <div className="mt-3 text-[11px] font-bold uppercase tracking-[0.28em] text-white/85">
+            <div className="mt-5 text-[11px] font-bold uppercase tracking-[0.28em] text-white/85">
               {t("tagline")}
             </div>
           </div>
