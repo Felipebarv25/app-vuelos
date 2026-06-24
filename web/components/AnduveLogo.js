@@ -55,7 +55,14 @@ function AnduveIconStatic({ size = 60, variant = "teal", className = "", style =
   const html = INNER_STATIC.replace(/%CLIP%/g, uid);
   return (
     <svg
-      viewBox="11 -63 156 156"
+      // viewBox tightened — la referencia original "11 -63 156 156"
+      // dejaba mucho whitespace horizontal (walker ocupa ~70u en un
+      // viewBox de 156u). Ahora abraza tight al walker (que va de y=-55
+      // a y=86, x=60 a x=130) + el horizonte del planeta a y=72.
+      // overflow:hidden corta el resto del círculo del planeta que con
+      // overflow:visible se desbordaba bajo el icono. Aspect 130/145
+      // ≈ 0.9, casi cuadrado, sin huecos visibles al renderizar.
+      viewBox="35 -55 130 145"
       width={size}
       height={size}
       fill="none"
@@ -68,7 +75,7 @@ function AnduveIconStatic({ size = 60, variant = "teal", className = "", style =
         color: p.ink,
         ["--vj-accent"]: p.accent,
         ["--vj-surface"]: p.surface,
-        overflow: "visible",
+        overflow: "hidden",
         display: "block",
         ...style,
       }}
