@@ -4,6 +4,8 @@
 // amigos/referidos directamente, (c) tiene espacio para la FAQ legal.
 import Link from "next/link";
 import ProCheckoutBoton from "./ProCheckoutBoton";
+import PrecioLocal from "@/components/PrecioLocal";
+import { PRECIOS, fmtUsd } from "@/lib/precios";
 
 const SITIO = "https://app-vuelos-mfos.vercel.app";
 
@@ -32,9 +34,10 @@ export const metadata = {
 const PLANES = [
   {
     nombre: "Pro Anual",
-    precio: "US$ 24",
+    precio: fmtUsd(PRECIOS.anual.usd),
+    usd: PRECIOS.anual.usd,
     periodo: "por año",
-    ahorro: "Ahorra 60% vs mensual",
+    ahorro: "Solo ~US$2/mes · facturado al año",
     tipo: "anual",
     destacado: true,
     ventajas: [
@@ -48,7 +51,8 @@ const PLANES = [
   },
   {
     nombre: "Pro Mensual",
-    precio: "US$ 4.99",
+    precio: fmtUsd(PRECIOS.mensual.usd),
+    usd: PRECIOS.mensual.usd,
     periodo: "por mes",
     ahorro: null,
     tipo: "mensual",
@@ -60,9 +64,10 @@ const PLANES = [
   },
   {
     nombre: "Lifetime",
-    precio: "US$ 39",
+    precio: fmtUsd(PRECIOS.lifetime.usd),
+    usd: PRECIOS.lifetime.usd,
     periodo: "una sola vez",
-    ahorro: "Oferta lanzamiento · primeros 100",
+    ahorro: "Oferta lanzamiento · primeros 100 (luego US$99)",
     tipo: "lifetime",
     destacado: false,
     ventajas: [
@@ -173,6 +178,12 @@ export default function PaginaPro() {
           comunidad, subimos. Si entras hoy, te lo quedas a este precio.
         </p>
 
+        {/* Framing de valor: anclamos el precio contra el ahorro real (cazar una
+            oferta de vuelo), no contra la lista de features. */}
+        <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2.5 text-[14px] font-semibold text-emerald-700">
+          💡 Una sola oferta de vuelo que caces puede pagar años de Pro.
+        </div>
+
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
           {PLANES.map((p) => (
             <div
@@ -200,6 +211,7 @@ export default function PaginaPro() {
                   {p.ahorro}
                 </div>
               )}
+              <PrecioLocal usd={p.usd} className="mt-1" />
               <ul className="mt-4 space-y-1.5 text-[13.5px] text-slate-600">
                 {p.ventajas.map((v, i) => (
                   <li key={i} className="flex items-start gap-2">

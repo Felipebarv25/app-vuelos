@@ -1,0 +1,53 @@
+name: Brief ejecutivo semanal
+
+# Genera el INFORME EJECUTIVO 360 cada semana (sábado 15:00 UTC = 10:00 a.m.
+# Colombia) y lo guarda en informes/ como Markdown + PDF. Si está configurado
+# el secret ANTHROPIC_API_KEY, la IA refresca el contenido con investigación web
+# (competencia, mercado, consumidor) antes de renderizar. También se puede lanzar
+# a mano desde la pestaña Actions.
+
+on:
+  schedule:
+    - cron: "0 15 * * 6"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # WeasyPrint necesita librerías nativas (Pango/Cairo) para renderizar PDF.
+      - name: Instalar dependencias del sistema (WeasyPrint)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpango-1.0-0 libpangocairo-1.0-0 \
+            libgdk-pixbuf-2.0-0 libffi-dev libcairo2 fonts-dejavu
+
+      - name: Instalar dependencias de Python
+        run: pip install weasyprint markdown anthropic
+
+      - name: Generar el brief (con IA si hay API key)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          BRIEF_MODELO: claude-opus-4-8
+        run: python informes/generar_brief.py --generar-con-ia
+
+      - name: Commit del informe
+        run: |
+          git config user.name "viajero360-bot"
+          git config user.email "bot@viajero360.app"
+          git add informes/
+          if git diff --cached --quiet; then
+            echo "Sin cambios que commitear."
+          else
+            git commit -m "Brief ejecutivo semanal $(date +%Y-%m-%d)"
+            git push
+          fi
