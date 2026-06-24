@@ -90,12 +90,9 @@ export default function AnduveLogo({
   // usuario:
   //   - icon 138px, font 74px → font ≈ icon × 0.535
   //   - gap 104px → gap ≈ icon × 0.75
-  //   - translateY del texto: la referencia usaba 14px (0.10), pero
-  //     a tamaños chicos (60-72px) el wordmark ANDUVE queda visualmente
-  //     ALTO vs el walker porque solo tiene mayúsculas (no descenders),
-  //     entonces el cap-height-center está sobre el line-height-center.
-  //     Compensación: 0.18 baja el texto lo suficiente para que el
-  //     centro óptico de ANDUVE coincida con el centro del walker.
+  //   El translateY (textShiftY) lo quitamos: en el pill chico
+  //   `align-items: center` del flex ya centra naturalmente y cualquier
+  //   shift adicional lo desbalancea.
   fontSize = Math.round(iconSize * 0.535),
   gap = Math.round(iconSize * 0.75),
   animate = false,
@@ -111,7 +108,6 @@ export default function AnduveLogo({
   // walker estático es la composición correcta para uso con texto.
   // El `animate` prop entrante se ignora aquí; usar <AnduveIcon> directo
   // para la versión animada standalone.
-  const textShiftY = Math.round(iconSize * 0.18);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap, ...style }}>
       <AnduveIconStatic size={iconSize} variant={variant} />
@@ -122,7 +118,6 @@ export default function AnduveLogo({
           fontSize,
           letterSpacing: "-0.02em",
           lineHeight: 1,
-          transform: `translateY(${textShiftY}px)`,
         }}
       >
         <span style={{ color: word }}>ANDU</span>
