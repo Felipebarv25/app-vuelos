@@ -42,10 +42,12 @@ export function LogoMarca({ tono = "marca", size = 32, className = "", animado =
       <AnduveLogo
         variant={variantPara(tono, darkMode)}
         iconSize={size}
-        fontSize={Math.round(size * 0.62)}
         animate={animado}
         style={{ verticalAlign: "middle" }}
       />
+      {/* fontSize, gap y translateY los calcula AnduveLogo con las
+          proporciones EXACTAS de la referencia del usuario (font ≈
+          icon×0.535, gap ≈ icon×0.75). No pasamos overrides. */}
     </span>
   );
 }

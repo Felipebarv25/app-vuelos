@@ -82,22 +82,22 @@ function AnduveIconStatic({ size = 60, variant = "teal", className = "", style =
 export default function AnduveLogo({
   variant = "teal",
   iconSize = 60,
-  fontSize = 28,
-  // Gap proporcional al tamaño del ícono. La SVG tiene transparencia
-  // alrededor del walker, así que necesitamos un gap visual generoso
-  // para que el wordmark no parezca pegado al ícono (problema reportado
-  // en el header in-app y landing pre-login).
-  gap = Math.round(iconSize * 0.45),
+  // Proporciones EXACTAS de la referencia Anduve-Logo-Web.html del
+  // usuario:
+  //   - icon 138px, font 74px → font ≈ icon × 0.535
+  //   - gap 104px → gap ≈ icon × 0.75
+  //   - translateY del texto 14px → ≈ icon × 0.10 (compensa la línea
+  //     baseline para que el texto se alinee visualmente con el walker)
+  fontSize = Math.round(iconSize * 0.535),
+  gap = Math.round(iconSize * 0.75),
   animate = false,
   style = {},
 }) {
   const isWhite = variant === "white";
   const word = isWhite ? "#ffffff" : "#0c5f58";
   const acento = isWhite ? "#ff9d7a" : "#f4734d";
-  // Si animate=true usa el AnduveIcon completo (con órbita); si no, la
-  // versión estática (solo walker + planeta) que es lo que muestra la
-  // referencia "Anduve-Logo-Web" del usuario.
   const Icon = animate ? AnduveIcon : AnduveIconStatic;
+  const textShiftY = Math.round(iconSize * 0.10);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap, ...style }}>
       <Icon size={iconSize} variant={variant} animate={animate} />
@@ -108,6 +108,7 @@ export default function AnduveLogo({
           fontSize,
           letterSpacing: "-0.02em",
           lineHeight: 1,
+          transform: `translateY(${textShiftY}px)`,
         }}
       >
         <span style={{ color: word }}>ANDU</span>
