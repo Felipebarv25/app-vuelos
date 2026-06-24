@@ -910,22 +910,29 @@ export default function Home() {
               type="button"
               onClick={irAlInicio}
               aria-label="Anduve — inicio"
-              className={`cursor-pointer text-left ${
-                esHero
-                  ? "rounded-2xl bg-marca-900/30 px-4 py-2.5 backdrop-blur-md ring-1 ring-white/20"
-                  : ""
-              }`}
+              className="cursor-pointer text-left"
             >
-              <LogoMarca
-                size={esHero ? 72 : 60}
-                animado
-                tono={esHero ? "claro" : "marca"}
-                className={esHero ? "[filter:drop-shadow(0_2px_6px_rgba(0,0,0,0.45))_drop-shadow(0_1px_2px_rgba(0,0,0,0.6))]" : ""}
-              />
-              <div
-                className={`mt-5 hidden text-[11px] font-bold uppercase tracking-[0.28em] sm:block sm:text-[12px] ${
+              {/* Pill backdrop blur SOLO alrededor del lockup (icon+wordmark)
+                  — el tagline queda DEBAJO del pill, fuera. Asi el pill
+                  abraza tight el lockup sin huecos visibles. */}
+              <span
+                className={`inline-flex items-center ${
                   esHero
-                    ? "text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.7)]"
+                    ? "rounded-2xl bg-marca-900/35 px-4 py-2 backdrop-blur-md ring-1 ring-white/20"
+                    : ""
+                }`}
+              >
+                <LogoMarca
+                  size={esHero ? 72 : 60}
+                  animado
+                  tono={esHero ? "claro" : "marca"}
+                  className={esHero ? "[filter:drop-shadow(0_2px_6px_rgba(0,0,0,0.45))_drop-shadow(0_1px_2px_rgba(0,0,0,0.6))]" : ""}
+                />
+              </span>
+              <div
+                className={`mt-2 hidden text-[11px] font-bold uppercase tracking-[0.28em] sm:block sm:text-[12px] ${
+                  esHero
+                    ? "pl-4 text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.7)]"
                     : "text-slate-500"
                 }`}
               >
