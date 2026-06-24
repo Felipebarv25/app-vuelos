@@ -1066,7 +1066,7 @@ export default function Home() {
                   selector integrado y CTA con color sólido (no gradient). */}
               <form
                 onSubmit={(e) => { e.preventDefault(); abrirPresupuestoCon(montoHero, monedaHero); }}
-                className="mx-auto mt-6 max-w-xl overflow-hidden rounded-xl bg-white shadow-card ring-1 ring-slate-200/80"
+                className="mx-auto mt-6 max-w-xl rounded-xl bg-white shadow-card ring-1 ring-slate-200/80"
               >
                 <div className="flex flex-col sm:flex-row sm:items-stretch">
                   <div className="flex flex-1 items-center gap-3 px-4 py-3.5 sm:border-r sm:border-slate-100">
@@ -1101,7 +1101,7 @@ export default function Home() {
                   </div>
                   <button
                     type="submit"
-                    className="inline-flex items-center justify-center gap-2 bg-marca-700 px-6 py-3.5 text-[14.5px] font-semibold text-white transition hover:bg-marca-800 sm:rounded-none"
+                    className="inline-flex items-center justify-center gap-2 rounded-b-xl bg-marca-700 px-6 py-3.5 text-[14.5px] font-semibold text-white transition hover:bg-marca-800 sm:rounded-bl-none sm:rounded-r-xl"
                   >
                     {t("heroVerOpciones")} <Icono nombre="arrowRight" size={16} />
                   </button>
