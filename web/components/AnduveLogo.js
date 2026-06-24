@@ -55,14 +55,12 @@ function AnduveIconStatic({ size = 60, variant = "teal", className = "", style =
   const html = INNER_STATIC.replace(/%CLIP%/g, uid);
   return (
     <svg
-      // viewBox tightened — la referencia original "11 -63 156 156"
-      // dejaba mucho whitespace horizontal (walker ocupa ~70u en un
-      // viewBox de 156u). Ahora abraza tight al walker (que va de y=-55
-      // a y=86, x=60 a x=130) + el horizonte del planeta a y=72.
-      // overflow:hidden corta el resto del círculo del planeta que con
-      // overflow:visible se desbordaba bajo el icono. Aspect 130/145
-      // ≈ 0.9, casi cuadrado, sin huecos visibles al renderizar.
+      // viewBox tightened + preserveAspectRatio="xMinYMid meet" para
+      // alinear el walker a la IZQUIERDA del SVG container (no centrado
+      // horizontalmente). Así el tagline debajo del pill se alinea con
+      // el walker SIN compensar offset interno del SVG.
       viewBox="35 -55 130 145"
+      preserveAspectRatio="xMinYMid meet"
       width={size}
       height={size}
       fill="none"
@@ -92,8 +90,12 @@ export default function AnduveLogo({
   // usuario:
   //   - icon 138px, font 74px → font ≈ icon × 0.535
   //   - gap 104px → gap ≈ icon × 0.75
-  //   - translateY del texto 14px → ≈ icon × 0.10 (compensa la línea
-  //     baseline para que el texto se alinee visualmente con el walker)
+  //   - translateY del texto: la referencia usaba 14px (0.10), pero
+  //     a tamaños chicos (60-72px) el wordmark ANDUVE queda visualmente
+  //     ALTO vs el walker porque solo tiene mayúsculas (no descenders),
+  //     entonces el cap-height-center está sobre el line-height-center.
+  //     Compensación: 0.18 baja el texto lo suficiente para que el
+  //     centro óptico de ANDUVE coincida con el centro del walker.
   fontSize = Math.round(iconSize * 0.535),
   gap = Math.round(iconSize * 0.75),
   animate = false,
@@ -109,7 +111,7 @@ export default function AnduveLogo({
   // walker estático es la composición correcta para uso con texto.
   // El `animate` prop entrante se ignora aquí; usar <AnduveIcon> directo
   // para la versión animada standalone.
-  const textShiftY = Math.round(iconSize * 0.10);
+  const textShiftY = Math.round(iconSize * 0.18);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap, ...style }}>
       <AnduveIconStatic size={iconSize} variant={variant} />
