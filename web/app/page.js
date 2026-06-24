@@ -1004,13 +1004,18 @@ export default function Home() {
 
               {/* Form principal: presupuesto + moneda + CTA. Al enviar abre
                   el modal de Presupuesto pre-llenado con esos valores. */}
+              {/* Tarjeta presupuesto — diseño fintech limpio: borde sutil,
+                  sin gradientes vivos, sin emojis decorativos, currency
+                  selector integrado y CTA con color sólido (no gradient). */}
               <form
                 onSubmit={(e) => { e.preventDefault(); abrirPresupuestoCon(montoHero, monedaHero); }}
-                className="mx-auto mt-6 max-w-xl rounded-2xl bg-white/95 p-2 shadow-2xl ring-1 ring-white/40 backdrop-blur"
+                className="mx-auto mt-6 max-w-xl overflow-hidden rounded-xl bg-white shadow-card ring-1 ring-slate-200/80"
               >
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <div className="flex flex-1 items-center gap-2 rounded-xl bg-white px-3.5 py-2.5 ring-1 ring-slate-200 focus-within:ring-marca-400">
-                    <span className="text-2xl">💰</span>
+                <div className="flex flex-col sm:flex-row sm:items-stretch">
+                  <div className="flex flex-1 items-center gap-3 px-4 py-3.5 sm:border-r sm:border-slate-100">
+                    <span className="select-none text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                      {monedaHero === "COP" ? "$" : monedaHero === "USD" ? "US$" : monedaHero === "EUR" ? "€" : "$"}
+                    </span>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -1024,13 +1029,13 @@ export default function Home() {
                       onFocus={(e) => { try { e.target.select(); } catch {} }}
                       placeholder="0"
                       aria-label={t("heroH1Budget")}
-                      className="w-full border-0 bg-transparent text-left text-[20px] font-extrabold text-marca-900 outline-none placeholder:text-slate-300 lg:text-[24px]"
+                      className="w-full border-0 bg-transparent text-left text-[22px] font-semibold tracking-tight text-slate-900 outline-none placeholder:text-slate-300 lg:text-[26px]"
                     />
                     <select
                       value={monedaHero}
                       onChange={(e) => setMonedaHero(e.target.value)}
                       aria-label="Moneda"
-                      className="rounded-lg border-0 bg-slate-100 px-2 py-1 text-[13px] font-bold text-slate-700 outline-none"
+                      className="border-0 bg-transparent text-[13px] font-semibold text-slate-500 outline-none hover:text-slate-700 focus:text-slate-700"
                     >
                       <option value="COP">COP</option>
                       <option value="USD">USD</option>
@@ -1040,16 +1045,18 @@ export default function Home() {
                   </div>
                   <button
                     type="submit"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-3 text-[15px] font-bold text-white shadow-md transition hover:brightness-110"
+                    className="inline-flex items-center justify-center gap-2 bg-marca-700 px-6 py-3.5 text-[14.5px] font-semibold text-white transition hover:bg-marca-800 sm:rounded-none"
                   >
-                    {t("heroVerOpciones")} <Icono nombre="arrowRight" size={18} />
+                    {t("heroVerOpciones")} <Icono nombre="arrowRight" size={16} />
                   </button>
                 </div>
               </form>
 
-              {/* Chips de montos sugeridos: clicar fija el monto+moneda y abre
-                  el modal directo (atajo para el usuario que no quiere tipear). */}
-              <div className="mx-auto mt-3 flex max-w-xl flex-wrap justify-center gap-2">
+              {/* Quick amounts — botones secundarios discretos como texto.
+                  Menos énfasis visual: el CTA principal es la tarjeta de
+                  arriba; estos son atajos. */}
+              <div className="mx-auto mt-4 flex max-w-xl flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[12.5px]">
+                <span className="text-white/60">{lang === "en" ? "Quick:" : lang === "pt" ? "Rápido:" : lang === "fr" ? "Rapide :" : "Rápido:"}</span>
                 {[
                   { monto: 5000000, moneda: "COP", label: "$5M COP" },
                   { monto: 10000000, moneda: "COP", label: "$10M COP" },
@@ -1061,7 +1068,7 @@ export default function Home() {
                     key={opt.label}
                     type="button"
                     onClick={() => abrirPresupuestoCon(opt.monto, opt.moneda)}
-                    className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12.5px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                    className="font-semibold text-white/85 underline-offset-4 transition hover:text-white hover:underline"
                   >
                     {opt.label}
                   </button>
