@@ -22,7 +22,6 @@ export default function Bienvenida() {
     lang,
     cambiarIdioma,
     entrarGoogle,
-    entrarDemo,
     pedirCodigoEmail,
     verificarCodigoEmail,
   } = useApp();
@@ -516,26 +515,10 @@ export default function Bienvenida() {
                 {t("landingLoginPrivacidad")}
               </div>
 
-              {/* Demo accounts: sin crear cuenta real, ver la app entera */}
-              <div className="mt-5 border-t border-slate-100 pt-4 dark:border-slate-700">
-                <div className="text-center text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                  {t("demoTitulo")}
-                </div>
-                <div className="mt-2.5 grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => entrarDemo("pro")}
-                    className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-[12.5px] font-bold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300"
-                  >
-                    ★ {t("demoPro")}
-                  </button>
-                  <button
-                    onClick={() => entrarDemo("free")}
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[12.5px] font-bold text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
-                  >
-                    {t("demoFree")}
-                  </button>
-                </div>
-              </div>
+              {/* NOTA: las cuentas demo (Pro / Free) se quitaron de la UI el
+                  2026-06-22 — decisión del usuario para empujar la creación
+                  de cuenta real. El endpoint /api/auth/demo se mantiene
+                  funcional para verificación admin/QA (curl manual). */}
             </div>
           </div>
         </div>,
