@@ -16,6 +16,8 @@ import DetalleLugar from "@/components/DetalleLugar";
 import Bienvenida from "@/components/Bienvenida";
 import SelectorIdioma from "@/components/SelectorIdioma";
 import Presupuesto from "@/components/Presupuesto";
+import SelectorMoneda from "@/components/SelectorMoneda";
+import { monedaDePais, simboloMoneda } from "@/lib/monedas";
 import CardDestino from "@/components/CardDestino";
 import Ofertas from "@/components/Ofertas";
 import Asesor from "@/components/Asesor";
@@ -315,20 +317,40 @@ export default function Home() {
   // Pais del visitante (de /api/geo). Sirve para personalizar el hero:
   // "Plan tu viaje desde {pais}". Cae a "Colombia" si no se puede detectar.
   // Detecta una sola vez por sesion (cacheado en sessionStorage).
+  // En la MISMA llamada autodetectamos la moneda nativa del país y la
+  // aplicamos a `monedaHero` (CO→COP, ES→EUR, MX→MXN, etc.).
   const [paisVisitante, setPaisVisitante] = useState("Colombia");
   useEffect(() => {
     let vivo = true;
     try {
       const cache = sessionStorage.getItem("anduve_pais_nombre");
-      if (cache) { setPaisVisitante(cache); return; }
+      const cacheMoneda = sessionStorage.getItem("anduve_moneda_geo");
+      if (cache) {
+        setPaisVisitante(cache);
+        if (cacheMoneda) setMonedaHero(cacheMoneda);
+        return;
+      }
     } catch {}
     fetch("/api/geo")
       .then((r) => (r.ok ? r.json() : null))
       .then((g) => {
         if (!vivo) return;
-        const nombre = (g?.pais && PAIS_GENTILICIO[g.pais]) || "Colombia";
+        const iso = g?.pais;
+        const nombre = (iso && PAIS_GENTILICIO[iso]) || "Colombia";
         setPaisVisitante(nombre);
         try { sessionStorage.setItem("anduve_pais_nombre", nombre); } catch {}
+        // Auto-set moneda según país del visitante (siempre que el
+        // usuario no haya elegido ya otra cosa en esta sesión).
+        try {
+          const yaTocada = sessionStorage.getItem("anduve_moneda_user_set");
+          if (!yaTocada && iso) {
+            const code = monedaDePais(iso);
+            if (code) {
+              setMonedaHero(code);
+              sessionStorage.setItem("anduve_moneda_geo", code);
+            }
+          }
+        } catch {}
       })
       .catch(() => {});
     return () => { vivo = false; };
@@ -1013,8 +1035,8 @@ export default function Home() {
               >
                 <div className="flex flex-col sm:flex-row sm:items-stretch">
                   <div className="flex flex-1 items-center gap-3 px-4 py-3.5 sm:border-r sm:border-slate-100">
-                    <span className="select-none text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                      {monedaHero === "COP" ? "$" : monedaHero === "USD" ? "US$" : monedaHero === "EUR" ? "€" : "$"}
+                    <span className="select-none text-[12px] font-semibold uppercase tracking-wider text-slate-400">
+                      {simboloMoneda(monedaHero)}
                     </span>
                     <input
                       type="text"
@@ -1031,17 +1053,16 @@ export default function Home() {
                       aria-label={t("heroH1Budget")}
                       className="w-full border-0 bg-transparent text-left text-[22px] font-semibold tracking-tight text-slate-900 outline-none placeholder:text-slate-300 lg:text-[26px]"
                     />
-                    <select
+                    <SelectorMoneda
                       value={monedaHero}
-                      onChange={(e) => setMonedaHero(e.target.value)}
-                      aria-label="Moneda"
-                      className="border-0 bg-transparent text-[13px] font-semibold text-slate-500 outline-none hover:text-slate-700 focus:text-slate-700"
-                    >
-                      <option value="COP">COP</option>
-                      <option value="USD">USD</option>
-                      <option value="MXN">MXN</option>
-                      <option value="EUR">EUR</option>
-                    </select>
+                      onChange={(code) => {
+                        setMonedaHero(code);
+                        // Marca que el usuario tocó la moneda manualmente,
+                        // para que no la sobreescribamos con la del país en
+                        // próximas recargas.
+                        try { sessionStorage.setItem("anduve_moneda_user_set", "1"); } catch {}
+                      }}
+                    />
                   </div>
                   <button
                     type="submit"
