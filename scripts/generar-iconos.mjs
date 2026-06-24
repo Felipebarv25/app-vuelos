@@ -40,8 +40,11 @@ const PUBLIC = path.join(RAIZ, "web", "public");
 // El SVG teal del logo (versión para fondos claros). Lo renderizamos sobre
 // un fondo teal para el ícono de la app — así no se ve transparente en
 // fondos blancos del launcher.
-// SVG redondo del rebrand Anduve (mismo que sirve como favicon).
-const SVG_REDONDO = path.join(PUBLIC, "icono.svg");
+// SVG redondo del rebrand Anduve. Fuente única: web/app/icon.svg (la
+// que sirve Next.js como favicon auto-fingerprinted). Antes había una
+// copia en /public/icono.svg pero la borramos para evitar dos URLs
+// del mismo asset (cache busting inconsistente).
+const SVG_REDONDO = path.join(RAIZ, "web", "app", "icon.svg");
 const SVG_TEAL = SVG_REDONDO;
 const SVG_WHITE = SVG_REDONDO;
 
@@ -80,29 +83,35 @@ async function main() {
 
   // La SVG fuente YA es redonda y tiene su propio fondo teal + borde
   // coral, así que renderizamos a tamaño completo sin padding extra.
+  const TRANSPARENTE = { r: 0, g: 0, b: 0, alpha: 0 };
 
-  // PNG estándar 192 — Android home-screen.
+  // PNG estándar 192 — Android home-screen + tab del browser. Esquinas
+  // TRANSPARENTES para que el círculo se vea realmente redondo sobre
+  // cualquier fondo del browser (antes salía cuadrado por las esquinas
+  // teal sólidas).
   await renderear(SVG_REDONDO, 192, path.join(PUBLIC, "icono-192.png"), {
     padding: 0,
-    fondo: BG_TEAL,
+    fondo: TRANSPARENTE,
   });
 
-  // PNG estándar 512 — PWA installer / splash.
+  // PNG estándar 512 — PWA installer / splash. Mismo razonamiento.
   await renderear(SVG_REDONDO, 512, path.join(PUBLIC, "icono-512.png"), {
     padding: 0,
-    fondo: BG_TEAL,
+    fondo: TRANSPARENTE,
   });
 
   // Maskable — Android Q+ aplica máscara circular/squircle. El safe-zone
   // central (80%) debe contener todo el contenido importante. Como el
   // logo YA es circular, lo escalamos al 80% (~10% padding por lado)
   // sobre el fondo teal para que la máscara no recorte la silueta.
+  // Aquí SÍ usamos fondo teal opaco — Android necesita la imagen llena.
   await renderear(SVG_REDONDO, 512, path.join(PUBLIC, "icono-maskable.png"), {
     padding: 52,
     fondo: BG_TEAL,
   });
 
-  // Apple touch icon — iOS recorta a squircle automáticamente.
+  // Apple touch icon — iOS no soporta transparencia, fondo opaco teal.
+  // iOS aplica su propio squircle automáticamente al ícono.
   await renderear(SVG_REDONDO, 180, path.join(PUBLIC, "apple-touch-icon.png"), {
     padding: 0,
     fondo: BG_TEAL,

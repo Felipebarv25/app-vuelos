@@ -906,9 +906,31 @@ export default function Home() {
         <div className={`relative mx-auto max-w-7xl px-4 lg:px-8 ${esHero ? "pt-5 pb-16 lg:pb-24" : "pt-3 pb-3"}`}>
           {/* Barra de navegación superior */}
           <div className="flex items-center justify-between gap-4">
-            <button type="button" onClick={irAlInicio} aria-label="Anduve — inicio" className="cursor-pointer text-left">
-              <LogoMarca size={esHero ? 72 : 60} animado tono={esHero ? "claro" : "marca"} className={esHero ? "drop-shadow" : ""} />
-              <div className={`mt-5 hidden text-[11px] font-bold uppercase tracking-[0.28em] sm:block sm:text-[12px] ${esHero ? "text-white/85" : "text-slate-500"}`}>{t("tagline")}</div>
+            <button
+              type="button"
+              onClick={irAlInicio}
+              aria-label="Anduve — inicio"
+              className={`cursor-pointer text-left ${
+                esHero
+                  ? "rounded-2xl bg-marca-900/30 px-4 py-2.5 backdrop-blur-md ring-1 ring-white/20"
+                  : ""
+              }`}
+            >
+              <LogoMarca
+                size={esHero ? 72 : 60}
+                animado
+                tono={esHero ? "claro" : "marca"}
+                className={esHero ? "[filter:drop-shadow(0_2px_6px_rgba(0,0,0,0.45))_drop-shadow(0_1px_2px_rgba(0,0,0,0.6))]" : ""}
+              />
+              <div
+                className={`mt-5 hidden text-[11px] font-bold uppercase tracking-[0.28em] sm:block sm:text-[12px] ${
+                  esHero
+                    ? "text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.7)]"
+                    : "text-slate-500"
+                }`}
+              >
+                {t("tagline")}
+              </div>
             </button>
             <div className="flex items-center gap-3 lg:gap-4">
               {ciudad && (
