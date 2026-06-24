@@ -202,6 +202,17 @@ export default async function PaginaDestino({ params }) {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
           <FavToggle slug={slug} conFoto={true} />
+          {/* Atribución requerida por la licencia de Wikipedia/Commons (CC-BY/SA) */}
+          {foto.articulo && (
+            <a
+              href={foto.articulo}
+              target="_blank"
+              rel="noopener nofollow"
+              className="absolute bottom-2 right-3 z-10 rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-medium text-white/80 backdrop-blur-sm hover:text-white"
+            >
+              Foto: Wikipedia · CC-BY/SA
+            </a>
+          )}
           <div className="relative mx-auto flex h-full max-w-4xl flex-col justify-end px-6 pb-8 pt-12 text-white">
             <div className="flex items-center gap-3 text-[13px] font-semibold uppercase tracking-[0.18em] text-white/85">
               <span className="text-3xl">{d.bandera}</span>

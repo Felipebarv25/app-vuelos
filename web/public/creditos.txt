@@ -1,0 +1,56 @@
+CRÉDITOS Y LICENCIAS DE CONTENIDO — Anduve
+============================================
+
+Auditoría: 2026-06-22
+
+IMÁGENES
+--------
+
+1) Foto del hero del landing pre-login (`/landing-hero.jpg` y rotación)
+   Fuente: Unsplash (https://unsplash.com/license)
+   Licencia: Unsplash License — permite uso comercial y modificación
+   sin atribución obligatoria. No se puede vender la foto sola ni
+   replicar el servicio de Unsplash.
+   → Uso conforme.
+
+2) Fotos del hero rotativo dentro de la app (HERO_IMGS_POR_TEMA en
+   `app/page.js`)
+   Fuente: Unsplash (hotlinks a images.unsplash.com)
+   Licencia: misma Unsplash License — uso conforme.
+
+3) Fotos hero de las páginas /destino/<slug>
+   Fuente: Wikipedia REST API (originalimage)
+   Licencia: variada, generalmente CC-BY o CC-BY-SA (Wikimedia Commons)
+   → Mostramos atribución visible con link al artículo origen
+     (esquina inferior derecha del hero). Cumple los requisitos
+     básicos de las licencias CC-BY/SA.
+
+4) Logo Anduve (web/components/AnduveIcon.js, AnduveLogo.js, icono.svg)
+   Fuente: diseño propio (entregado por Felipe Barrera 2026-06-21)
+   Licencia: trabajo del propietario, todos los derechos reservados.
+
+5) Datos del mapa (tiles)
+   Fuente: OpenStreetMap (osm.org)
+   Licencia: ODbL — atribución requerida.
+   → Atribuido por el control nativo de Leaflet (footer del mapa).
+
+DATOS
+-----
+
+6) Visas y requisitos (`/requisitos/visas.json`)
+   Fuente: Passport Index (https://www.passportindex.org/)
+   Licencia: datos abiertos. Atribuido en la página /requisitos/<iso>.
+
+7) Salud y vacunas (`/data/salud-paises.json`)
+   Fuentes: WHO ITH + CDC Travel Health Notices + Wikipedia "Health in <X>"
+   Licencia: datos públicos. Atribuido en cada ficha + disclaimer.
+
+8) Precios de vuelos (`/ofertas.json`, `/api/vuelo-vivo`)
+   Fuente: Travelpayouts (Aviasales API)
+   Licencia: API afiliada con marker 734652. Uso permitido.
+
+QUEJAS / DMCA
+-------------
+
+Si crees que algún contenido viola tus derechos, contáctanos:
+felipebarv@gmail.com

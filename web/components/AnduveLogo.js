@@ -83,7 +83,11 @@ export default function AnduveLogo({
   variant = "teal",
   iconSize = 60,
   fontSize = 28,
-  gap = 14,
+  // Gap proporcional al tamaño del ícono. La SVG tiene transparencia
+  // alrededor del walker, así que necesitamos un gap visual generoso
+  // para que el wordmark no parezca pegado al ícono (problema reportado
+  // en el header in-app y landing pre-login).
+  gap = Math.round(iconSize * 0.45),
   animate = false,
   style = {},
 }) {

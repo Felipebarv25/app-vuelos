@@ -138,19 +138,11 @@ export default function Bienvenida() {
     <div className="fixed inset-0 z-[5000] overflow-y-auto bg-slate-50 dark:bg-slate-900">
       {/* ============== HERO ============== */}
       <section className="relative min-h-[92vh] w-full overflow-hidden">
-        {/* Hero servido desde public/ (no hotlink Unsplash) por 3 razones:
-            1) LCP estable — no depende de la red ni de cambios de URL externa.
-            2) Cache edge de Vercel sirve la imagen siempre rapido.
-            3) Evita que Unsplash limite el sitio si crece el trafico.
-            Foto: vintage travel essentials (mapa + camara + libreta). */}
-        <img
-          src="/landing-hero.jpg"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover"
-          loading="eager"
-          fetchpriority="high"
-        />
+        {/* Slideshow de viajeros felices en distintos entornos. Cambia cada
+            15s con crossfade. La 1ª foto carga con fetchpriority=high (LCP),
+            las demás lazy. Todas son Unsplash License (uso comercial libre).
+            Self-hosted en /public para evitar hotlink throttling de Unsplash. */}
+        <HeroSlideshow />
         <div className="absolute inset-0 bg-gradient-to-b from-marca-900/85 via-marca-800/70 to-marca-900/95" />
 
         {/* Top nav: idioma + botones de auth */}
@@ -158,7 +150,7 @@ export default function Bienvenida() {
           {/* Marca discreta arriba izquierda */}
           <div className="hidden sm:block">
             <LogoMarca size={60} tono="claro" />
-            <div className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.28em] text-white/85">
+            <div className="mt-3 text-[11px] font-bold uppercase tracking-[0.28em] text-white/85">
               {t("tagline")}
             </div>
           </div>
@@ -651,6 +643,37 @@ function PantallaMagicCode({
           </form>
         )}
       </div>
+    </div>
+  );
+}
+
+// Slideshow del hero del landing pre-login. Rota cada 15s entre 7 fotos
+// Unsplash (license libre, ver public/creditos.txt). Crossfade de 1.2s.
+// La 1ª carga eager (LCP); las demás lazy. Cada índice activo tiene
+// opacity=1, los demás opacity=0. Funciona sin JS adicional (CSS transition).
+const HERO_FOTOS = 7;
+const HERO_INTERVALO_MS = 15000;
+
+function HeroSlideshow() {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setI((n) => (n + 1) % HERO_FOTOS), HERO_INTERVALO_MS);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div className="absolute inset-0">
+      {Array.from({ length: HERO_FOTOS }, (_, idx) => (
+        <img
+          key={idx}
+          src={`/landing-hero-${idx + 1}.jpg`}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-[1200ms] ease-in-out"
+          style={{ opacity: idx === i ? 1 : 0 }}
+          loading={idx === 0 ? "eager" : "lazy"}
+          fetchpriority={idx === 0 ? "high" : "auto"}
+        />
+      ))}
     </div>
   );
 }

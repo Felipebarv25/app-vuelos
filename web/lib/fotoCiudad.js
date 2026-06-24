@@ -17,7 +17,16 @@ async function pedirWiki(wiki, titulo) {
     if (!r.ok) return null;
     const d = await r.json();
     const img = d.originalimage?.source || d.thumbnail?.source || null;
-    return img ? { url: img, ancho: d.originalimage?.width, alto: d.originalimage?.height } : null;
+    if (!img) return null;
+    // Atribución requerida por la licencia de Wikipedia/Commons: devolvemos
+    // también la URL del artículo origen para que el componente pueda
+    // mostrar "Foto: Wikipedia" con link al artículo (cumple CC-BY/SA).
+    return {
+      url: img,
+      ancho: d.originalimage?.width,
+      alto: d.originalimage?.height,
+      articulo: d.content_urls?.desktop?.page || `https://${wiki}.wikipedia.org/wiki/${encodeURIComponent(titulo)}`,
+    };
   } catch {
     return null;
   }
