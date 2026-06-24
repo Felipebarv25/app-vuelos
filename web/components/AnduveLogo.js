@@ -97,7 +97,7 @@ export default function AnduveLogo({
   // Gap reducido a 0.30 para que ANDUVE quede pegado al walker
   // (iteración con el usuario — la referencia ZIP era 0.75 pero a
   // tamaños chicos quedaba con demasiado aire).
-  gap = Math.round(iconSize * 0.30),
+  gap = Math.round(iconSize * 0.20),
   animate = false,
   style = {},
 }) {
@@ -114,7 +114,7 @@ export default function AnduveLogo({
   // Shift hacia abajo del wordmark — el centro óptico de Sora en
   // mayúsculas queda visualmente alto vs el walker. 0.10 = iteración
   // con el usuario.
-  const textShiftY = Math.round(iconSize * 0.10);
+  const textShiftY = Math.round(iconSize * 0.07);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap, ...style }}>
       <AnduveIconStatic size={iconSize} variant={variant} />
