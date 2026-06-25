@@ -13,7 +13,8 @@ ARCHIVO_HISTORIAL = os.path.join(CARPETA_DATOS, "historial.csv")
 ARCHIVO_ALERTAS = os.path.join(CARPETA_DATOS, "alertas_enviadas.csv")
 
 CAMPOS_HISTORIAL = ["timestamp", "origen", "destino", "fecha_ida",
-                    "fecha_vuelta", "precio", "moneda", "aerolinea"]
+                    "fecha_vuelta", "precio", "moneda", "aerolinea",
+                    "escalas_ida", "escalas_vuelta"]
 
 
 def _asegurar_archivo(ruta, campos):
@@ -26,10 +27,15 @@ def _asegurar_archivo(ruta, campos):
 def guardar_precio(origen, destino, fecha_ida, fecha_vuelta, oferta):
     _asegurar_archivo(ARCHIVO_HISTORIAL, CAMPOS_HISTORIAL)
     with open(ARCHIVO_HISTORIAL, "a", newline="", encoding="utf-8") as f:
+        # Las filas historicas anteriores al 2026-06-24 no tienen las columnas
+        # escalas_ida/vuelta — csv.DictReader las leera como None, lo cual es OK
+        # porque el frontend trata None como "desconocido" sin asumir directo.
         csv.writer(f).writerow([
             datetime.now().isoformat(timespec="seconds"),
             origen, destino, fecha_ida, fecha_vuelta,
             oferta["precio"], oferta["moneda"], oferta["aerolinea"],
+            oferta.get("escalas_ida", ""),
+            oferta.get("escalas_vuelta", ""),
         ])
 
 

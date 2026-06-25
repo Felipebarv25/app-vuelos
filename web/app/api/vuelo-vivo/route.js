@@ -66,6 +66,15 @@ async function consultar(origen, destino, mes, token, marker) {
       const sep = link.includes("?") ? "&" : "?";
       link = `${link}${sep}marker=${marker}`;
     }
+    // Escalas: Travelpayouts devuelve `transfers` (ida) y `return_transfers`
+    // (vuelta). 0 = directo. Si vienen ausentes, los dejamos null y la UI
+    // muestra "—" (no asumimos directo para no mentir).
+    const escIda = fila.transfers === 0 || Number.isFinite(Number(fila.transfers))
+      ? Number(fila.transfers)
+      : null;
+    const escVuelta = fila.return_transfers === 0 || Number.isFinite(Number(fila.return_transfers))
+      ? Number(fila.return_transfers)
+      : null;
     return {
       precio,
       origen,
@@ -74,6 +83,8 @@ async function consultar(origen, destino, mes, token, marker) {
       fecha_ida: (fila.departure_at || mes).slice(0, 10),
       fecha_vuelta: (fila.return_at || "").slice(0, 10),
       link,
+      escalas_ida: escIda,
+      escalas_vuelta: escVuelta,
     };
   } catch {
     return null;

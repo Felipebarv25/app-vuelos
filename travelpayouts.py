@@ -56,6 +56,15 @@ def buscar_oferta_mas_barata(origen, destino, mes, moneda, solo_directos):
         sep = "&" if "?" in link else "?"
         link = f"{link}{sep}marker={marker}"
 
+    # Escalas: la API devuelve `transfers` (ida) y `return_transfers` (vuelta).
+    # 0 = vuelo directo. Si el campo viene ausente (raro), guardamos None y la
+    # UI lo trata como "desconocido" en lugar de mentir mostrando "directo".
+    def _int_o_none(v):
+        try:
+            return int(v) if v is not None else None
+        except (TypeError, ValueError):
+            return None
+
     return {
         "precio": precio,
         "moneda": moneda.upper(),
@@ -63,4 +72,6 @@ def buscar_oferta_mas_barata(origen, destino, mes, moneda, solo_directos):
         "fecha_ida": (mejor.get("departure_at") or mes)[:10],
         "fecha_vuelta": (mejor.get("return_at") or "")[:10],
         "link": link,
+        "escalas_ida": _int_o_none(mejor.get("transfers")),
+        "escalas_vuelta": _int_o_none(mejor.get("return_transfers")),
     }

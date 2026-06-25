@@ -71,6 +71,10 @@ export async function obtenerPreciosReales() {
           origen: ruta.origen,
           visto: ruta.visto,
           generado: data.generado,
+          // Escalas (null = desconocido en filas viejas; entero = real). La UI
+          // las usa para "directo" / "1 escala" / "1-2 escalas" según ida/vuelta.
+          escalas_ida: ruta.escalas_ida ?? null,
+          escalas_vuelta: ruta.escalas_vuelta ?? null,
         };
         if (!mapa[llave]) mapa[llave] = { porOrigen: {}, mejor: null };
         // Conserva por origen (solo la mas barata si llegan varias muestras de la misma base).
@@ -147,6 +151,8 @@ export async function buscarVueloEnVivo(ciudad, pais, origenes = []) {
       origen: data.origen,
       visto: data.visto,
       vivo: true, // distinguir del precio estático del detector
+      escalas_ida: data.escalas_ida ?? null,
+      escalas_vuelta: data.escalas_vuelta ?? null,
     };
     cacheVivo.set(llave, oferta);
     return oferta;

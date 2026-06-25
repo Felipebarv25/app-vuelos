@@ -932,17 +932,42 @@ function fmtHaceCorto(iso, t) {
   return t("ofertasHaceDias").replace("{n}", d);
 }
 
-// Línea "Oferta para 12 mar – 20 mar · visto hace 3h" bajo el precio cuando
-// es real. QW2: añadimos sello de frescura adyacente al precio para que
-// nadie vea una cifra sin saber cuándo fue verificada.
+// Línea "Oferta para 12 mar – 20 mar · directo · visto hace 3h" bajo el precio
+// cuando es real. QW2: añadimos sello de frescura adyacente al precio para que
+// nadie vea una cifra sin saber cuándo fue verificada. Escalas (2026-06-24):
+// mostramos cuántas escalas tiene el vuelo recomendado (0 = directo). Si el
+// número de escalas ida/vuelta difiere, mostramos el MAYOR con marca "máx".
+// Si no tenemos el dato (filas viejas del CSV), no mostramos nada — no
+// asumimos directo para no mentirle al usuario.
+function fmtEscalas(ida, vuelta) {
+  const idaN = Number.isFinite(ida) ? ida : null;
+  const vueltaN = Number.isFinite(vuelta) ? vuelta : null;
+  if (idaN === null && vueltaN === null) return "";
+  // Tomamos el valor existente o el peor (máx) si tenemos ambos.
+  let n;
+  if (idaN !== null && vueltaN !== null) n = Math.max(idaN, vueltaN);
+  else n = (idaN ?? vueltaN);
+  if (n === 0) return "directo";
+  const palabra = n === 1 ? "escala" : "escalas";
+  // Si los tramos difieren, marcarlo para no engañar (peor caso visible).
+  const distintos = idaN !== null && vueltaN !== null && idaN !== vueltaN;
+  return distintos ? `máx ${n} ${palabra}` : `${n} ${palabra}`;
+}
+
 function FechasOferta({ vueloReal, t }) {
   if (!vueloReal || (!vueloReal.fecha_ida && !vueloReal.fecha_vuelta)) return null;
   const visto = vueloReal.visto || vueloReal.generado;
   const hace = visto ? fmtHaceCorto(visto, t) : "";
+  const escalas = fmtEscalas(vueloReal.escalas_ida, vueloReal.escalas_vuelta);
   return (
     <div className="-mt-0.5 mb-1 pl-0.5 text-[11px] font-medium text-emerald-700">
       {t("presupOfertaPara")} {fmtFechaCorta(vueloReal.fecha_ida)}
       {vueloReal.fecha_vuelta ? ` – ${fmtFechaCorta(vueloReal.fecha_vuelta)}` : ""}
+      {escalas && (
+        <span className={`ml-1.5 font-normal ${escalas === "directo" ? "text-emerald-700" : "text-emerald-700/80"}`}>
+          · {escalas}
+        </span>
+      )}
       {hace && <span className="ml-1.5 font-normal text-emerald-700/70">· {hace}</span>}
     </div>
   );

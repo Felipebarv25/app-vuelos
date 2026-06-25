@@ -138,6 +138,16 @@ def main():
         es_ganga = (mediana and precio <= mediana * (1 - DESCUENTO_GANGA)) or (umbral and precio <= umbral * 0.85)
         ciudad, pais, bandera = META[destino]
 
+        # Escalas: si la fila las trae como entero ("0", "1", ...), las pasamos;
+        # si vienen vacias (filas viejas), las dejamos None para que la UI
+        # sepa que no son datos confiables y no mienta diciendo "directo".
+        def _esc(v):
+            try:
+                s = (v or "").strip()
+                return int(s) if s != "" else None
+            except (TypeError, ValueError):
+                return None
+
         salida.append({
             "origen": origen,
             "destino": destino,
@@ -150,6 +160,8 @@ def main():
             "fecha_ida": mejor.get("fecha_ida", ""),
             "fecha_vuelta": mejor.get("fecha_vuelta", ""),
             "aerolinea": mejor.get("aerolinea", "—"),
+            "escalas_ida": _esc(mejor.get("escalas_ida")),
+            "escalas_vuelta": _esc(mejor.get("escalas_vuelta")),
             "umbral": umbral,
             "mediana": round(mediana),
             "descuento": max(0, descuento),
