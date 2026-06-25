@@ -294,6 +294,67 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modo, ruta?.entrada && llaveCiudad(ruta.entrada), ruta?.esRealEntrada]);
 
+  // ELECCIÓN INTELIGENTE DE LA ENTRADA (Fase 2 — rediseño 2026-06-24):
+  // Cuando el usuario abre la ruta multiciudad o cambia origen/región/mes,
+  // consultamos /api/entrada-region en background. Eso trae las 6 candidatas
+  // MÁS PROBABLEMENTE BARATAS de la región con precio REAL desde el origen
+  // del usuario para el mes elegido. Mergeamos al map preciosReales y la
+  // lógica existente de construirRuta automáticamente elige la más barata
+  // como entrada de la ruta. Sin esto, la primera ciudad era el estimado
+  // del catálogo (a veces equivocada para el origen/mes del usuario).
+  const [entradaEstado, setEntradaEstado] = useState("idle"); // idle|buscando|ok|no
+  useEffect(() => {
+    if (modo !== "ruta") return;
+    if (!origen || !region || region === "todas" || !mes) return;
+    if (presupuestoUsd <= 0) return;
+    let vivo = true;
+    setEntradaEstado("buscando");
+    const id = setTimeout(async () => {
+      try {
+        const r = await fetch(
+          `/api/entrada-region?origen=${encodeURIComponent(origen)}&region=${encodeURIComponent(region)}&mes=${encodeURIComponent(mes)}`,
+          { cache: "default" }
+        );
+        if (!r.ok) { if (vivo) setEntradaEstado("no"); return; }
+        const data = await r.json();
+        if (!vivo) return;
+        if (!data.ofertas?.length) { setEntradaEstado("no"); return; }
+        // Merge: cada oferta entra al map por llave "Ciudad|País". Conserva
+        // la forma { porOrigen, mejor } que el resto del código ya entiende.
+        setPreciosReales((prev) => {
+          const next = { ...prev };
+          const visto = data.visto || new Date().toISOString();
+          for (const o of data.ofertas) {
+            const llave = `${o.ciudad}|${o.pais}`;
+            const oferta = {
+              precio: o.precio,
+              fecha_ida: o.fecha_ida,
+              fecha_vuelta: o.fecha_vuelta,
+              link: o.link,
+              origen: o.origen,
+              visto,
+              vivo: true,
+              escalas_ida: o.escalas_ida ?? null,
+              escalas_vuelta: o.escalas_vuelta ?? null,
+            };
+            const reg = next[llave] || { porOrigen: {}, mejor: null };
+            // Si ya teníamos algo del detector para el mismo origen, lo
+            // SOBREESCRIBIMOS — el live para el mes elegido es más relevante.
+            reg.porOrigen = { ...reg.porOrigen, [o.origen]: oferta };
+            if (!reg.mejor || oferta.precio < reg.mejor.precio) reg.mejor = oferta;
+            next[llave] = reg;
+          }
+          return next;
+        });
+        setEntradaEstado("ok");
+        track("entrada_region", { origen, region, mes, ciudades: data.ofertas.length, mejor: data.mejor?.ciudad });
+      } catch {
+        if (vivo) setEntradaEstado("no");
+      }
+    }, 400);
+    return () => { vivo = false; clearTimeout(id); };
+  }, [modo, origen, region, mes, presupuestoUsd > 0]);
+
   // Nombre legible de una ciudad excluida (a partir de su llave).
   const nombreLlave = (k) => k.split("|")[0];
 
