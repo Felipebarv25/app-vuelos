@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { geocodificar, traerLugares, CATEGORIAS } from "@/lib/osm";
@@ -912,7 +912,7 @@ export default function Home() {
         txt += `  ${i + 1}. ${nombreLocalizado(p, lang)} (${fmtMin(p.minutos)})\n`;
       });
     });
-    txt += `\n${t("hechoCon")} Anduve · https://app-vuelos-mfos.vercel.app/`;
+    txt += `\n${t("hechoCon")} Anduve · https://anduve-app.vercel.app/`;
     try {
       if (navigator.share) {
         await navigator.share({ title: "Anduve", text: txt });
@@ -1744,7 +1744,7 @@ export default function Home() {
             ) : null
           ))}
           <div className="meta" style={{ marginTop: "20pt" }}>
-            Generado en Anduve · app-vuelos-mfos.vercel.app
+            Generado en Anduve · anduve-app.vercel.app
           </div>
         </div>
       )}

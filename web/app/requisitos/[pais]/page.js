@@ -1,4 +1,4 @@
-// Página interna /requisitos/<iso-pais> — visa + salud por destino.
+﻿// Página interna /requisitos/<iso-pais> — visa + salud por destino.
 // SSG: una página por país que tenga entrada en web/data/salud-paises.json.
 // La info de salud viene del dataset (refrescado mensualmente por cron).
 // La info de visa la consulta el componente cliente (depende de la
@@ -10,7 +10,7 @@ import { PAISES_ISO } from "@/lib/paisesISO";
 import { FIEBRE_AMARILLA } from "@/lib/requisitos";
 import RequisitosCliente from "./RequisitosCliente";
 
-const SITIO = "https://app-vuelos-mfos.vercel.app";
+const SITIO = "https://anduve-app.vercel.app";
 
 // Pre-render una página por cada ISO con datos de salud.
 export async function generateStaticParams() {

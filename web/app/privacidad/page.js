@@ -1,4 +1,4 @@
-// Política de privacidad pública. Esta página es referida desde /pro y desde
+﻿// Política de privacidad pública. Esta página es referida desde /pro y desde
 // el footer global. Cubre los requisitos básicos de Habeas Data en Colombia
 // (Ley 1581 de 2012) y GDPR para usuarios europeos. Si activamos checkout en
 // Lemon Squeezy y/o expandimos a más territorios, conviene revisar con un
@@ -28,8 +28,8 @@ export default function PaginaPrivacidad() {
             Anduve es un servicio operado de manera independiente desde Colombia.
             Esta política explica qué datos recolectamos cuando usas la aplicación
             web disponible en{" "}
-            <a href="https://app-vuelos-mfos.vercel.app/" className="text-marca-700 underline dark:text-marca-300">
-              app-vuelos-mfos.vercel.app
+            <a href="https://anduve-app.vercel.app/" className="text-marca-700 underline dark:text-marca-300">
+              anduve-app.vercel.app
             </a>{" "}
             (en adelante, el &quot;Servicio&quot;) y cómo los utilizamos.
           </p>

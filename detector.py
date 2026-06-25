@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 Detector de vuelos internacionales económicos desde Colombia.
 
@@ -26,7 +26,7 @@ load_dotenv()  # carga las credenciales del archivo .env
 # sigue funcionando normal y solo se omite la llamada.
 ALERTS_URL = os.environ.get(
     "ALERTS_URL",
-    "https://app-vuelos-mfos.vercel.app/api/alertas/disparar",
+    "https://anduve-app.vercel.app/api/alertas/disparar",
 )
 ALERTS_SECRET = os.environ.get("ALERTS_SHARED_SECRET", "")
 

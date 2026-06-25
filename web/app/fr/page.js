@@ -1,4 +1,4 @@
-// /fr — landing en français. Redirige vers l'accueil avec lang=fr.
+﻿// /fr — landing en français. Redirige vers l'accueil avec lang=fr.
 import { redirect } from "next/navigation";
 
 export const metadata = {
@@ -6,13 +6,13 @@ export const metadata = {
   description:
     "Combien pouvez-vous dépenser ? Nous vous disons où aller, quand c'est moins cher et planifions chaque jour. Prix de vols en direct et recommandations personnalisées.",
   alternates: {
-    canonical: "https://app-vuelos-mfos.vercel.app/fr",
+    canonical: "https://anduve-app.vercel.app/fr",
     languages: {
-      es: "https://app-vuelos-mfos.vercel.app/",
-      en: "https://app-vuelos-mfos.vercel.app/en",
-      pt: "https://app-vuelos-mfos.vercel.app/pt",
-      fr: "https://app-vuelos-mfos.vercel.app/fr",
-      "x-default": "https://app-vuelos-mfos.vercel.app/",
+      es: "https://anduve-app.vercel.app/",
+      en: "https://anduve-app.vercel.app/en",
+      pt: "https://anduve-app.vercel.app/pt",
+      fr: "https://anduve-app.vercel.app/fr",
+      "x-default": "https://anduve-app.vercel.app/",
     },
   },
 };

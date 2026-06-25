@@ -1,4 +1,4 @@
-// Genera los datos de REQUISITOS DE ENTRADA por país a partir de fuentes
+﻿// Genera los datos de REQUISITOS DE ENTRADA por país a partir de fuentes
 // abiertas y verídicas, como archivos estáticos (sin depender de APIs en vivo):
 //
 //  1) Visas: dataset Passport Index (ilyankou/passport-index-dataset, abierto).
@@ -13,7 +13,7 @@ import { dirname, join } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const RAIZ = join(__dirname, "..");
-const UA = "Anduve/1.0 (https://app-vuelos-mfos.vercel.app)";
+const UA = "Anduve/1.0 (https://anduve-app.vercel.app)";
 
 const PI_URL =
   "https://raw.githubusercontent.com/ilyankou/passport-index-dataset/master/passport-index-tidy-iso2.csv";

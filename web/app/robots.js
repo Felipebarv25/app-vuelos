@@ -1,5 +1,5 @@
-// robots.txt para los crawlers. Apunta al sitemap dinámico.
-const SITIO = "https://app-vuelos-mfos.vercel.app";
+﻿// robots.txt para los crawlers. Apunta al sitemap dinámico.
+const SITIO = "https://anduve-app.vercel.app";
 
 export default function robots() {
   return {

@@ -1,4 +1,4 @@
-import "./globals.css";
+﻿import "./globals.css";
 import { Plus_Jakarta_Sans, Sora } from "next/font/google";
 import Providers from "./providers";
 import VitalsReporter from "@/components/VitalsReporter";
@@ -28,7 +28,7 @@ const DESC =
   "Itinerarios día a día con mapa, GPS, transporte y los mejores lugares y restaurantes de cualquier ciudad del mundo. Rutas por presupuesto y precios de vuelos en vivo.";
 
 export const metadata = {
-  metadataBase: new URL("https://app-vuelos-mfos.vercel.app"),
+  metadataBase: new URL("https://anduve-app.vercel.app"),
   title: "Anduve · Planea tu viaje perfecto",
   description: DESC,
   manifest: "/manifest.json",
@@ -58,7 +58,7 @@ export const metadata = {
     title: "Anduve · Planea tu viaje perfecto",
     description: DESC,
     type: "website",
-    url: "https://app-vuelos-mfos.vercel.app/",
+    url: "https://anduve-app.vercel.app/",
     siteName: "Anduve",
   },
   twitter: {
@@ -112,34 +112,34 @@ export default function RootLayout({ children }) {
               "@graph": [
                 {
                   "@type": "Organization",
-                  "@id": "https://app-vuelos-mfos.vercel.app/#organization",
+                  "@id": "https://anduve-app.vercel.app/#organization",
                   name: "Anduve",
-                  url: "https://app-vuelos-mfos.vercel.app/",
-                  logo: "https://app-vuelos-mfos.vercel.app/icono-192.png",
+                  url: "https://anduve-app.vercel.app/",
+                  logo: "https://anduve-app.vercel.app/icono-192.png",
                   description: "Planificador de viajes personalizado: itinerarios por presupuesto, precios reales de vuelos y recomendaciones globales.",
                   sameAs: ["https://github.com/Felipebarv25/app-vuelos"],
                 },
                 {
                   "@type": "TravelAgency",
-                  "@id": "https://app-vuelos-mfos.vercel.app/#agency",
+                  "@id": "https://anduve-app.vercel.app/#agency",
                   name: "Anduve",
-                  url: "https://app-vuelos-mfos.vercel.app/",
+                  url: "https://anduve-app.vercel.app/",
                   description: "Itinerarios día a día, presupuestos por país, alertas de precios y planificación multiciudad para 80+ destinos.",
                   areaServed: { "@type": "Country", name: "Worldwide" },
                   priceRange: "$",
                 },
                 {
                   "@type": "WebSite",
-                  "@id": "https://app-vuelos-mfos.vercel.app/#website",
-                  url: "https://app-vuelos-mfos.vercel.app/",
+                  "@id": "https://anduve-app.vercel.app/#website",
+                  url: "https://anduve-app.vercel.app/",
                   name: "Anduve",
-                  publisher: { "@id": "https://app-vuelos-mfos.vercel.app/#organization" },
+                  publisher: { "@id": "https://anduve-app.vercel.app/#organization" },
                   inLanguage: ["es", "en", "pt", "fr"],
                   potentialAction: {
                     "@type": "SearchAction",
                     target: {
                       "@type": "EntryPoint",
-                      urlTemplate: "https://app-vuelos-mfos.vercel.app/?q={search_term_string}",
+                      urlTemplate: "https://anduve-app.vercel.app/?q={search_term_string}",
                     },
                     "query-input": "required name=search_term_string",
                   },

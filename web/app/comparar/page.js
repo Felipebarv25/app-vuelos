@@ -1,8 +1,8 @@
-// Comparador de destinos lado a lado. SSG: pre-renderiza una página vacía con
+﻿// Comparador de destinos lado a lado. SSG: pre-renderiza una página vacía con
 // SEO, y el cliente (ComparadorCliente) maneja la lógica de selección.
 import ComparadorCliente from "./ComparadorCliente";
 
-const SITIO = "https://app-vuelos-mfos.vercel.app";
+const SITIO = "https://anduve-app.vercel.app";
 
 export const metadata = {
   title: "Comparar destinos lado a lado · Anduve",

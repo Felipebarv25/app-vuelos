@@ -1,4 +1,4 @@
-// API serverless que consulta TRAVELPAYOUTS en vivo para un destino dado,
+﻿// API serverless que consulta TRAVELPAYOUTS en vivo para un destino dado,
 // buscando la mejor oferta i/v entre BOG y MDE en los próximos 6 meses.
 //
 // Llama el endpoint público "Prices for dates":
@@ -16,7 +16,7 @@ const BASE = "https://api.travelpayouts.com/aviasales/v3/prices_for_dates";
 // (CSV de IATAs), se respeta esa lista en lugar del default. Asi un viajero
 // en Mexico puede pedir MEX+CUN, uno en Ecuador puede pedir UIO+GYE, etc.
 const ORIGENES_DEFAULT = ["BOG", "MDE"];
-const UA = "Anduve/1.0 (https://app-vuelos-mfos.vercel.app)";
+const UA = "Anduve/1.0 (https://anduve-app.vercel.app)";
 
 function mesISO(d) {
   const y = d.getFullYear();

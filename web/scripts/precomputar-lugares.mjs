@@ -1,4 +1,4 @@
-// Precalcula los "imperdibles" de las ciudades conocidas y los guarda como JSON
+﻿// Precalcula los "imperdibles" de las ciudades conocidas y los guarda como JSON
 // estático en public/lugares/<slug>.json (se sirven desde el CDN en <100ms, así
 // esas ciudades abren en menos de 2s sin esperar a Overpass en vivo).
 // También genera lib/precalcIndex.js (índice liviano que se empaqueta en el cliente).
@@ -72,7 +72,7 @@ function slug(ciudad, pais) {
 //        con coordenadas y fama incluidas. Filtramos a tipos de POI visitables
 //        (museos, templos, monumentos, castillos/palacios, parques, torres,
 //        puentes, plazas, estadios, teatros, sitios arqueológicos) vía P31/P279*.
-const UA = "Anduve/1.0 (https://app-vuelos-mfos.vercel.app)";
+const UA = "Anduve/1.0 (https://anduve-app.vercel.app)";
 
 // Lista AMPLIA de tipos de POI (P31 directo, sin subclases para que sea rápido:
 // P279* tardaba ~60s; esto ~15s). Cubre museos, templos, monumentos, castillos/

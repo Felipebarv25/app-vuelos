@@ -1,4 +1,4 @@
-// Sitemap dinámico. Next.js lo expone en /sitemap.xml. Google lo encuentra
+﻿// Sitemap dinámico. Next.js lo expone en /sitemap.xml. Google lo encuentra
 // vía robots.txt y empieza a indexar todas las /destino/<slug> automáticamente.
 //
 // SEO i18n con 4 idiomas: ES (default), EN, PT, FR. Cada destino entrega
@@ -6,7 +6,7 @@
 
 import { TODOS_SLUGS } from "@/lib/destinos";
 
-const SITIO = "https://app-vuelos-mfos.vercel.app";
+const SITIO = "https://anduve-app.vercel.app";
 
 export default function sitemap() {
   const ahora = new Date().toISOString();

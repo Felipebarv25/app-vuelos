@@ -1,4 +1,4 @@
-// Versão em português da landing de destino. SEO i18n com hreflang.
+﻿// Versão em português da landing de destino. SEO i18n com hreflang.
 // Reutiliza datosSeoDe e faqsDe com lang="pt".
 
 import { promises as fs } from "fs";
@@ -10,7 +10,7 @@ import { fotoCiudad } from "@/lib/fotoCiudad";
 import { linkTours, linkHoteles, linkVuelos } from "@/lib/afiliados";
 import FavToggle from "../../../destino/[slug]/FavToggle";
 
-const SITIO = "https://app-vuelos-mfos.vercel.app";
+const SITIO = "https://anduve-app.vercel.app";
 
 export async function generateStaticParams() {
   return TODOS_SLUGS.map((slug) => ({ slug }));

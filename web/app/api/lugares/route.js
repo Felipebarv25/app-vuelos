@@ -1,4 +1,4 @@
-// API propia en Vercel para traer lugares. Estrategia robusta de 2 fuentes:
+﻿// API propia en Vercel para traer lugares. Estrategia robusta de 2 fuentes:
 //  1) Overpass (OpenStreetMap) — trae todo lo de la zona por categoría.
 //  2) Photon (Komoot) como RESPALDO — rápido y estable, busca por palabras.
 // Si una falla o viene vacía, usamos la otra. Así la categoría NUNCA queda vacía.
@@ -103,7 +103,7 @@ const TERMINOS_PHOTON = {
 
 // User-Agent identificable: varias APIs gratuitas (Photon/Nominatim/Overpass)
 // rechazan peticiones sin UA, sobre todo desde IPs de datacenter como Vercel.
-const UA = "Anduve/1.0 (https://app-vuelos-mfos.vercel.app)";
+const UA = "Anduve/1.0 (https://anduve-app.vercel.app)";
 
 function carrera(query) {
   const cuerpo = "data=" + encodeURIComponent(query);

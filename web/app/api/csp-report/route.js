@@ -1,4 +1,4 @@
-// Endpoint que recibe los reportes de violación del Content-Security-Policy
+﻿// Endpoint que recibe los reportes de violación del Content-Security-Policy
 // (modo Report-Only en next.config.mjs). Los logueamos a console + KV
 // con TTL 7 días para revisar qué orígenes faltan en la allowlist
 // antes de hacer el switch a CSP enforcing.
@@ -6,7 +6,7 @@
 // Estructura del body que envía el browser:
 //   {
 //     "csp-report": {
-//       "document-uri": "https://app-vuelos-mfos.vercel.app/destino/madrid-espana",
+//       "document-uri": "https://anduve-app.vercel.app/destino/madrid-espana",
 //       "violated-directive": "img-src",
 //       "blocked-uri": "https://example.com/foto.jpg",
 //       ...

@@ -1,4 +1,4 @@
-// Compartir itinerario por enlace público. Guarda un snapshot del viaje en
+﻿// Compartir itinerario por enlace público. Guarda un snapshot del viaje en
 // Vercel KV con un id corto y aleatorio (sin autenticación: el id ES la
 // "llave"). Después lo lee /viaje/<id> en modo solo lectura.
 //
@@ -78,6 +78,6 @@ export async function POST(req) {
 
   // Origen del request para devolver la URL completa.
   const proto = req.headers.get("x-forwarded-proto") || "https";
-  const host = req.headers.get("host") || "app-vuelos-mfos.vercel.app";
+  const host = req.headers.get("host") || "anduve-app.vercel.app";
   return Response.json({ id, url: `${proto}://${host}/viaje/${id}` });
 }

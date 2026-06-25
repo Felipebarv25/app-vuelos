@@ -1,4 +1,4 @@
-# ✈️ Detector de vuelos internacionales económicos
+﻿# ✈️ Detector de vuelos internacionales económicos
 
 Programa que **revisa solo, todos los días**, los precios de vuelos ida y vuelta
 desde **Bogotá (BOG)** y **Medellín (MDE)** hacia las principales ciudades del
@@ -157,7 +157,7 @@ El panel viejo en HTML (`index.html`, `itinerario.html`, `panel.bat`) fue
 reemplazado por una **app web completa en Next.js** que vive en la carpeta
 [`web/`](./web) y está **publicada y al día** en:
 
-👉 **https://app-vuelos-mfos.vercel.app/**
+👉 **https://anduve-app.vercel.app/**
 
 La app es mucho más que un panel: planifica itinerarios día a día en
 cualquier ciudad del mundo, muestra precios reales de vuelos desde Colombia

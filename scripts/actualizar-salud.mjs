@@ -1,4 +1,4 @@
-// Actualiza web/data/salud-paises.json consultando fuentes oficiales:
+﻿// Actualiza web/data/salud-paises.json consultando fuentes oficiales:
 //   - Wikipedia "Health in <country>" (REST API, plain extract)
 //   - CDC Travel Health Notices (página por destino, parseo simple)
 //   - WHO ITH (no tiene API pública estructurada, sirve solo como
@@ -28,7 +28,7 @@ const JSON_PATH = path.join(RAIZ, "web", "data", "salud-paises.json");
 
 // User-Agent identificable: APIs públicas (Wikipedia, etc.) rechazan
 // peticiones sin UA desde IPs datacenter. Aprendido en sesión 10.
-const UA = "Anduve-HealthBot/1.0 (https://app-vuelos-mfos.vercel.app)";
+const UA = "Anduve-HealthBot/1.0 (https://anduve-app.vercel.app)";
 
 const args = process.argv.slice(2);
 const FILTRO_PAIS = (() => {

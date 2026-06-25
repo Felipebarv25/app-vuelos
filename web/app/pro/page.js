@@ -1,11 +1,11 @@
-// /pro — pagina publica de planes. SEO + CTA. La razon de tener esta
+﻿// /pro — pagina publica de planes. SEO + CTA. La razon de tener esta
 // pagina (vs solo el modal de paywall) es que (a) Google la indexa para
 // busquedas tipo "viajero 360 pro precio", (b) se puede compartir con
 // amigos/referidos directamente, (c) tiene espacio para la FAQ legal.
 import Link from "next/link";
 import ProCheckoutBoton from "./ProCheckoutBoton";
 
-const SITIO = "https://app-vuelos-mfos.vercel.app";
+const SITIO = "https://anduve-app.vercel.app";
 
 export const metadata = {
   title: "Anduve Pro · planes y precios",

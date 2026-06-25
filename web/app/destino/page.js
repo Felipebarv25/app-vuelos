@@ -1,4 +1,4 @@
-// Página índice /destino: cataloga los 80+ destinos del SEO agrupados por
+﻿// Página índice /destino: cataloga los 80+ destinos del SEO agrupados por
 // región, con filtros y enlace directo a cada landing. Fortalece el linking
 // interno (todas las /destino/<slug> son alcanzables desde una página) y
 // mejora rankeo en Google ("dónde viajar barato", "destinos baratos").
@@ -6,7 +6,7 @@ import Link from "next/link";
 import { DESTINOS_SEO } from "@/lib/destinos";
 import IndiceFavoritos from "./IndiceFavoritos";
 
-const SITIO = "https://app-vuelos-mfos.vercel.app";
+const SITIO = "https://anduve-app.vercel.app";
 
 const REGIONES_META = {
   sudamerica: { titulo: "Sudamérica", emoji: "🌎" },

@@ -1,10 +1,10 @@
-// Foto representativa de una ciudad desde la API REST de Wikipedia.
+﻿// Foto representativa de una ciudad desde la API REST de Wikipedia.
 // Devuelve la URL del "originalimage" del artículo. Cache:
 //   · Next.js cachea el fetch (revalidate 30 días).
 //   · La consulta cae al wiki español primero; si no hay, al inglés.
 // Si todo falla, devuelve null y el componente usa el gradiente como fallback.
 
-const UA = "Anduve/1.0 (https://app-vuelos-mfos.vercel.app)";
+const UA = "Anduve/1.0 (https://anduve-app.vercel.app)";
 const TTL = 60 * 60 * 24 * 30; // 30 días en segundos
 
 async function pedirWiki(wiki, titulo) {

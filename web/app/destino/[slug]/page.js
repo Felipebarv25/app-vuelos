@@ -1,4 +1,4 @@
-// Página estática por destino. SSG: pre-renderizada en build time para SEO.
+﻿// Página estática por destino. SSG: pre-renderizada en build time para SEO.
 // Una URL por ciudad del catálogo (~80) tipo /destino/madrid-espana.
 //
 // Contenido pensado para Google: H1 con keyword, descripción, datos clave
@@ -17,7 +17,7 @@ import { linkTours, linkHoteles, linkVuelos, linkESIM, linkSeguro } from "@/lib/
 import FavToggle from "./FavToggle";
 import AlertaPrecio from "@/components/AlertaPrecio";
 
-const SITIO = "https://app-vuelos-mfos.vercel.app";
+const SITIO = "https://anduve-app.vercel.app";
 
 // SSG: lista de slugs a pre-renderizar en build.
 export async function generateStaticParams() {

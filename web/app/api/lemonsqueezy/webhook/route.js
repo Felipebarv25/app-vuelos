@@ -1,4 +1,4 @@
-// Webhook Lemon Squeezy.
+﻿// Webhook Lemon Squeezy.
 //
 // Lemon Squeezy es el Merchant of Record (MoR) que cobra y nos paga via Wise.
 // A diferencia de Stripe, no hace falta tener cuenta empresarial colombiana.
@@ -14,7 +14,7 @@
 //
 // Setup en Lemon Squeezy:
 //   1) Settings -> Webhooks -> Create
-//   2) URL: https://app-vuelos-mfos.vercel.app/api/lemonsqueezy/webhook
+//   2) URL: https://anduve-app.vercel.app/api/lemonsqueezy/webhook
 //   3) Marcar los eventos de arriba
 //   4) Copiar Signing Secret -> Vercel env var LEMONSQUEEZY_WEBHOOK_SECRET
 //

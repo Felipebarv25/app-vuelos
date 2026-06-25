@@ -1,11 +1,11 @@
-# 🌙 Avances de la sesión nocturna — Viajero 360
+﻿# 🌙 Avances de la sesión nocturna — Viajero 360
 
 > Trabajo autónomo mientras duermes. Aquí documento TODO lo que hago, en orden,
 > para que mañana lo revises de un vistazo. Lo más reciente arriba.
 
 **Inicio:** 2026-06-01 (noche)
 **Autonomía:** total (decido, construyo, pruebo y subo a Vercel)
-**App en vivo:** https://app-vuelos-mfos.vercel.app/
+**App en vivo:** https://anduve-app.vercel.app/
 **Repo:** https://github.com/Felipebarv25/app-vuelos
 
 ---
@@ -53,7 +53,7 @@ Sesión de día trabajando contigo en vivo. Lo entregado:
 4. **🚇 Más lugares y más rápido** — cobertura mejorada (Marrakech pasó de 1 a 21
    lugares), restaurantes/cafés/bares reforzados, carga optimizada.
 
-**Cómo probarlo:** abre https://app-vuelos-mfos.vercel.app/ → toca el botón verde
+**Cómo probarlo:** abre https://anduve-app.vercel.app/ → toca el botón verde
 "💰 ¿Adónde viajar con mi presupuesto?" o busca cualquier ciudad.
 
 **Total: ~15 mejoras subidas**, todas verificadas en producción. El detalle abajo. 👇

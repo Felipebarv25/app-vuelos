@@ -1,10 +1,10 @@
-// /en/destino — English destinations index. SSG: lists all ~80 cities with
+﻿// /en/destino — English destinations index. SSG: lists all ~80 cities with
 // flag, name and a quick flight estimate. Same data as the Spanish index,
 // just localized labels.
 import Link from "next/link";
 import { DESTINOS_SEO } from "@/lib/destinos";
 
-const SITIO = "https://app-vuelos-mfos.vercel.app";
+const SITIO = "https://anduve-app.vercel.app";
 
 export const metadata = {
   title: "All destinations · Anduve",

@@ -1,10 +1,10 @@
-// NextAuth con Google. Estrategia JWT (sin DB): la sesión vive en una cookie
+﻿// NextAuth con Google. Estrategia JWT (sin DB): la sesión vive en una cookie
 // firmada con NEXTAUTH_SECRET. Para un login simple sin "Mis viajes" en la
 // nube es suficiente. Si después queremos sincronizar entre dispositivos,
 // añadimos un adapter (Vercel KV / Supabase) sin tocar este archivo.
 //
 // Env vars necesarias en Vercel (Settings → Environment Variables):
-//   · NEXTAUTH_URL = https://app-vuelos-mfos.vercel.app
+//   · NEXTAUTH_URL = https://anduve-app.vercel.app
 //   · NEXTAUTH_SECRET = (cualquier string aleatorio largo)
 //   · GOOGLE_CLIENT_ID = (desde Google Cloud Console)
 //   · GOOGLE_CLIENT_SECRET = (desde Google Cloud Console)

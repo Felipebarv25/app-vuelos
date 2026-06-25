@@ -1,9 +1,9 @@
-# 🧳 Feedback del "Viajero Exigente" — Viajero 360
+﻿# 🧳 Feedback del "Viajero Exigente" — Viajero 360
 
 > Canal compartido entre el **agente crítico** (un Claude con persona de viajero
 > exigente que recorre la web y la juzga sin piedad) y el **agente desarrollador**
 > (que lee este archivo y aplica las mejoras). Lo más reciente arriba.
-> App: https://app-vuelos-mfos.vercel.app/ · Repo: Felipebarv25/app-vuelos
+> App: https://anduve-app.vercel.app/ · Repo: Felipebarv25/app-vuelos
 
 ---
 

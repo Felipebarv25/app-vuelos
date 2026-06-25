@@ -1,4 +1,4 @@
-// English version of the destination landing page. SEO i18n with hreflang:
+﻿// English version of the destination landing page. SEO i18n with hreflang:
 // the Spanish (default) and English versions cross-link to each other so
 // Google can serve the right language to each user.
 //
@@ -16,7 +16,7 @@ import { iataDe } from "@/lib/iataCiudades";
 import { linkTours, linkHoteles, linkVuelos } from "@/lib/afiliados";
 import FavToggle from "../../../destino/[slug]/FavToggle";
 
-const SITIO = "https://app-vuelos-mfos.vercel.app";
+const SITIO = "https://anduve-app.vercel.app";
 
 // SSG: pre-render the same 80 destinations as Spanish.
 export async function generateStaticParams() {
