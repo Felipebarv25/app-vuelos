@@ -113,13 +113,13 @@ export const DESTINOS_PRESUPUESTO = [
 ];
 
 export const REGIONES = {
-  todas: "🌍 Todo el mundo",
-  sudamerica: "🌎 Sudamérica",
-  norteamerica: "🌎 Norte y Centroamérica",
-  europa: "🇪🇺 Europa",
-  asia: "🌏 Asia",
-  africa: "🌍 África",
-  oceania: "🌏 Oceanía",
+  todas: "Todo el mundo",
+  sudamerica: "Sudamérica",
+  norteamerica: "Norte y Centroamérica",
+  europa: "Europa",
+  asia: "Asia",
+  africa: "África",
+  oceania: "Oceanía",
 };
 
 // Tasa de cambio aproximada para mostrar el presupuesto en moneda local.
@@ -267,6 +267,73 @@ export function diasPosibles(destino, presupuestoUsd, personas) {
   const restante = presupuestoUsd - destino.vuelo * personas;
   if (restante <= 0) return 0;
   return Math.floor(restante / (destino.dia * personas));
+}
+
+// Recomienda cuántos días caben dada una región y presupuesto.
+// El usuario primero elige a dónde y con cuánto; los días los DEDUCE la app
+// (no los pide). Si el presupuesto es muy bajo, retorna advertencia + el monto
+// mínimo sugerido para un viaje razonable (7 días).
+//
+// Estrategia: medianas (no promedios) por región para evitar que outliers como
+// Nueva York o Zúrich distorsionen el cálculo. Más fiel a la realidad.
+export function diasRecomendados({ presupuestoUsd, region, personas = 1 }) {
+  const lista = ciudadesDeRegion(region);
+  if (!lista.length || presupuestoUsd <= 0) {
+    return { recomendado: 0, advertencia: "sin_datos", vueloMediana: 0, diaMediana: 0 };
+  }
+  const mediana = (arr) => {
+    const s = [...arr].sort((a, b) => a - b);
+    return s[Math.floor(s.length / 2)];
+  };
+  const vueloMediana = mediana(lista.map((d) => d.vuelo));
+  const diaMediana = mediana(lista.map((d) => d.dia));
+
+  const costoVueloTotal = vueloMediana * personas;
+  const restante = presupuestoUsd - costoVueloTotal;
+
+  // Caso 1: ni el vuelo cabe.
+  if (restante <= 0) {
+    return {
+      recomendado: 0,
+      advertencia: "insuficiente_vuelo",
+      vueloMediana,
+      diaMediana,
+      presupuestoMinSugerido: Math.ceil(costoVueloTotal + diaMediana * personas * 7),
+    };
+  }
+
+  const diasRaw = restante / (diaMediana * personas);
+  // Clamp entre 3 y 30. Viajes <3 días a otro continente no tienen sentido;
+  // >30 días casi nadie los planea desde el inicio.
+  const recomendado = Math.max(3, Math.min(30, Math.round(diasRaw)));
+
+  // Bandera: si el cálculo crudo es muy corto, advertir.
+  let advertencia = null;
+  if (diasRaw < 4) advertencia = "muy_corto";
+  else if (diasRaw > 25) advertencia = "muy_largo";
+
+  return {
+    recomendado,
+    advertencia,
+    vueloMediana,
+    diaMediana,
+    presupuestoMinSugerido: Math.ceil(costoVueloTotal + diaMediana * personas * 7),
+    diasRaw: Math.round(diasRaw * 10) / 10, // para que la UI muestre "alcanza para ~7.3"
+  };
+}
+
+// Dada una región, días deseados y personas, calcula el presupuesto MÍNIMO
+// que cubriría el viaje. Útil para advertir al usuario si su monto se queda corto.
+export function presupuestoMinimoPara({ region, dias, personas = 1 }) {
+  const lista = ciudadesDeRegion(region);
+  if (!lista.length) return 0;
+  const mediana = (arr) => {
+    const s = [...arr].sort((a, b) => a - b);
+    return s[Math.floor(s.length / 2)];
+  };
+  const vueloMediana = mediana(lista.map((d) => d.vuelo));
+  const diaMediana = mediana(lista.map((d) => d.dia));
+  return Math.ceil((vueloMediana + diaMediana * dias) * personas);
 }
 
 // ---------- Modo 2: ruta multiciudad ----------

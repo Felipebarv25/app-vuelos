@@ -8,6 +8,8 @@ import {
   ciudadesDeRegion,
   llaveCiudad,
   diasPosibles,
+  diasRecomendados,
+  presupuestoMinimoPara,
   REGIONES,
   MONEDAS,
 } from "@/lib/presupuesto";
@@ -30,8 +32,21 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   const [monto, setMonto] = useState(inicial?.monto ?? 10000000);
   const [moneda, setMoneda] = useState(inicial?.moneda ?? "COP");
   const [dias, setDias] = useState(10);
+  // Marca si el usuario tocó los días manualmente. Mientras sea false, los
+  // días siguen a la recomendación (presupuesto+región). Cuando edita el
+  // select, queda en true y la recomendación pasa a ser sólo informativa.
+  const [diasTocado, setDiasTocado] = useState(false);
   const [personas, setPersonas] = useState(1);
   const [region, setRegion] = useState("europa");
+  // Mes de viaje (YYYY-MM). Default: mes actual + 2 (lead time razonable para
+  // conseguir buenos precios). Travelpayouts itera por mes, no por día exacto,
+  // así que con elegir el mes alcanza para precios reales.
+  const [mes, setMes] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + 2);
+    return d.toISOString().slice(0, 7);
+  });
   const [detalle, setDetalle] = useState(null);
 
   // Pais de origen del viajero (CO/MX/EC/PE/...). Define que hubs aereos se
@@ -213,6 +228,28 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
     return () => clearTimeout(id);
   }, [presupuestoUsd, region]);
 
+  // Recomendación: días sugeridos según presupuesto + región + personas.
+  // El usuario primero elige a dónde y con cuánto; los días los DEDUCE la app.
+  // Si el presupuesto no alcanza ni para el vuelo, recom.advertencia indica el caso.
+  const recom = useMemo(
+    () => diasRecomendados({ presupuestoUsd, region, personas }),
+    [presupuestoUsd, region, personas]
+  );
+
+  // Mientras el usuario no edite "Días" manualmente, los días siguen
+  // automáticamente a la recomendación. Cuando edita, queda fijo en su valor.
+  useEffect(() => {
+    if (!diasTocado && recom.recomendado > 0) setDias(recom.recomendado);
+  }, [recom.recomendado, diasTocado]);
+
+  // Presupuesto mínimo para cubrir los días que el usuario tiene puestos en
+  // este momento (sirve para mostrar "Te faltan ~US$X"). Recalcula cuando
+  // cambian días/región/personas, no por cada keystroke del monto.
+  const presupMinimo = useMemo(
+    () => presupuestoMinimoPara({ region, dias, personas }),
+    [region, dias, personas]
+  );
+
   const resultados = useMemo(
     () => calcularDestinos({ presupuestoUsd, dias, personas, region, preciosReales, origen }),
     [presupuestoUsd, dias, personas, region, preciosReales, origen]
@@ -269,28 +306,50 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
     return m.simbolo + " " + Math.round(val).toLocaleString("es-CO");
   }
 
+  // Lista de los próximos 12 meses (YYYY-MM). El select de "Mes de viaje" la
+  // usa para que el usuario sepa cuándo planea ir — sirve para luego pedir
+  // precios reales a Travelpayouts (que itera por mes, no por día exacto).
+  const proximosMeses = useMemo(() => {
+    const meses = [];
+    const base = new Date();
+    base.setDate(1);
+    base.setHours(0, 0, 0, 0);
+    for (let i = 0; i < 12; i++) {
+      const mm = new Date(base.getFullYear(), base.getMonth() + i, 1);
+      meses.push({
+        key: `${mm.getFullYear()}-${String(mm.getMonth() + 1).padStart(2, "0")}`,
+        label: mm.toLocaleDateString("es-CO", { month: "long", year: "numeric" }),
+      });
+    }
+    return meses;
+  }, []);
+
   return (
     <div className="fixed inset-0 z-[4000] flex items-end justify-center bg-slate-900/60 backdrop-blur-sm">
-      <div className="animar-subir flex max-h-[94vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-slate-50 shadow-[0_-12px_40px_rgba(0,0,0,.35)] dark:bg-slate-900">
-        {/* Cabecera */}
-        <div className="bg-gradient-to-br from-marca-600 via-marca-700 to-marca-900 px-5 pb-4 pt-5 text-white">
+      <div className="animar-subir flex max-h-[94vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-[0_-12px_40px_rgba(0,0,0,.25)] dark:bg-slate-900">
+        {/* Cabecera: tono sobrio, sin gradiente tropical — diseño "panel de
+            herramienta seria" en vez de marketing. */}
+        <div className="border-b border-slate-200 bg-white px-5 pb-3 pt-4 dark:border-slate-700 dark:bg-slate-900">
           <div className="flex items-start justify-between">
             <div>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">
-                Anduve
+              <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                Anduve · Planificador
               </div>
-              <div className="mt-0.5 text-xl font-extrabold tracking-tight">{t("presupTitulo")}</div>
+              <div className="mt-0.5 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                {t("presupTitulo")}
+              </div>
             </div>
             <button
               onClick={onCerrar}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25"
+              aria-label="Cerrar"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <Icono nombre="x" size={16} />
             </button>
           </div>
 
-          {/* Conmutador de modo */}
-          <div className="mt-4 grid grid-cols-2 gap-1 rounded-2xl bg-black/15 p-1">
+          {/* Conmutador de modo — más sutil, estilo tabs en vez de pills */}
+          <div className="-mb-3 mt-3 flex gap-4 border-b border-transparent">
             {[
               ["ruta", t("presupModoRuta")],
               ["destino", t("presupModoDestino")],
@@ -298,11 +357,16 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
               <button
                 key={k}
                 onClick={() => setModo(k)}
-                className={`rounded-xl py-2 text-sm font-bold transition ${
-                  modo === k ? "bg-white text-marca-700 shadow" : "text-white/85"
+                className={`relative pb-2 text-[13px] font-medium tracking-tight transition ${
+                  modo === k
+                    ? "text-marca-700 dark:text-marca-300"
+                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                 }`}
               >
                 {label}
+                {modo === k && (
+                  <span className="absolute -bottom-px left-0 right-0 h-[2px] bg-marca-700 dark:bg-marca-400" />
+                )}
               </button>
             ))}
           </div>
@@ -310,23 +374,24 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
 
         {/* Cuerpo scrollable */}
         <div className="flex-1 overflow-y-auto px-5 py-4">
-          {/* Controles comunes */}
-          <div className="grid gap-3">
-            {/* SALES DESDE: pais + hub aereo. La app detecta tu pais por IP
-                (x-vercel-ip-country) y preselecciona; puedes cambiarlo. Solo
-                Colombia tiene cobertura del detector hoy; el resto cae a
-                estimados/busqueda en vivo y se le avisa al usuario. */}
+          {/* Orden de campos (rediseño 2026-06-24): origen → presupuesto →
+              REGIÓN → personas → mes → días (recomendado por la app). Antes
+              se pedían días arriba sin contexto; ahora la app DEDUCE los días
+              a partir del presupuesto+región. El usuario puede sobreescribir.
+              Criterio del owner: "primero conocer a dónde quiere viajar antes
+              que cuántos días le podemos recomendar". */}
+          <div className="grid gap-3.5">
+            {/* 1) ORIGEN: país + hub aéreo. Combobox typeahead sobre catálogo
+                IATA completo (~7000 aeropuertos). Hint del placeholder hace
+                evidente que es escribible para que el usuario no piense que
+                es un input cerrado. */}
             <div>
               <Label>{t("presupSalesDesde")}</Label>
-              {/* Combobox con typeahead sobre catálogo IATA completo (~7000
-                  aeropuertos del mundo, /aeropuertos.json cargado bajo
-                  demanda). El usuario puede escribir ciudad, nombre de
-                  aeropuerto o IATA. Setea país + IATA juntos. */}
               <SelectorAeropuerto
                 value={origen}
                 paisInicial={paisOrigen}
                 onChange={elegirAeropuerto}
-                placeholder={t("presupSalesDesdePlaceholder")}
+                placeholder={t("presupSalesDesdePlaceholder") || "Escribe tu país y ciudad"}
                 ariaLabel={t("presupSalesDesde")}
               />
               {detectorCubre ? (
@@ -334,13 +399,14 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   {t("presupSalesDesdeNota")}
                 </div>
               ) : (
-                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11.5px] leading-snug text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
-                  <b>⚠️ {t("presupCoberturaTitulo")}</b>{" "}
+                <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 p-2.5 text-[11.5px] leading-snug text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+                  <b>{t("presupCoberturaTitulo")}:</b>{" "}
                   {t("presupCoberturaAviso").replace("{pais}", paisActual.nombre)}
                 </div>
               )}
             </div>
 
+            {/* 2) PRESUPUESTO */}
             <div>
               <Label>{t("presupTuPresup")}</Label>
               <div className="flex gap-2">
@@ -349,27 +415,20 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   inputMode="numeric"
                   value={monto > 0 ? monto.toLocaleString("es-CO") : ""}
                   onChange={(e) => {
-                    // Solo digitos: ignora puntos, comas, letras o caracteres
-                    // raros que el usuario pegue. Si queda vacio, monto = 0
-                    // (sin "0" colgando en el input — value="" lo limpia visualmente).
                     const raw = (e.target.value || "").replace(/\D/g, "");
                     if (raw === "") { setMonto(0); return; }
                     const n = parseInt(raw, 10);
                     if (!Number.isNaN(n)) setMonto(Math.max(0, n));
                   }}
-                  onFocus={(e) => {
-                    // Al hacer focus, seleccionar todo: tipear reemplaza sin
-                    // tener que borrar el monto anterior digito por digito.
-                    try { e.target.select(); } catch {}
-                  }}
+                  onFocus={(e) => { try { e.target.select(); } catch {} }}
                   placeholder="0"
                   aria-label={t("presupTuPresup")}
-                  className="flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-[15px] outline-none focus:border-marca-400"
+                  className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2.5 text-[15px] outline-none focus:border-marca-500 dark:border-slate-600 dark:bg-slate-800"
                 />
                 <select
                   value={moneda}
                   onChange={(e) => setMoneda(e.target.value)}
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-[15px] outline-none"
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-[15px] outline-none dark:border-slate-600 dark:bg-slate-800"
                 >
                   {Object.keys(MONEDAS).map((k) => (
                     <option key={k} value={k}>{k}</option>
@@ -387,50 +446,97 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <label className="flex-1">
-                <Label>{t("dias")}</Label>
-                <select
-                  value={dias}
-                  onChange={(e) => setDias(+e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[15px] outline-none"
-                >
-                  {Array.from({ length: 60 }, (_, i) => i + 1).map((n) => (
-                    <option key={n} value={n}>{n}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="flex-1">
-                <Label>{t("presupPersonas")}</Label>
-                <select
-                  value={personas}
-                  onChange={(e) => setPersonas(+e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[15px] outline-none"
-                >
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <option key={n} value={n}>{n}</option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
+            {/* 3) REGIÓN (movida arriba de días — el destino determina el costo).
+                Chips tipográficos en vez de pills redondeadas con emojis. */}
             <div>
               <Label>{t("presupRegion")}</Label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {Object.entries(REGIONES).map(([k, nombre]) => (
                   <button
                     key={k}
                     onClick={() => { setRegion(k); setInicio(""); setSemilla(0); setExcluidos([]); }}
-                    className={`rounded-full px-3.5 py-2 text-[13px] font-semibold transition ${
+                    className={`rounded-md border px-3 py-1.5 text-[13px] font-medium tracking-tight transition ${
                       region === k
-                        ? "bg-marca-600 text-white shadow"
-                        : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-marca-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600"
+                        ? "border-marca-700 bg-marca-700 text-white"
+                        : "border-slate-300 bg-white text-slate-700 hover:border-marca-400 hover:text-marca-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-marca-400"
                     }`}
                   >
                     {nombre}
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* 4) PERSONAS y 5) MES DE VIAJE en fila. Personas separado de días
+                porque ahora días es deducido y va abajo con su banner. */}
+            <div className="flex gap-3">
+              <label className="flex-1">
+                <Label>{t("presupPersonas")}</Label>
+                <select
+                  value={personas}
+                  onChange={(e) => setPersonas(+e.target.value)}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-[15px] outline-none dark:border-slate-600 dark:bg-slate-800"
+                >
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex-1">
+                <Label>Mes de viaje</Label>
+                <select
+                  value={mes}
+                  onChange={(e) => setMes(e.target.value)}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-[15px] capitalize outline-none dark:border-slate-600 dark:bg-slate-800"
+                  aria-label="Mes de viaje"
+                >
+                  {proximosMeses.map((m) => (
+                    <option key={m.key} value={m.key} className="capitalize">{m.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            {/* 6) DÍAS (recomendado por la app). El select queda editable, pero
+                la recomendación se calcula con diasRecomendados() y se muestra
+                en el banner debajo. */}
+            <div>
+              <div className="flex items-center justify-between">
+                <Label>
+                  {t("dias")}
+                  {!diasTocado && recom.recomendado > 0 && (
+                    <span className="ml-2 inline-flex items-center rounded-sm bg-marca-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-marca-800 dark:bg-marca-900/40 dark:text-marca-200">
+                      Recomendado
+                    </span>
+                  )}
+                </Label>
+                {diasTocado && recom.recomendado > 0 && recom.recomendado !== dias && (
+                  <button
+                    onClick={() => { setDias(recom.recomendado); setDiasTocado(false); }}
+                    className="text-[11px] font-medium text-marca-700 underline-offset-2 hover:underline dark:text-marca-300"
+                  >
+                    Usar recomendado ({recom.recomendado})
+                  </button>
+                )}
+              </div>
+              <select
+                value={dias}
+                onChange={(e) => { setDias(+e.target.value); setDiasTocado(true); }}
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-[15px] outline-none dark:border-slate-600 dark:bg-slate-800"
+              >
+                {Array.from({ length: 60 }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+              <AvisoPresupuesto
+                recom={recom}
+                dias={dias}
+                personas={personas}
+                presupuestoUsd={presupuestoUsd}
+                presupMinimo={presupMinimo}
+                fmtUsd={fmtUsd}
+                regionLabel={REGIONES[region]}
+              />
             </div>
 
             {/* Solo modo ruta: ciudad de salida. Listamos TODO el catalogo
@@ -458,7 +564,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   }}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[15px] outline-none"
                 >
-                  <option value="">⭐ {t("recomendado")}</option>
+                  <option value="">{t("recomendado")}</option>
                   {Object.keys(ciudadesPorRegion)
                     .filter((r) => REGIONES[r])
                     .map((r) => (
@@ -615,8 +721,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                         del detector (compara los precios reales que el sistema
                         ya tiene escaneados) y empuja la propuesta de valor. */}
                     {d.ahorroDesde && (
-                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-[12px] font-semibold text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
-                        <span>💡</span>
+                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-[12px] font-medium text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
                         <span>
                           {t("presupAhorroDesde").replace("{origen}", nombreDeIATA(d.ahorroDesde.origen))}
                           {" "}
@@ -739,7 +844,70 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
 }
 
 function Label({ children }) {
-  return <div className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-slate-500">{children}</div>;
+  return <div className="mb-1.5 text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">{children}</div>;
+}
+
+// Banner de advertencia / refuerzo sobre el match presupuesto ↔ días.
+// Cubre 4 escenarios:
+//   1. Presupuesto no cubre ni el vuelo a la región → bloqueante
+//   2. Usuario eligió N días pero su presupuesto sólo alcanza para M < N → alerta
+//   3. Presupuesto holgado → confirmación positiva
+//   4. Días muy cortos o muy largos para la región → sugerencia
+// El tono es informativo y honesto, sin emojis, con cifras concretas.
+function AvisoPresupuesto({ recom, dias, personas, presupuestoUsd, presupMinimo, fmtUsd, regionLabel }) {
+  if (!recom || presupuestoUsd <= 0) return null;
+
+  // Caso 1: ni siquiera el vuelo cabe.
+  if (recom.advertencia === "insuficiente_vuelo") {
+    return (
+      <div className="mt-2 rounded-md border border-rose-200 bg-rose-50 p-3 text-[13px] leading-snug text-rose-900 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+        <div className="font-semibold">Presupuesto insuficiente para esta región</div>
+        <div className="mt-0.5 text-rose-800/90 dark:text-rose-300/90">
+          Para un viaje básico de 7 días a {regionLabel} necesitarías al menos{" "}
+          <b>{fmtUsd(recom.presupuestoMinSugerido)}</b>. Considera otra región o subir el presupuesto.
+        </div>
+      </div>
+    );
+  }
+
+  // Caso 2: el monto cubre el vuelo pero los días del usuario exceden lo que alcanza.
+  const faltante = presupMinimo - presupuestoUsd;
+  if (faltante > 0) {
+    return (
+      <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-[13px] leading-snug text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+        <div className="font-semibold">Tu presupuesto se queda corto para {dias} días</div>
+        <div className="mt-0.5 text-amber-800/90 dark:text-amber-300/90">
+          Con {fmtUsd(presupuestoUsd)} alcanza para aproximadamente <b>{recom.recomendado} días</b>{" "}
+          en {regionLabel}
+          {personas > 1 && ` para ${personas} personas`}. Para llegar a {dias} días te faltarían{" "}
+          <b>{fmtUsd(faltante)}</b>.
+        </div>
+      </div>
+    );
+  }
+
+  // Caso 3: holgado — el monto alcanza con margen.
+  const sobra = presupuestoUsd - presupMinimo;
+  if (sobra > recom.diaMediana * personas * 3) {
+    return (
+      <div className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-[13px] leading-snug text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
+        <div className="font-semibold">Presupuesto holgado</div>
+        <div className="mt-0.5 text-emerald-800/90 dark:text-emerald-300/90">
+          Con {fmtUsd(presupuestoUsd)} podrías quedarte hasta <b>{recom.recomendado} días</b>{" "}
+          cómodamente en {regionLabel}, o usar el excedente en experiencias mejores.
+        </div>
+      </div>
+    );
+  }
+
+  // Caso 4: alcanza justo. Mensaje informativo neutro.
+  return (
+    <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-[12.5px] leading-snug text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
+      Cubre <b>{dias} días</b> en {regionLabel}
+      {personas > 1 && ` para ${personas} personas`}. Mínimo estimado:{" "}
+      <b>{fmtUsd(presupMinimo)}</b>.
+    </div>
+  );
 }
 
 // Formatea "2026-03-12" → "12 mar" (sin dependencias, idioma por defecto es).
@@ -845,7 +1013,7 @@ function RutaCard({
             {i > 0 && (
               <div className="flex items-center gap-2 py-1 pl-3 text-[12px] text-slate-400">
                 <span className="text-slate-300">│</span>
-                <span>✈️ {fmtUsd(c.salto)} · {c.km.toLocaleString("es-CO")} km</span>
+                <span>{fmtUsd(c.salto)} · {c.km.toLocaleString("es-CO")} km</span>
               </div>
             )}
             <div className="flex items-center gap-3">
@@ -886,7 +1054,7 @@ function RutaCard({
       {/* Desglose de costos */}
       <div className="border-t border-slate-100 px-4 py-3">
         <Fila
-          nombre={"✈️ " + t("presupVueloIntl")}
+          nombre={t("presupVueloIntl")}
           valor={fmtUsd(desglose.vueloIntl)}
           badge={ruta.esRealEntrada ? t("presupPrecioReal") : t("presupEstimado")}
           badgeReal={ruta.esRealEntrada}
@@ -950,11 +1118,11 @@ function RutaCard({
           </a>
         )}
 
-        <Fila nombre={"🚄 " + t("presupEntreCiudades")} valor={fmtUsd(desglose.saltos)} />
-        <Fila nombre={"🏨 " + t("presupHospedaje")} valor={fmtUsd(desglose.hospedaje)} />
-        <Fila nombre={"🍽️ " + t("presupComida")} valor={fmtUsd(desglose.comida)} />
-        <Fila nombre={"🚇 " + t("presupTransporte")} valor={fmtUsd(desglose.transporte)} />
-        <Fila nombre={"🎟️ " + t("presupExtras")} valor={fmtUsd(desglose.extras)} />
+        <Fila nombre={t("presupEntreCiudades")} valor={fmtUsd(desglose.saltos)} />
+        <Fila nombre={t("presupHospedaje")} valor={fmtUsd(desglose.hospedaje)} />
+        <Fila nombre={t("presupComida")} valor={fmtUsd(desglose.comida)} />
+        <Fila nombre={t("presupTransporte")} valor={fmtUsd(desglose.transporte)} />
+        <Fila nombre={t("presupExtras")} valor={fmtUsd(desglose.extras)} />
       </div>
 
       {/* Total */}
@@ -968,9 +1136,9 @@ function RutaCard({
         </div>
         <div className="text-right text-[13px] font-semibold">
           {cabe ? (
-            <span className="text-emerald-600">💚 {t("presupTeSobra")} {fmtUsd(sobra)}</span>
+            <span className="text-emerald-700 dark:text-emerald-400">{t("presupTeSobra")} {fmtUsd(sobra)}</span>
           ) : (
-            <span className="text-red-600">💸 {t("presupTeFalta")} {fmtUsd(-sobra)}</span>
+            <span className="text-rose-700 dark:text-rose-400">{t("presupTeFalta")} {fmtUsd(-sobra)}</span>
           )}
         </div>
       </div>
