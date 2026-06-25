@@ -14,6 +14,7 @@ import {
   MONEDAS,
 } from "@/lib/presupuesto";
 import { obtenerPreciosReales, buscarVueloEnVivo } from "@/lib/preciosVuelos";
+import { fmtDuracion } from "@/lib/tramos";
 import { linkVuelos, linkGoogleFlights, linkHoteles } from "@/lib/afiliados";
 import { obtenerTasas, aUsdDe } from "@/lib/fx";
 import { PAISES_ORIGEN, PAISES_ORDEN, PAIS_DEFAULT, paisValido, nombreDeIATA } from "@/lib/paisesOrigen";
@@ -908,6 +909,16 @@ function Label({ children }) {
   return <div className="mb-1.5 text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">{children}</div>;
 }
 
+// Etiqueta del medio de transporte cuando no hay nombre comercial (operador
+// es null). Mantiene la lectura compacta y consistente con la tabla curada.
+function labelMedio(medio) {
+  if (medio === "tren") return "Tren";
+  if (medio === "bus") return "Bus";
+  if (medio === "vuelo") return "Vuelo low-cost";
+  if (medio === "ferry") return "Ferry";
+  return medio || "";
+}
+
 // Banner de advertencia / refuerzo sobre el match presupuesto ↔ días.
 // Cubre 4 escenarios:
 //   1. Presupuesto no cubre ni el vuelo a la región → bloqueante
@@ -1092,14 +1103,31 @@ function RutaCard({
         </div>
       </div>
 
-      {/* Línea de tiempo de ciudades */}
+      {/* Línea de tiempo de ciudades. Entre cada par de ciudades mostramos el
+          medio de transporte real (AVE, Eurostar, FlixBus, vuelo low-cost) +
+          duración + costo. Si el tramo NO está curado, se marca "aprox" para
+          ser honestos. La tabla curada vive en lib/tramos.js. */}
       <div className="px-4 py-3">
         {ciudades.map((c, i) => (
           <div key={llaveCiudad(c)}>
             {i > 0 && (
-              <div className="flex items-center gap-2 py-1 pl-3 text-[12px] text-slate-400">
-                <span className="text-slate-300">│</span>
-                <span>{fmtUsd(c.salto)} · {c.km.toLocaleString("es-CO")} km</span>
+              <div className="flex items-center gap-2 py-1 pl-3 text-[12px] text-slate-500 dark:text-slate-400">
+                <span className="text-slate-300 dark:text-slate-600">│</span>
+                <span className="flex flex-wrap items-center gap-x-1.5">
+                  {c.medioTramo && (
+                    <span className="font-medium text-slate-700 dark:text-slate-300">
+                      {c.operadorTramo || labelMedio(c.medioTramo)}
+                    </span>
+                  )}
+                  {c.duracionTramoH > 0 && (
+                    <span className="text-slate-500">· {fmtDuracion(c.duracionTramoH)}</span>
+                  )}
+                  <span className="text-slate-500">· {fmtUsd(c.salto)}</span>
+                  {c.esTramoCurado === false && (
+                    <span className="rounded-sm bg-slate-100 px-1 text-[10px] font-medium uppercase text-slate-500 dark:bg-slate-700 dark:text-slate-400">aprox</span>
+                  )}
+                  <span className="text-slate-400">· {c.km.toLocaleString("es-CO")} km</span>
+                </span>
               </div>
             )}
             <div className="flex items-center gap-3">

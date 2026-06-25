@@ -1,7 +1,7 @@
 // Service Worker mínimo: hace que la app abra rápido y funcione como app
 // instalada. Estrategia "network-first" para HTML (siempre lo más nuevo) y
 // caché para los recursos estáticos (mapa, iconos, etc.).
-const CACHE = "anduve-v38";
+const CACHE = "anduve-v39";
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();

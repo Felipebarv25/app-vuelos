@@ -9,6 +9,8 @@
 // Vuelos = ida y vuelta aproximados desde Colombia (BOG/MDE). Son estimaciones
 // para planear; el precio real se confirma con el detector de vuelos.
 
+import { costoTramoReal } from "./tramos";
+
 // Costo diario por persona (gama media) y vuelo i/v aproximado desde Colombia.
 // dia = hospedaje + comida + transporte local + actividades/extras (USD/día).
 export const DESTINOS_PRESUPUESTO = [
@@ -147,7 +149,10 @@ function distKm(a, b) {
 }
 
 // Costo aproximado (USD/persona) de un salto entre ciudades de la ruta
-// (tren, bus o vuelo barato según la distancia).
+// (tren, bus o vuelo barato según la distancia). DEPRECADO: lo dejamos para
+// compat por si algo externo lo importa, pero `construirRuta` ahora usa
+// `costoTramoReal` de lib/tramos.js que tiene tabla curada por par de ciudades
+// para los tramos comunes (AVE Madrid-Barcelona, Eurostar París-Londres, etc).
 function costoSalto(km) {
   if (km < 300) return 35;
   if (km < 700) return 70;
@@ -406,8 +411,18 @@ export function construirRuta({
     // Variedad: elegir al azar entre las más cercanas (según la semilla).
     const top = opciones.slice(0, Math.min(4, opciones.length));
     const elegido = top[Math.floor(rnd() * top.length)];
-    const salto = costoSalto(elegido.km);
-    const cand = { ...elegido.c, salto, km: Math.round(elegido.km) };
+    // Costo del tramo: tabla curada (AVE €60, Eurostar €120, etc) si el par
+    // está cubierto; si no, fallback geométrico por km marcado como `aprox`.
+    const tramo = costoTramoReal(last, elegido.c, elegido.km);
+    const cand = {
+      ...elegido.c,
+      salto: tramo.precio,
+      km: Math.round(elegido.km),
+      medioTramo: tramo.medio,
+      operadorTramo: tramo.operador,
+      duracionTramoH: tramo.duracion_h,
+      esTramoCurado: tramo.esCurado,
+    };
     if (costoPiso([...ruta, cand]) <= presupViaje) {
       ruta.push(cand);
       usados.add(llaveCiudad(elegido.c));
