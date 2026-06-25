@@ -20,9 +20,13 @@ const sora = Sora({
   variable: "--font-sora",
 });
 
-// Debe coincidir EXACTO con HERO_IMG de page.js para que el preload sirva.
-const HERO_IMG =
-  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=70";
+// Preload de la imagen LCP del PRE-login (lo que ve el visitante nuevo, mayoría
+// del tráfico SEO). Es la 1ª foto del slideshow self-hosted del Bienvenida.js
+// (HeroSlideshow → /landing-hero-1.jpg). Si en el futuro cambia el orden del
+// slideshow, actualizar aquí también. Antes precargaba una URL de Unsplash de
+// HERO_IMGS_POR_TEMA.general[0] (post-login) → era un waste de ~200KB con
+// fetchPriority high para usuarios que jamás veían esa imagen.
+const HERO_IMG = "/landing-hero-1.jpg";
 
 const DESC =
   "Itinerarios día a día con mapa, GPS, transporte y los mejores lugares y restaurantes de cualquier ciudad del mundo. Rutas por presupuesto y precios de vuelos en vivo.";

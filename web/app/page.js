@@ -12,18 +12,14 @@ import { sugerirCiudades } from "@/lib/autocompletar";
 import { useGeo } from "@/lib/useGeo";
 import { Chip } from "@/components/ui";
 import Itinerario from "@/components/Itinerario";
-import DetalleLugar from "@/components/DetalleLugar";
 import Bienvenida from "@/components/Bienvenida";
 import SelectorIdioma from "@/components/SelectorIdioma";
-import Presupuesto from "@/components/Presupuesto";
 import SelectorMoneda from "@/components/SelectorMoneda";
 import SelectorPais from "@/components/SelectorPais";
 import { monedaDePais, simboloMoneda } from "@/lib/monedas";
 import CardDestino from "@/components/CardDestino";
 import Ofertas from "@/components/Ofertas";
-import Asesor from "@/components/Asesor";
 import { AfiliadosCiudad } from "@/components/Afiliados";
-import RequisitosViaje from "@/components/RequisitosViaje";
 import { listarViajesAsync, guardarViajeAsync, borrarViajeAsync } from "@/lib/viajes";
 import { LogoMarca } from "@/components/Logo";
 import { Icono } from "@/components/Icono";
@@ -31,10 +27,17 @@ import Toast from "@/components/Toast";
 import { useApp } from "@/lib/AppContext";
 import { track, trackVisita } from "@/lib/track";
 import { registrarEvento, obtenerRecomendaciones } from "@/lib/perfil";
-import Paywall from "@/components/Paywall";
 import MenuUsuario from "@/components/MenuUsuario";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
+// Modales y bloques cargados sólo cuando el usuario los necesita. Salen del
+// bundle inicial (que pagan TODOS los visitantes, incluido el pre-login).
+// Cada uno se descarga al primer render condicional → mejora LCP/INP.
+const Presupuesto = dynamic(() => import("@/components/Presupuesto"));
+const DetalleLugar = dynamic(() => import("@/components/DetalleLugar"));
+const RequisitosViaje = dynamic(() => import("@/components/RequisitosViaje"));
+const Paywall = dynamic(() => import("@/components/Paywall"));
+const Asesor = dynamic(() => import("@/components/Asesor"));
 
 // Destinos destacados con foto (fotos libres de Wikimedia Commons).
 // visitantes: turistas internacionales/año (millones, datos publicos UNWTO,
