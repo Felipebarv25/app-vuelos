@@ -1,5 +1,6 @@
 ﻿"use client";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { geocodificar, traerLugares, CATEGORIAS } from "@/lib/osm";
 import { traducirLoteWD, nombreLocalizado } from "@/lib/nombres";
@@ -196,6 +197,32 @@ const PAIS_GENTILICIO = {
 // Mensaje rotatorio durante carga larga: en vez del spinner mudo, se le cuenta
 // al usuario en que parte del proceso esta la app. Antes solo veia "Buscando los
 // mejores lugares..." durante hasta 8s, lo que se sentia trabado.
+// Cards de entrada del home (Opción A — 2026-06-24). Cada card linkea a su
+// sección. Diseño liviano: borde sutil, ícono en pill, copy corto, CTA discreto.
+function EntryCard({ href, icono, titulo, subtitulo, cta }) {
+  return (
+    <Link
+      href={href}
+      className="group block rounded-xl border border-slate-200 bg-white p-5 transition hover:border-marca-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-marca-500"
+    >
+      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-marca-50 text-marca-700 dark:bg-marca-900/30 dark:text-marca-300">
+        <EntryIcono nombre={icono} />
+      </div>
+      <div className="text-[14.5px] font-bold text-slate-900 dark:text-slate-100">{titulo}</div>
+      <div className="mt-0.5 text-[12.5px] text-slate-500 dark:text-slate-400">{subtitulo}</div>
+      <div className="mt-3 text-[12.5px] font-semibold text-marca-700 transition group-hover:underline dark:text-marca-300">{cta}</div>
+    </Link>
+  );
+}
+
+function EntryIcono({ nombre }) {
+  const p = { width: 20, height: 20, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+  if (nombre === "globe") return (<svg {...p}><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>);
+  if (nombre === "plane") return (<svg {...p}><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" /></svg>);
+  if (nombre === "bookmark") return (<svg {...p}><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>);
+  return null;
+}
+
 function MensajeCargandoLugares({ t }) {
   const [fase, setFase] = useState(0);
   useEffect(() => {
@@ -974,8 +1001,10 @@ export default function Home() {
           {/* Barra de navegación superior. max-w aumentado y px reducido para
               que el logo respire MAS hacia la izquierda y los controles a la
               derecha — el contenido centrado queda intacto (su propio max-w-2xl
-              más abajo). */}
+              más abajo). Logo + nav links agrupados a la izquierda; cluster
+              de usuario a la derecha. */}
           <div className="flex items-center justify-between gap-3 lg:gap-5">
+            <div className="flex items-center gap-4 lg:gap-7">
             <button
               type="button"
               onClick={irAlInicio}
@@ -1009,6 +1038,41 @@ export default function Home() {
                 {t("tagline")}
               </div>
             </button>
+            {/* Nav links principales (Opción A — 2026-06-24). Solo visible en
+                md+. En mobile el usuario navega desde las cards del cuerpo. */}
+            <nav className="hidden items-center gap-1 md:flex">
+              <Link
+                href="/destino"
+                className={`rounded-md px-3 py-1.5 text-[13px] font-medium transition ${
+                  esHero
+                    ? "text-white/85 hover:bg-white/15 hover:text-white"
+                    : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                }`}
+              >
+                Destinos
+              </Link>
+              <Link
+                href="/ofertas"
+                className={`rounded-md px-3 py-1.5 text-[13px] font-medium transition ${
+                  esHero
+                    ? "text-white/85 hover:bg-white/15 hover:text-white"
+                    : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                }`}
+              >
+                Ofertas
+              </Link>
+              <Link
+                href="/mis-viajes"
+                className={`rounded-md px-3 py-1.5 text-[13px] font-medium transition ${
+                  esHero
+                    ? "text-white/85 hover:bg-white/15 hover:text-white"
+                    : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                }`}
+              >
+                Mis viajes
+              </Link>
+            </nav>
+            </div>
             {/* Cluster top-right. Ligeramente mas grande (h-9 vs h-8), gap mayor
                 y empujado contra el borde derecho del max-w del header. */}
             <div className="flex items-center gap-2.5 lg:gap-3.5">
@@ -1287,9 +1351,42 @@ export default function Home() {
 
       {!ciudad && !cargando && (
         <div className="relative z-10 -mt-8 rounded-t-[32px] bg-[#f6f7fb] pt-2 print:hidden dark:bg-slate-900 lg:-mt-12">
-        <div className="animar-subir mx-auto max-w-7xl px-4 pb-4 pt-7 lg:px-8">
-          {/* Mis viajes guardados (en este dispositivo) */}
-          {viajesGuardados.length > 0 && (
+        <div className="animar-subir mx-auto max-w-5xl px-4 pb-4 pt-8 lg:px-8 lg:pt-12">
+          {/* Entry cards principales (Opción A — 2026-06-24): el home post-login
+              ya no apila destinos/ofertas/fechas/viajes en scroll largo. En su
+              lugar 3 cards que llevan a cada sección con su propia URL.
+              Recomendados se mantiene si hay perfil. */}
+          <div className="mb-2 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-marca-700 dark:text-marca-300">
+            O explora sin pensar en presupuesto
+          </div>
+          <div className="mx-auto mb-7 h-px w-12 bg-slate-300 dark:bg-slate-700" />
+          <div className="grid gap-3 sm:grid-cols-3">
+            <EntryCard
+              href="/destino"
+              icono="globe"
+              titulo="Destinos populares"
+              subtitulo="80+ ciudades del mundo"
+              cta="Ver destinos →"
+            />
+            <EntryCard
+              href="/ofertas"
+              icono="plane"
+              titulo="Vuelos baratos"
+              subtitulo="Detectados cada 3 h"
+              cta="Ver ofertas →"
+            />
+            <EntryCard
+              href="/mis-viajes"
+              icono="bookmark"
+              titulo="Mis viajes"
+              subtitulo={viajesGuardados.length > 0 ? `${viajesGuardados.length} guardado${viajesGuardados.length === 1 ? "" : "s"}` : "Empieza a guardar"}
+              cta="Ver mis viajes →"
+            />
+          </div>
+
+          {/* (Bloque anterior comentado — se conservó como referencia y se
+              eliminará en la próxima limpieza una vez confirmado el patrón A.) */}
+          {false && viajesGuardados.length > 0 && (
             <div className="mt-10">
               <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-marca-500">
                 {t("misViajesEyebrow")}
