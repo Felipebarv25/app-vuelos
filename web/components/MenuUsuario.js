@@ -94,7 +94,15 @@ export default function MenuUsuario({ oscuro = false }) {
             {inicial}
           </span>
         )}
-        <span className="hidden text-[13px] font-bold sm:inline">{usuario.nombre || t("defaultNombre")}</span>
+        <span className="hidden max-w-[120px] truncate text-[13px] font-semibold sm:inline">
+          {(() => {
+            const nombre = usuario.nombre || t("defaultNombre");
+            // Solo primer nombre, capitalizado. "felipe barrera vargas" -> "Felipe".
+            // El nombre completo va en el dropdown abierto (linea 110).
+            const primer = nombre.trim().split(/\s+/)[0] || "";
+            return primer.charAt(0).toUpperCase() + primer.slice(1).toLowerCase();
+          })()}
+        </span>
         {pro && (
           <span className="rounded-full bg-amber-400 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-amber-900">
             ★

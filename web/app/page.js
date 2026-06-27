@@ -985,21 +985,21 @@ export default function Home() {
               <span
                 className={`inline-flex items-center ${
                   esHero
-                    ? "rounded-2xl bg-marca-900/35 px-4 py-2 backdrop-blur-md ring-1 ring-white/20"
+                    ? "rounded-xl bg-marca-950/25 px-3 py-1.5 backdrop-blur-sm ring-1 ring-white/15"
                     : ""
                 }`}
               >
                 <LogoMarca
-                  size={esHero ? 72 : 60}
+                  size={esHero ? 56 : 60}
                   animado
                   tono={esHero ? "claro" : "marca"}
-                  className={esHero ? "[filter:drop-shadow(0_2px_6px_rgba(0,0,0,0.45))_drop-shadow(0_1px_2px_rgba(0,0,0,0.6))]" : ""}
+                  className={esHero ? "[filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.5))]" : ""}
                 />
               </span>
               <div
-                className={`mt-2 hidden text-[11px] font-bold uppercase tracking-[0.28em] sm:block sm:text-[12px] ${
+                className={`mt-1.5 hidden text-[10px] font-bold uppercase tracking-[0.32em] sm:block ${
                   esHero
-                    ? "pl-4 text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.7)]"
+                    ? "pl-3 text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.7)]"
                     : "text-slate-500"
                 }`}
               >
@@ -1045,22 +1045,35 @@ export default function Home() {
                "busca una ciudad". El input de presupuesto pasa a ser el CTA
                principal; la busqueda por ciudad queda como opcion secundaria
                desplegable. */
-            <div className="mx-auto mt-10 max-w-2xl text-center lg:mt-16">
-              {viajerosVivos != null && viajerosVivos > 0 && (
-                <div className="mb-4 flex justify-center">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur">
+            <div className="mx-auto mt-8 max-w-2xl text-center lg:mt-12">
+              {/* Fila superior: viajeros en linea + saludo en MISMA linea separados
+                  por un divisor. Antes ocupaban 2 lineas con mb-4 + mb-3 que se
+                  sentia demasiado airy. Ahora una sola fila ligera. */}
+              <div className="mb-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[12.5px] text-white/90">
+                {viajerosVivos != null && viajerosVivos > 0 && (
+                  <span className="inline-flex items-center gap-1.5">
                     <span className="relative flex h-2 w-2">
                       <span className="absolute inset-0 animate-ping rounded-full bg-emerald-300 opacity-75" />
                       <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                     </span>
-                    {viajerosVivos.toLocaleString(lang)} {viajerosVivos === 1 ? t("viajeroEnLinea") : t("viajerosEnLinea")}
+                    <span className="font-medium">
+                      {viajerosVivos.toLocaleString(lang)} {viajerosVivos === 1 ? t("viajeroEnLinea") : t("viajerosEnLinea")}
+                    </span>
                   </span>
-                </div>
-              )}
-              {/* Saludo personalizado (solo primer nombre — surnames suelen ser largos
-                  y este es un saludo casual, no formal). */}
-              <div className="mb-3 text-[14px] font-semibold text-white/85">
-                {t(saludoClave())}, {(usuario.nombre || "").split(" ")[0]} 👋
+                )}
+                {viajerosVivos != null && viajerosVivos > 0 && (
+                  <span className="text-white/30">·</span>
+                )}
+                {/* Saludo personalizado — primer nombre CAPITALIZADO ("felipe" ->
+                    "Felipe"). El emoji 👋 se conserva como toque humano del saludo. */}
+                <span className="font-medium">
+                  {t(saludoClave())},{" "}
+                  {(() => {
+                    const p = (usuario.nombre || "").trim().split(/\s+/)[0] || "";
+                    return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
+                  })()}{" "}
+                  <span aria-hidden="true">👋</span>
+                </span>
               </div>
               {/* Eyebrow "PLAN TU VIAJE DESDE …" y subtítulo removidos
                   2026-06-23: el usuario reportó demasiada densidad de info
@@ -1118,23 +1131,29 @@ export default function Home() {
                 </div>
               </form>
 
-              {/* Quick amounts — botones secundarios discretos como texto.
-                  Menos énfasis visual: el CTA principal es la tarjeta de
-                  arriba; estos son atajos. */}
-              <div className="mx-auto mt-4 flex max-w-xl flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[12.5px]">
-                <span className="text-white/60">{lang === "en" ? "Quick:" : lang === "pt" ? "Rápido:" : lang === "fr" ? "Rapide :" : "Rápido:"}</span>
-                {[
-                  { monto: 5000000, moneda: "COP", label: "$5M COP" },
-                  { monto: 10000000, moneda: "COP", label: "$10M COP" },
-                  { monto: 20000000, moneda: "COP", label: "$20M COP" },
-                  { monto: 1500, moneda: "USD", label: "US$ 1.500" },
-                  { monto: 3000, moneda: "USD", label: "US$ 3.000" },
-                ].map((opt) => (
+              {/* Quick amounts — chips secundarios discretos. Antes eran 5 text-
+                  links que llenaban una línea entera con poco ritmo. Ahora 3
+                  chips estilizados que se ajustan según la moneda dominante
+                  del usuario (COP si vive en Colombia, USD si no). El CTA
+                  principal es la tarjeta de arriba; estos son atajos. */}
+              <div className="mx-auto mt-3 flex max-w-xl flex-wrap items-center justify-center gap-2">
+                {(monedaHero === "COP"
+                  ? [
+                      { monto: 5000000, label: "$ 5M" },
+                      { monto: 10000000, label: "$ 10M" },
+                      { monto: 20000000, label: "$ 20M" },
+                    ]
+                  : [
+                      { monto: 1500, label: `${simboloMoneda(monedaHero)} 1.500` },
+                      { monto: 3000, label: `${simboloMoneda(monedaHero)} 3.000` },
+                      { monto: 6000, label: `${simboloMoneda(monedaHero)} 6.000` },
+                    ]
+                ).map((opt) => (
                   <button
                     key={opt.label}
                     type="button"
-                    onClick={() => abrirPresupuestoCon(opt.monto, opt.moneda)}
-                    className="font-semibold text-white/85 underline-offset-4 transition hover:text-white hover:underline"
+                    onClick={() => abrirPresupuestoCon(opt.monto, monedaHero)}
+                    className="rounded-full border border-white/25 bg-white/5 px-3.5 py-1.5 text-[12.5px] font-medium text-white/90 backdrop-blur-sm transition hover:border-white/50 hover:bg-white/15 hover:text-white"
                   >
                     {opt.label}
                   </button>
@@ -1153,12 +1172,12 @@ export default function Home() {
                   COLAPSADA — solo aparece el link "o busca por ciudad" para
                   los que ya saben a donde. Mantiene la entrada por ciudad
                   accesible sin competir con el CTA principal de presupuesto. */}
-              <div className="mx-auto mt-7 flex max-w-xl items-center gap-3 text-[12px] text-white/70">
-                <span className="h-px flex-1 bg-white/25" />
+              <div className="mx-auto mt-6 flex max-w-xl items-center gap-3 text-[11px] text-white/55">
+                <span className="h-px flex-1 bg-white/15" />
                 <button
                   type="button"
                   onClick={() => setMostrarBuscarCiudad((v) => !v)}
-                  className="flex items-center gap-1 font-semibold uppercase tracking-[0.18em] text-white/80 transition hover:text-white"
+                  className="flex items-center gap-1 font-semibold uppercase tracking-[0.2em] text-white/70 transition hover:text-white"
                 >
                   {t("heroOSabesDestino")} <span className={`transition ${mostrarBuscarCiudad ? "rotate-180" : ""}`}>▾</span>
                 </button>

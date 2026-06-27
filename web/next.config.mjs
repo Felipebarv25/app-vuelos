@@ -14,7 +14,7 @@ const CSP_DIRECTIVES = [
   // + Google Fonts si todavía se usa.
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   // Imgs: self + data: + blob: + las fuentes de fotos que usamos.
-  "img-src 'self' data: blob: https://images.unsplash.com https://*.unsplash.com https://upload.wikimedia.org https://commons.wikimedia.org https://*.tile.openstreetmap.org https://*.googleusercontent.com",
+  "img-src 'self' data: blob: https://images.unsplash.com https://*.unsplash.com https://upload.wikimedia.org https://commons.wikimedia.org https://*.tile.openstreetmap.org https://*.googleusercontent.com https://flagcdn.com",
   // Fonts: self (next/font auto-hosts) + Google Fonts CDN fallback.
   "font-src 'self' data: https://fonts.gstatic.com",
   // Conexiones (fetch/XHR/EventSource/WebSocket): self + APIs que usa

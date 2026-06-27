@@ -19,6 +19,27 @@ const PAISES = Object.entries(PAISES_ISO).map(([cc, info]) => ({
     .replace(/[̀-ͯ]/g, ""),
 }));
 
+// Componente helper para mostrar la bandera del país como SVG/PNG via flagcdn.
+// Razón: los emoji de bandera (🇨🇴) NO renderizan en Windows (segoe UI emoji
+// no incluye flags por restricciones politicas de Microsoft) — se muestran
+// como "CO" y eso se ve mal. flagcdn sirve PNGs livianos de cualquier ISO.
+function Bandera({ cc, size = 18 }) {
+  if (!cc) return null;
+  const lo = cc.toLowerCase();
+  return (
+    <img
+      src={`https://flagcdn.com/${size}x${Math.round(size * 0.75)}/${lo}.png`}
+      srcSet={`https://flagcdn.com/${size * 2}x${Math.round(size * 1.5)}/${lo}.png 2x`}
+      alt={cc}
+      width={size}
+      height={Math.round(size * 0.75)}
+      className="inline-block rounded-[2px] align-middle"
+      loading="lazy"
+      onError={(e) => { e.currentTarget.style.display = "none"; }}
+    />
+  );
+}
+
 function buscarPaises(query) {
   const q = (query || "")
     .trim()
@@ -95,10 +116,19 @@ export default function SelectorPais({ value, onChange, className = "" }) {
         aria-haspopup="listbox"
         aria-expanded={abierto}
       >
-        <span className="text-base leading-none">📍</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>
         <span className="text-white/75">Detectado:</span>
-        <span>{paisActual ? `${paisActual.bandera} ${paisActual.nombre}` : "—"}</span>
-        <span className="text-[11px] text-white/60">✎</span>
+        <span className="inline-flex items-center gap-1.5">
+          {paisActual && <Bandera cc={paisActual.cc} size={18} />}
+          <span>{paisActual ? paisActual.nombre : "—"}</span>
+        </span>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
       </button>
 
       {abierto && (
@@ -129,7 +159,7 @@ export default function SelectorPais({ value, onChange, className = "" }) {
                         : "text-slate-700 hover:bg-slate-50"
                     } ${p.cc === value ? "font-bold" : ""}`}
                   >
-                    <span className="text-base">{p.bandera}</span>
+                    <Bandera cc={p.cc} size={20} />
                     <span className="flex-1 truncate">{p.nombre}</span>
                     <span className="shrink-0 font-mono text-[11px] text-slate-400">{p.cc}</span>
                   </button>
