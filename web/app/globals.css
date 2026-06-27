@@ -38,12 +38,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Cursor de marca Anduve (avión de papel teal + sombra coral). Hotspot
-   en la punta de adelante del avión (3, 4) — es donde el usuario "señala".
-   Fallback `auto` si el SVG no carga. Se sobreescribe a `text` en inputs
-   y `pointer` natural en links/botones para mantener semántica accesible. */
+/* Cursor de marca Anduve (flecha teal con punto coral). Hotspot en la
+   punta de la flecha (4, 2) — es donde el usuario "señala". Fallback
+   `auto` si el SVG no carga. Se sobreescribe a `text` en inputs y
+   `pointer` natural en links/botones para mantener semántica accesible. */
 html {
-  cursor: url('/cursors/avion.svg') 3 4, auto;
+  cursor: url('/cursors/flecha.svg') 4 2, auto;
 }
 input[type="text"],
 input[type="email"],
@@ -62,7 +62,7 @@ button,
 select,
 summary,
 label[for] {
-  cursor: url('/cursors/avion.svg') 3 4, pointer;
+  cursor: url('/cursors/flecha.svg') 4 2, pointer;
 }
 
 /* Una sola tipografía en todo el sistema (Plus Jakarta Sans). Los h1/h2
