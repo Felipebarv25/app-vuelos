@@ -19,7 +19,7 @@ import SelectorMoneda from "@/components/SelectorMoneda";
 import SelectorPais from "@/components/SelectorPais";
 import { monedaDePais, simboloMoneda } from "@/lib/monedas";
 import CardDestino from "@/components/CardDestino";
-import Ofertas from "@/components/Ofertas";
+import MiniOfertas from "@/components/MiniOfertas";
 import { AfiliadosCiudad } from "@/components/Afiliados";
 import { listarViajesAsync, guardarViajeAsync, borrarViajeAsync } from "@/lib/viajes";
 import { LogoMarca } from "@/components/Logo";
@@ -1455,63 +1455,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* Destinos con foto */}
-          <div className="mb-4 mt-10">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-marca-500">
-              {t("destinosEyebrow")}
-            </div>
-            <h2 className="mt-1 text-[20px] font-extrabold tracking-tight text-marca-900 lg:text-[26px]">
-              {t("pruebaPopular")}
-            </h2>
-          </div>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-4">
-            {DESTINOS_DESTACADOS.map((d) => (
-              <CardDestino key={d.q} nombre={d.nombre} pais={d.pais} hint={d.hint}
-                visitantes={d.visitantes}
-                onClick={() => buscarTexto(d.q)} />
-            ))}
-          </div>
-
-          {/* Chips de beneficios removidos del post-login el 2026-06-XX —
-              movidos al landing pre-login con descripciones para atraer
-              usuarios nuevos. Quien ya está logueado conoce las features. */}
-
-          {/* ¿Cuándo viajas? Rango de fechas que alimenta vuelos + itinerario. */}
-          <div className="mt-10 rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
-            <div className="flex flex-wrap items-end gap-3">
-              <div className="mr-auto">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-marca-500">
-                  {t("cuandoEyebrow")}
-                </div>
-                <div className="mt-0.5 text-[15px] font-extrabold text-marca-900">{t("cuandoTitulo")}</div>
-              </div>
-              <label className="flex flex-col gap-1 text-[12.5px] font-semibold text-slate-600">
-                <span className="inline-flex items-center gap-1.5"><Icono nombre="planeTakeoff" size={15} /> {t("fechaIda")}</span>
-                <input type="date" value={fechaInicio} min={new Date().toISOString().slice(0, 10)}
-                  onChange={(e) => aplicarFechas(e.target.value, fechaFin)}
-                  className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[14px]" />
-              </label>
-              <label className="flex flex-col gap-1 text-[12.5px] font-semibold text-slate-600">
-                <span className="inline-flex items-center gap-1.5"><Icono nombre="planeLanding" size={15} /> {t("fechaVuelta")}</span>
-                <input type="date" value={fechaFin} min={fechaInicio || new Date().toISOString().slice(0, 10)}
-                  onChange={(e) => aplicarFechas(fechaInicio, e.target.value)}
-                  className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[14px]" />
-              </label>
-              {fechaInicio && fechaFin && (
-                <span className="pb-2 text-[12.5px] font-semibold text-emerald-600">
-                  ✓ {diasEntre(fechaInicio, fechaFin)} {t("dias").toLowerCase()}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Vuelos baratos desde Colombia (detector de precios) */}
-          <Ofertas
-            t={t}
-            lang={lang}
-            rango={fechaInicio && fechaFin ? { inicio: fechaInicio, fin: fechaFin } : null}
-            onPlanear={(q) => { buscarTexto(q); }}
-          />
+          <MiniOfertas t={t} lang={lang} onPlanear={(q) => buscarTexto(q)} />
         </div>
         </div>
       )}
