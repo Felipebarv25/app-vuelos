@@ -38,6 +38,33 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Cursor de marca Anduve (avión de papel teal + sombra coral). Hotspot
+   en la punta de adelante del avión (3, 4) — es donde el usuario "señala".
+   Fallback `auto` si el SVG no carga. Se sobreescribe a `text` en inputs
+   y `pointer` natural en links/botones para mantener semántica accesible. */
+html {
+  cursor: url('/cursors/avion.svg') 3 4, auto;
+}
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="password"],
+textarea,
+[contenteditable="true"] {
+  cursor: text;
+}
+a,
+button,
+[role="button"],
+select,
+summary,
+label[for] {
+  cursor: url('/cursors/avion.svg') 3 4, pointer;
+}
+
 /* Una sola tipografía en todo el sistema (Plus Jakarta Sans). Los h1/h2
    heredan del body — antes usaban Fraunces (serif display), removido
    2026-06-23 a pedido del usuario para unificar typo. */
