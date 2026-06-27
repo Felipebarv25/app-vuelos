@@ -4,13 +4,17 @@
 // en el dropdown del MenuUsuario. Ahora tiene URL propia (compartible y mejor
 // estructura). Al hacer click en "Abrir" navega al home con
 // ?destino=ciudad-slug para reconstruir el viaje.
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useApp } from "@/lib/AppContext";
 import { listarViajesAsync, borrarViajeAsync } from "@/lib/viajes";
 import NavTop from "@/components/NavTop";
+import FooterAnduve from "@/components/FooterAnduve";
 import { Icono } from "@/components/Icono";
+
+const Asesor = dynamic(() => import("@/components/Asesor"));
 
 export default function PaginaMisViajes() {
   const { t, lang, usuario } = useApp();
@@ -135,6 +139,18 @@ export default function PaginaMisViajes() {
           </div>
         )}
       </main>
+
+      <FooterAnduve />
+
+      {/* Brújula flotante coherente con home y /ofertas. */}
+      <div className="print:hidden">
+        <Asesor
+          t={t}
+          usuario={usuario}
+          onPlanear={(q) => router.push(`/?q=${encodeURIComponent(q)}`)}
+          onAbrirPresupuesto={() => router.push("/?presupuesto=1")}
+        />
+      </div>
     </div>
   );
 }

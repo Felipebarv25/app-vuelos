@@ -4,15 +4,21 @@
 // su propia URL (compartible) y nav top. Al hacer click en una oferta o
 // "Planear", navega al home con ?q=Ciudad,Pais para que arranque el flujo
 // de planificacion.
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useApp } from "@/lib/AppContext";
 import NavTop from "@/components/NavTop";
 import Ofertas from "@/components/Ofertas";
+import FooterAnduve from "@/components/FooterAnduve";
 import { Icono } from "@/components/Icono";
 
+// Brújula: chat flotante de marca. Solo se carga cuando hace falta (lazy)
+// para no penalizar el LCP de la ruta.
+const Asesor = dynamic(() => import("@/components/Asesor"));
+
 export default function PaginaOfertas() {
-  const { t, lang } = useApp();
+  const { t, lang, usuario } = useApp();
   const router = useRouter();
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
@@ -92,6 +98,20 @@ export default function PaginaOfertas() {
           onPlanear={planear}
         />
       </main>
+
+      <FooterAnduve />
+
+      {/* Brújula flotante. onPlanear navega al home con la consulta;
+          onAbrirPresupuesto va al home con ?presupuesto=1 que la home lee
+          para abrir el modal automaticamente. */}
+      <div className="print:hidden">
+        <Asesor
+          t={t}
+          usuario={usuario}
+          onPlanear={(q) => router.push(`/?q=${encodeURIComponent(q)}`)}
+          onAbrirPresupuesto={() => router.push("/?presupuesto=1")}
+        />
+      </div>
     </div>
   );
 }

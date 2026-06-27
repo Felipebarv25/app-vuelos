@@ -30,6 +30,7 @@ import { track, trackVisita } from "@/lib/track";
 import { registrarEvento, obtenerRecomendaciones } from "@/lib/perfil";
 import { useBrowserBackClose } from "@/lib/useBrowserBack";
 import MenuUsuario from "@/components/MenuUsuario";
+import FooterAnduve from "@/components/FooterAnduve";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
 // Modales y bloques cargados sólo cuando el usuario los necesita. Salen del
@@ -197,26 +198,51 @@ const PAIS_GENTILICIO = {
 // Mensaje rotatorio durante carga larga: en vez del spinner mudo, se le cuenta
 // al usuario en que parte del proceso esta la app. Antes solo veia "Buscando los
 // mejores lugares..." durante hasta 8s, lo que se sentia trabado.
-// Cards de entrada del home (Opción A — 2026-06-24). Cada card linkea a su
-// sección. Diseño liviano: borde sutil, ícono en pill, copy corto, CTA discreto.
-function EntryCard({ href, icono, titulo, subtitulo, cta }) {
+// Cards de entrada del home (Opción A — 2026-06-24, refinada 2026-06-25 con
+// foto de fondo). Cada card linkea a su sección. Diseño con altura fija +
+// foto de fondo + overlay teal degradado de abajo hacia arriba para legibilidad
+// del texto. Hover sube ligeramente la card y oscurece el overlay para feedback.
+function EntryCard({ href, icono, titulo, subtitulo, cta, bg }) {
   return (
     <Link
       href={href}
-      className="group block rounded-xl border border-slate-200 bg-white p-5 transition hover:border-marca-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-marca-500"
+      className="group relative block aspect-[3/4] overflow-hidden rounded-xl shadow-card transition hover:-translate-y-0.5 hover:shadow-modal sm:aspect-[5/6]"
     >
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-marca-50 text-marca-700 dark:bg-marca-900/30 dark:text-marca-300">
-        <EntryIcono nombre={icono} />
+      {/* Foto de fondo */}
+      <div
+        className="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-105"
+        style={{ backgroundImage: `url(${bg})` }}
+      />
+      {/* Overlay teal degradado: oscuro abajo (para legibilidad del título) y
+          casi transparente arriba (para que la foto se vea). En hover el
+          overlay se oscurece ligeramente. */}
+      <div className="absolute inset-0 bg-gradient-to-t from-marca-950/95 via-marca-900/60 to-marca-900/10 transition group-hover:from-marca-950" />
+      {/* Contenido */}
+      <div className="relative flex h-full flex-col justify-between p-5">
+        <div className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-white/15 text-white backdrop-blur-sm ring-1 ring-white/25">
+          <EntryIcono nombre={icono} />
+        </div>
+        <div>
+          <div className="text-[16.5px] font-extrabold leading-tight tracking-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.5)]">
+            {titulo}
+          </div>
+          <div className="mt-1 text-[12.5px] text-white/85 [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
+            {subtitulo}
+          </div>
+          <div className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-bold text-white transition group-hover:translate-x-0.5">
+            {cta}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M13 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
       </div>
-      <div className="text-[14.5px] font-bold text-slate-900 dark:text-slate-100">{titulo}</div>
-      <div className="mt-0.5 text-[12.5px] text-slate-500 dark:text-slate-400">{subtitulo}</div>
-      <div className="mt-3 text-[12.5px] font-semibold text-marca-700 transition group-hover:underline dark:text-marca-300">{cta}</div>
     </Link>
   );
 }
 
 function EntryIcono({ nombre }) {
-  const p = { width: 20, height: 20, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+  const p = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
   if (nombre === "globe") return (<svg {...p}><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>);
   if (nombre === "plane") return (<svg {...p}><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" /></svg>);
   if (nombre === "bookmark") return (<svg {...p}><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>);
@@ -1366,70 +1392,28 @@ export default function Home() {
               icono="globe"
               titulo="Destinos populares"
               subtitulo="80+ ciudades del mundo"
-              cta="Ver destinos →"
+              cta="Ver destinos"
+              bg="/landing-hero-4.jpg"
             />
             <EntryCard
               href="/ofertas"
               icono="plane"
               titulo="Vuelos baratos"
-              subtitulo="Detectados cada 3 h"
-              cta="Ver ofertas →"
+              subtitulo="Detectados cada 3 horas"
+              cta="Ver ofertas"
+              bg="/landing-hero-1.jpg"
             />
+            {/* Si no hay viajes guardados, el CTA invita a planear (no a una
+                pantalla vacia). Cuando guardas algo, cambia a "Ver mis viajes". */}
             <EntryCard
-              href="/mis-viajes"
+              href={viajesGuardados.length > 0 ? "/mis-viajes" : "/?planear=1"}
               icono="bookmark"
               titulo="Mis viajes"
-              subtitulo={viajesGuardados.length > 0 ? `${viajesGuardados.length} guardado${viajesGuardados.length === 1 ? "" : "s"}` : "Empieza a guardar"}
-              cta="Ver mis viajes →"
+              subtitulo={viajesGuardados.length > 0 ? `${viajesGuardados.length} guardado${viajesGuardados.length === 1 ? "" : "s"}` : "Empieza a planear tu primer viaje"}
+              cta={viajesGuardados.length > 0 ? "Ver mis viajes" : "Planear viaje"}
+              bg="/landing-hero-6.jpg"
             />
           </div>
-
-          {/* (Bloque anterior comentado — se conservó como referencia y se
-              eliminará en la próxima limpieza una vez confirmado el patrón A.) */}
-          {false && viajesGuardados.length > 0 && (
-            <div className="mt-10">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-marca-500">
-                {t("misViajesEyebrow")}
-              </div>
-              <h2 className="mt-1 text-[20px] font-extrabold tracking-tight text-marca-900 lg:text-[26px]">
-                {t("misViajesTitulo")}
-                {usuario?.google && (
-                  <span className="ml-2 inline-flex items-center gap-1 align-middle text-[11px] font-bold uppercase tracking-wide text-emerald-700">
-                    <Icono nombre="check" size={12} /> {t("misViajesSync")}
-                  </span>
-                )}
-              </h2>
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {viajesGuardados.map((v) => (
-                  <div key={v.id} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3.5 shadow-suave dark:border-slate-700 dark:bg-slate-800">
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-[15px] font-extrabold text-marca-900">{v.ciudad?.nombre}</div>
-                      <div className="truncate text-[12.5px] text-slate-500">
-                        {v.ciudad?.pais}
-                        {v.fechaInicio && v.fechaFin
-                          ? ` · ${new Date(v.fechaInicio + "T00:00:00").toLocaleDateString(lang, { day: "numeric", month: "short" })}–${new Date(v.fechaFin + "T00:00:00").toLocaleDateString(lang, { day: "numeric", month: "short" })}`
-                          : ` · ${v.dias} ${t("dias").toLowerCase()}`}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => reabrirViaje(v)}
-                      className="shrink-0 rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-3 py-2 text-[12.5px] font-bold text-white shadow-marca transition hover:brightness-105"
-                    >
-                      {t("misViajesReabrir")}
-                    </button>
-                    <button
-                      onClick={() => eliminarViaje(v.id)}
-                      aria-label={t("misViajesEliminar")}
-                      title={t("misViajesEliminar")}
-                      className="flex shrink-0 items-center rounded-lg px-2 py-2 text-slate-300 transition hover:bg-red-50 hover:text-red-500"
-                    >
-                      <Icono nombre="x" size={15} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Recomendaciones personalizadas: solo si el usuario tiene perfil
               con datos. Ordenado por afinidad con los gustos acumulados. */}
@@ -1824,45 +1808,9 @@ export default function Home() {
         </div>
       )}
 
-      <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-slate-400 print:hidden dark:text-slate-500 lg:px-8">
-        {/* Enlaces a las landing pages SEO desde la home */}
-        <div className="mb-3 flex flex-wrap justify-center gap-3 text-[12.5px] font-semibold text-slate-500">
-          <a href="/destino" className="hover:text-marca-600 hover:underline">
-            Ver 80 destinos
-          </a>
-          <span className="text-slate-300">·</span>
-          <a href="/comparar" className="hover:text-marca-600 hover:underline">
-            Comparar destinos
-          </a>
-        </div>
-        <div>{t("footer")} · Anduve</div>
-        <div className="mt-1 text-[11px] text-slate-400">
-          Datos de lugares: ©{" "}
-          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" className="underline hover:text-marca-600">
-            OpenStreetMap
-          </a>{" "}
-          (ODbL) ·{" "}
-          <a href="https://es.wikivoyage.org/" target="_blank" rel="noopener" className="underline hover:text-marca-600">
-            Wikivoyage
-          </a>
-          /{" "}
-          <a href="https://www.wikidata.org/" target="_blank" rel="noopener" className="underline hover:text-marca-600">
-            Wikidata
-          </a>{" "}
-          (CC BY-SA) · Popularidad: Amadeus
-        </div>
-        <div className="mt-1 text-[11px] text-slate-400">
-          Requisitos de visa:{" "}
-          <a href="https://github.com/ilyankou/passport-index-dataset" target="_blank" rel="noopener" className="underline hover:text-marca-600">
-            Passport Index
-          </a>{" "}
-          · Países:{" "}
-          <a href="https://restcountries.com/" target="_blank" rel="noopener" className="underline hover:text-marca-600">
-            REST Countries
-          </a>
-          {" "}· Información referencial, verifica en fuentes oficiales.
-        </div>
-      </footer>
+      {/* Footer compartido — extraido a FooterAnduve component para que
+          /ofertas y /mis-viajes lo reusen sin duplicar markup. */}
+      <FooterAnduve />
 
       {/* Toasts: confirmaciones rápidas para acciones del usuario */}
       <Toast mostrar={guardado} texto={t("guardado")} icono="check" />
