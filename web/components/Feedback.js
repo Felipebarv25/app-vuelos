@@ -9,8 +9,11 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useApp } from "@/lib/AppContext";
 import { Icono } from "./Icono";
+import { useBrowserBackClose } from "@/lib/useBrowserBack";
 
 export default function Feedback({ abierto, onCerrar, onEnviado }) {
+  // Flecha "atrás" del navegador cierra el modal en vez de salir del sitio.
+  useBrowserBackClose(abierto, () => onCerrar?.());
   const { t, usuario, lang } = useApp();
   const [like, setLike] = useState("");
   const [dislike, setDislike] = useState("");

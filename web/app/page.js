@@ -27,6 +27,7 @@ import Toast from "@/components/Toast";
 import { useApp } from "@/lib/AppContext";
 import { track, trackVisita } from "@/lib/track";
 import { registrarEvento, obtenerRecomendaciones } from "@/lib/perfil";
+import { useBrowserBackClose } from "@/lib/useBrowserBack";
 import MenuUsuario from "@/components/MenuUsuario";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
@@ -610,6 +611,12 @@ export default function Home() {
     setRutaTrazada(null);
     setError(null);
   }
+
+  // Flecha "atrás" del navegador cuando se está dentro de una ciudad: vuelve
+  // al menú principal (post-login) en vez de sacar al usuario al pre-login.
+  // El hook registra una entrada artificial en el history cuando hay ciudad
+  // y la consume cuando el usuario aprieta ←.
+  useBrowserBackClose(!!ciudad, irAlInicio);
 
   // Autocompletado con debounce (rápido, sin saturar la red)
   useEffect(() => {

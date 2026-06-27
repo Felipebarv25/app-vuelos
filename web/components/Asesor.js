@@ -2,11 +2,14 @@
 import { useEffect, useRef, useState } from "react";
 import { construirRuta, REGIONES, MONEDAS } from "@/lib/presupuesto";
 import { Icono } from "./Icono";
+import { useBrowserBackClose } from "@/lib/useBrowserBack";
 
 // Asesor de viajes (modo GRATIS): chat guiado por botones que usa NUESTRO motor
 // de rutas/presupuesto. Cero costo, todo en el código (sin IA).
 export default function Asesor({ t = (k) => k, usuario, onPlanear, onAbrirPresupuesto }) {
   const [abierto, setAbierto] = useState(false);
+  // Flecha "atrás" del navegador cierra el chat en vez de salir del sitio.
+  useBrowserBackClose(abierto, () => setAbierto(false));
   // El modo IA (ChatIA) está desactivado por ahora: solo mostramos la guía
   // gratis (sin costo). Para reactivarlo: recuperar el componente ChatIA del
   // historial de git, restaurar el conmutador de modo aquí y configurar

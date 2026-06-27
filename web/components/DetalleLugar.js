@@ -10,6 +10,7 @@ import { BotonTourLugar } from "./Afiliados";
 import { Icono, iconoCategoria } from "./Icono";
 import BadgeApertura from "./BadgeApertura";
 import { nombreLocalizado } from "@/lib/nombres";
+import { useBrowserBackClose } from "@/lib/useBrowserBack";
 
 // Distancia legible (m / km).
 function fmtDist(m) {
@@ -27,6 +28,10 @@ function gmapsModo(modo) {
 // foto, descripción, y cómo llegar desde la ubicación del usuario
 // (transporte, tiempo, costo y ruta dibujada en nuestro mapa).
 export default function DetalleLugar({ lugar, ciudad, origen, husoDestino, onCerrar, onTrazarRuta, onAgregar, t = (k) => k, lang = "es" }) {
+  // Flecha "atrás" del navegador cierra este modal en vez de sacar al usuario
+  // hacia el pre-login. El modal solo se monta cuando hay lugar, así que el
+  // hook registra/limpia la entrada de history en mount/unmount.
+  useBrowserBackClose(true, onCerrar);
   const nombreLug = nombreLocalizado(lugar, lang);
   const [foto, setFoto] = useState(null);
   const [cargandoFoto, setCargandoFoto] = useState(true);

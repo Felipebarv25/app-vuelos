@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Icono } from "./Icono";
 import { track } from "@/lib/track";
+import { useBrowserBackClose } from "@/lib/useBrowserBack";
 
 // Paywall modal. Se abre desde cualquier feature gateada (PDF, 2do viaje,
 // 2da alerta, grafico de precios). Muestra los 3 precios con el plan anual
@@ -24,6 +25,9 @@ export default function Paywall({
   onCerrar,
   t = (k) => k,
 }) {
+  // Flecha "atrás" del navegador cierra el paywall en vez de mandar al
+  // pre-login. Solo se monta cuando esta visible.
+  useBrowserBackClose(true, onCerrar);
   const [planFocado, setPlanFocado] = useState("anual");
   // Resolver las URLs de checkout. Vienen via process.env solo si estan
   // marcadas NEXT_PUBLIC_ (Next.js las exporta al cliente).

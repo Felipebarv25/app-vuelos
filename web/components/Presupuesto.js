@@ -14,6 +14,7 @@ import {
   MONEDAS,
 } from "@/lib/presupuesto";
 import { obtenerPreciosReales, buscarVueloEnVivo } from "@/lib/preciosVuelos";
+import { useBrowserBackClose } from "@/lib/useBrowserBack";
 import { fmtDuracion } from "@/lib/tramos";
 import { linkVuelos, linkGoogleFlights, linkHoteles } from "@/lib/afiliados";
 import { obtenerTasas, aUsdDe } from "@/lib/fx";
@@ -26,6 +27,10 @@ import SelectorAeropuerto, { banderaDePais } from "./SelectorAeropuerto";
 //  - Ruta multiciudad: arma una ruta de varias ciudades dentro del presupuesto,
 //    con botón para regenerar otra ruta.
 export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, inicial = null }) {
+  // Que la flecha "atrás" del navegador cierre este modal en vez de sacar al
+  // usuario al pre-login. Como el componente solo se monta cuando esta abierto,
+  // pasamos true fijo: el hook registra/limpia history en mount/unmount.
+  useBrowserBackClose(true, onCerrar);
   const [modo, setModo] = useState("ruta"); // "ruta" | "destino"
   // `inicial` permite que el HERO abra este modal pre-llenado con el monto+moneda
   // que el usuario tipeo en el input principal de la home. Sin override quedan

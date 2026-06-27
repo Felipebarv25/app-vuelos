@@ -16,10 +16,13 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useApp } from "@/lib/AppContext";
 import { Icono } from "./Icono";
+import { useBrowserBackClose } from "@/lib/useBrowserBack";
 
 export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, label = null }) {
   const { t, lang, usuario, abrirPaywall } = useApp();
   const [abierto, setAbierto] = useState(false);
+  // Flecha "atrás" del navegador cierra este modal en vez de salir del sitio.
+  useBrowserBackClose(abierto, () => setAbierto(false));
   const [umbral, setUmbral] = useState(() =>
     precioActual && Number.isFinite(precioActual)
       ? Math.round(precioActual * 0.8)
