@@ -73,7 +73,7 @@ export default function MenuUsuario({ oscuro = false }) {
       <button
         type="button"
         onClick={() => setAbierto((v) => !v)}
-        className={`flex items-center gap-2 rounded-full border px-2 py-1 transition ${
+        className={`flex items-center gap-2 rounded-full border px-2.5 py-1.5 transition ${
           oscuro
             ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
             : "border-slate-200 bg-white text-slate-700 hover:border-marca-200"
@@ -84,11 +84,11 @@ export default function MenuUsuario({ oscuro = false }) {
           <img
             src={usuario.foto}
             alt=""
-            className="h-7 w-7 rounded-full border border-white/30 object-cover"
+            className="h-8 w-8 rounded-full border border-white/30 object-cover"
             referrerPolicy="no-referrer"
           />
         ) : (
-          <span className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-extrabold ${
+          <span className={`flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-extrabold ${
             oscuro ? "bg-white/25 text-white" : "bg-marca-100 text-marca-700"
           }`}>
             {inicial}

@@ -970,9 +970,12 @@ export default function Home() {
           {CIUDADES_POPULARES.map((c) => (<option key={c} value={c} />))}
         </datalist>
 
-        <div className={`relative mx-auto max-w-7xl px-4 lg:px-8 ${esHero ? "pt-5 pb-16 lg:pb-24" : "pt-3 pb-3"}`}>
-          {/* Barra de navegación superior */}
-          <div className="flex items-center justify-between gap-4">
+        <div className={`relative mx-auto max-w-[1480px] px-3 lg:px-5 ${esHero ? "pt-3 pb-16 lg:pb-24" : "pt-2 pb-3"}`}>
+          {/* Barra de navegación superior. max-w aumentado y px reducido para
+              que el logo respire MAS hacia la izquierda y los controles a la
+              derecha — el contenido centrado queda intacto (su propio max-w-2xl
+              más abajo). */}
+          <div className="flex items-center justify-between gap-3 lg:gap-5">
             <button
               type="button"
               onClick={irAlInicio}
@@ -1006,7 +1009,9 @@ export default function Home() {
                 {t("tagline")}
               </div>
             </button>
-            <div className="flex items-center gap-3 lg:gap-4">
+            {/* Cluster top-right. Ligeramente mas grande (h-9 vs h-8), gap mayor
+                y empujado contra el borde derecho del max-w del header. */}
+            <div className="flex items-center gap-2.5 lg:gap-3.5">
               {ciudad && (
                 <button onClick={irAlInicio} className={`text-[13px] underline-offset-2 hover:underline ${esHero ? "text-white/90" : "text-slate-500"}`}>
                   <span className="inline-flex items-center gap-1"><Icono nombre="home" size={14} /> {t("inicio")}</span>
@@ -1015,7 +1020,7 @@ export default function Home() {
               {!pro && (
                 <a
                   href="/pro"
-                  className={`hidden text-[13px] font-bold underline-offset-2 hover:underline sm:inline ${esHero ? "text-amber-200" : "text-amber-600"}`}
+                  className={`hidden text-[13.5px] font-bold underline-offset-2 hover:underline sm:inline ${esHero ? "text-amber-200" : "text-amber-600"}`}
                 >
                   ★ Hazte Pro
                 </a>
@@ -1026,7 +1031,7 @@ export default function Home() {
                 onClick={toggleDark}
                 aria-label={darkMode ? "Modo claro" : "Modo oscuro"}
                 title={darkMode ? "Modo claro" : "Modo oscuro"}
-                className={`flex h-8 w-8 items-center justify-center rounded-full border text-[16px] transition ${
+                className={`flex h-9 w-9 items-center justify-center rounded-full border text-[17px] transition ${
                   esHero
                     ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
                     : "border-slate-200 bg-white text-slate-600 hover:border-marca-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
