@@ -112,7 +112,7 @@ export default function SelectorPais({ value, onChange, className = "" }) {
       <button
         type="button"
         onClick={() => setAbierto((v) => !v)}
-        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[12.5px] font-semibold text-white/85 underline-offset-2 outline-none transition hover:text-white hover:underline"
+        className="group inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[12.5px] font-semibold text-white/85 underline-offset-2 outline-none transition hover:text-white"
         aria-haspopup="listbox"
         aria-expanded={abierto}
       >
@@ -120,15 +120,12 @@ export default function SelectorPais({ value, onChange, className = "" }) {
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
           <circle cx="12" cy="10" r="3"></circle>
         </svg>
-        <span className="text-white/75">Detectado:</span>
+        <span className="text-white/75">Saliendo desde</span>
         <span className="inline-flex items-center gap-1.5">
           {paisActual && <Bandera cc={paisActual.cc} size={18} />}
-          <span>{paisActual ? paisActual.nombre : "—"}</span>
+          <span className="font-bold">{paisActual ? paisActual.nombre : "—"}</span>
         </span>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-        </svg>
+        <span className="ml-0.5 text-[11.5px] font-medium text-white/75 underline-offset-2 group-hover:underline">cambiar</span>
       </button>
 
       {abierto && (

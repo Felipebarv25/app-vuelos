@@ -55,6 +55,39 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   });
   const [detalle, setDetalle] = useState(null);
 
+  // PERSISTENCIA DEL STATE DEL MODAL (Item D1 — auditoria 2026-06-25):
+  // Si el usuario llena el modal y por accidente lo cierra (back del browser,
+  // refresh, etc.) antes pierde TODO. Ahora guardamos el state en sessionStorage
+  // cada cambio. Al reabrir el modal en la misma session, restauramos. Otra
+  // session = empezar limpio (sessionStorage no persiste entre tabs/restart).
+  const STORAGE_KEY = "anduve_presupuesto_state";
+  // Restaurar UNA vez al montar. Si `inicial` se pasa (por ej. desde el hero),
+  // sobreescribe el restore para monto+moneda (lo que el usuario acaba de tipear
+  // en la home es mas reciente que lo guardado).
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (s.modo) setModo(s.modo);
+      if (s.monto > 0 && !inicial) setMonto(s.monto);
+      if (s.moneda && !inicial) setMoneda(s.moneda);
+      if (s.mes) setMes(s.mes);
+      if (s.region) setRegion(s.region);
+      if (s.personas) setPersonas(s.personas);
+      if (s.dias) { setDias(s.dias); setDiasTocado(!!s.diasTocado); }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // Persistir cuando cambia cualquiera de los campos clave.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+        modo, monto, moneda, mes, region, personas, dias, diasTocado,
+      }));
+    } catch {}
+  }, [modo, monto, moneda, mes, region, personas, dias, diasTocado]);
+
   // Pais de origen del viajero (CO/MX/EC/PE/...). Define que hubs aereos se
   // ofrecen y si los precios del detector aplican o si hay que ir a vivo.
   // - Por defecto Colombia (el mercado principal hoy).

@@ -55,33 +55,33 @@ export default function PaginaMisViajes() {
         <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-marca-700 dark:text-marca-300">
-              Tus planes
+              {t("misViajesEyebrow")}
             </div>
             <h1 className="mt-1 text-[26px] font-extrabold tracking-tight text-slate-900 lg:text-[32px] dark:text-slate-100">
-              Mis viajes
+              {t("misViajesH1")}
               {usuario?.google && (
                 <span className="ml-3 inline-flex items-center gap-1 align-middle text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
-                  <Icono nombre="check" size={12} /> Sincronizado
+                  <Icono nombre="check" size={12} /> {t("misViajesSync")}
                 </span>
               )}
             </h1>
             <p className="mt-1.5 text-[13.5px] text-slate-600 dark:text-slate-400">
               {viajes.length > 0
-                ? `${viajes.length} ${viajes.length === 1 ? "viaje guardado" : "viajes guardados"}.`
-                : "Cuando guardes un viaje aparecerá aquí."}
+                ? (viajes.length === 1 ? t("misViajesContador1") : t("misViajesContadorN")).replace("{n}", viajes.length)
+                : t("misViajesVacioSub")}
             </p>
           </div>
           <Link
             href="/"
             className="rounded-md bg-marca-700 px-4 py-2 text-[13px] font-semibold text-white hover:bg-marca-800"
           >
-            + Planear un viaje nuevo
+            {t("misViajesPlanearNuevo")}
           </Link>
         </div>
 
         {/* Estado: cargando, vacio o lista */}
         {cargando && (
-          <div className="py-12 text-center text-slate-400">Cargando viajes…</div>
+          <div className="py-12 text-center text-slate-400">{t("misViajesCargando")}</div>
         )}
 
         {!cargando && viajes.length === 0 && (
@@ -89,15 +89,15 @@ export default function PaginaMisViajes() {
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-marca-50 text-marca-700 dark:bg-marca-900/30 dark:text-marca-300">
               <Icono nombre="bookmark" size={20} />
             </div>
-            <div className="text-[15px] font-bold text-slate-900 dark:text-slate-100">Sin viajes guardados todavía</div>
+            <div className="text-[15px] font-bold text-slate-900 dark:text-slate-100">{t("misViajesVacioTitulo")}</div>
             <p className="mt-1 text-[13px] text-slate-600 dark:text-slate-400">
-              Planea tu primer viaje y guárdalo desde la página de la ciudad.
+              {t("misViajesVacioMsg")}
             </p>
             <Link
               href="/"
               className="mt-4 inline-flex rounded-md bg-marca-700 px-4 py-2 text-[13px] font-semibold text-white hover:bg-marca-800"
             >
-              Empezar
+              {t("misViajesEmpezar")}
             </Link>
           </div>
         )}
@@ -117,19 +117,19 @@ export default function PaginaMisViajes() {
                     {v.ciudad?.pais}
                     {v.fechaInicio && v.fechaFin
                       ? ` · ${new Date(v.fechaInicio + "T00:00:00").toLocaleDateString(lang, { day: "numeric", month: "short" })}–${new Date(v.fechaFin + "T00:00:00").toLocaleDateString(lang, { day: "numeric", month: "short" })}`
-                      : ` · ${v.dias} días`}
+                      : ` · ${v.dias} ${t("dias").toLowerCase()}`}
                   </div>
                 </div>
                 <button
                   onClick={() => reabrir(v)}
                   className="shrink-0 rounded-md bg-marca-700 px-3 py-1.5 text-[12.5px] font-semibold text-white hover:bg-marca-800"
                 >
-                  Abrir
+                  {t("misViajesAbrir")}
                 </button>
                 <button
                   onClick={() => eliminar(v.id)}
-                  aria-label="Eliminar viaje"
-                  title="Eliminar viaje"
+                  aria-label={t("misViajesEliminar")}
+                  title={t("misViajesEliminar")}
                   className="flex shrink-0 items-center rounded-md px-2 py-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-900/20"
                 >
                   <Icono nombre="x" size={15} />

@@ -22,17 +22,21 @@ module.exports = {
           900: "#052b28",
         },
         // Acento: coral cálido (calidez latina, para CTAs puntuales).
+        // Rampa rederivada 2026-06-25 alrededor de #f4734d para alinear con
+        // los SVG del logo (AnduveIcon/AnduveLogo), la var --acento de
+        // globals.css y los CTAs de los emails. Antes 500=#f4633f generaba
+        // un sutil mismatch entre clase Tailwind y SVG/CSS-var.
         acento: {
-          50: "#fff4f1",
-          100: "#ffe5de",
-          200: "#ffc9bb",
-          300: "#ffa68f",
-          400: "#fb8166",
-          500: "#f4633f",
-          600: "#df4a26",
-          700: "#b9381c",
-          800: "#93301a",
-          900: "#78291a",
+          50: "#fff5f1",
+          100: "#ffe7de",
+          200: "#ffcfbb",
+          300: "#ffaa8a",
+          400: "#f88860",
+          500: "#f4734d",
+          600: "#de5a31",
+          700: "#b54521",
+          800: "#8c3520",
+          900: "#6c2a1d",
         },
       },
       fontFamily: {

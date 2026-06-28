@@ -1177,6 +1177,15 @@ export default function Home() {
                 {t("heroH1Budget")}
               </h1>
 
+              {/* "Saliendo desde 🇨🇴 Colombia · cambiar" — movido aquí 2026-06-25
+                  desde abajo de los chips. Establece el CONTEXTO del cálculo
+                  (origen de los vuelos) ANTES de pedir el presupuesto, no
+                  después. Sin esto Sofía no sabía que su país afectaba lo
+                  que iba a ver, y Carlos pensaba que el campo era informativo. */}
+              <div className="mx-auto mt-5 flex max-w-xl items-center justify-center">
+                <SelectorPais value={paisIso} onChange={cambiarPaisManual} />
+              </div>
+
               {/* Form principal: presupuesto + moneda + CTA. Al enviar abre
                   el modal de Presupuesto pre-llenado con esos valores. */}
               {/* Tarjeta presupuesto — diseño fintech limpio: borde sutil,
@@ -1184,7 +1193,7 @@ export default function Home() {
                   selector integrado y CTA con color sólido (no gradient). */}
               <form
                 onSubmit={(e) => { e.preventDefault(); abrirPresupuestoCon(montoHero, monedaHero); }}
-                className="mx-auto mt-6 max-w-xl rounded-xl bg-white shadow-card ring-1 ring-slate-200/80"
+                className="mx-auto mt-4 max-w-xl rounded-xl bg-white shadow-card ring-1 ring-slate-200/80"
               >
                 <div className="flex flex-col sm:flex-row sm:items-stretch">
                   <div className="flex flex-1 items-center gap-3 px-4 py-3.5 sm:border-r sm:border-slate-100">
@@ -1253,14 +1262,6 @@ export default function Home() {
                     {opt.label}
                   </button>
                 ))}
-              </div>
-
-              {/* Indicador "Detectado: X ✎" — el usuario puede corregir si
-                  la IP geolocation dio mal (VPN, roaming). Al cambiar
-                  también re-setea la moneda si no la había tocado manual.
-                  Persiste en localStorage entre sesiones. */}
-              <div className="mx-auto mt-3 flex max-w-xl items-center justify-center">
-                <SelectorPais value={paisIso} onChange={cambiarPaisManual} />
               </div>
 
               {/* Divisor + opcion secundaria: buscar por ciudad. Empieza

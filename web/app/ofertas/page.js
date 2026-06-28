@@ -35,14 +35,13 @@ export default function PaginaOfertas() {
         {/* Cabecera de la seccion */}
         <div className="mb-8">
           <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-marca-700 dark:text-marca-300">
-            Vuelos
+            {t("ofertasEyebrow")}
           </div>
           <h1 className="mt-1 text-[26px] font-extrabold tracking-tight text-slate-900 lg:text-[32px] dark:text-slate-100">
-            Ofertas detectadas
+            {t("ofertasH1")}
           </h1>
           <p className="mt-1.5 max-w-2xl text-[13.5px] leading-relaxed text-slate-600 dark:text-slate-400">
-            Precios escaneados cada 3 horas desde {fechaInicio || fechaFin ? "tus fechas" : "los hubs principales"}.
-            Si te gusta una, click en planear y te armamos el itinerario completo.
+            {t("ofertasSub")}
           </p>
         </div>
 
@@ -51,13 +50,13 @@ export default function PaginaOfertas() {
           <div className="flex flex-wrap items-end gap-3">
             <div className="mr-auto">
               <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-marca-700 dark:text-marca-300">
-                ¿Cuándo viajas?
+                {t("ofertasCuandoEyebrow")}
               </div>
-              <div className="mt-0.5 text-[13.5px] font-bold text-slate-900 dark:text-slate-100">Filtra por rango de fechas (opcional)</div>
+              <div className="mt-0.5 text-[13.5px] font-bold text-slate-900 dark:text-slate-100">{t("ofertasCuandoLabel")}</div>
             </div>
             <label className="flex flex-col gap-1 text-[12.5px] font-semibold text-slate-600 dark:text-slate-400">
               <span className="inline-flex items-center gap-1.5">
-                <Icono nombre="planeTakeoff" size={15} /> Fecha ida
+                <Icono nombre="planeTakeoff" size={15} /> {t("ofertasFechaIda")}
               </span>
               <input
                 type="date"
@@ -69,7 +68,7 @@ export default function PaginaOfertas() {
             </label>
             <label className="flex flex-col gap-1 text-[12.5px] font-semibold text-slate-600 dark:text-slate-400">
               <span className="inline-flex items-center gap-1.5">
-                <Icono nombre="planeLanding" size={15} /> Fecha vuelta
+                <Icono nombre="planeLanding" size={15} /> {t("ofertasFechaVuelta")}
               </span>
               <input
                 type="date"
@@ -84,7 +83,7 @@ export default function PaginaOfertas() {
                 onClick={() => { setFechaInicio(""); setFechaFin(""); }}
                 className="rounded-md px-2.5 py-1.5 text-[12px] font-semibold text-slate-500 underline-offset-2 hover:underline"
               >
-                Quitar filtro
+                {t("ofertasQuitarFiltro")}
               </button>
             )}
           </div>
