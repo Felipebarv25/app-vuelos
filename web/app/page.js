@@ -33,6 +33,9 @@ import MenuUsuario from "@/components/MenuUsuario";
 import FooterAnduve from "@/components/FooterAnduve";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
+// Tab bar mobile cargado lazy (solo importa en mobile, pero igual no es
+// critico para el primer paint).
+const BottomTabBar = dynamic(() => import("@/components/BottomTabBar"), { ssr: false });
 // Modales y bloques cargados sólo cuando el usuario los necesita. Salen del
 // bundle inicial (que pagan TODOS los visitantes, incluido el pre-login).
 // Cada uno se descarga al primer render condicional → mejora LCP/INP.
@@ -1836,6 +1839,14 @@ export default function Home() {
       {/* Footer compartido — extraido a FooterAnduve component para que
           /ofertas y /mis-viajes lo reusen sin duplicar markup. */}
       <FooterAnduve />
+
+      {/* Bottom tab bar — SOLO en mobile (md:hidden interno). Patron nativo
+          de navegacion para que el usuario movil no tenga que abrir el menu
+          ni scrollear hasta arriba para cambiar de seccion. */}
+      <BottomTabBar />
+
+      {/* Spacer para que el footer no quede tapado por el tab bar en mobile. */}
+      <div className="h-16 print:hidden md:hidden" aria-hidden="true" />
 
       {/* Toasts: confirmaciones rápidas para acciones del usuario */}
       <Toast mostrar={guardado} texto={t("guardado")} icono="check" />

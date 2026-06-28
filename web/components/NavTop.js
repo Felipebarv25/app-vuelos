@@ -49,12 +49,9 @@ export default function NavTop({ active = null }) {
         </div>
       </div>
 
-      {/* Nav mobile (debajo, scroll horizontal si hace falta) */}
-      <nav className="flex items-center gap-1 overflow-x-auto border-t border-slate-100 px-3 py-1.5 md:hidden dark:border-slate-800">
-        <NavLink href="/destino" active={active === "destinos"} compact>Destinos</NavLink>
-        <NavLink href="/ofertas" active={active === "ofertas"} compact>Ofertas</NavLink>
-        <NavLink href="/mis-viajes" active={active === "misviajes"} compact>Mis viajes</NavLink>
-      </nav>
+      {/* Nav mobile removida 2026-06-25: BottomTabBar component lo reemplaza
+          con un patron nativo de tab bar fijo abajo. Mas usable que el strip
+          de scroll horizontal que estaba aqui. */}
     </header>
   );
 }

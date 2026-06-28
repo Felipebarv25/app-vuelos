@@ -25,7 +25,7 @@ export default function Asesor({ t = (k) => k, usuario, onPlanear, onAbrirPresup
       {!abierto && (
         <button
           onClick={() => setAbierto(true)}
-          className="fixed bottom-5 right-5 z-[3500] flex items-center gap-2 rounded-full bg-gradient-to-r from-marca-500 to-marca-700 px-5 py-3.5 text-white shadow-[0_10px_30px_rgba(15,118,110,.45)] transition hover:brightness-110"
+          className="fixed bottom-20 right-4 z-[3500] flex items-center gap-2 rounded-full bg-gradient-to-r from-marca-500 to-marca-700 px-5 py-3.5 text-white shadow-[0_10px_30px_rgba(15,118,110,.45)] transition hover:brightness-110 md:bottom-5 md:right-5"
         >
           <Icono nombre="compass" size={20} />
           <span className="text-sm font-bold">{t("asesorBoton")}</span>

@@ -12,6 +12,7 @@ import { useApp } from "@/lib/AppContext";
 import { listarViajesAsync, borrarViajeAsync } from "@/lib/viajes";
 import NavTop from "@/components/NavTop";
 import FooterAnduve from "@/components/FooterAnduve";
+import BottomTabBar from "@/components/BottomTabBar";
 import { Icono } from "@/components/Icono";
 
 const Asesor = dynamic(() => import("@/components/Asesor"));
@@ -47,7 +48,7 @@ export default function PaginaMisViajes() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-slate-50 pb-16 dark:bg-slate-900 md:pb-0">
       <NavTop active="misviajes" />
 
       <main className="mx-auto max-w-4xl px-4 py-8 lg:px-8 lg:py-10">
@@ -151,6 +152,8 @@ export default function PaginaMisViajes() {
           onAbrirPresupuesto={() => router.push("/?presupuesto=1")}
         />
       </div>
+
+      <BottomTabBar />
     </div>
   );
 }
