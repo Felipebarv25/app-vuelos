@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { useApp } from "@/lib/AppContext";
 import { IDIOMAS } from "@/lib/idiomas";
 import { Logo, LogoMarca } from "@/components/Logo";
+import { Icono } from "@/components/Icono";
 
 // Landing pre-login: scrolleable, full-screen, con propuesta de valor antes
 // del formulario de auth. Aplica behavioral econ / neuromarketing: loss
@@ -16,6 +17,12 @@ import { Logo, LogoMarca } from "@/components/Logo";
 // cuenta", (b) el CTA del hero, o (c) URL ?login=1. Dentro del dialogo el
 // usuario elige Google o email. Si elige email, cerramos el dialogo y
 // mostramos PantallaMagicCode (full screen focus, sin distracciones).
+// Wrapper para usar el Icono component al tamaño exacto de las pills de
+// features del landing (28x28). Centraliza el sizing para no repetirlo.
+function FeatureIcon({ nombre }) {
+  return <Icono nombre={nombre} size={26} />;
+}
+
 export default function Bienvenida() {
   const {
     t,
@@ -248,22 +255,26 @@ export default function Bienvenida() {
             </h2>
           </div>
 
+          {/* Features con iconos SVG (audit A2 - 2026-06-25). Antes usaba
+              emojis decorativos (🗺️ ✈️ 🔔 🧭) inconsistentes con la dirección
+              "menos didáctico" del rediseño. Ahora SVG outline en teal sobre
+              pill teal/10. */}
           <div className="mt-12 grid gap-5 sm:grid-cols-2">
             {[
-              { emoji: "🗺️", titKey: "landingFeat1Tit", subKey: "landingFeat1Sub" },
-              { emoji: "✈️", titKey: "landingFeat2Tit", subKey: "landingFeat2Sub" },
-              { emoji: "🔔", titKey: "landingFeat3Tit", subKey: "landingFeat3Sub" },
-              { emoji: "🧭", titKey: "landingFeat4Tit", subKey: "landingFeat4Sub" },
+              { icono: "map",     titKey: "landingFeat1Tit", subKey: "landingFeat1Sub" },
+              { icono: "plane",   titKey: "landingFeat2Tit", subKey: "landingFeat2Sub" },
+              { icono: "bell",    titKey: "landingFeat3Tit", subKey: "landingFeat3Sub" },
+              { icono: "compass", titKey: "landingFeat4Tit", subKey: "landingFeat4Sub" },
             ].map((f, i) => (
               <div
                 key={i}
-                className="group rounded-3xl border border-slate-100 bg-white p-6 shadow-suave transition hover:-translate-y-1 hover:border-marca-200 hover:shadow-media"
+                className="group rounded-3xl border border-slate-100 bg-white p-6 shadow-suave transition hover:-translate-y-1 hover:border-marca-200 hover:shadow-media dark:border-slate-700 dark:bg-slate-800"
               >
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-marca-50 text-2xl dark:bg-marca-900/30">
-                  {f.emoji}
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-marca-50 text-marca-700 dark:bg-marca-900/30 dark:text-marca-300">
+                  <FeatureIcon nombre={f.icono} />
                 </div>
-                <h3 className="mt-4 text-[19px] font-extrabold text-marca-900">{t(f.titKey)}</h3>
-                <p className="mt-2 text-[14.5px] leading-relaxed text-slate-600">{t(f.subKey)}</p>
+                <h3 className="mt-4 text-[19px] font-extrabold text-marca-900 dark:text-marca-200">{t(f.titKey)}</h3>
+                <p className="mt-2 text-[14.5px] leading-relaxed text-slate-600 dark:text-slate-400">{t(f.subKey)}</p>
               </div>
             ))}
           </div>
@@ -288,17 +299,17 @@ export default function Bienvenida() {
 
           <div className="mt-12 grid gap-5 sm:grid-cols-2">
             {[
-              { emoji: "📅", titKey: "benDiaTitulo",    subKey: "benDiaTexto" },
-              { emoji: "📍", titKey: "benGpsTitulo",    subKey: "benGpsTexto" },
-              { emoji: "🍴", titKey: "benComerTitulo",  subKey: "benComerTexto" },
-              { emoji: "🧭", titKey: "benLlegarTitulo", subKey: "benLlegarTexto" },
+              { icono: "calendar", titKey: "benDiaTitulo",    subKey: "benDiaTexto" },
+              { icono: "pin",      titKey: "benGpsTitulo",    subKey: "benGpsTexto" },
+              { icono: "utensils", titKey: "benComerTitulo",  subKey: "benComerTexto" },
+              { icono: "compass",  titKey: "benLlegarTitulo", subKey: "benLlegarTexto" },
             ].map((f, i) => (
               <div
                 key={i}
                 className="rounded-3xl border border-slate-100 bg-white p-6 shadow-suave dark:border-slate-700 dark:bg-slate-800"
               >
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-marca-50 text-2xl dark:bg-marca-900/30">
-                  {f.emoji}
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-marca-50 text-marca-700 dark:bg-marca-900/30 dark:text-marca-300">
+                  <FeatureIcon nombre={f.icono} />
                 </div>
                 <h3 className="mt-4 text-[19px] font-extrabold text-marca-900 dark:text-marca-300">{t(f.titKey)}</h3>
                 <p className="mt-2 text-[14.5px] leading-relaxed text-slate-600 dark:text-slate-300">{t(f.subKey)}</p>
@@ -334,60 +345,10 @@ export default function Bienvenida() {
         </div>
       </section>
 
-      {/* ============== PRO UPSELL (sembrado, sin bloquear) ============== */}
-      <section className="bg-gradient-to-br from-marca-50 via-white to-marca-50/60 py-20 px-6 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
-        <div className="mx-auto max-w-5xl">
-          <div className="grid items-stretch gap-6 lg:grid-cols-[1.2fr_1fr]">
-            {/* Card principal: pitch de Pro */}
-            <div className="rounded-3xl border border-marca-100 bg-white p-8 shadow-suave dark:border-slate-700 dark:bg-slate-800">
-              <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-marca-600 dark:text-marca-400">
-                {t("landingProEyebrow")}
-              </div>
-              <h2 className="mt-2 font-display text-[28px] font-extrabold tracking-tight text-marca-900 dark:text-marca-300 sm:text-[34px]">
-                {t("landingProTit")}
-              </h2>
-              <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-slate-600 dark:text-slate-300">
-                {t("landingProSub")}
-              </p>
-              <ul className="mt-5 space-y-2 text-[14px] text-slate-700 dark:text-slate-200">
-                {[1, 2, 3].map((n) => (
-                  <li key={n} className="flex items-start gap-2">
-                    <span className="text-emerald-500 dark:text-emerald-400">✓</span>
-                    <span>{t(`landingProBeneficio${n}`)}</span>
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="/pro"
-                className="mt-6 inline-flex items-center gap-1.5 rounded-2xl border-[1.5px] border-marca-300 bg-white px-5 py-3 text-[14.5px] font-bold text-marca-700 transition hover:-translate-y-0.5 hover:border-marca-500 hover:bg-marca-50 dark:border-marca-700 dark:bg-slate-800 dark:text-marca-300 dark:hover:bg-marca-900/30"
-              >
-                {t("landingProVerPlanes")}
-              </a>
-            </div>
-
-            {/* Card lateral: escasez real de fundador (Lifetime) */}
-            <a
-              href="/pro"
-              className="group flex flex-col justify-between rounded-3xl bg-gradient-to-br from-marca-700 via-marca-800 to-marca-900 p-8 text-white shadow-media transition hover:-translate-y-0.5"
-            >
-              <div>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-acento-500/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-acento-200">
-                  ★ {t("landingProOfertaTit")}
-                </div>
-                <div className="mt-4 font-display text-[36px] font-extrabold leading-tight tracking-tight sm:text-[42px]">
-                  {t("landingProOfertaPrecio")}
-                </div>
-                <div className="mt-1 text-[13.5px] text-white/85">
-                  {t("landingProOfertaSub")}
-                </div>
-              </div>
-              <div className="mt-6 inline-flex items-center gap-1.5 text-[13px] font-bold text-acento-300 transition group-hover:gap-2">
-                {t("landingProVerPlanes")}
-              </div>
-            </a>
-          </div>
-        </div>
-      </section>
+      {/* Pro upsell REMOVIDO del pre-login (audit A4 - 2026-06-25): pedirle
+          al visitante nuevo que considere Pro antes de probar el producto
+          reduce trust. La pagina /pro sigue accesible desde el footer y se
+          encuentra naturalmente desde el post-login. */}
 
       {/* ============== SOCIAL PROOF (live + stats honestos) ============== */}
       <section className="bg-marca-900 py-16 px-6 text-white">

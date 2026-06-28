@@ -289,6 +289,19 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
     [region, dias, personas]
   );
 
+  // Regiones ALTERNATIVAS que caben con el presupuesto actual + dias + personas
+  // (audit D2 — 2026-06-25). Cuando el banner rojo/ámbar dice "insuficiente"
+  // mostramos un atajo "Ver regiones que sí caben" para no dejar al usuario
+  // tirado. Excluye la región actual y "todas". Ordenado por holgura desc.
+  const regionesQueCaben = useMemo(() => {
+    if (presupuestoUsd <= 0) return [];
+    return Object.keys(REGIONES)
+      .filter((r) => r !== "todas" && r !== region)
+      .map((r) => ({ key: r, label: REGIONES[r], min: presupuestoMinimoPara({ region: r, dias, personas }) }))
+      .filter((x) => x.min <= presupuestoUsd)
+      .sort((a, b) => a.min - b.min);
+  }, [presupuestoUsd, dias, personas, region]);
+
   const resultados = useMemo(
     () => calcularDestinos({ presupuestoUsd, dias, personas, region, preciosReales, origen }),
     [presupuestoUsd, dias, personas, region, preciosReales, origen]
@@ -636,6 +649,8 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                 presupMinimo={presupMinimo}
                 fmtUsd={fmtUsd}
                 regionLabel={REGIONES[region]}
+                regionesQueCaben={regionesQueCaben}
+                onCambiarRegion={(r) => { setRegion(r); setInicio(""); setSemilla(0); setExcluidos([]); }}
               />
             </div>
 
@@ -964,8 +979,30 @@ function labelMedio(medio) {
 //   3. Presupuesto holgado → confirmación positiva
 //   4. Días muy cortos o muy largos para la región → sugerencia
 // El tono es informativo y honesto, sin emojis, con cifras concretas.
-function AvisoPresupuesto({ recom, dias, personas, presupuestoUsd, presupMinimo, fmtUsd, regionLabel }) {
+function AvisoPresupuesto({ recom, dias, personas, presupuestoUsd, presupMinimo, fmtUsd, regionLabel, regionesQueCaben = [], onCambiarRegion }) {
   if (!recom || presupuestoUsd <= 0) return null;
+
+  // Pills de regiones alternativas que SÍ caben. Mostradas dentro del banner
+  // rojo o ámbar para que el usuario tenga UN solo click para escapar de la
+  // restricción en lugar de "considera otra región" abstracto.
+  const renderAlternativas = () => {
+    if (!regionesQueCaben?.length) return null;
+    const top = regionesQueCaben.slice(0, 3);
+    return (
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <span className="text-[11.5px] font-semibold uppercase tracking-wider opacity-75">Sí cabe en:</span>
+        {top.map((r) => (
+          <button
+            key={r.key}
+            onClick={() => onCambiarRegion?.(r.key)}
+            className="rounded-md border border-current/30 bg-white/50 px-2 py-0.5 text-[12px] font-bold underline-offset-2 hover:bg-white/80 hover:underline dark:bg-white/5 dark:hover:bg-white/15"
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
+    );
+  };
 
   // Caso 1: ni siquiera el vuelo cabe.
   if (recom.advertencia === "insuficiente_vuelo") {
@@ -974,8 +1011,9 @@ function AvisoPresupuesto({ recom, dias, personas, presupuestoUsd, presupMinimo,
         <div className="font-semibold">Presupuesto insuficiente para esta región</div>
         <div className="mt-0.5 text-rose-800/90 dark:text-rose-300/90">
           Para un viaje básico de 7 días a {regionLabel} necesitarías al menos{" "}
-          <b>{fmtUsd(recom.presupuestoMinSugerido)}</b>. Considera otra región o subir el presupuesto.
+          <b>{fmtUsd(recom.presupuestoMinSugerido)}</b>.
         </div>
+        {renderAlternativas()}
       </div>
     );
   }
@@ -992,6 +1030,7 @@ function AvisoPresupuesto({ recom, dias, personas, presupuestoUsd, presupMinimo,
           {personas > 1 && ` para ${personas} personas`}. Para llegar a {dias} días te faltarían{" "}
           <b>{fmtUsd(faltante)}</b>.
         </div>
+        {renderAlternativas()}
       </div>
     );
   }
