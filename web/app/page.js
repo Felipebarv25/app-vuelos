@@ -524,9 +524,32 @@ export default function Home() {
   // CTA desde páginas estáticas de SEO (/destino/<slug>): al cargar la app con
   // ?destino=madrid-espana, abrimos esa ciudad directamente (sin que el usuario
   // tenga que volver a buscarla). Solo dispara una vez por sesión.
+  // Tambien lee `anduve_intent_q` de sessionStorage — set por el trial anonimo
+  // de Bienvenida cuando el visitante elige una ciudad antes de registrarse.
+  // Tras auth, la home lo lee y abre esa ciudad como si la hubiera buscado.
   useEffect(() => {
     if (!listo || ciudad) return;
     try {
+      // 1) Intent del trial anonimo (audit B1 - 2026-06-25). Mas alta prioridad
+      // que los query params porque el usuario YA mostro intencion de ir alli.
+      let intentQ = "";
+      try {
+        intentQ = sessionStorage.getItem("anduve_intent_q") || "";
+        if (intentQ) sessionStorage.removeItem("anduve_intent_q");
+      } catch {}
+      if (intentQ && usuario) {
+        const q = intentQ.trim();
+        setConsulta(q);
+        (async () => {
+          try {
+            setCargando(true);
+            await buscarTexto(q);
+          } finally {
+            setCargando(false);
+          }
+        })();
+        return;
+      }
       const sp = new URLSearchParams(window.location.search);
       // ?presupuesto=1 → abrir el modal de presupuesto (CTA desde /destino).
       if (sp.get("presupuesto") === "1") {
@@ -574,7 +597,8 @@ export default function Home() {
       })();
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listo]);
+  }, [listo, usuario]); // usuario incluido para que el intent del trial anonimo
+  //                       se dispare al autenticar (B1).
 
   // Traducir nombres de POIs cuando llegan datos nuevos o cambia el idioma.
   // Best-effort: muta lugar.nombres[lang] en sitio y bumpea el state para

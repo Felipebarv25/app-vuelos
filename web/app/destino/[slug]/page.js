@@ -602,9 +602,35 @@ export default async function PaginaDestino({ params }) {
       </section>
 
       {/* Footer mínimo */}
-      <footer className="mx-auto max-w-4xl px-6 pb-10 text-center text-[12px] text-slate-400">
+      <footer className="mx-auto max-w-4xl px-6 pb-28 text-center text-[12px] text-slate-400 lg:pb-10">
         Datos de OpenStreetMap y Wikipedia · Precios orientativos en USD.
       </footer>
+
+      {/* Sticky CTA (audit E2 - 2026-06-25): el visitante llega desde Google,
+          lee el destino y se va sin convertir. Esta barra le ofrece accionar
+          en cualquier momento del scroll. Linkea al home con ?q=Ciudad,Pais
+          que dispara la busqueda y arma el itinerario. Hidden en print. */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur-md print:hidden dark:border-slate-700 dark:bg-slate-900/95">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="truncate text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Empezar a planear
+            </div>
+            <div className="truncate text-[14px] font-bold text-slate-900 dark:text-slate-100">
+              {d.ciudad}, {d.pais}
+            </div>
+          </div>
+          <Link
+            href={`/?q=${encodeURIComponent(`${d.ciudad}, ${d.pais}`)}`}
+            className="inline-flex shrink-0 items-center gap-2 rounded-md bg-marca-700 px-4 py-2.5 text-[13px] font-semibold text-white shadow-cta transition hover:bg-marca-800"
+          >
+            Planear este viaje
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M13 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }

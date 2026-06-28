@@ -1,10 +1,15 @@
 "use client";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useApp } from "@/lib/AppContext";
 import { IDIOMAS } from "@/lib/idiomas";
 import { Logo, LogoMarca } from "@/components/Logo";
 import { Icono } from "@/components/Icono";
+
+// Presupuesto modal lazy — solo se baja si el visitante hace click en "Probar
+// sin cuenta". Para el visitante que solo viene a leer y se va, no paga el JS.
+const Presupuesto = dynamic(() => import("@/components/Presupuesto"));
 
 // Landing pre-login: scrolleable, full-screen, con propuesta de valor antes
 // del formulario de auth. Aplica behavioral econ / neuromarketing: loss
@@ -37,6 +42,11 @@ export default function Bienvenida() {
   const [recordar, setRecordar] = useState(true);
   const [mostrarLogin, setMostrarLogin] = useState(false);
   const [montado, setMontado] = useState(false);
+  // Trial anonimo del Presupuesto (audit B1 - 2026-06-25). El visitante puede
+  // probar el feature signature SIN registrarse. Cuando elige una ciudad
+  // dentro, guardamos la intencion en sessionStorage y abrimos el dialogo de
+  // login. Tras autenticar, la home lee la intencion y abre esa ciudad.
+  const [mostrarPresupuestoTrial, setMostrarPresupuestoTrial] = useState(false);
   // Social proof real: conteo en vivo desde /api/online. null = aún no lo
   // sabemos; número = lo que reporta KV. Si la red falla o KV no responde,
   // queda en null y la UI lo oculta (cero números inventados).
@@ -219,13 +229,23 @@ export default function Bienvenida() {
             {t("landingSub")}
           </p>
 
-          {/* CTA primario: abre el dialogo de login */}
-          <button
-            onClick={() => setMostrarLogin(true)}
-            className="mt-8 rounded-2xl bg-acento-500 px-7 py-3.5 text-[15.5px] font-bold text-white shadow-[0_10px_30px_rgba(244,99,63,.45)] transition hover:-translate-y-0.5 hover:bg-acento-600"
-          >
-            {t("landingCtaHero")} →
-          </button>
+          {/* CTAs: primario (crear cuenta) + secundario (probar sin cuenta).
+              El secundario abre el Presupuesto modal directamente — el
+              visitante prueba el feature antes de decidirse a registrar. */}
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:gap-4">
+            <button
+              onClick={() => setMostrarLogin(true)}
+              className="rounded-2xl bg-acento-500 px-7 py-3.5 text-[15.5px] font-bold text-white shadow-[0_10px_30px_rgba(244,115,77,.45)] transition hover:-translate-y-0.5 hover:bg-acento-600"
+            >
+              {t("landingCtaHero")} →
+            </button>
+            <button
+              onClick={() => setMostrarPresupuestoTrial(true)}
+              className="rounded-2xl border border-white/30 bg-white/10 px-7 py-3.5 text-[15.5px] font-bold text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/20"
+            >
+              {t("landingCtaPruebaSinCuenta") || "Probar sin cuenta"}
+            </button>
+          </div>
 
           {/* Chips honestos */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-[12.5px] font-semibold text-white/80">
@@ -423,6 +443,19 @@ export default function Bienvenida() {
         </div>
         <div className="mt-3">© {new Date().getFullYear()} Anduve · {t("footer")}</div>
       </footer>
+
+      {/* ============== PRESUPUESTO TRIAL ANONIMO ============== */}
+      {mostrarPresupuestoTrial && montado && (
+        <PresupuestoTrial
+          onCerrar={() => setMostrarPresupuestoTrial(false)}
+          onIntent={() => {
+            // Cerramos el modal y abrimos el dialogo de login. Al autenticar,
+            // la home lee anduve_intent_q de sessionStorage y abre la ciudad.
+            setMostrarPresupuestoTrial(false);
+            setMostrarLogin(true);
+          }}
+        />
+      )}
 
       {/* ============== DIÁLOGO LOGIN ============== */}
       {mostrarLogin && montado && createPortal(
@@ -626,6 +659,24 @@ function PantallaMagicCode({
         )}
       </div>
     </div>
+  );
+}
+
+// Modal de Presupuesto en MODO TRIAL ANONIMO. El visitante puede usarlo sin
+// haberse registrado. Si elige una ciudad (boton Planear), guardamos la
+// intencion en sessionStorage como "anduve_intent_q" y abrimos el dialogo de
+// login. Tras autenticar la home lee la intencion y la abre directamente.
+function PresupuestoTrial({ onCerrar, onIntent }) {
+  return (
+    <Presupuesto
+      onCerrar={onCerrar}
+      onElegirCiudad={(d) => {
+        try {
+          sessionStorage.setItem("anduve_intent_q", `${d.ciudad}, ${d.pais}`);
+        } catch {}
+        onIntent?.();
+      }}
+    />
   );
 }
 
