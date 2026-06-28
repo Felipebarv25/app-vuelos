@@ -205,12 +205,28 @@ const PAIS_GENTILICIO = {
 // foto de fondo). Cada card linkea a su sección. Diseño con altura fija +
 // foto de fondo + overlay teal degradado de abajo hacia arriba para legibilidad
 // del texto. Hover sube ligeramente la card y oscurece el overlay para feedback.
-function EntryCard({ href, icono, titulo, subtitulo, cta, bg }) {
+// `onClick` se usa cuando la card debe disparar una accion en el cliente
+// (como abrir el modal de Presupuesto) en lugar de navegar. Si se pasa
+// onClick, renderiza como <button>; si no, como <Link>.
+function EntryCard({ href, onClick, icono, titulo, subtitulo, cta, bg }) {
+  const claseBase = "group relative block aspect-[3/4] w-full overflow-hidden rounded-xl text-left shadow-card transition hover:-translate-y-0.5 hover:shadow-modal sm:aspect-[5/6]";
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={claseBase}>
+        {renderEntryCardBody({ bg, icono, titulo, subtitulo, cta })}
+      </button>
+    );
+  }
   return (
-    <Link
-      href={href}
-      className="group relative block aspect-[3/4] overflow-hidden rounded-xl shadow-card transition hover:-translate-y-0.5 hover:shadow-modal sm:aspect-[5/6]"
-    >
+    <Link href={href} className={claseBase}>
+      {renderEntryCardBody({ bg, icono, titulo, subtitulo, cta })}
+    </Link>
+  );
+}
+
+function renderEntryCardBody({ bg, icono, titulo, subtitulo, cta }) {
+  return (
+    <>
       {/* Foto de fondo */}
       <div
         className="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-105"
@@ -240,7 +256,7 @@ function EntryCard({ href, icono, titulo, subtitulo, cta, bg }) {
           </div>
         </div>
       </div>
-    </Link>
+    </>
   );
 }
 
@@ -1432,9 +1448,13 @@ export default function Home() {
               bg="/landing-hero-1.jpg"
             />
             {/* Si no hay viajes guardados, el CTA invita a planear (no a una
-                pantalla vacia). Cuando guardas algo, cambia a "Ver mis viajes". */}
+                pantalla vacia). Cuando guardas algo, cambia a "Ver mis viajes".
+                Fix 2026-06-25: cuando 0 viajes, abrimos el modal de Presupuesto
+                directamente con onClick (antes linkeaba a /?planear=1 que NO
+                era escuchado por el handler de query params del home — bug). */}
             <EntryCard
-              href={viajesGuardados.length > 0 ? "/mis-viajes" : "/?planear=1"}
+              href={viajesGuardados.length > 0 ? "/mis-viajes" : null}
+              onClick={viajesGuardados.length > 0 ? null : () => setMostrarPresupuesto(true)}
               icono="bookmark"
               titulo="Mis viajes"
               subtitulo={viajesGuardados.length > 0 ? `${viajesGuardados.length} guardado${viajesGuardados.length === 1 ? "" : "s"}` : "Empieza a planear tu primer viaje"}
