@@ -35,6 +35,25 @@ export async function POST(req) {
     return Response.json({ ok: false, motivo: "datos-invalidos" }, { status: 400 });
   }
 
+  // FILTRO ANTI-SPAM (2026-06-29): solo enviamos email si el precio esta al
+  // menos 20% por debajo del promedio historico de la ruta. Asi evitamos
+  // notificar precios que apenas cumplen el umbral pero no son notable
+  // ganga. El detector calcula el promedio y nos lo manda en `promedio_ruta`.
+  // Si no viene (ruta sin historia), aplicamos solo el umbral del usuario.
+  const promedioRuta = Number(body?.promedio_ruta);
+  const tienePromedio = Number.isFinite(promedioRuta) && promedioRuta > 0;
+  const UMBRAL_GANGA = 0.80; // precio <= promedio * 0.80 = 20% bajo el avg
+  if (tienePromedio && precio > promedioRuta * UMBRAL_GANGA) {
+    return Response.json({
+      ok: true,
+      disparadas: 0,
+      motivo: "no-es-ganga",
+      precio,
+      promedio: Math.round(promedioRuta),
+      umbral_ganga: Math.round(promedioRuta * UMBRAL_GANGA),
+    });
+  }
+
   const ids = await idsAlertasPorIATA(iata);
   if (!ids.length) return Response.json({ ok: true, disparadas: 0 });
 

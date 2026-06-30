@@ -88,6 +88,22 @@ export default async function AlertaDetalle({ params }) {
           )}
         </div>
 
+        {/* Filtro anti-spam (2026-06-29): solo emails cuando precio esta al
+            menos 20% bajo el promedio historico. Hace visible al usuario el
+            criterio adicional para que entienda por que no recibe spam. */}
+        {tieneDatos && (
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11.5px] text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4M12 16h.01" />
+            </svg>
+            <span>
+              Solo te avisamos si el precio está al menos <b>20% bajo el promedio</b>{" "}
+              (≤ <b>{fmt(Math.round(promedio * 0.80))}</b>). Filtro anti-spam.
+            </span>
+          </div>
+        )}
+
         {/* Estado: sin datos */}
         {!tieneDatos && (
           <div className="mt-8 rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-800">

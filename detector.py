@@ -32,10 +32,15 @@ ALERTS_SECRET = os.environ.get("ALERTS_SHARED_SECRET", "")
 
 
 def notificar_alertas_web(origen, destino, precio, fecha_ida, fecha_vuelta,
-                          link, aerolinea):
+                          link, aerolinea, promedio_ruta=None):
     """Avisa al endpoint Vercel que vio un precio. La app busca usuarios con
     alertas para ese destino cuyo umbral cumpla y les manda email. Best-effort:
-    si falla la red o el secret no esta, no rompe la corrida."""
+    si falla la red o el secret no esta, no rompe la corrida.
+
+    promedio_ruta: opcional. Promedio historico (origen, destino) usado por la
+    API para filtrar "anti-spam" — solo envia email si el precio esta al menos
+    20% bajo este promedio. Si no se pasa, solo aplica el umbral del usuario.
+    """
     if not ALERTS_SECRET:
         return
     try:
@@ -54,6 +59,7 @@ def notificar_alertas_web(origen, destino, precio, fecha_ida, fecha_vuelta,
                 "fecha_vuelta": fecha_vuelta,
                 "link": link,
                 "aerolinea": aerolinea,
+                "promedio_ruta": promedio_ruta,
             },
             timeout=8,
         )
@@ -61,6 +67,21 @@ def notificar_alertas_web(origen, destino, precio, fecha_ida, fecha_vuelta,
         # No detenemos al detector por esto: las alertas son secundarias al
         # objetivo primario (escanear precios y guardar historial).
         print(f"  ! No se pudo notificar alertas web: {e}")
+
+
+def promedio_ruta_completa(historial, origen, destino):
+    """Promedio de TODOS los precios historicos para (origen, destino),
+    independiente del mes de salida. Sirve para que la API decida si una
+    oferta es realmente una ganga (>=20% bajo este promedio) y no spamee
+    al usuario con precios que apenas bajan del umbral pero no son notables.
+    Retorna None si no hay datos."""
+    todos = []
+    for (o, d, _mes), precios in historial.items():
+        if o == origen and d == destino:
+            todos.extend(precios)
+    if not todos:
+        return None
+    return sum(todos) / len(todos)
 
 
 def generar_meses():
@@ -157,6 +178,9 @@ def main():
 
                 # Notificar a la app web para que dispare las alertas de los
                 # usuarios cuyo umbral se cumpla (best-effort, no bloquea).
+                # Pasamos el promedio historico de la ruta para que la API solo
+                # envie email si es ganga real (precio <= promedio * 0.80).
+                promedio = promedio_ruta_completa(historial, origen, destino)
                 notificar_alertas_web(
                     origen=origen,
                     destino=destino,
@@ -165,6 +189,7 @@ def main():
                     fecha_vuelta=fecha_vuelta,
                     link=oferta.get("link", ""),
                     aerolinea=oferta.get("aerolinea", ""),
+                    promedio_ruta=round(promedio) if promedio else None,
                 )
 
                 es_ganga, razon = evaluar_oferta(precio, umbral, historico)
