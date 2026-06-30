@@ -7,6 +7,7 @@
 //  - Hazte Pro / Gestionar suscripcion
 //  - Salir
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/lib/AppContext";
 import { Icono } from "./Icono";
@@ -141,11 +142,20 @@ export default function MenuUsuario({ oscuro = false }) {
                     key={a.id}
                     className="flex items-center justify-between rounded-lg bg-slate-50 px-2 py-1.5 text-[12.5px] dark:bg-slate-700/60"
                   >
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-semibold text-marca-900 dark:text-slate-200">
-                        {a.ciudad} <span className="text-slate-400">·</span> <span className="text-amber-700 dark:text-amber-400">≤ US$ {a.umbral}</span>
-                      </div>
-                    </div>
+                    {/* Link a /alertas/<id> con detalle de mejor precio por mes,
+                        promedio y ahorro estimado. Cierra el dropdown al
+                        navegar para no quedar abierto encima del nuevo render. */}
+                    <Link
+                      href={`/alertas/${a.id}`}
+                      onClick={() => setAbierto(false)}
+                      className="min-w-0 flex-1 truncate"
+                    >
+                      <span className="font-semibold text-marca-900 hover:text-marca-700 dark:text-slate-200 dark:hover:text-marca-300">
+                        {a.ciudad}
+                      </span>{" "}
+                      <span className="text-slate-400">·</span>{" "}
+                      <span className="text-amber-700 dark:text-amber-400">≤ US$ {a.umbral}</span>
+                    </Link>
                     <button
                       type="button"
                       onClick={() => borrarAlerta(a.id)}
