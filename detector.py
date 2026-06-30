@@ -180,17 +180,24 @@ def main():
                 # usuarios cuyo umbral se cumpla (best-effort, no bloquea).
                 # Pasamos el promedio historico de la ruta para que la API solo
                 # envie email si es ganga real (precio <= promedio * 0.80).
-                promedio = promedio_ruta_completa(historial, origen, destino)
-                notificar_alertas_web(
-                    origen=origen,
-                    destino=destino,
-                    precio=int(precio),
-                    fecha_ida=fecha_ida,
-                    fecha_vuelta=fecha_vuelta,
-                    link=oferta.get("link", ""),
-                    aerolinea=oferta.get("aerolinea", ""),
-                    promedio_ruta=round(promedio) if promedio else None,
-                )
+                # Envuelto en try/except amplio: si el calculo del promedio o
+                # la notificacion fallan por cualquier razon, el detector NO
+                # debe abortar — su trabajo principal es escanear y guardar
+                # precios, las alertas son secundarias.
+                try:
+                    promedio = promedio_ruta_completa(historial, origen, destino)
+                    notificar_alertas_web(
+                        origen=origen,
+                        destino=destino,
+                        precio=int(precio),
+                        fecha_ida=fecha_ida,
+                        fecha_vuelta=fecha_vuelta,
+                        link=oferta.get("link", ""),
+                        aerolinea=oferta.get("aerolinea", ""),
+                        promedio_ruta=round(promedio) if promedio else None,
+                    )
+                except Exception as e:
+                    print(f"  ! Error notificando alertas {origen}->{destino}: {e}")
 
                 es_ganga, razon = evaluar_oferta(precio, umbral, historico)
                 if not es_ganga:
