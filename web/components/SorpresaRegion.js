@@ -1,32 +1,47 @@
 "use client";
-// "Sorpréndeme" — selector aleatorio de región tipo ruleta.
+// "Sorpréndeme" — ruleta de regiones con mecanica de "mano que suelta al walker".
 //
-// UX (rediseño 2026-06-29):
-// 1. Modal abre en estado "esperando" — globo estático + walker arriba + boton "GIRAR".
-// 2. Click → fase "girando" — el globo rota 5 segundos con desaceleracion final.
-// 3. Reveal → walker grande + nombre de región + botones.
+// Flujo:
+// 1. Esperando: planeta estatico + walker COLGANDO de una mano que lo sujeta
+//    por la mochila + boton "Girar el planeta".
+// 2. Girando: planeta empieza a rotar. La mano sigue sosteniendo al walker
+//    los primeros 2.5s para construir suspense.
+// 3. A los 2.5s: la mano se abre y sube fuera del cuadro. El walker CAE sobre
+//    el planeta con un pequeno rebote al aterrizar.
+// 4. El planeta sigue girando hasta los 5s totales, desacelerando estilo
+//    ruleta de fortuna.
+// 5. Reveal: nombre de la region grande + botones.
 //
-// Detalles importantes:
-// - El WALKER es exactamente el del logo (mismos paths, mismas proporciones).
-// - El PLANETA es una tierra estilizada con continentes recognizable (Americas,
-//   Africa, Eurasia, Australia) — no la version "blobs" anterior.
-// - La rotación incluye desaceleracion (cubic-bezier easeOut) al final para
-//   que se sienta como una ruleta deteniendose, no un giro mecanico.
+// Decisiones de diseño:
+// - El walker es EXACTAMENTE el del logo (paths copiados de AnduveIcon.js).
+// - El planeta usa la imagen REAL del mapa mundial de NASA Land/Ocean/Ice
+//   (public domain, hosted en Wikimedia Commons) wrappeada en una esfera
+//   circular. La rotacion se hace animando background-position-x = el mapa
+//   pasa horizontalmente dentro del circulo, dando ilusion de globo girando.
+// - Curva: cubic-bezier(.05,.95,.3,1) = arranque rapido + freno suave.
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 const REGIONES_KEYS = ["sudamerica", "norteamerica", "europa", "asia", "africa", "oceania"];
-const SPIN_MS = 5000; // 5 segundos para que la persona sienta suspense pero no se aburra
+const SPIN_MS = 5000;
+const RELEASE_MS = 2500;
+
+// Mapa mundial real — NASA Land/Ocean/Ice composite (public domain).
+// Wikimedia esta permitido por nuestro CSP (next.config.mjs img-src).
+// 640px ancho × 320px alto = aspecto 2:1 (equirectangular), perfecto para
+// envolver alrededor del globo via background-repeat horizontal.
+const MAPA_MUNDIAL_URL =
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Land_ocean_ice_2048.jpg/640px-Land_ocean_ice_2048.jpg";
 
 export default function SorpresaRegion({ regionesLabel, onElegir, onCerrar }) {
   const [fase, setFase] = useState("esperando"); // esperando | girando | revelando
+  const [walkerSuelto, setWalkerSuelto] = useState(false);
   const [resultado, setResultado] = useState(null);
   const [montado, setMontado] = useState(false);
   const decididoRef = useRef(null);
 
   useEffect(() => { setMontado(true); }, []);
 
-  // Cerrar con ESC.
   useEffect(() => {
     function onKey(e) { if (e.key === "Escape") onCerrar?.(); }
     window.addEventListener("keydown", onKey);
@@ -34,15 +49,16 @@ export default function SorpresaRegion({ regionesLabel, onElegir, onCerrar }) {
   }, [onCerrar]);
 
   function girar() {
-    // Eligimos la región al click (no antes). Asi cada giro es genuinamente
-    // nuevo aunque el usuario reabra el modal.
     decididoRef.current = REGIONES_KEYS[Math.floor(Math.random() * REGIONES_KEYS.length)];
     setFase("girando");
-    const t = setTimeout(() => {
+    setWalkerSuelto(false);
+    // A los RELEASE_MS la mano suelta al walker. El walker cae con animacion.
+    const tRelease = setTimeout(() => setWalkerSuelto(true), RELEASE_MS);
+    const tReveal = setTimeout(() => {
       setResultado(decididoRef.current);
       setFase("revelando");
     }, SPIN_MS);
-    return () => clearTimeout(t);
+    return () => { clearTimeout(tRelease); clearTimeout(tReveal); };
   }
 
   function confirmar() {
@@ -52,6 +68,7 @@ export default function SorpresaRegion({ regionesLabel, onElegir, onCerrar }) {
 
   function girarOtraVez() {
     setResultado(null);
+    setWalkerSuelto(false);
     setFase("esperando");
   }
 
@@ -71,7 +88,7 @@ export default function SorpresaRegion({ regionesLabel, onElegir, onCerrar }) {
         <button
           onClick={onCerrar}
           aria-label="Cerrar"
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700"
+          className="absolute right-3 top-3 z-50 flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 6 6 18M6 6l12 12" />
@@ -87,18 +104,31 @@ export default function SorpresaRegion({ regionesLabel, onElegir, onCerrar }) {
               {fase === "girando" ? "Buscando tu destino…" : "¿A dónde te lleva Anduve?"}
             </h2>
 
-            <div className="relative mx-auto mt-6 h-56 w-56">
-              {/* Walker ENCIMA del planeta. Usa el walker exacto del logo */}
-              <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-2">
-                <WalkerLogo size={64} />
+            {/* Stage: hand + walker + planet. Altura fija para que el walker
+                pueda caer con animacion CSS predecible. */}
+            <div className="relative mx-auto mt-6 h-64 w-64">
+              {/* MANO. Cuando walkerSuelto, se desliza hacia arriba y desvanece. */}
+              <div
+                className={`absolute left-1/2 top-0 z-20 -translate-x-1/2 transition-all duration-500 ease-in ${
+                  walkerSuelto ? "-translate-y-10 opacity-0" : "translate-y-0 opacity-100"
+                }`}
+              >
+                <ManoSVG />
               </div>
 
-              {/* Planeta: spin acelerado al inicio y desacelerado al final
-                  para que se sienta como una ruleta de fortuna. */}
-              <div className="absolute inset-x-0 bottom-0 mx-auto h-48 w-48">
-                <div className={fase === "girando" ? "animate-tierra-girar" : ""}>
-                  <TierraSVG />
-                </div>
+              {/* WALKER. Hangs at top:36px (justo bajo la mano). Cuando suelto,
+                  animacion CSS lo hace caer al planeta. */}
+              <div
+                className={`absolute left-1/2 z-10 -translate-x-1/2 ${
+                  walkerSuelto ? "animate-walker-cae" : "top-[36px]"
+                }`}
+              >
+                <WalkerLogo size={70} />
+              </div>
+
+              {/* PLANETA con mapa mundial real. */}
+              <div className="absolute inset-x-0 bottom-0 mx-auto h-52 w-52">
+                <TierraGlobe girando={fase === "girando"} />
               </div>
             </div>
 
@@ -117,7 +147,7 @@ export default function SorpresaRegion({ regionesLabel, onElegir, onCerrar }) {
 
             {fase === "girando" && (
               <p className="mt-5 text-[12.5px] text-slate-500 dark:text-slate-400">
-                El walker está eligiendo…
+                {walkerSuelto ? "¡Cayendo!" : "Preparando la caída…"}
               </p>
             )}
           </>
@@ -159,17 +189,23 @@ export default function SorpresaRegion({ regionesLabel, onElegir, onCerrar }) {
         )}
       </div>
 
-      {/* Keyframes locales. La curva cubic-bezier(.05,.95,.3,1) da
-          aceleración rápida + desaceleración suave al final (efecto ruleta).
-          5 vueltas completas (1800deg) en los 5 segundos. */}
-      <style jsx>{`
-        @keyframes tierra-girar {
-          from { transform: rotate(0deg); }
-          to   { transform: rotate(1800deg); }
+      {/* Keyframes globales para que el child TierraGlobe pueda usarlas via
+          el style inline `animation`. Walker-cae queda scoped al modal. */}
+      <style jsx global>{`
+        @keyframes tierra-girar-bg {
+          from { background-position-x: 0%; }
+          to   { background-position-x: -1000%; }
         }
-        .animate-tierra-girar {
-          animation: tierra-girar ${SPIN_MS}ms cubic-bezier(.05, .95, .3, 1) forwards;
-          transform-origin: center;
+      `}</style>
+      <style jsx>{`
+        @keyframes walker-cae {
+          0%   { top: 36px; }
+          70%  { top: 100px; }
+          85%  { top: 88px; }
+          100% { top: 96px; }
+        }
+        .animate-walker-cae {
+          animation: walker-cae 800ms cubic-bezier(.34, 1.56, .64, 1) forwards;
         }
       `}</style>
     </div>,
@@ -177,109 +213,86 @@ export default function SorpresaRegion({ regionesLabel, onElegir, onCerrar }) {
   );
 }
 
-// ============== TIERRA ==============
-// Esfera con paths simplificados que evocan continentes reales — no blobs
-// abstractos. Recognocible como tierra desde el espacio. Colores: oceano teal
-// profundo, continentes verde tierra para contraste suave.
-function TierraSVG() {
+// ============== TIERRA — mapa mundial real wrappeado en esfera ==============
+// Background-image con la textura del mapa mundial NASA (equirectangular,
+// 2:1 aspect). background-size 200% width hace que se vea SOLO MITAD del
+// mapa a la vez en el container circular — la otra mitad esta "del otro lado"
+// del globo. background-repeat-x = la imagen se repite sin fin a los lados,
+// para que la animacion de scroll sea sin saltos.
+//
+// El efecto: cuando el background-position-x va de 0% a -1000% (5 vueltas
+// completas del mapa), el visitante ve los continentes pasar por el
+// circulo como si la Tierra estuviera girando.
+//
+// Overlays: highlight arriba-izq (sol) + sombra abajo-der (terminador noche)
+// dan profundidad 3D + halo de atmosfera exterior.
+function TierraGlobe({ girando }) {
   return (
-    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="h-full w-full drop-shadow-lg">
-      <defs>
-        {/* Gradiente radial: la cara izq mas iluminada (luz del sol) */}
-        <radialGradient id="oceano" cx="35%" cy="35%" r="75%">
-          <stop offset="0%" stopColor="#1a8074" />
-          <stop offset="55%" stopColor="#0c5f58" />
-          <stop offset="100%" stopColor="#043730" />
-        </radialGradient>
-        <clipPath id="planeta">
-          <circle cx="100" cy="100" r="90" />
-        </clipPath>
-      </defs>
+    <div className="relative h-full w-full">
+      {/* Halo de atmosfera */}
+      <div className="absolute -inset-1 rounded-full bg-cyan-300/15 blur-sm" />
 
-      {/* Halo exterior */}
-      <circle cx="100" cy="100" r="96" fill="none" stroke="rgba(12,95,88,0.18)" strokeWidth="3" />
+      {/* Esfera con el mapa wrappeado. La animacion gira solo el background. */}
+      <div
+        className="absolute inset-0 overflow-hidden rounded-full ring-1 ring-black/30"
+        style={{
+          backgroundColor: "#0e3a4a",
+          backgroundImage: `url('${MAPA_MUNDIAL_URL}')`,
+          backgroundSize: "200% 100%",
+          backgroundRepeat: "repeat-x",
+          backgroundPosition: "0% center",
+          animation: girando
+            ? `tierra-girar-bg ${SPIN_MS}ms cubic-bezier(.05, .95, .3, 1) forwards`
+            : "none",
+        }}
+      />
 
-      {/* Oceano con gradiente para efecto 3D */}
-      <circle cx="100" cy="100" r="90" fill="url(#oceano)" />
+      {/* Highlight de atmosfera (luz del sol viene de arriba-izq) */}
+      <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-br from-white/25 via-white/5 to-transparent" />
 
-      {/* Todo el contenido geografico clipeado dentro del planeta */}
-      <g clipPath="url(#planeta)" fill="#a8c668" stroke="#7fa850" strokeWidth="0.5">
-        {/* AMERICAS — Norteamerica + bridge + Sudamerica */}
-        <path d="M 38 55
-                 L 50 50 L 62 52 L 68 62 L 64 72
-                 L 58 78 L 60 88 L 56 94 L 48 92 L 44 86
-                 L 42 78 L 38 72 L 36 64 Z" />
-        <path d="M 55 105
-                 L 64 100 L 70 108 L 72 120
-                 L 70 135 L 66 150 L 60 160 L 56 168
-                 L 52 160 L 50 145 L 52 130 L 54 115 Z" />
+      {/* Sombra del terminador (lado noche, abajo-der) */}
+      <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-br from-transparent via-transparent to-black/55" />
 
-        {/* AFRICA — forma característica con cuerno */}
-        <path d="M 95 70
-                 L 108 68 L 118 76 L 122 90
-                 L 124 105 L 122 120 L 118 135
-                 L 110 148 L 102 155 L 96 150
-                 L 92 138 L 94 125 L 96 110 L 95 95 L 93 82 Z" />
+      {/* Borde sutil para definir la silueta */}
+      <div className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-inset ring-black/30" />
+    </div>
+  );
+}
 
-        {/* EUROPA — pequeña arriba a la izq de Asia */}
-        <path d="M 95 50
-                 L 110 46 L 122 50 L 125 58 L 118 65
-                 L 108 64 L 100 60 Z" />
-
-        {/* ASIA — la masa grande al noreste */}
-        <path d="M 125 50
-                 L 140 45 L 160 48 L 170 56 L 168 70
-                 L 162 82 L 152 88 L 140 84 L 130 78
-                 L 124 70 L 122 60 Z" />
-
-        {/* INDIA — peninsula colgando */}
-        <path d="M 138 88 L 142 96 L 144 105 L 140 110 L 134 102 L 134 92 Z" />
-
-        {/* AUSTRALIA */}
-        <path d="M 148 130
-                 L 162 128 L 172 134 L 170 144
-                 L 160 148 L 150 145 L 146 138 Z" />
-
-        {/* JAPON (islas) — pequeño detalle ojo de pez */}
-        <ellipse cx="172" cy="78" rx="3" ry="6" transform="rotate(-15 172 78)" />
-        <ellipse cx="168" cy="88" rx="2" ry="3" />
-
-        {/* MADAGASCAR */}
-        <ellipse cx="126" cy="140" rx="3" ry="8" />
-
-        {/* CARIBE — Cuba */}
-        <ellipse cx="60" cy="92" rx="5" ry="2" />
-
-        {/* INDONESIA archipielago */}
-        <ellipse cx="155" cy="115" rx="4" ry="2" />
-        <ellipse cx="162" cy="118" rx="3" ry="1.5" />
-      </g>
-
-      {/* Highlights / brillo de la atmosfera arriba a la izq */}
-      <ellipse cx="68" cy="55" rx="22" ry="14" fill="rgba(255,255,255,0.12)" />
-      <ellipse cx="60" cy="48" rx="10" ry="6" fill="rgba(255,255,255,0.18)" />
-
-      {/* Sombra del lado opuesto (terminador) para profundidad 3D */}
-      <circle cx="100" cy="100" r="90" fill="url(#noche)" opacity="0.35" />
-      <defs>
-        <radialGradient id="noche" cx="80%" cy="65%" r="60%">
-          <stop offset="0%" stopColor="rgba(0,0,0,0)" />
-          <stop offset="100%" stopColor="rgba(0,0,0,0.55)" />
-        </radialGradient>
-      </defs>
-
-      {/* Borde sutil para definir el planeta */}
-      <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="0.8" />
+// ============== MANO ==============
+// Mano viene desde arriba del cuadro, dedos cerrados sosteniendo al walker
+// por la correa de la mochila. Trazo simple, color teal de marca.
+function ManoSVG() {
+  return (
+    <svg width="60" height="64" viewBox="0 0 60 64" xmlns="http://www.w3.org/2000/svg">
+      {/* Brazo desde arriba */}
+      <rect x="24" y="0" width="12" height="22" fill="#0c5f58" />
+      <rect x="24" y="0" width="12" height="4" fill="rgba(0,0,0,0.18)" />
+      {/* Muñeca (mas ancha) */}
+      <path d="M 20 18 Q 18 24 22 30 L 38 30 Q 42 24 40 18 Z" fill="#0c5f58" />
+      {/* Palma de la mano (ancha, cerrada en puño) */}
+      <path d="M 17 28 Q 14 38 18 44 L 42 44 Q 46 38 43 28 Z" fill="#0c5f58" />
+      {/* Pulgar visible al frente, doblado */}
+      <path d="M 15 32 Q 11 38 13 44 L 18 44 L 20 36 Z" fill="#0a4a45" />
+      <path d="M 13 38 Q 14 40 16 41" stroke="#063630" strokeWidth="0.8" fill="none" />
+      {/* Dedos cerrados — 4 dedos visibles agarrando */}
+      <path d="M 18 42 Q 15 50 19 52 L 23 52 Q 23 47 22 42 Z" fill="#0c5f58" />
+      <path d="M 23 42 Q 22 52 27 54 L 30 54 Q 30 47 28 42 Z" fill="#0a4a45" />
+      <path d="M 30 42 Q 30 52 35 54 L 38 54 Q 38 47 36 42 Z" fill="#0c5f58" />
+      <path d="M 38 42 Q 38 50 42 52 L 45 52 Q 45 47 43 42 Z" fill="#0a4a45" />
+      {/* Sombras de articulaciones */}
+      <line x1="20" y1="46" x2="22" y2="46" stroke="#063630" strokeWidth="0.6" />
+      <line x1="25" y1="46" x2="28" y2="46" stroke="#063630" strokeWidth="0.6" />
+      <line x1="32" y1="46" x2="36" y2="46" stroke="#063630" strokeWidth="0.6" />
+      <line x1="40" y1="46" x2="42" y2="46" stroke="#063630" strokeWidth="0.6" />
     </svg>
   );
 }
 
-// ============== WALKER (idéntico al logo) ==============
-// Paths extraídos directamente de components/AnduveIcon.js (el walker que
-// vive en la cima del planeta del logo, lineas 36-55). Re-encuadrado a un
-// viewBox tight alrededor del personaje, sin las animaciones internas
-// (sway/bob/legs) porque aquí queremos al walker estático arriba del globo.
-// Colores: ink = teal de marca, accent = coral de la mochila.
+// ============== WALKER (identico al logo) ==============
+// Paths extraidos LITERALMENTE de AnduveIcon.js (lineas 36-55, el walker
+// que vive en la cima del planeta del logo). Sin animaciones internas —
+// queda quieto colgando o cayendo.
 function WalkerLogo({ size = 56 }) {
   return (
     <svg
@@ -294,26 +307,21 @@ function WalkerLogo({ size = 56 }) {
       xmlns="http://www.w3.org/2000/svg"
       style={{ overflow: "visible" }}
     >
-      {/* Piernas */}
+      {/* Pierna atras */}
       <path d="M98.5 56 L101.5 56 L101.5 62 L98.5 62 Z" />
       <circle cx="100" cy="62" r="1.5" />
       <path d="M98.5 62 L101.5 62 L101.5 68.6 Q101.7 69.7 102.6 70.1 Q103.6 70.5 104 71.1 Q104.4 71.5 104.4 71.9 Q104.4 72.3 103.8 72.3 L98.8 72.3 Q98.3 72.3 98.3 71.6 Z" />
-
       {/* Brazo atras */}
       <path d="M98.7 41 L101.3 41 L100.7 54.5 L99.3 54.5 Z" />
       <path d="M99.1 54.5 Q98.4 54.5 98.3 55.6 Q97.5 55.7 97.7 56.6 Q97.9 57.3 98.7 57.2 Q98.8 58.2 99.5 58.4 Q100 58.6 100.5 58.4 Q101.4 58.1 101.4 57 L101.4 55.5 Q101.4 54.5 100 54.5 Z" />
-
       {/* Mochila (coral) */}
       <rect x="89" y="43.5" width="8" height="11" rx="3" fill="#f4734d" stroke="#f4734d" />
       <rect x="94.4" y="42.5" width="1.9" height="10" rx="0.9" fill="#f4734d" stroke="#f4734d" />
-
       {/* Torso */}
       <path d="M97.7 40.5 C97.7 38.2 103.1 38.2 103.1 40.5 L104 54.5 Q104 59 100.4 59 Q96.8 59 96.8 54.5 Z" />
-
       {/* Brazo adelante */}
       <path d="M98.7 41 L101.3 41 L100.7 54.5 L99.3 54.5 Z" />
       <path d="M99.1 54.5 Q98.4 54.5 98.3 55.6 Q97.5 55.7 97.7 56.6 Q97.9 57.3 98.7 57.2 Q98.8 58.2 99.5 58.4 Q100 58.6 100.5 58.4 Q101.4 58.1 101.4 57 L101.4 55.5 Q101.4 54.5 100 54.5 Z" />
-
       {/* Cabeza + pelo */}
       <circle cx="100.4" cy="32.5" r="5.2" />
       <path d="M104.5 31.1 Q106.7 31.5 106.6 32.6 Q106.5 33.7 104.5 34.1 Z" />
