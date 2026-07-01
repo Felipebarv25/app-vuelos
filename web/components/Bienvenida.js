@@ -205,12 +205,11 @@ export default function Bienvenida() {
 
         {/* Contenido hero centrado */}
         <div className="relative mx-auto flex min-h-[80vh] max-w-3xl flex-col items-center justify-center px-6 py-12 text-center text-white">
-          {/* El SVG del logo tiene viewBox 200x200 pero el contenido visible
-              llega solo hasta y≈150 (clipPath corta ahí), dejando ~25% de
-              altura vacía abajo. mb-[-40px] absorbe ese hueco para que el
-              chip de abajo quede pegado a la curva del planeta. */}
-          <div className="drop-shadow-[0_8px_20px_rgba(0,0,0,0.3)] mb-[-40px]">
-            <Logo size={180} animado tono="claro" />
+          {/* Logo animado — tamano reducido de 180 a 130 (audit 2026-06-29)
+              para dar mas peso al copy sin sacrificar la presencia visual
+              del walker+planeta. */}
+          <div className="drop-shadow-[0_8px_20px_rgba(0,0,0,0.3)] mb-[-28px]">
+            <Logo size={130} animado tono="claro" />
           </div>
 
           {/* Chip "precios actualizados ahora" — livelyness real */}
@@ -220,7 +219,7 @@ export default function Bienvenida() {
           </div>
 
           {/* Headline */}
-          <h1 className="mt-5 font-display text-[40px] font-extrabold leading-[1.05] tracking-tight sm:text-[58px]">
+          <h1 className="mt-5 font-display text-[42px] font-extrabold leading-[1.05] tracking-tight sm:text-[62px]">
             {t("landingHeadline1")}<br />
             <span className="text-acento-400">{t("landingHeadline2")}</span>
           </h1>
@@ -229,21 +228,26 @@ export default function Bienvenida() {
             {t("landingSub")}
           </p>
 
-          {/* CTAs: primario (crear cuenta) + secundario (probar sin cuenta).
-              El secundario abre el Presupuesto modal directamente — el
-              visitante prueba el feature antes de decidirse a registrar. */}
+          {/* CTAs: JERARQUIA INVERTIDA (audit 2026-06-29). Antes el CTA
+              principal era "Crear cuenta" (alta friccion) y el secundario
+              "Probar sin cuenta" (baja friccion). Se invirtio: ahora
+              probar SIN registrarse es el CTA principal coral fuerte, y
+              crear cuenta queda como link secundario mas discreto. La logica:
+              deja que el usuario experimente el producto ANTES de pedirle
+              nada. Los que valoren la app se registraran naturalmente al
+              querer guardar un viaje o crear alerta. */}
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:gap-4">
             <button
-              onClick={() => setMostrarLogin(true)}
-              className="rounded-2xl bg-acento-500 px-7 py-3.5 text-[15.5px] font-bold text-white shadow-[0_10px_30px_rgba(244,115,77,.45)] transition hover:-translate-y-0.5 hover:bg-acento-600"
+              onClick={() => setMostrarPresupuestoTrial(true)}
+              className="rounded-2xl bg-acento-500 px-8 py-3.5 text-[15.5px] font-bold text-white shadow-[0_10px_30px_rgba(244,115,77,.45)] transition hover:-translate-y-0.5 hover:bg-acento-600"
             >
               {t("landingCtaHero")} →
             </button>
             <button
-              onClick={() => setMostrarPresupuestoTrial(true)}
-              className="rounded-2xl border border-white/30 bg-white/10 px-7 py-3.5 text-[15.5px] font-bold text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/20"
+              onClick={() => setMostrarLogin(true)}
+              className="text-[14px] font-semibold text-white/85 underline-offset-4 hover:text-white hover:underline"
             >
-              {t("landingCtaPruebaSinCuenta") || "Probar sin cuenta"}
+              {t("navCrearCuenta")}
             </button>
           </div>
 
@@ -263,28 +267,32 @@ export default function Bienvenida() {
         </div>
       </section>
 
-      {/* ============== FEATURES ============== */}
+      {/* ============== QUÉ HACE ANDUVE (sección unificada) ==============
+          Auditoría 2026-06-29: antes había 3 secciones que decían casi lo
+          mismo: "Features" (mapas/vuelos/alertas/brújula), "Tu viaje en
+          detalle" (día por día, GPS, comer, llegar), y "Cómo funciona" (3
+          pasos genéricos). Todo eso convertía el landing en una lista
+          repetitiva de bullets. Reemplazado por UNA sola sección con las
+          4 funciones core reales del producto, cada una con su ícono
+          representativo y una descripción concreta de qué HACE, no
+          "cómo funciona" abstracto. */}
       <section className="bg-white py-20 px-6 dark:bg-slate-800">
         <div className="mx-auto max-w-5xl">
           <div className="text-center">
-            <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-marca-600">
+            <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-marca-600 dark:text-marca-300">
               {t("landingFeatEyebrow")}
             </div>
-            <h2 className="mt-2 font-display text-[32px] font-extrabold tracking-tight text-marca-900 sm:text-[40px]">
+            <h2 className="mt-2 font-display text-[32px] font-extrabold tracking-tight text-marca-900 sm:text-[40px] dark:text-marca-200">
               {t("landingFeatTit")}
             </h2>
           </div>
 
-          {/* Features con iconos SVG (audit A2 - 2026-06-25). Antes usaba
-              emojis decorativos (🗺️ ✈️ 🔔 🧭) inconsistentes con la dirección
-              "menos didáctico" del rediseño. Ahora SVG outline en teal sobre
-              pill teal/10. */}
           <div className="mt-12 grid gap-5 sm:grid-cols-2">
             {[
-              { icono: "map",     titKey: "landingFeat1Tit", subKey: "landingFeat1Sub" },
-              { icono: "plane",   titKey: "landingFeat2Tit", subKey: "landingFeat2Sub" },
-              { icono: "bell",    titKey: "landingFeat3Tit", subKey: "landingFeat3Sub" },
-              { icono: "compass", titKey: "landingFeat4Tit", subKey: "landingFeat4Sub" },
+              { icono: "map",      titKey: "landingFeat1Tit", subKey: "landingFeat1Sub" },
+              { icono: "plane",    titKey: "landingFeat2Tit", subKey: "landingFeat2Sub" },
+              { icono: "bell",     titKey: "landingFeat3Tit", subKey: "landingFeat3Sub" },
+              { icono: "compass",  titKey: "landingFeat4Tit", subKey: "landingFeat4Sub" },
             ].map((f, i) => (
               <div
                 key={i}
@@ -295,70 +303,6 @@ export default function Bienvenida() {
                 </div>
                 <h3 className="mt-4 text-[19px] font-extrabold text-marca-900 dark:text-marca-200">{t(f.titKey)}</h3>
                 <p className="mt-2 text-[14.5px] leading-relaxed text-slate-600 dark:text-slate-400">{t(f.subKey)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ============== TU VIAJE EN DETALLE ==============
-          Las 4 funciones core de Anduve mientras estás en el viaje.
-          Antes eran chips en el post-login (sin contexto); ahora son
-          cards con explicación rich aquí en el landing para atraer
-          al usuario que aún no se registra. */}
-      <section className="bg-slate-50 py-20 px-6 dark:bg-slate-900">
-        <div className="mx-auto max-w-5xl">
-          <div className="text-center">
-            <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-marca-600">
-              {t("landingDetalleEyebrow")}
-            </div>
-            <h2 className="mt-2 font-display text-[32px] font-extrabold tracking-tight text-marca-900 sm:text-[40px] dark:text-marca-300">
-              {t("landingDetalleTit")}
-            </h2>
-          </div>
-
-          <div className="mt-12 grid gap-5 sm:grid-cols-2">
-            {[
-              { icono: "calendar", titKey: "benDiaTitulo",    subKey: "benDiaTexto" },
-              { icono: "pin",      titKey: "benGpsTitulo",    subKey: "benGpsTexto" },
-              { icono: "utensils", titKey: "benComerTitulo",  subKey: "benComerTexto" },
-              { icono: "compass",  titKey: "benLlegarTitulo", subKey: "benLlegarTexto" },
-            ].map((f, i) => (
-              <div
-                key={i}
-                className="rounded-3xl border border-slate-100 bg-white p-6 shadow-suave dark:border-slate-700 dark:bg-slate-800"
-              >
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-marca-50 text-marca-700 dark:bg-marca-900/30 dark:text-marca-300">
-                  <FeatureIcon nombre={f.icono} />
-                </div>
-                <h3 className="mt-4 text-[19px] font-extrabold text-marca-900 dark:text-marca-300">{t(f.titKey)}</h3>
-                <p className="mt-2 text-[14.5px] leading-relaxed text-slate-600 dark:text-slate-300">{t(f.subKey)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ============== CÓMO FUNCIONA ============== */}
-      <section className="bg-white py-20 px-6 dark:bg-slate-800">
-        <div className="mx-auto max-w-5xl">
-          <div className="text-center">
-            <div className="text-[11.5px] font-bold uppercase tracking-[0.25em] text-acento-600">
-              {t("landingComoEyebrow")}
-            </div>
-            <h2 className="mt-2 font-display text-[32px] font-extrabold tracking-tight text-marca-900 sm:text-[40px]">
-              {t("landingComoTit")}
-            </h2>
-          </div>
-
-          <div className="mt-12 grid gap-6 sm:grid-cols-3">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="relative">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-acento-500 text-[16px] font-extrabold text-white shadow-[0_6px_18px_rgba(244,99,63,.35)]">
-                  {n}
-                </div>
-                <h3 className="mt-4 text-[18px] font-extrabold text-marca-900">{t(`landingPaso${n}Tit`)}</h3>
-                <p className="mt-2 text-[14.5px] leading-relaxed text-slate-600">{t(`landingPaso${n}Sub`)}</p>
               </div>
             ))}
           </div>
@@ -398,10 +342,15 @@ export default function Bienvenida() {
               </div>
             )}
 
-            {/* Anchor de precio: card protagonista. Es la prueba más fuerte
-                — número concreto + comparación + ahorro estimado. */}
+            {/* Anchor de precio: card protagonista. Etiqueta clarificada
+                (audit 2026-06-29): antes decia solo "MEXICO -> ROMA US$733"
+                sin contexto de fechas ni fuente, se sentia inventado. Ahora
+                explicita "Detectado por nuestro sistema" + comparacion vs
+                promedio + ahorro estimado. Sigue siendo un ejemplo pero
+                narrativa mas confiable. */}
             <div className="w-full max-w-md rounded-3xl bg-white/10 px-8 py-6 ring-1 ring-white/15 backdrop-blur-md">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/65">
+              <div className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.22em] text-emerald-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 {t("landingPrecioEjemplo")}
               </div>
               <div className="mt-2 font-display text-[28px] font-extrabold leading-tight sm:text-[32px]">
@@ -411,7 +360,8 @@ export default function Bienvenida() {
                 {t("landingPrecioVs")}
               </div>
               <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-[12px] font-bold uppercase tracking-wider text-emerald-300">
-                ✓ {t("landingPrecioAhorro")}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                {t("landingPrecioAhorro")}
               </div>
             </div>
 

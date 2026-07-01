@@ -19,7 +19,8 @@ import SelectorMoneda from "@/components/SelectorMoneda";
 import SelectorPais from "@/components/SelectorPais";
 import { monedaDePais, simboloMoneda } from "@/lib/monedas";
 import CardDestino from "@/components/CardDestino";
-import MiniOfertas from "@/components/MiniOfertas";
+// MiniOfertas: import removido (audit 2026-06-29). Componente sigue existiendo
+// para reuso futuro pero no se instancia en el home. Ver linea ~1506.
 import { AfiliadosCiudad } from "@/components/Afiliados";
 import { listarViajesAsync, guardarViajeAsync, borrarViajeAsync } from "@/lib/viajes";
 import { LogoMarca } from "@/components/Logo";
@@ -265,6 +266,7 @@ function EntryIcono({ nombre }) {
   if (nombre === "globe") return (<svg {...p}><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>);
   if (nombre === "plane") return (<svg {...p}><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" /></svg>);
   if (nombre === "bookmark") return (<svg {...p}><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>);
+  if (nombre === "compass") return (<svg {...p}><circle cx="12" cy="12" r="10" /><path d="m16.2 7.8-2.9 6.3-6.3 2.9 2.9-6.3z" /></svg>);
   return null;
 }
 
@@ -1349,28 +1351,30 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* Ideas rapidas de ciudad - solo si el bloque secundario esta abierto */}
+                  {/* Ideas rapidas de ciudad - solo si el bloque secundario esta abierto.
+                      Sin emojis (audit 2026-06-29): reemplazados por icono pin discreto para
+                      mantener consistencia con el resto del rediseno "menos didactico". */}
                   <div className="mt-3 flex flex-wrap justify-center gap-2">
                     <button
                       type="button"
                       onClick={() => pruebaRapida({ q: "Cartagena, Colombia", dias: 3 })}
-                      className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
                     >
-                      🏖️ Cartagena
+                      <Icono nombre="pin" size={12} /> Cartagena
                     </button>
                     <button
                       type="button"
                       onClick={() => pruebaRapida({ q: "Tokio, Japón", dias: 5 })}
-                      className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
                     >
-                      🗼 Tokio
+                      <Icono nombre="pin" size={12} /> Tokio
                     </button>
                     <button
                       type="button"
                       onClick={() => pruebaRapida({ q: "Madrid, España", momento: "nocturno" })}
-                      className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur transition hover:bg-white/20"
                     >
-                      🌃 Madrid
+                      <Icono nombre="pin" size={12} /> Madrid
                     </button>
                   </div>
                 </div>
@@ -1410,7 +1414,7 @@ export default function Home() {
       {error && (
         <div className="mx-auto mt-3.5 max-w-7xl px-4 print:hidden lg:px-8">
           <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-red-100 bg-red-50 p-4 text-red-800 shadow-suave dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300">
-            <span className="text-2xl">😕</span>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300"><Icono nombre="alert" size={18} /></span>
             <p className="flex-1 text-sm">{error}</p>
             <button onClick={reintentar} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:brightness-110">
               <span className="inline-flex items-center gap-1.5"><Icono nombre="refresh" size={15} /> {t("recalcular")}</span>
@@ -1430,14 +1434,19 @@ export default function Home() {
             O explora sin pensar en presupuesto
           </div>
           <div className="mx-auto mb-7 h-px w-12 bg-slate-300 dark:bg-slate-700" />
-          <div className="grid gap-3 sm:grid-cols-3">
+          {/* 4 entry cards (audit 2026-06-29): antes eran 3 usando fotos de
+              viajeros del pool landing-hero — no representaban su contenido.
+              Ahora cada card usa una imagen unsplash tematica a su seccion +
+              4ta card "Sorprendeme" para exponer el momento delightful que
+              antes estaba enterrado dentro del modal de Presupuesto. */}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <EntryCard
               href="/destino"
               icono="globe"
               titulo="Destinos populares"
               subtitulo="80+ ciudades del mundo"
               cta="Ver destinos"
-              bg="/landing-hero-4.jpg"
+              bg="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=70"
             />
             <EntryCard
               href="/ofertas"
@@ -1445,13 +1454,8 @@ export default function Home() {
               titulo="Vuelos baratos"
               subtitulo="Detectados cada 3 horas"
               cta="Ver ofertas"
-              bg="/landing-hero-1.jpg"
+              bg="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=70"
             />
-            {/* Si no hay viajes guardados, el CTA invita a planear (no a una
-                pantalla vacia). Cuando guardas algo, cambia a "Ver mis viajes".
-                Fix 2026-06-25: cuando 0 viajes, abrimos el modal de Presupuesto
-                directamente con onClick (antes linkeaba a /?planear=1 que NO
-                era escuchado por el handler de query params del home — bug). */}
             <EntryCard
               href={viajesGuardados.length > 0 ? "/mis-viajes" : null}
               onClick={viajesGuardados.length > 0 ? null : () => setMostrarPresupuesto(true)}
@@ -1459,7 +1463,20 @@ export default function Home() {
               titulo="Mis viajes"
               subtitulo={viajesGuardados.length > 0 ? `${viajesGuardados.length} guardado${viajesGuardados.length === 1 ? "" : "s"}` : "Empieza a planear tu primer viaje"}
               cta={viajesGuardados.length > 0 ? "Ver mis viajes" : "Planear viaje"}
-              bg="/landing-hero-6.jpg"
+              bg="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=70"
+            />
+            {/* 4ta card: Sorprendeme. Abre el modal de Presupuesto con la
+                intencion de que el usuario arranque directamente en el
+                boton "Sorprendeme" que esta al lado del selector de region.
+                Idea narrativa: si no sabes a donde ir, deja que Anduve
+                decida por ti. */}
+            <EntryCard
+              onClick={() => setMostrarPresupuesto(true)}
+              icono="compass"
+              titulo="Sorpréndeme"
+              subtitulo="Que Anduve elija por ti"
+              cta="Girar la ruleta"
+              bg="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=70"
             />
           </div>
 
@@ -1487,7 +1504,11 @@ export default function Home() {
             </div>
           )}
 
-          <MiniOfertas t={t} lang={lang} onPlanear={(q) => buscarTexto(q)} />
+          {/* MiniOfertas removido del home (audit 2026-06-29): era redundante
+              con la entry card "Vuelos baratos" ubicada arriba (misma funcion,
+              mismo destino). El usuario que quiere ver ofertas ya tiene el
+              CTA en la card, no necesita ver 3 preview cards duplicadas
+              justo debajo. La ruta /ofertas conserva el dashboard completo. */}
         </div>
         </div>
       )}
