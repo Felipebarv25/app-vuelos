@@ -1,5 +1,5 @@
 {
-  "generado": "2026-07-05T11:06:55",
+  "generado": "2026-07-05T13:31:03",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -646,7 +646,7 @@
       "escalas_ida": null,
       "escalas_vuelta": null,
       "umbral": 1300,
-      "mediana": 864,
+      "mediana": 862,
       "descuento": 20,
       "esGanga": true,
       "visto": "2026-07-05T02:59:24",
@@ -2670,7 +2670,7 @@
       "escalas_ida": null,
       "escalas_vuelta": null,
       "umbral": 750,
-      "mediana": 1330,
+      "mediana": 1336,
       "descuento": 0,
       "esGanga": false,
       "visto": "2026-07-05T02:58:25",
