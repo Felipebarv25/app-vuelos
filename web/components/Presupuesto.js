@@ -1,12 +1,8 @@
 "use client";
-import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { track } from "@/lib/track";
 import { Icono } from "./Icono";
 
-// Modal "Sorpréndeme" cargado lazy — solo si el usuario hace click, no penaliza
-// el JS inicial del Presupuesto modal.
-const SorpresaRegion = dynamic(() => import("./SorpresaRegion"));
 import {
   calcularDestinos,
   construirRuta,
@@ -59,9 +55,6 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
     return d.toISOString().slice(0, 7);
   });
   const [detalle, setDetalle] = useState(null);
-  // Modal "Sorpréndeme" — globo girando + walker cayendo sobre una región al
-  // azar. Cuando se confirma, dispara cambioRegion para aplicar la elección.
-  const [mostrarSorpresa, setMostrarSorpresa] = useState(false);
 
   // PERSISTENCIA DEL STATE DEL MODAL (Item D1 — auditoria 2026-06-25):
   // Si el usuario llena el modal y por accidente lo cierra (back del browser,
@@ -568,26 +561,9 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
             </div>
 
             {/* 3) REGIÓN (movida arriba de días — el destino determina el costo).
-                Chips tipográficos en vez de pills redondeadas con emojis.
-                Sorpréndeme: boton al lado del Label que abre SorpresaRegion —
-                modal con globo girando + walker que cae sobre el continente
-                elegido al azar. Emocional, on-brand. */}
+                Chips tipográficos en vez de pills redondeadas con emojis. */}
             <div>
-              <div className="mb-1.5 flex items-end justify-between gap-2">
-                <Label>{t("presupRegion")}</Label>
-                <button
-                  type="button"
-                  onClick={() => setMostrarSorpresa(true)}
-                  className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-marca-700 to-marca-800 px-2.5 py-1 text-[11.5px] font-semibold text-white shadow-sm transition hover:from-marca-800 hover:to-marca-900"
-                  aria-label="Sorpréndeme — elegir región al azar"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                  </svg>
-                  Sorpréndeme
-                </button>
-              </div>
+              <Label>{t("presupRegion")}</Label>
               <div className="flex flex-wrap gap-1.5">
                 {Object.entries(REGIONES).map(([k, nombre]) => (
                   <button
@@ -979,23 +955,6 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
           <div className="mt-4 text-[11px] leading-relaxed text-slate-400">{t("presupAviso")}</div>
         </div>
       </div>
-
-      {/* Modal Sorpréndeme — portal a body. Cuando el usuario confirma,
-          aplica la región (reseteando ruta/inicio/excluidos como hacen los
-          chips manuales) y cierra. */}
-      {mostrarSorpresa && (
-        <SorpresaRegion
-          regionesLabel={REGIONES}
-          onElegir={(k) => {
-            setRegion(k);
-            setInicio("");
-            setSemilla(0);
-            setExcluidos([]);
-            track("sorpresa_region", { region: k });
-          }}
-          onCerrar={() => setMostrarSorpresa(false)}
-        />
-      )}
     </div>
   );
 }

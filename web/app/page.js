@@ -45,6 +45,10 @@ const DetalleLugar = dynamic(() => import("@/components/DetalleLugar"));
 const RequisitosViaje = dynamic(() => import("@/components/RequisitosViaje"));
 const Paywall = dynamic(() => import("@/components/Paywall"));
 const Asesor = dynamic(() => import("@/components/Asesor"));
+// Chip de alertas en el home post-login. Se dinamica para no engordar el
+// bundle del pre-login (audit 2026-06-29: exponer alertas antes de entrar
+// a una ciudad).
+const AlertasChip = dynamic(() => import("@/components/AlertasChip"), { ssr: false });
 
 // Destinos destacados con foto (fotos libres de Wikimedia Commons).
 // visitantes: turistas internacionales/año (millones, datos publicos UNWTO,
@@ -366,7 +370,10 @@ export default function Home() {
   const [mostrarPresupuesto, setMostrarPresupuesto] = useState(false);
   // Valores que el usuario tipea en el input de presupuesto del HERO. Si abre el
   // modal por ese camino, se le pasan como `inicial` y arranca ya con su monto.
-  const [montoHero, setMontoHero] = useState(10000000);
+  // Default 0 (audit 2026-07-01): el hero arranca vacio para que el usuario
+  // escriba el monto que le nace, sin anclas. El input tiene placeholder "0".
+  // Los chips (5M/10M/20M) siguen siendo atajos rapidos.
+  const [montoHero, setMontoHero] = useState(0);
   const [monedaHero, setMonedaHero] = useState("COP");
   const [presupuestoInicial, setPresupuestoInicial] = useState(null);
   // Despliega/colapsa el bloque de busqueda por ciudad (secundario en el nuevo
@@ -1237,7 +1244,10 @@ export default function Home() {
                   sin gradientes vivos, sin emojis decorativos, currency
                   selector integrado y CTA con color sólido (no gradient). */}
               <form
-                onSubmit={(e) => { e.preventDefault(); abrirPresupuestoCon(montoHero, monedaHero); }}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (montoHero > 0) abrirPresupuestoCon(montoHero, monedaHero);
+                }}
                 className="mx-auto mt-4 max-w-xl rounded-xl bg-white shadow-card ring-1 ring-slate-200/80"
               >
                 <div className="flex flex-col sm:flex-row sm:items-stretch">
@@ -1273,7 +1283,8 @@ export default function Home() {
                   </div>
                   <button
                     type="submit"
-                    className="inline-flex items-center justify-center gap-2 rounded-b-xl bg-marca-700 px-6 py-3.5 text-[14.5px] font-semibold text-white transition hover:bg-marca-800 sm:rounded-bl-none sm:rounded-r-xl"
+                    disabled={montoHero <= 0}
+                    className="inline-flex items-center justify-center gap-2 rounded-b-xl bg-marca-700 px-6 py-3.5 text-[14.5px] font-semibold text-white transition hover:bg-marca-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:hover:bg-slate-300 sm:rounded-bl-none sm:rounded-r-xl"
                   >
                     {t("heroVerOpciones")} <Icono nombre="arrowRight" size={16} />
                   </button>
@@ -1428,18 +1439,9 @@ export default function Home() {
         <div className="animar-subir mx-auto max-w-5xl px-4 pb-4 pt-8 lg:px-8 lg:pt-12">
           {/* Entry cards principales (Opción A — 2026-06-24): el home post-login
               ya no apila destinos/ofertas/fechas/viajes en scroll largo. En su
-              lugar 3 cards que llevan a cada sección con su propia URL.
+              lugar cards que llevan a cada sección con su propia URL.
               Recomendados se mantiene si hay perfil. */}
-          <div className="mb-2 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-marca-700 dark:text-marca-300">
-            O explora sin pensar en presupuesto
-          </div>
-          <div className="mx-auto mb-7 h-px w-12 bg-slate-300 dark:bg-slate-700" />
-          {/* 4 entry cards (audit 2026-06-29): antes eran 3 usando fotos de
-              viajeros del pool landing-hero — no representaban su contenido.
-              Ahora cada card usa una imagen unsplash tematica a su seccion +
-              4ta card "Sorprendeme" para exponer el momento delightful que
-              antes estaba enterrado dentro del modal de Presupuesto. */}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <EntryCard
               href="/destino"
               icono="globe"
@@ -1465,20 +1467,12 @@ export default function Home() {
               cta={viajesGuardados.length > 0 ? "Ver mis viajes" : "Planear viaje"}
               bg="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=70"
             />
-            {/* 4ta card: Sorprendeme. Abre el modal de Presupuesto con la
-                intencion de que el usuario arranque directamente en el
-                boton "Sorprendeme" que esta al lado del selector de region.
-                Idea narrativa: si no sabes a donde ir, deja que Anduve
-                decida por ti. */}
-            <EntryCard
-              onClick={() => setMostrarPresupuesto(true)}
-              icono="compass"
-              titulo="Sorpréndeme"
-              subtitulo="Que Anduve elija por ti"
-              cta="Girar la ruleta"
-              bg="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=70"
-            />
           </div>
+
+          {/* Chip de alertas: expone la feature en el home post-login (antes
+              cero visibilidad hasta entrar a una ciudad). Se dinamica y se
+              auto-oculta si no hay usuario o mientras carga. */}
+          <AlertasChip />
 
           {/* Recomendaciones personalizadas: solo si el usuario tiene perfil
               con datos. Ordenado por afinidad con los gustos acumulados. */}

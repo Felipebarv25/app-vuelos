@@ -289,8 +289,8 @@ export default function Bienvenida() {
 
           <div className="mt-12 grid gap-5 sm:grid-cols-2">
             {[
-              { icono: "map",      titKey: "landingFeat1Tit", subKey: "landingFeat1Sub" },
-              { icono: "plane",    titKey: "landingFeat2Tit", subKey: "landingFeat2Sub" },
+              { icono: "map",      titKey: "landingFeat1Tit", subKey: "landingFeat1Sub", ctaKey: "landingFeat1Cta", href: "/?q=Par%C3%ADs%2C+Francia" },
+              { icono: "plane",    titKey: "landingFeat2Tit", subKey: "landingFeat2Sub", ctaKey: "landingFeat2Cta", href: "/ofertas" },
               { icono: "bell",     titKey: "landingFeat3Tit", subKey: "landingFeat3Sub" },
               { icono: "compass",  titKey: "landingFeat4Tit", subKey: "landingFeat4Sub" },
             ].map((f, i) => (
@@ -303,6 +303,17 @@ export default function Bienvenida() {
                 </div>
                 <h3 className="mt-4 text-[19px] font-extrabold text-marca-900 dark:text-marca-200">{t(f.titKey)}</h3>
                 <p className="mt-2 text-[14.5px] leading-relaxed text-slate-600 dark:text-slate-400">{t(f.subKey)}</p>
+                {f.href && (
+                  <a
+                    href={f.href}
+                    className="mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-marca-700 transition group-hover:translate-x-0.5 hover:text-marca-800 dark:text-marca-300 dark:hover:text-marca-200"
+                  >
+                    {t(f.ctaKey)}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M13 5l7 7-7 7" />
+                    </svg>
+                  </a>
+                )}
               </div>
             ))}
           </div>

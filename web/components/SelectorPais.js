@@ -1,28 +1,29 @@
 "use client";
-// Combobox typeahead de país. Usa PAISES_ISO (todos los países del
-// mundo con bandera emoji). Sirve para el override de "Detectado: X"
-// — el usuario corrige cuando la IP da el país equivocado (VPN,
-// roaming, etc.).
+// Combobox typeahead de país. Busqueda tolerante multi-idioma:
+// - Nombre oficial en es/en/pt/fr (via Intl.DisplayNames)
+// - Codigo ISO-2
+// - Alias comunes (USA, EEUU, UK, Holanda, etc.)
+// - Match por prefijo o "contiene", sin acentos, case-insensitive.
+//
+// Reemplaza el catalogo viejo PAISES_ISO que solo guardaba codigos como
+// "nombre" (bug del script generador que hacia imposible buscar "colombia").
 //
 //   <SelectorPais value="CO" onChange={(iso) => ...} />
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PAISES_ISO } from "@/lib/paisesISO";
+import { aliasBusqueda, nombrePaisMostrar, normalizar } from "@/lib/paisesNombres";
+import { useApp } from "@/lib/AppContext";
 
-const PAISES = Object.entries(PAISES_ISO).map(([cc, info]) => ({
+// Se construye una vez al importar. Cada pais lleva su lista de alias
+// normalizados para busqueda O(n) sin regex.
+const PAISES = Object.keys(PAISES_ISO).map((cc) => ({
   cc,
-  nombre: info.nombre,
-  bandera: info.bandera || "🌍",
-  nombreLower: (info.nombre || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, ""),
+  alias: aliasBusqueda(cc),
 }));
 
-// Componente helper para mostrar la bandera del país como SVG/PNG via flagcdn.
-// Razón: los emoji de bandera (🇨🇴) NO renderizan en Windows (segoe UI emoji
-// no incluye flags por restricciones politicas de Microsoft) — se muestran
-// como "CO" y eso se ve mal. flagcdn sirve PNGs livianos de cualquier ISO.
+// Bandera vs emoji: en Windows los emoji de bandera no renderizan, asi
+// que se usa flagcdn (PNGs livianos con soporte universal).
 function Bandera({ cc, size = 18 }) {
   if (!cc) return null;
   const lo = cc.toLowerCase();
@@ -40,26 +41,38 @@ function Bandera({ cc, size = 18 }) {
   );
 }
 
-function buscarPaises(query) {
-  const q = (query || "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
-  if (!q) return PAISES.slice(0, 30);
+function buscarPaises(query, lang) {
+  const q = normalizar(query);
+  if (!q) {
+    // Sin query: catalogo top con nombres para mostrar (ordenado alfabetico
+    // por nombre localizado).
+    return PAISES
+      .map((p) => ({ ...p, nombre: nombrePaisMostrar(p.cc, lang) }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, lang))
+      .slice(0, 30);
+  }
   const exactos = [];
   const prefijos = [];
   const contiene = [];
   for (const p of PAISES) {
-    const cc = p.cc.toLowerCase();
-    if (cc === q || p.nombreLower === q) exactos.push(p);
-    else if (cc.startsWith(q) || p.nombreLower.startsWith(q)) prefijos.push(p);
-    else if (p.nombreLower.includes(q)) contiene.push(p);
+    let mejor = null; // "exacto" | "prefijo" | "contiene"
+    for (const a of p.alias) {
+      if (a === q) { mejor = "exacto"; break; }
+      if (a.startsWith(q)) { if (mejor !== "exacto") mejor = "prefijo"; }
+      else if (a.includes(q)) { if (!mejor) mejor = "contiene"; }
+    }
+    if (!mejor) continue;
+    const item = { ...p, nombre: nombrePaisMostrar(p.cc, lang) };
+    if (mejor === "exacto") exactos.push(item);
+    else if (mejor === "prefijo") prefijos.push(item);
+    else contiene.push(item);
   }
-  return [...exactos, ...prefijos, ...contiene].slice(0, 30);
+  const cmp = (a, b) => a.nombre.localeCompare(b.nombre, lang);
+  return [...exactos.sort(cmp), ...prefijos.sort(cmp), ...contiene.sort(cmp)].slice(0, 30);
 }
 
 export default function SelectorPais({ value, onChange, className = "" }) {
+  const { lang } = useApp();
   const [abierto, setAbierto] = useState(false);
   const [q, setQ] = useState("");
   const [iSeleccion, setISeleccion] = useState(0);
@@ -82,8 +95,8 @@ export default function SelectorPais({ value, onChange, className = "" }) {
     }
   }, [abierto]);
 
-  const resultados = useMemo(() => buscarPaises(q), [q]);
-  const paisActual = PAISES.find((p) => p.cc === value);
+  const resultados = useMemo(() => buscarPaises(q, lang || "es"), [q, lang]);
+  const nombreActual = value ? nombrePaisMostrar(value, lang || "es") : "—";
 
   function elegir(cc) {
     onChange?.(cc);
@@ -122,8 +135,8 @@ export default function SelectorPais({ value, onChange, className = "" }) {
         </svg>
         <span className="text-white/75">Saliendo desde</span>
         <span className="inline-flex items-center gap-1.5">
-          {paisActual && <Bandera cc={paisActual.cc} size={18} />}
-          <span className="font-bold">{paisActual ? paisActual.nombre : "—"}</span>
+          {value && <Bandera cc={value} size={18} />}
+          <span className="font-bold">{nombreActual}</span>
         </span>
         <span className="ml-0.5 text-[11.5px] font-medium text-white/75 underline-offset-2 group-hover:underline">cambiar</span>
       </button>
@@ -136,7 +149,7 @@ export default function SelectorPais({ value, onChange, className = "" }) {
             value={q}
             onChange={(e) => { setQ(e.target.value); setISeleccion(0); }}
             onKeyDown={onKey}
-            placeholder="Buscar país (Colombia, ES, France…)"
+            placeholder="Buscar país (Colombia, USA, France…)"
             className="w-full border-0 border-b border-slate-100 bg-white px-3 py-2.5 text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
             autoComplete="off"
           />

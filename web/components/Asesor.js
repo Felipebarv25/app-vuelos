@@ -8,6 +8,23 @@ import { useBrowserBackClose } from "@/lib/useBrowserBack";
 // de rutas/presupuesto. Cero costo, todo en el código (sin IA).
 export default function Asesor({ t = (k) => k, usuario, onPlanear, onAbrirPresupuesto }) {
   const [abierto, setAbierto] = useState(false);
+  // Onboarding tip (audit 2026-06-29): la Brujula era invisible. Aparece 1
+  // vez por dispositivo (localStorage) apuntando al boton flotante, ~1.5s
+  // despues del mount para no distraer del primer paint. Se descarta al
+  // abrir el chat o con "Entendido".
+  const [tipVisible, setTipVisible] = useState(false);
+  useEffect(() => {
+    if (!usuario?.email) return;
+    let visto = false;
+    try { visto = !!localStorage.getItem("anduve_asesor_tip_visto"); } catch {}
+    if (visto) return;
+    const id = setTimeout(() => setTipVisible(true), 1500);
+    return () => clearTimeout(id);
+  }, [usuario?.email]);
+  function ocultarTip() {
+    setTipVisible(false);
+    try { localStorage.setItem("anduve_asesor_tip_visto", "1"); } catch {}
+  }
   // Flecha "atrás" del navegador cierra el chat en vez de salir del sitio.
   useBrowserBackClose(abierto, () => setAbierto(false));
   // El modo IA (ChatIA) está desactivado por ahora: solo mostramos la guía
@@ -23,13 +40,50 @@ export default function Asesor({ t = (k) => k, usuario, onPlanear, onAbrirPresup
   return (
     <>
       {!abierto && (
-        <button
-          onClick={() => setAbierto(true)}
-          className="fixed bottom-20 right-4 z-[3500] flex items-center gap-2 rounded-full bg-gradient-to-r from-marca-500 to-marca-700 px-5 py-3.5 text-white shadow-[0_10px_30px_rgba(15,118,110,.45)] transition hover:brightness-110 md:bottom-5 md:right-5"
-        >
-          <Icono nombre="compass" size={20} />
-          <span className="text-sm font-bold">{t("asesorBoton")}</span>
-        </button>
+        <div className="fixed bottom-20 right-4 z-[3500] md:bottom-5 md:right-5">
+          {tipVisible && (
+            <div className="animar-subir relative mb-3 max-w-[260px] rounded-2xl bg-white p-3.5 shadow-[0_18px_45px_rgba(15,118,110,.35)] ring-1 ring-marca-100 dark:bg-slate-800 dark:ring-slate-700">
+              <div className="flex items-start gap-2.5">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-marca-100 text-marca-700 dark:bg-marca-900/40 dark:text-marca-300">
+                  <Icono nombre="compass" size={15} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] font-extrabold text-marca-900 dark:text-slate-100">
+                    {t("asesorTipTit")}
+                  </div>
+                  <div className="mt-0.5 text-[12px] leading-snug text-slate-600 dark:text-slate-300">
+                    {t("asesorTipSub")}
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { ocultarTip(); setAbierto(true); }}
+                      className="rounded-full bg-marca-600 px-3 py-1 text-[11.5px] font-bold text-white hover:bg-marca-700"
+                    >
+                      {t("asesorTipProbar")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={ocultarTip}
+                      className="rounded-full px-3 py-1 text-[11.5px] font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
+                    >
+                      {t("asesorTipCerrar")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              {/* Punta hacia el boton */}
+              <div className="absolute -bottom-1.5 right-6 h-3 w-3 rotate-45 bg-white ring-1 ring-marca-100 dark:bg-slate-800 dark:ring-slate-700" />
+            </div>
+          )}
+          <button
+            onClick={() => { ocultarTip(); setAbierto(true); }}
+            className={`relative flex items-center gap-2 rounded-full bg-gradient-to-r from-marca-500 to-marca-700 px-5 py-3.5 text-white shadow-[0_10px_30px_rgba(15,118,110,.45)] transition hover:brightness-110 ${tipVisible ? "animate-pulse" : ""}`}
+          >
+            <Icono nombre="compass" size={20} />
+            <span className="text-sm font-bold">{t("asesorBoton")}</span>
+          </button>
+        </div>
       )}
 
       {abierto && (
