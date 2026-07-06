@@ -62,7 +62,12 @@ META = {
 }
 
 DESCUENTO_GANGA = 0.15  # 15% bajo la mediana = oferta destacada
-MAX_DIAS_FRESCO = 30    # no mostrar rutas cuyo último dato sea más viejo que esto
+# Ventana de frescura del precio "actual" (audit 2026-07-05: usuario reporto
+# precio de hace 18h muy distinto a Google). Solo se muestra el precio como
+# vigente si fue verificado en las ultimas 6 horas. Si es mas viejo, la ruta
+# se OMITE del ofertas.json. Con el detector corriendo cada 3h esto deja 1
+# corrida de margen antes de considerar el precio obsoleto.
+HORAS_FRESCO = 6
 
 
 def _ddmm(iso):
@@ -111,7 +116,20 @@ def main():
             clave = (fila["origen"], fila["destino"])
             rutas.setdefault(clave, []).append({**fila, "precio": precio})
 
-    limite_fresco = (date.today() - timedelta(days=MAX_DIAS_FRESCO)).isoformat()
+    def _parse_ts(s):
+        """Timestamp ISO -> datetime, tolerante a formatos variados."""
+        if not s:
+            return None
+        try:
+            return datetime.fromisoformat(s)
+        except ValueError:
+            # timestamps con Z o sin segundos: cortar a los primeros 19 chars
+            try:
+                return datetime.fromisoformat(s[:19])
+            except Exception:
+                return None
+
+    umbral_fresco = datetime.now() - timedelta(hours=HORAS_FRESCO)
     salida = []
     for (origen, destino), filas in rutas.items():
         if origen not in ORIGENES or destino not in META:
@@ -121,13 +139,16 @@ def main():
         precios = [r["precio"] for r in filas]
         mediana = statistics.median(precios)
 
-        # PRECIO ACTUAL = el más barato del ÚLTIMO escaneo, NO el mínimo histórico
-        # (ese ya no existe y por eso no cuadraba con Google). Así el número es el
-        # más reciente que vimos de verdad.
-        ultima = max((r.get("timestamp") or "")[:10] for r in filas)
-        if ultima and ultima < limite_fresco:
-            continue  # datos viejos: mejor no mostrar un precio que ya no aplica
-        recientes = [r for r in filas if (r.get("timestamp") or "")[:10] == ultima] or filas
+        # PRECIO ACTUAL = el más barato de las últimas HORAS_FRESCO horas. Si
+        # ninguna fila cae en esa ventana, la ruta se OMITE (no mostramos un
+        # precio que probablemente ya no existe). Antes usábamos "último día",
+        # lo que podía dejar precios de hace 18h como los mostrados al usuario.
+        recientes = [
+            r for r in filas
+            if (ts := _parse_ts(r.get("timestamp", ""))) and ts >= umbral_fresco
+        ]
+        if not recientes:
+            continue
         mejor = min(recientes, key=lambda r: r["precio"])
         precio = mejor["precio"]
 

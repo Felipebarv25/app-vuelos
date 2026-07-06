@@ -2,7 +2,29 @@
 import { useEffect, useMemo, useState } from "react";
 import { Icono } from "./Icono";
 import { obtenerTasas } from "@/lib/fx";
+import { isoDesdeNombre } from "@/lib/requisitos";
 import AlertaPrecio from "./AlertaPrecio";
+
+// Bandera PNG via flagcdn: los emoji de bandera (🇺🇸) NO renderizan en Windows
+// (segoe UI emoji no incluye flags) y se ven como "us" — lo que confunde al
+// usuario ("us Nueva York" en vez de "🇺🇸 Nueva York"). Usamos flagcdn como en
+// SelectorPais para tener rendering consistente en todo OS.
+function BanderaCC({ cc, size = 14 }) {
+  if (!cc) return null;
+  const lo = cc.toLowerCase();
+  return (
+    <img
+      src={`https://flagcdn.com/${size}x${Math.round(size * 0.75)}/${lo}.png`}
+      srcSet={`https://flagcdn.com/${size * 2}x${Math.round(size * 1.5)}/${lo}.png 2x`}
+      alt=""
+      width={size}
+      height={Math.round(size * 0.75)}
+      className="inline-block rounded-[2px] align-middle"
+      loading="lazy"
+      onError={(e) => { e.currentTarget.style.display = "none"; }}
+    />
+  );
+}
 
 // Tablero de "vuelos baratos detectados": lee web/public/ofertas.json
 // (generado por el detector de precios) y muestra las mejores ofertas
@@ -204,7 +226,10 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
             <div className="flex items-center gap-2 text-[12.5px] font-semibold text-slate-500">
               <span>{origenes[r.origen] || r.origen}</span>
               <span className="text-slate-300">→</span>
-              <span>{r.bandera} {r.ciudad}</span>
+              <span className="inline-flex items-center gap-1.5">
+                <BanderaCC cc={isoDesdeNombre(r.pais)} size={14} />
+                {r.ciudad}
+              </span>
             </div>
             {/* Social proof real: muestra cuantos viajeros han buscado este
                 destino. Solo aparece cuando hay datos reales en KV (umbral
@@ -245,12 +270,31 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
               {/* QW2: frescura del precio. Si la oferta tiene `visto` propio,
                   lo usamos; si no, caemos al timestamp global del archivo
                   (data.generado). Así NUNCA mostramos un precio sin frescura. */}
-              {(r.visto || data.generado) && (
-                <>
-                  <span className="text-slate-300">·</span>
-                  <span className="inline-flex items-center gap-1 text-[11px] text-slate-400"><Icono nombre="clock" size={11} /> {fmtHace(r.visto || data.generado)}</span>
-                </>
-              )}
+              {(r.visto || data.generado) && (() => {
+                // Badge honesto de frescura (audit 2026-07-05):
+                //   < 3h : verde con check (precio recien verificado)
+                //   3-6h : amarillo (aun vigente pero no super fresco)
+                //   > 6h : rojo (el detector Python ya omite estos, pero por
+                //          seguridad si aparece uno lo marcamos claramente).
+                // El detector corre cada 3h; con ventana de 6h en generar_ofertas.py
+                // dejamos 1 corrida de margen antes de considerar el precio obsoleto.
+                const ts = r.visto || data.generado;
+                const min = Math.round((Date.now() - new Date(ts).getTime()) / 60000);
+                const clase = min <= 180
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : min <= 360
+                    ? "text-amber-600 dark:text-amber-400"
+                    : "text-red-500";
+                const icono = min <= 180 ? "check" : "clock";
+                return (
+                  <>
+                    <span className="text-slate-300">·</span>
+                    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold ${clase}`}>
+                      <Icono nombre={icono} size={11} /> {fmtHace(ts)}
+                    </span>
+                  </>
+                );
+              })()}
             </div>
 
             <div className="mt-3 flex gap-2">
