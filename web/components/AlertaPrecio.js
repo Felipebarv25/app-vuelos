@@ -17,10 +17,55 @@ import { createPortal } from "react-dom";
 import { useApp } from "@/lib/AppContext";
 import { Icono } from "./Icono";
 import { useBrowserBackClose } from "@/lib/useBrowserBack";
+import { PAISES_ORIGEN, PAIS_DEFAULT, paisValido } from "@/lib/paisesOrigen";
+import { monedaDePais } from "@/lib/monedas";
+
+// Normaliza para comparar nombres de ciudad ("Medellín" vs "Medellin").
+function _norm(s) {
+  return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+}
 
 export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, label = null }) {
   const { t, lang, usuario, abrirPaywall } = useApp();
   const [abierto, setAbierto] = useState(false);
+  // ORIGEN de la alerta (feedback 2026-07-11: usuario de Medellin recibia
+  // alertas saliendo de Bogota). Hubs del pais del visitante + "cualquiera".
+  // Prioridad del default: eleccion previa (localStorage anduve_hub_origen)
+  // > ciudad detectada por IP (/api/geo, header x-vercel-ip-city) > 1er hub.
+  const [paisOrigen, setPaisOrigen] = useState(PAIS_DEFAULT);
+  const [hubOrigen, setHubOrigen] = useState("");       // IATA o "" = cualquiera
+  const [escalasMax, setEscalasMax] = useState(0);       // 0 directo | 1 | 99
+  useEffect(() => {
+    let vivo = true;
+    let iso = PAIS_DEFAULT;
+    try {
+      iso = localStorage.getItem("anduve_pais_iso")
+         || sessionStorage.getItem("anduve_pais_iso_geo")
+         || PAIS_DEFAULT;
+    } catch {}
+    if (!paisValido(iso)) iso = PAIS_DEFAULT;
+    setPaisOrigen(iso);
+    const hubs = PAISES_ORIGEN[iso]?.hubs || [];
+    // 1) eleccion previa del usuario
+    try {
+      const previo = localStorage.getItem("anduve_hub_origen");
+      if (previo === "" || hubs.some((h) => h.iata === previo)) {
+        setHubOrigen(previo ?? (hubs[0]?.iata || ""));
+        return;
+      }
+    } catch {}
+    // 2) ciudad detectada por IP -> hub que coincida por nombre
+    fetch("/api/geo")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((g) => {
+        if (!vivo) return;
+        const c = _norm(g?.ciudad);
+        const match = c ? hubs.find((h) => _norm(h.ciudad) === c) : null;
+        setHubOrigen(match ? match.iata : (hubs[0]?.iata || ""));
+      })
+      .catch(() => { if (vivo) setHubOrigen(hubs[0]?.iata || ""); });
+    return () => { vivo = false; };
+  }, []);
   // Flecha "atrás" del navegador cierra este modal en vez de salir del sitio.
   useBrowserBackClose(abierto, () => setAbierto(false));
   const [umbral, setUmbral] = useState(() =>
@@ -98,10 +143,23 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
         if (tk) headers.Authorization = `Bearer ${tk}`;
       } catch {}
 
+      // Recordar el hub elegido para las proximas alertas de este dispositivo.
+      try { localStorage.setItem("anduve_hub_origen", hubOrigen); } catch {}
+      // Moneda local del usuario (para que el email muestre USD + su moneda).
+      let moneda = "";
+      try {
+        moneda = sessionStorage.getItem("anduve_moneda_geo")
+              || monedaDePais(paisOrigen)
+              || "";
+      } catch {}
+
       const r = await fetch("/api/alertas/crear", {
         method: "POST",
         headers,
-        body: JSON.stringify({ ciudad, pais, iata, umbral: Number(umbral), lang }),
+        body: JSON.stringify({
+          ciudad, pais, iata, umbral: Number(umbral), lang,
+          origen: hubOrigen, escalasMax, moneda,
+        }),
       });
       const data = await r.json().catch(() => ({}));
       if (r.status === 402) {
@@ -226,6 +284,71 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
                       </button>
                     </div>
                   )}
+
+                  {/* ORIGEN: hubs del pais del visitante + "cualquiera". El
+                      default sale de la ciudad detectada por IP o de la
+                      eleccion anterior (localStorage). */}
+                  {(PAISES_ORIGEN[paisOrigen]?.hubs?.length || 0) > 0 && (
+                    <div className="mt-4">
+                      <div className="text-[13px] font-bold text-slate-600">{t("alertaOrigenLabel")}</div>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {PAISES_ORIGEN[paisOrigen].hubs.map((h) => (
+                          <button
+                            key={h.iata}
+                            type="button"
+                            onClick={() => setHubOrigen(h.iata)}
+                            className={`rounded-lg border px-2.5 py-1.5 text-[12.5px] font-semibold transition ${
+                              hubOrigen === h.iata
+                                ? "border-amber-500 bg-amber-500 text-white"
+                                : "border-slate-200 bg-white text-slate-600 hover:border-amber-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                            }`}
+                          >
+                            {h.ciudad}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => setHubOrigen("")}
+                          className={`rounded-lg border px-2.5 py-1.5 text-[12.5px] font-semibold transition ${
+                            hubOrigen === ""
+                              ? "border-amber-500 bg-amber-500 text-white"
+                              : "border-slate-200 bg-white text-slate-600 hover:border-amber-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                          }`}
+                        >
+                          {t("alertaOrigenCualquiera")}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ESCALAS: directo por defecto. El usuario acepta escalas
+                      explicitamente si las quiere (feedback 2026-07-11). */}
+                  <div className="mt-4">
+                    <div className="text-[13px] font-bold text-slate-600">{t("alertaEscalasLabel")}</div>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {[
+                        [0, t("alertaEscalasDirecto")],
+                        [1, t("alertaEscalasUna")],
+                        [99, t("alertaEscalasCualquiera")],
+                      ].map(([v, texto]) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setEscalasMax(v)}
+                          className={`rounded-lg border px-2.5 py-1.5 text-[12.5px] font-semibold transition ${
+                            escalasMax === v
+                              ? "border-amber-500 bg-amber-500 text-white"
+                              : "border-slate-200 bg-white text-slate-600 hover:border-amber-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                          }`}
+                        >
+                          {texto}
+                        </button>
+                      ))}
+                    </div>
+                    {escalasMax === 0 && (
+                      <div className="mt-1.5 text-[11.5px] text-slate-400">{t("alertaEscalasNota")}</div>
+                    )}
+                  </div>
 
                   {estado === "error" && (
                     <div className="mt-2 text-[12.5px] font-semibold text-red-600">

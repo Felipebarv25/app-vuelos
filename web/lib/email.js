@@ -12,7 +12,46 @@
 // Si RESEND_API_KEY no esta, las funciones devuelven { ok:false, motivo:
 // "no-configurado" } y el endpoint llamador se encarga de avisar.
 
+import { nombreDeIATA } from "./paisesOrigen";
+
 const FROM_DEFAULT = "Anduve <onboarding@resend.dev>";
+
+// --- Conversion a moneda local para el email de alertas ---------------------
+// El usuario pidio ver el precio en su moneda ademas de USD (2026-07-11).
+// Server-side no podemos llamar /api/fx (mismo deploy), asi que consultamos
+// la fuente directa con un cache en memoria de 6h por instancia. Best-effort:
+// si falla, el email sale solo en USD como antes.
+let _fxCache = { t: 0, rates: null };
+async function tasaLocal(moneda) {
+  if (!moneda || moneda === "USD") return null;
+  const ahora = Date.now();
+  if (!_fxCache.rates || ahora - _fxCache.t > 6 * 3600 * 1000) {
+    try {
+      const r = await fetch("https://open.er-api.com/v6/latest/USD");
+      const d = r.ok ? await r.json() : null;
+      if (d?.result === "success" && d.rates) _fxCache = { t: ahora, rates: d.rates };
+    } catch {}
+  }
+  const v = _fxCache.rates?.[moneda];
+  return typeof v === "number" && v > 0 ? v : null;
+}
+
+function fmtMonedaLocal(usd, moneda, tasa) {
+  const local = Math.round(usd * tasa);
+  return `≈ ${local.toLocaleString("es-CO")} ${moneda}`;
+}
+
+// Texto de escalas por idioma. null = desconocido (no se muestra nada).
+function textoEscalas(n, lang) {
+  if (n == null) return "";
+  const T = {
+    es: n === 0 ? "Vuelo directo" : n === 1 ? "1 escala" : `${n} escalas`,
+    en: n === 0 ? "Nonstop flight" : n === 1 ? "1 stop" : `${n} stops`,
+    pt: n === 0 ? "Voo direto" : n === 1 ? "1 escala" : `${n} escalas`,
+    fr: n === 0 ? "Vol direct" : n === 1 ? "1 escale" : `${n} escales`,
+  };
+  return T[lang] || T.es;
+}
 
 export function emailDisponible() {
   return !!process.env.RESEND_API_KEY;
@@ -147,9 +186,18 @@ export async function enviarAlertaPrecio({
   link = "",
   aerolinea = "",
   lang = "es",
+  escalas = null,
+  moneda = "",
 }) {
   const T = PLANTILLAS_ALERTA[lang] || PLANTILLAS_ALERTA.es;
   const ahorro = Math.max(0, umbral - precio);
+  // Origen legible: "MDE" -> "Medellín". Si el catalogo no lo conoce, se
+  // muestra el codigo IATA tal cual (mejor que nada).
+  const origenNombre = origen ? (nombreDeIATA(origen) || origen) : "";
+  // Precio en la moneda local del usuario (best-effort, solo si hay tasa).
+  const tasa = await tasaLocal(moneda);
+  const precioLocal = tasa ? fmtMonedaLocal(precio, moneda, tasa) : "";
+  const lineaEscalas = textoEscalas(escalas, lang);
   const html = `
 <!doctype html>
 <html lang="${lang}">
@@ -164,12 +212,14 @@ export async function enviarAlertaPrecio({
         <tr><td>
           <div style="font-size:13px;font-weight:700;letter-spacing:.18em;color:#0c5f58;text-transform:uppercase;">Anduve</div>
           <h1 style="margin:8px 0 24px 0;font-size:22px;color:#052b28;">${T.saludo}</h1>
-          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.55;color:#334155;">${T.intro(ciudad, precio, umbral, origen)}</p>
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.55;color:#334155;">${T.intro(ciudad, precio, umbral, origenNombre)}</p>
 
           <div style="margin:24px 0;padding:24px;background:linear-gradient(135deg,#0c5f58,#1c948e);border-radius:14px;text-align:center;color:#ffffff;">
             <div style="font-size:32px;font-weight:800;letter-spacing:-.5px;">US$ ${precio}</div>
-            <div style="font-size:13px;opacity:.85;margin-top:6px;">${ciudad}${pais ? ", " + pais : ""}${aerolinea ? " · " + aerolinea : ""}</div>
-            ${fecha_ida ? `<div style="font-size:13px;opacity:.85;margin-top:4px;">${fecha_ida}${fecha_vuelta ? " → " + fecha_vuelta : ""}</div>` : ""}
+            ${precioLocal ? `<div style="font-size:16px;font-weight:700;opacity:.9;margin-top:4px;">${precioLocal}</div>` : ""}
+            <div style="font-size:13px;opacity:.85;margin-top:6px;">${origenNombre ? origenNombre + " → " : ""}${ciudad}${pais ? ", " + pais : ""}${aerolinea ? " · " + aerolinea : ""}</div>
+            ${lineaEscalas ? `<div style="display:inline-block;margin-top:8px;padding:3px 10px;background:rgba(255,255,255,.18);border-radius:999px;font-size:12px;font-weight:700;">${lineaEscalas}</div>` : ""}
+            ${fecha_ida ? `<div style="font-size:13px;opacity:.85;margin-top:8px;">${fecha_ida}${fecha_vuelta ? " → " + fecha_vuelta : ""}</div>` : ""}
             ${ahorro > 0 ? `<div style="display:inline-block;margin-top:12px;padding:4px 10px;background:rgba(16,185,129,.25);border-radius:999px;font-size:12px;font-weight:700;">Ahorras US$ ${ahorro}</div>` : ""}
           </div>
 
@@ -186,7 +236,7 @@ export async function enviarAlertaPrecio({
 </body>
 </html>`.trim();
 
-  const text = `${T.saludo}\n\n${T.intro(ciudad, precio, umbral, origen).replace(/<[^>]+>/g, "")}\n\nUS$ ${precio} - ${ciudad}${aerolinea ? " (" + aerolinea + ")" : ""}\n${fecha_ida}${fecha_vuelta ? " - " + fecha_vuelta : ""}\n\n${link ? T.cta + ": " + link + "\n\n" : ""}${T.aviso}\n\n- ${T.firma}`;
+  const text = `${T.saludo}\n\n${T.intro(ciudad, precio, umbral, origenNombre).replace(/<[^>]+>/g, "")}\n\nUS$ ${precio}${precioLocal ? ` (${precioLocal})` : ""} - ${origenNombre ? origenNombre + " -> " : ""}${ciudad}${aerolinea ? " (" + aerolinea + ")" : ""}${lineaEscalas ? " - " + lineaEscalas : ""}\n${fecha_ida}${fecha_vuelta ? " - " + fecha_vuelta : ""}\n\n${link ? T.cta + ": " + link + "\n\n" : ""}${T.aviso}\n\n- ${T.firma}`;
 
   return enviar({ to, subject: T.subject(ciudad, precio), html, text });
 }

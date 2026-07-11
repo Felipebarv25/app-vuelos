@@ -47,6 +47,16 @@ export async function POST(req) {
   const iata = String(body?.iata || "").trim().toUpperCase().slice(0, 3);
   const umbral = Number(body?.umbral);
   const lang = ["es", "en", "pt", "fr"].includes(body?.lang) ? body.lang : "es";
+  // Origen preferido (IATA de hub, "" = cualquiera) — para que el usuario de
+  // Medellin no reciba gangas saliendo de Bogota.
+  const origenRaw = String(body?.origen || "").trim().toUpperCase().slice(0, 3);
+  const origen = /^[A-Z]{3}$/.test(origenRaw) ? origenRaw : "";
+  // Filtro de escalas: 0 (solo directo, default) | 1 | 99 (cualquiera).
+  const escalasNum = Number(body?.escalasMax);
+  const escalasMax = [0, 1, 99].includes(escalasNum) ? escalasNum : 0;
+  // Moneda local del usuario para mostrar el precio convertido en el email.
+  const monedaRaw = String(body?.moneda || "").trim().toUpperCase().slice(0, 3);
+  const moneda = /^[A-Z]{3}$/.test(monedaRaw) ? monedaRaw : "";
 
   if (!ciudad || !pais || !/^[A-Z]{3}$/.test(iata) || !Number.isFinite(umbral) || umbral <= 0) {
     return Response.json({ ok: false, motivo: "datos-invalidos" }, { status: 400 });
@@ -64,7 +74,7 @@ export async function POST(req) {
     }
   }
 
-  const alerta = await crearAlerta({ email, ciudad, pais, iata, umbral, lang });
+  const alerta = await crearAlerta({ email, ciudad, pais, iata, umbral, lang, origen, escalasMax, moneda });
   if (!alerta) return Response.json({ ok: false, motivo: "no-creada" }, { status: 500 });
 
   return Response.json({ ok: true, alerta });

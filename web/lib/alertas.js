@@ -21,7 +21,7 @@ export function generarIdAlerta() {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export async function crearAlerta({ email, ciudad, pais, iata, umbral, lang = "es" }) {
+export async function crearAlerta({ email, ciudad, pais, iata, umbral, lang = "es", origen = "", escalasMax = 0, moneda = "" }) {
   if (!kvActivo()) return null;
   const id = generarIdAlerta();
   const alerta = {
@@ -35,6 +35,16 @@ export async function crearAlerta({ email, ciudad, pais, iata, umbral, lang = "e
     ultimaDispara: null,
     activa: true,
     lang,
+    // origen: IATA del hub desde el que el usuario quiere salir ("" = desde
+    // cualquiera). Antes las alertas no tenian origen y el usuario de
+    // Medellin recibia gangas saliendo de Bogota (feedback 2026-07-11).
+    origen: String(origen || "").toUpperCase().slice(0, 3),
+    // escalasMax: 0 = solo vuelos directos (default), 1 = hasta 1 escala,
+    // 99 = cualquier cantidad. El usuario acepta explicitamente las escalas.
+    escalasMax: Number.isFinite(Number(escalasMax)) ? Number(escalasMax) : 0,
+    // moneda del usuario al crear la alerta, para que el email muestre el
+    // precio tambien en su moneda local ademas de USD.
+    moneda: String(moneda || "").toUpperCase().slice(0, 3),
   };
   const k = `alerta:${id}`;
   const kUser = `alertas:user:${alerta.email}`;

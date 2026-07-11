@@ -57,6 +57,14 @@ export async function POST(req) {
   const ids = await idsAlertasPorIATA(iata);
   if (!ids.length) return Response.json({ ok: true, disparadas: 0 });
 
+  // Escalas del vuelo visto. El detector manda escalas_ida/vuelta (entero o
+  // null = desconocido). "Peor" = el maximo de los dos tramos; si ALGUNO es
+  // desconocido, el total es desconocido (no podemos prometer "directo").
+  const escIda = Number.isInteger(body?.escalas_ida) ? body.escalas_ida : null;
+  const escVuelta = Number.isInteger(body?.escalas_vuelta) ? body.escalas_vuelta : null;
+  const peorEscalas = escIda != null && escVuelta != null ? Math.max(escIda, escVuelta) : null;
+  const origenVuelo = String(body?.origen || "").toUpperCase();
+
   let disparadas = 0;
   let errores = 0;
 
@@ -65,6 +73,22 @@ export async function POST(req) {
     if (!a || !a.activa) continue;
     if (precio > a.umbral) continue;
 
+    // Filtro de ORIGEN: si la alerta pide salir de un hub especifico, solo
+    // dispara con vuelos desde ese hub (feedback 2026-07-11: usuario en
+    // Medellin recibia alertas saliendo de Bogota). Alertas viejas sin
+    // `origen` mantienen el comportamiento anterior (cualquier origen).
+    if (a.origen && origenVuelo && a.origen !== origenVuelo) continue;
+
+    // Filtro de ESCALAS: escalasMax 0 = solo directo (default de alertas
+    // nuevas), 1 = hasta 1 escala, 99 = cualquiera. Alertas viejas sin el
+    // campo se tratan como 99 (no romper lo que ya existia). Si las escalas
+    // del vuelo son DESCONOCIDAS solo disparan las alertas que aceptan
+    // cualquier vuelo — nunca prometemos "directo" sin dato.
+    const maxAceptado = Number.isFinite(Number(a.escalasMax)) ? Number(a.escalasMax) : 99;
+    if (maxAceptado < 99) {
+      if (peorEscalas == null || peorEscalas > maxAceptado) continue;
+    }
+
     try {
       const env = await enviarAlertaPrecio({
         to: a.email,
@@ -72,12 +96,14 @@ export async function POST(req) {
         pais: a.pais,
         precio,
         umbral: a.umbral,
-        origen: body?.origen || "",
+        origen: origenVuelo,
         fecha_ida: body?.fecha_ida || "",
         fecha_vuelta: body?.fecha_vuelta || "",
         link: body?.link || "",
         aerolinea: body?.aerolinea || "",
         lang: a.lang || "es",
+        escalas: peorEscalas,
+        moneda: a.moneda || "",
       });
       if (env?.ok) {
         await marcarDisparada(id);

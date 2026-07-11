@@ -32,7 +32,8 @@ ALERTS_SECRET = os.environ.get("ALERTS_SHARED_SECRET", "")
 
 
 def notificar_alertas_web(origen, destino, precio, fecha_ida, fecha_vuelta,
-                          link, aerolinea, promedio_ruta=None):
+                          link, aerolinea, promedio_ruta=None,
+                          escalas_ida=None, escalas_vuelta=None):
     """Avisa al endpoint Vercel que vio un precio. La app busca usuarios con
     alertas para ese destino cuyo umbral cumpla y les manda email. Best-effort:
     si falla la red o el secret no esta, no rompe la corrida.
@@ -60,6 +61,11 @@ def notificar_alertas_web(origen, destino, precio, fecha_ida, fecha_vuelta,
                 "link": link,
                 "aerolinea": aerolinea,
                 "promedio_ruta": promedio_ruta,
+                # Escalas del vuelo visto (None = desconocido). La API las usa
+                # para respetar el filtro del usuario ("solo directo" por
+                # defecto, o hasta N escalas si el usuario acepto mas).
+                "escalas_ida": escalas_ida,
+                "escalas_vuelta": escalas_vuelta,
             },
             timeout=8,
         )
@@ -195,6 +201,8 @@ def main():
                         link=oferta.get("link", ""),
                         aerolinea=oferta.get("aerolinea", ""),
                         promedio_ruta=round(promedio) if promedio else None,
+                        escalas_ida=oferta.get("escalas_ida"),
+                        escalas_vuelta=oferta.get("escalas_vuelta"),
                     )
                 except Exception as e:
                     print(f"  ! Error notificando alertas {origen}->{destino}: {e}")
