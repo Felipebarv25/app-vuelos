@@ -14,7 +14,7 @@ import json
 import os
 import statistics
 import urllib.parse
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from dotenv import load_dotenv
 
@@ -117,19 +117,22 @@ def main():
             rutas.setdefault(clave, []).append({**fila, "precio": precio})
 
     def _parse_ts(s):
-        """Timestamp ISO -> datetime, tolerante a formatos variados."""
+        """Timestamp ISO -> datetime AWARE en UTC, tolerante a formatos.
+        Las filas nuevas traen +00:00 explicito; las viejas son naive pero
+        siempre se escribieron desde GitHub Actions (UTC), asi que a las
+        naive les fijamos tz=UTC en vez de adivinar hora local."""
         if not s:
             return None
         try:
-            return datetime.fromisoformat(s)
+            dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
         except ValueError:
-            # timestamps con Z o sin segundos: cortar a los primeros 19 chars
             try:
-                return datetime.fromisoformat(s[:19])
+                dt = datetime.fromisoformat(s[:19])
             except Exception:
                 return None
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
-    umbral_fresco = datetime.now() - timedelta(hours=HORAS_FRESCO)
+    umbral_fresco = datetime.now(timezone.utc) - timedelta(hours=HORAS_FRESCO)
     salida = []
     for (origen, destino), filas in rutas.items():
         if origen not in ORIGENES or destino not in META:
@@ -196,7 +199,7 @@ def main():
     salida.sort(key=lambda r: (not r["esGanga"], r["precio"]))
 
     doc = {
-        "generado": datetime.now().isoformat(timespec="seconds"),
+        "generado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "moneda": config.MONEDA,
         "origenes": ORIGENES,
         "rutas": salida,

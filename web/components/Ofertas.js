@@ -34,6 +34,16 @@ function BanderaCC({ cc, size = 14 }) {
 function ddmm(iso) {
   return iso && iso.length >= 10 ? iso.slice(8, 10) + iso.slice(5, 7) : "";
 }
+// Timestamps del detector -> epoch ms, forzando UTC si vienen naive.
+// El detector corre en GitHub Actions (UTC); las filas nuevas ya traen
+// +00:00 pero las viejas son naive. `new Date("...T10:15:07")` sin sufijo
+// se parsea como hora LOCAL del navegador: en Colombia (UTC-5) el precio se
+// veia 5 horas mas fresco de lo real (lectura 360 2026-07-11).
+function tsUTC(iso) {
+  if (!iso) return NaN;
+  const s = /Z|[+-]\d{2}:\d{2}$/.test(iso) ? iso : iso + "Z";
+  return new Date(s).getTime();
+}
 function markerDe(link) {
   const m = (link || "").match(/[?&]marker=([^&]+)/);
   return m ? m[1] : "";
@@ -126,8 +136,8 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
     // Orden: mayor descuento primero; si empatan, más reciente primero.
     return [...filtradas].sort((a, b) => {
       if (b.descuento !== a.descuento) return b.descuento - a.descuento;
-      const ta = a.visto ? new Date(a.visto).getTime() : 0;
-      const tb = b.visto ? new Date(b.visto).getTime() : 0;
+      const ta = a.visto ? tsUTC(a.visto) : 0;
+      const tb = b.visto ? tsUTC(b.visto) : 0;
       return tb - ta;
     });
   }, [data, filtro]);
@@ -138,7 +148,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
   const ultimoEscaneo = useMemo(() => {
     let max = 0;
     for (const r of data?.rutas || []) {
-      const ts = r.visto ? new Date(r.visto).getTime() : 0;
+      const ts = r.visto ? tsUTC(r.visto) : 0;
       if (ts > max) max = ts;
     }
     return max || null;
@@ -160,7 +170,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
   // "visto hace X" (frescura del precio) a partir del timestamp del último escaneo.
   function fmtHace(iso) {
     if (!iso) return "";
-    const ms = Date.now() - new Date(iso).getTime();
+    const ms = Date.now() - tsUTC(iso);
     if (Number.isNaN(ms)) return "";
     const min = Math.round(ms / 60000);
     if (min < 60) return t("ofertasHaceMin").replace("{n}", Math.max(1, min));
@@ -306,7 +316,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
                 // El detector corre cada 3h; con ventana de 6h en generar_ofertas.py
                 // dejamos 1 corrida de margen antes de considerar el precio obsoleto.
                 const ts = r.visto || data.generado;
-                const min = Math.round((Date.now() - new Date(ts).getTime()) / 60000);
+                const min = Math.round((Date.now() - tsUTC(ts)) / 60000);
                 const clase = min <= 180
                   ? "text-emerald-600 dark:text-emerald-400"
                   : min <= 360
@@ -396,7 +406,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
 
       {data.generado && (
         <div className="mt-3 text-[11px] text-slate-400">
-          {t("ofertasActualizado")}: {new Date(data.generado).toLocaleString(lang)} · {t("ofertasFuente")}
+          {t("ofertasActualizado")}: {new Date(tsUTC(data.generado)).toLocaleString(lang)} · {t("ofertasFuente")}
         </div>
       )}
     </section>

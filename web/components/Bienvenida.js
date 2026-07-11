@@ -51,6 +51,26 @@ export default function Bienvenida() {
   // sabemos; número = lo que reporta KV. Si la red falla o KV no responde,
   // queda en null y la UI lo oculta (cero números inventados).
   const [online, setOnline] = useState(null);
+  // Mejor oferta REAL para el anchor de precio. Antes el bloque decia
+  // "vs ~US$1.200 armandolo por tu cuenta" — numero inventado sin fuente que
+  // dañaba la seccion "Datos reales, no marketing" (lectura 360 2026-07-11).
+  // Ahora: mejor ganga de ofertas.json comparada contra su MEDIANA historica
+  // (dato que el detector ya calcula). Si el fetch falla, cae al copy estatico.
+  const [ofertaTop, setOfertaTop] = useState(null);
+  useEffect(() => {
+    let vivo = true;
+    fetch("/ofertas.json")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!vivo || !d?.rutas?.length) return;
+        const conDcto = d.rutas.filter((r) => r.descuento >= 5 && r.mediana > r.precio);
+        if (!conDcto.length) return;
+        const top = conDcto.sort((a, b) => b.descuento - a.descuento)[0];
+        setOfertaTop({ ...top, origenNombre: d.origenes?.[top.origen] || top.origen });
+      })
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, []);
 
   // Auth config (Google / magic code disponibles segun env vars).
   const [authConfig, setAuthConfig] = useState({ google: false, magicCode: false });
@@ -339,9 +359,11 @@ export default function Bienvenida() {
               (a) social proof real (live counter), (b) ancla de precio con
               valor concreto, (c) stat de producto de soporte (80+). */}
           <div className="mt-10 flex flex-col items-center gap-6">
-            {/* Contador en vivo. Solo aparece si KV respondió con ≥1 — cero
-                números inventados. */}
-            {online != null && online >= 1 && (
+            {/* Contador en vivo. Solo aparece con ≥5 — un "1 viajero ahora"
+                es ANTI-social-proof: grita app vacía y daña mas de lo que
+                suma (lectura 360 2026-07-11). Cero números inventados: si
+                hay poca gente, simplemente no se muestra. */}
+            {online != null && online >= 5 && (
               <div className="inline-flex items-center gap-2.5 rounded-full bg-emerald-500/15 px-4 py-2 ring-1 ring-emerald-400/40">
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -356,27 +378,44 @@ export default function Bienvenida() {
               </div>
             )}
 
-            {/* Anchor de precio: card protagonista. Etiqueta clarificada
-                (audit 2026-06-29): antes decia solo "MEXICO -> ROMA US$733"
-                sin contexto de fechas ni fuente, se sentia inventado. Ahora
-                explicita "Detectado por nuestro sistema" + comparacion vs
-                promedio + ahorro estimado. Sigue siendo un ejemplo pero
-                narrativa mas confiable. */}
+            {/* Anchor de precio: card protagonista. Datos 100% REALES desde
+                ofertas.json (mejor ganga + su mediana historica). El copy
+                estatico "vs ~US$1.200 armandolo por tu cuenta" solo queda
+                como fallback si el fetch falla — era un numero sin fuente
+                que restaba credibilidad (lectura 360 2026-07-11). */}
             <div className="w-full max-w-md rounded-3xl bg-white/10 px-8 py-6 ring-1 ring-white/15 backdrop-blur-md">
               <div className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.22em] text-emerald-300">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 {t("landingPrecioEjemplo")}
               </div>
-              <div className="mt-2 font-display text-[28px] font-extrabold leading-tight sm:text-[32px]">
-                {t("landingPrecioRuta")} <span className="text-acento-400">US$733</span>
-              </div>
-              <div className="mt-2 text-[13.5px] text-white/65 line-through">
-                {t("landingPrecioVs")}
-              </div>
-              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-[12px] font-bold uppercase tracking-wider text-emerald-300">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
-                {t("landingPrecioAhorro")}
-              </div>
+              {ofertaTop ? (
+                <>
+                  <div className="mt-2 font-display text-[28px] font-extrabold leading-tight sm:text-[32px]">
+                    {ofertaTop.origenNombre} → {ofertaTop.ciudad}{" "}
+                    <span className="text-acento-400">US${Math.round(ofertaTop.precio).toLocaleString("en-US")}</span>
+                  </div>
+                  <div className="mt-2 text-[13.5px] text-white/65 line-through">
+                    {t("landingPrecioNormal").replace("{v}", `US$${Math.round(ofertaTop.mediana).toLocaleString("en-US")}`)}
+                  </div>
+                  <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-[12px] font-bold uppercase tracking-wider text-emerald-300">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                    {t("landingPrecioBajo").replace("{n}", ofertaTop.descuento)}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="mt-2 font-display text-[28px] font-extrabold leading-tight sm:text-[32px]">
+                    {t("landingPrecioRuta")} <span className="text-acento-400">US$733</span>
+                  </div>
+                  <div className="mt-2 text-[13.5px] text-white/65 line-through">
+                    {t("landingPrecioVs")}
+                  </div>
+                  <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-[12px] font-bold uppercase tracking-wider text-emerald-300">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                    {t("landingPrecioAhorro")}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Stat de producto en línea pequeña como caption de soporte. */}

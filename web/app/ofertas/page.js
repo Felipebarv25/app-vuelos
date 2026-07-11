@@ -25,6 +25,15 @@ export default function PaginaOfertas() {
   const [fechaFin, setFechaFin] = useState("");
 
   function planear(q) {
+    // Anonimo: /?q= re-renderiza el landing y se pierde la intencion (lectura
+    // 360 2026-07-11). Guardamos la ciudad como intent (mismo mecanismo del
+    // trial anonimo B1) y abrimos el login; tras autenticar, la home lee
+    // anduve_intent_q y abre esa ciudad directamente.
+    if (!usuario) {
+      try { sessionStorage.setItem("anduve_intent_q", q); } catch {}
+      router.push("/?login=1");
+      return;
+    }
     router.push(`/?q=${encodeURIComponent(q)}`);
   }
 

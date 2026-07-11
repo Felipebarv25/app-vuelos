@@ -6,7 +6,7 @@ directamente en Excel y ver cómo evolucionan los precios.
 """
 import csv
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 CARPETA_DATOS = os.path.join(os.path.dirname(__file__), "datos")
 ARCHIVO_HISTORIAL = os.path.join(CARPETA_DATOS, "historial.csv")
@@ -30,8 +30,12 @@ def guardar_precio(origen, destino, fecha_ida, fecha_vuelta, oferta):
         # Las filas historicas anteriores al 2026-06-24 no tienen las columnas
         # escalas_ida/vuelta — csv.DictReader las leera como None, lo cual es OK
         # porque el frontend trata None como "desconocido" sin asumir directo.
+        # Timestamp SIEMPRE en UTC explicito (+00:00). Antes era naive
+        # (datetime.now() del runner de Actions = UTC sin marcar) y el
+        # navegador en Colombia lo parseaba como hora LOCAL: los precios se
+        # veian 5 horas mas frescos de lo real (lectura 360 2026-07-11).
         csv.writer(f).writerow([
-            datetime.now().isoformat(timespec="seconds"),
+            datetime.now(timezone.utc).isoformat(timespec="seconds"),
             origen, destino, fecha_ida, fecha_vuelta,
             oferta["precio"], oferta["moneda"], oferta["aerolinea"],
             oferta.get("escalas_ida", ""),

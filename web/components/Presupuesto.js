@@ -1070,9 +1070,13 @@ function fmtFechaCorta(iso) {
 }
 
 // "visto hace X" del timestamp del último escaneo. Compartido con Ofertas.js.
+// Los timestamps del detector vienen de GitHub Actions (UTC); si son naive
+// (sin Z ni offset) hay que fijarles UTC o el navegador los lee como hora
+// local y el precio parece 5h mas fresco (Colombia).
 function fmtHaceCorto(iso, t) {
   if (!iso) return "";
-  const ms = Date.now() - new Date(iso).getTime();
+  const s = /Z|[+-]\d{2}:\d{2}$/.test(iso) ? iso : iso + "Z";
+  const ms = Date.now() - new Date(s).getTime();
   if (Number.isNaN(ms) || ms < 0) return "";
   const min = Math.round(ms / 60000);
   if (min < 60) return t("ofertasHaceMin").replace("{n}", Math.max(1, min));

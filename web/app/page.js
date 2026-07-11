@@ -1196,19 +1196,22 @@ export default function Home() {
               {/* Fila superior: viajeros en linea + saludo en MISMA linea separados
                   por un divisor. Antes ocupaban 2 lineas con mb-4 + mb-3 que se
                   sentia demasiado airy. Ahora una sola fila ligera. */}
+              {/* Umbral 5: "1 viajero en linea" es anti-social-proof — grita
+                  app vacia. Con pocos usuarios el chip simplemente no aparece
+                  (lectura 360 2026-07-11). */}
               <div className="mb-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[12.5px] text-white/90">
-                {viajerosVivos != null && viajerosVivos > 0 && (
+                {viajerosVivos != null && viajerosVivos >= 5 && (
                   <span className="inline-flex items-center gap-1.5">
                     <span className="relative flex h-2 w-2">
                       <span className="absolute inset-0 animate-ping rounded-full bg-emerald-300 opacity-75" />
                       <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                     </span>
                     <span className="font-medium">
-                      {viajerosVivos.toLocaleString(lang)} {viajerosVivos === 1 ? t("viajeroEnLinea") : t("viajerosEnLinea")}
+                      {viajerosVivos.toLocaleString(lang)} {t("viajerosEnLinea")}
                     </span>
                   </span>
                 )}
-                {viajerosVivos != null && viajerosVivos > 0 && (
+                {viajerosVivos != null && viajerosVivos >= 5 && (
                   <span className="text-white/30">·</span>
                 )}
                 {/* Saludo personalizado — primer nombre CAPITALIZADO ("felipe" ->
