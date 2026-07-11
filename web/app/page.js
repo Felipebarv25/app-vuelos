@@ -49,6 +49,9 @@ const Asesor = dynamic(() => import("@/components/Asesor"));
 // bundle del pre-login (audit 2026-06-29: exponer alertas antes de entrar
 // a una ciudad).
 const AlertasChip = dynamic(() => import("@/components/AlertasChip"), { ssr: false });
+// Banda sonora de la ciudad: solo se necesita dentro de una ciudad, fuera
+// del bundle inicial.
+const MusicaCiudad = dynamic(() => import("@/components/MusicaCiudad"));
 
 // Destinos destacados con foto (fotos libres de Wikimedia Commons).
 // visitantes: turistas internacionales/año (millones, datos publicos UNWTO,
@@ -1736,6 +1739,16 @@ export default function Home() {
 
             {/* Reserva tu viaje (experiencias, hoteles y vuelos) */}
             <AfiliadosCiudad ciudad={ciudad} t={t} />
+
+            {/* Banda sonora del viaje: artistas locales + Top 50 del pais +
+                vibe de temporada. mesViaje sale de la fecha de inicio si el
+                usuario la fijo; si no, el mes actual. */}
+            <MusicaCiudad
+              ciudad={ciudad.nombre}
+              pais={ciudad.pais}
+              mesViaje={fechaInicio ? Number(fechaInicio.slice(5, 7)) : null}
+              t={t}
+            />
 
             {/* Lista completa de lugares encontrados (radio amplio ~100 km) */}
             {lugaresBase.length > 0 && (

@@ -45,6 +45,7 @@ const PATHS = {
   calendar: (<><path d="M8 2v4M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" /></>),
   bell: (<><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></>),
   clock: (<><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></>),
+  music: (<><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></>),
   sun: (<><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>),
   moon: (<><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></>),
   planeTakeoff: (<><path d="M2 22h20" /><path d="M6.4 17.4 22 13c-.5-1.9-2.5-3-4.4-2.5l-3.3.9-5.4-5.2-1.9.5 3.2 5.6-3.6 1-1.4-1.1-1.5.4z" /></>),

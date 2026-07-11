@@ -16,6 +16,7 @@ import { iataDe } from "@/lib/iataCiudades";
 import { linkTours, linkHoteles, linkVuelos, linkESIM, linkSeguro } from "@/lib/afiliados";
 import FavToggle from "./FavToggle";
 import AlertaPrecio from "@/components/AlertaPrecio";
+import MusicaCiudad from "@/components/MusicaCiudad";
 
 const SITIO = "https://anduve-app.vercel.app";
 
@@ -281,6 +282,12 @@ export default async function PaginaDestino({ params }) {
           <Dato titulo="Días recomendados" valor={diasSugeridos} sub="ideal" />
           <Dato titulo="Presupuesto sugerido" valor={`US$ ${presupuestoSugerido}`} sub={`${diasSugeridos} días, 1 persona`} />
         </div>
+      </section>
+
+      {/* Banda sonora del destino: artistas locales + Top 50 + vibe. Client
+          component dentro de la pagina SSR — usa su fallback en español. */}
+      <section className="mx-auto max-w-4xl px-6">
+        <MusicaCiudad ciudad={d.ciudad} pais={d.pais} />
       </section>
 
       {/* Mejor época + datos prácticos */}
