@@ -17,6 +17,8 @@ import { linkTours, linkHoteles, linkVuelos, linkESIM, linkSeguro } from "@/lib/
 import FavToggle from "./FavToggle";
 import AlertaPrecio from "@/components/AlertaPrecio";
 import MusicaCiudad from "@/components/MusicaCiudad";
+import PrecioDual from "@/components/PrecioDual";
+import BotonVolver from "@/components/BotonVolver";
 
 const SITIO = "https://anduve-app.vercel.app";
 
@@ -191,6 +193,8 @@ export default async function PaginaDestino({ params }) {
         </span>
       </nav>
 
+      <BotonVolver href="/destino" etiqueta="Volver a destinos" />
+
       {/* Hero: foto real de Wikipedia con overlay; fallback al gradiente si no
           se pudo conseguir foto. */}
       {foto?.url ? (
@@ -276,11 +280,14 @@ export default async function PaginaDestino({ params }) {
 
       {/* Datos clave */}
       <section className="mx-auto max-w-4xl px-6 py-6">
+        {/* Precios en USD + moneda local del usuario (feedback 2026-07-11:
+            "no sé cuánto representa en mi moneda"). PrecioDual soloLocal
+            agrega la linea "≈ X COP" bajo cada monto. */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Dato titulo="Vuelo i/v aprox." valor={`US$ ${d.vuelo}`} sub="referencial" />
-          <Dato titulo="Costo diario aprox." valor={`US$ ${d.dia}`} sub="por persona" />
+          <Dato titulo="Vuelo i/v aprox." valor={`US$ ${d.vuelo}`} sub={<><PrecioDual usd={d.vuelo} soloLocal className="font-bold text-marca-700 dark:text-marca-300" /> · referencial</>} />
+          <Dato titulo="Costo diario aprox." valor={`US$ ${d.dia}`} sub={<><PrecioDual usd={d.dia} soloLocal className="font-bold text-marca-700 dark:text-marca-300" /> · por persona</>} />
           <Dato titulo="Días recomendados" valor={diasSugeridos} sub="ideal" />
-          <Dato titulo="Presupuesto sugerido" valor={`US$ ${presupuestoSugerido}`} sub={`${diasSugeridos} días, 1 persona`} />
+          <Dato titulo="Presupuesto sugerido" valor={`US$ ${presupuestoSugerido}`} sub={<><PrecioDual usd={presupuestoSugerido} soloLocal className="font-bold text-marca-700 dark:text-marca-300" /> · {diasSugeridos} días, 1 persona</>} />
         </div>
       </section>
 

@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useApp } from "@/lib/AppContext";
 import { listarViajesAsync, borrarViajeAsync } from "@/lib/viajes";
 import NavTop from "@/components/NavTop";
+import BotonVolver from "@/components/BotonVolver";
 import FooterAnduve from "@/components/FooterAnduve";
 import BottomTabBar from "@/components/BottomTabBar";
 import { Icono } from "@/components/Icono";
@@ -50,6 +51,7 @@ export default function PaginaMisViajes() {
   return (
     <div className="min-h-screen bg-slate-50 pb-16 dark:bg-slate-900 md:pb-0">
       <NavTop active="misviajes" />
+      <BotonVolver />
 
       <main className="mx-auto max-w-4xl px-4 py-8 lg:px-8 lg:py-10">
         {/* Cabecera */}

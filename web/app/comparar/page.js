@@ -1,6 +1,7 @@
 ﻿// Comparador de destinos lado a lado. SSG: pre-renderiza una página vacía con
 // SEO, y el cliente (ComparadorCliente) maneja la lógica de selección.
 import ComparadorCliente from "./ComparadorCliente";
+import BotonVolver from "@/components/BotonVolver";
 
 const SITIO = "https://anduve-app.vercel.app";
 
@@ -23,6 +24,7 @@ export const metadata = {
 export default function PaginaComparar() {
   return (
     <main className="bg-slate-50 pb-12">
+      <BotonVolver href="/destino" etiqueta="Volver a destinos" />
       <header className="mx-auto max-w-6xl px-6 pt-8">
         <div className="text-[12px] font-semibold uppercase tracking-[0.22em] text-marca-500">
           Herramienta

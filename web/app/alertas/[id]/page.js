@@ -12,6 +12,7 @@ import Link from "next/link";
 import { leerAlerta } from "@/lib/alertas";
 import { preciosPorMes } from "@/lib/historialPrecios";
 import NavTop from "@/components/NavTop";
+import BotonVolver from "@/components/BotonVolver";
 import FooterAnduve from "@/components/FooterAnduve";
 import BottomTabBar from "@/components/BottomTabBar";
 
@@ -57,6 +58,7 @@ export default async function AlertaDetalle({ params }) {
   return (
     <div className="min-h-screen bg-slate-50 pb-16 dark:bg-slate-900 md:pb-0">
       <NavTop />
+      <BotonVolver />
 
       <main className="mx-auto max-w-3xl px-4 py-8 lg:px-8 lg:py-10">
         {/* Breadcrumb / volver */}

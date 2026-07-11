@@ -5,6 +5,8 @@
 import Link from "next/link";
 import { DESTINOS_SEO } from "@/lib/destinos";
 import IndiceFavoritos from "./IndiceFavoritos";
+import BuscadorDestinos from "@/components/BuscadorDestinos";
+import BotonVolver from "@/components/BotonVolver";
 
 const SITIO = "https://anduve-app.vercel.app";
 
@@ -76,6 +78,8 @@ export default function IndiceDestinos() {
 
       <IndiceFavoritos />
 
+      <BotonVolver href="/" etiqueta="Volver al inicio" />
+
       <nav className="mx-auto max-w-6xl px-6 pt-6 text-[13px] text-slate-500">
         <Link href="/" className="hover:text-marca-600">Inicio</Link>
         <span className="mx-1.5 text-slate-300 dark:text-slate-600">/</span>
@@ -99,6 +103,12 @@ export default function IndiceDestinos() {
         >
           ⚖️ Comparar destinos lado a lado →
         </Link>
+
+        {/* Buscador del catalogo: filtra y navega directo (feedback
+            2026-07-11). Client island; el listado SEO sigue completo abajo. */}
+        <BuscadorDestinos
+          destinos={DESTINOS_SEO.map((d) => ({ slug: d.slug, ciudad: d.ciudad, pais: d.pais, vuelo: d.vuelo }))}
+        />
       </header>
 
       {/* Chips de salto a cada región (anchor links) */}

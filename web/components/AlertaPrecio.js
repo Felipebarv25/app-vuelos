@@ -19,6 +19,7 @@ import { Icono } from "./Icono";
 import { useBrowserBackClose } from "@/lib/useBrowserBack";
 import { PAISES_ORIGEN, PAIS_DEFAULT, paisValido } from "@/lib/paisesOrigen";
 import { monedaDePais } from "@/lib/monedas";
+import PrecioDual from "./PrecioDual";
 
 // Normaliza para comparar nombres de ciudad ("Medellín" vs "Medellin").
 function _norm(s) {
@@ -264,9 +265,18 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
                     />
                   </div>
 
+                  {/* Equivalente en la moneda del usuario, reactivo a lo que
+                      escribe (feedback 2026-07-11: "no sé cuánto representa"). */}
+                  {Number(umbral) > 0 && (
+                    <div className="mt-1.5 text-[12.5px] font-semibold text-marca-700 dark:text-marca-300">
+                      <PrecioDual usd={Number(umbral)} soloLocal />
+                    </div>
+                  )}
+
                   {precioActual && (
                     <div className="mt-2 text-[12.5px] text-slate-500">
-                      {t("alertaActualHoy")} <b className="text-slate-700">US$ {precioActual}</b> ·{" "}
+                      {t("alertaActualHoy")} <b className="text-slate-700">US$ {precioActual}</b>
+                      {" "}<PrecioDual usd={precioActual} soloLocal className="text-slate-400" /> ·{" "}
                       <button
                         type="button"
                         className="text-marca-600 underline-offset-2 hover:underline"

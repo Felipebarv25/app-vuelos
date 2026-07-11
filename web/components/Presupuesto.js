@@ -36,7 +36,10 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   // `inicial` permite que el HERO abra este modal pre-llenado con el monto+moneda
   // que el usuario tipeo en el input principal de la home. Sin override quedan
   // los defaults razonables (10M COP).
-  const [monto, setMonto] = useState(inicial?.monto ?? 10000000);
+  // Default 0 (feedback 2026-07-11): NUNCA condicionar al usuario con un
+  // monto inventado por nosotros. El campo arranca vacio con un placeholder
+  // que invita a escribir; los resultados aparecen apenas hay monto > 0.
+  const [monto, setMonto] = useState(inicial?.monto ?? 0);
   const [moneda, setMoneda] = useState(inicial?.moneda ?? "COP");
   const [dias, setDias] = useState(10);
   // Marca si el usuario tocó los días manualmente. Mientras sea false, los
@@ -535,9 +538,10 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                     if (!Number.isNaN(n)) setMonto(Math.max(0, n));
                   }}
                   onFocus={(e) => { try { e.target.select(); } catch {} }}
-                  placeholder="0"
+                  placeholder={t("presupPlaceholder")}
+                  autoFocus={monto <= 0}
                   aria-label={t("presupTuPresup")}
-                  className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2.5 text-[15px] outline-none focus:border-marca-500 dark:border-slate-600 dark:bg-slate-800"
+                  className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2.5 text-[15px] outline-none focus:border-marca-500 placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-800"
                 />
                 <select
                   value={moneda}
@@ -700,7 +704,15 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
           {/* ---------- MODO RUTA ---------- */}
           {modo === "ruta" && (
             <div className="mt-5">
-              {!ruta || ruta.ciudades.length === 0 ? (
+              {presupuestoUsd <= 0 ? (
+                /* Sin monto todavia: invitacion calida, NO el aviso amber de
+                   "no alcanza" (ese es para montos insuficientes reales). */
+                <div className="rounded-2xl border border-marca-100 bg-marca-50/50 p-6 text-center dark:border-marca-800 dark:bg-marca-900/20">
+                  <div className="text-3xl">💭</div>
+                  <div className="mt-2 text-[15px] font-extrabold text-marca-900 dark:text-marca-200">{t("presupVacioTit")}</div>
+                  <div className="mx-auto mt-1 max-w-sm text-[13.5px] leading-relaxed text-slate-600 dark:text-slate-400">{t("presupVacioSub")}</div>
+                </div>
+              ) : !ruta || ruta.ciudades.length === 0 ? (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
                   {t("presupNoRuta")}
                 </div>
@@ -767,7 +779,14 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
           )}
 
           {/* ---------- MODO DESTINO ---------- */}
-          {modo === "destino" && (
+          {modo === "destino" && presupuestoUsd <= 0 && (
+            <div className="mt-5 rounded-2xl border border-marca-100 bg-marca-50/50 p-6 text-center dark:border-marca-800 dark:bg-marca-900/20">
+              <div className="text-3xl">💭</div>
+              <div className="mt-2 text-[15px] font-extrabold text-marca-900 dark:text-marca-200">{t("presupVacioTit")}</div>
+              <div className="mx-auto mt-1 max-w-sm text-[13.5px] leading-relaxed text-slate-600 dark:text-slate-400">{t("presupVacioSub")}</div>
+            </div>
+          )}
+          {modo === "destino" && presupuestoUsd > 0 && (
             <div className="mt-5">
               <div className="flex items-center justify-between rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 px-4 py-3.5 dark:border-emerald-800 dark:from-emerald-900/20 dark:to-teal-900/20">
                 <div>

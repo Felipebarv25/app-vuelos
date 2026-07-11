@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useApp } from "@/lib/AppContext";
 import NavTop from "@/components/NavTop";
+import BotonVolver from "@/components/BotonVolver";
 import Ofertas from "@/components/Ofertas";
 import FooterAnduve from "@/components/FooterAnduve";
 import BottomTabBar from "@/components/BottomTabBar";
@@ -40,6 +41,7 @@ export default function PaginaOfertas() {
   return (
     <div className="min-h-screen bg-slate-50 pb-16 dark:bg-slate-900 md:pb-0">
       <NavTop active="ofertas" />
+      <BotonVolver />
 
       <main className="mx-auto max-w-6xl px-4 py-8 lg:px-8 lg:py-10">
         {/* Cabecera de la seccion */}
