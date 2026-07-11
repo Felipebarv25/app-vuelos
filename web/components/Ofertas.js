@@ -48,7 +48,30 @@ function linkMisFechas(r, rango) {
 
 const LOTE = 12; // tarjetas por lote inicial y por "Ver más"
 
-export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = null }) {
+// Codigo IATA de aerolinea -> nombre legible. El detector guarda el codigo
+// crudo ("DM", "Y4"...) que para el usuario no significa nada (lectura 360
+// 2026-07-11: "¿qué es DM?"). Cubre las aerolineas que aparecen en rutas
+// desde los hubs trackeados; si falta alguna, se muestra el codigo tal cual.
+const AEROLINEAS = {
+  AV: "Avianca", LA: "LATAM", DM: "Arajet", JA: "JetSMART", Y4: "Volaris",
+  VB: "Viva Aerobus", AM: "Aeroméxico", CM: "Copa", P5: "Wingo", AR: "Aerolíneas Argentinas",
+  G3: "Gol", AD: "Azul", H2: "Sky Airline", AC: "Air Canada", AA: "American",
+  DL: "Delta", UA: "United", B6: "JetBlue", NK: "Spirit", F9: "Frontier",
+  IB: "Iberia", UX: "Air Europa", TP: "TAP", AF: "Air France", KL: "KLM",
+  LH: "Lufthansa", BA: "British Airways", AZ: "ITA Airways", LX: "Swiss",
+  TK: "Turkish Airlines", EK: "Emirates", QR: "Qatar Airways", ET: "Ethiopian",
+  AL: "Air Leisure", "2D": "Aero VIP",
+};
+function nombreAerolinea(cod) {
+  const c = (cod || "").trim().toUpperCase();
+  return AEROLINEAS[c] || cod || "—";
+}
+
+// sinCabecera: la pagina /ofertas ya tiene su propio H1 con el mismo texto;
+// con esta prop el componente omite su titulo interno (se veia doble cabecera
+// "Ofertas detectadas" + "Vuelos baratos detectados", lectura 360 2026-07-11)
+// pero conserva el chip de frescura y el toggle USD/COP.
+export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = null, sinCabecera = false }) {
   const [data, setData] = useState(null);
   const [filtro, setFiltro] = useState("colombia"); // colombia | BOG | MDE | todos
   const [visibles, setVisibles] = useState(LOTE); // cuántas tarjetas mostrar
@@ -155,13 +178,17 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
     <section className="mt-12">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-marca-500">
-            {t("ofertasEyebrow")}
-          </div>
-          <h2 className="mt-1 text-[20px] font-extrabold tracking-tight text-marca-900 lg:text-[26px]">
-            {t("ofertasTitulo")}
-          </h2>
-          <p className="mt-1 max-w-xl text-[13.5px] text-slate-500">{t("ofertasSub")}</p>
+          {!sinCabecera && (
+            <>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-marca-500">
+                {t("ofertasEyebrow")}
+              </div>
+              <h2 className="mt-1 text-[20px] font-extrabold tracking-tight text-marca-900 lg:text-[26px]">
+                {t("ofertasTitulo")}
+              </h2>
+              <p className="mt-1 max-w-xl text-[13.5px] text-slate-500">{t("ofertasSub")}</p>
+            </>
+          )}
           {ultimoEscaneo && (
             <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11.5px] font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
               <span className="relative flex h-1.5 w-1.5">
@@ -265,7 +292,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
               <Icono nombre="calendar" size={13} /> {fmtFecha(r.fecha_ida)} – {fmtFecha(r.fecha_vuelta)}
               <span className="text-slate-300">·</span>
               <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-700 dark:text-slate-400">
-                {r.aerolinea}
+                {nombreAerolinea(r.aerolinea)}
               </span>
               {/* QW2: frescura del precio. Si la oferta tiene `visto` propio,
                   lo usamos; si no, caemos al timestamp global del archivo

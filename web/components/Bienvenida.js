@@ -289,7 +289,10 @@ export default function Bienvenida() {
 
           <div className="mt-12 grid gap-5 sm:grid-cols-2">
             {[
-              { icono: "map",      titKey: "landingFeat1Tit", subKey: "landingFeat1Sub", ctaKey: "landingFeat1Cta", href: "/?q=Par%C3%ADs%2C+Francia" },
+              // El ejemplo de París apunta a la página pública /destino/paris-francia
+              // (SSR, sin login). Antes iba a /?q=París y el visitante anónimo
+              // volvía a caer en este mismo landing — botón que no cumplía.
+              { icono: "map",      titKey: "landingFeat1Tit", subKey: "landingFeat1Sub", ctaKey: "landingFeat1Cta", href: "/destino/paris-francia" },
               { icono: "plane",    titKey: "landingFeat2Tit", subKey: "landingFeat2Sub", ctaKey: "landingFeat2Cta", href: "/ofertas" },
               { icono: "bell",     titKey: "landingFeat3Tit", subKey: "landingFeat3Sub" },
               { icono: "compass",  titKey: "landingFeat4Tit", subKey: "landingFeat4Sub" },
@@ -408,6 +411,7 @@ export default function Bienvenida() {
       {/* ============== PRESUPUESTO TRIAL ANONIMO ============== */}
       {mostrarPresupuestoTrial && montado && (
         <PresupuestoTrial
+          t={t}
           onCerrar={() => setMostrarPresupuestoTrial(false)}
           onIntent={() => {
             // Cerramos el modal y abrimos el dialogo de login. Al autenticar,
@@ -627,9 +631,13 @@ function PantallaMagicCode({
 // haberse registrado. Si elige una ciudad (boton Planear), guardamos la
 // intencion en sessionStorage como "anduve_intent_q" y abrimos el dialogo de
 // login. Tras autenticar la home lee la intencion y la abre directamente.
-function PresupuestoTrial({ onCerrar, onIntent }) {
+function PresupuestoTrial({ t, onCerrar, onIntent }) {
+  // OJO: pasar `t` SIEMPRE. Sin él, Presupuesto usa su default (k) => k y el
+  // visitante ve las claves i18n crudas ("presupTitulo", "PRESUPREGION"...)
+  // en el CTA principal del landing. Bug detectado en la lectura 360 2026-07-11.
   return (
     <Presupuesto
+      t={t}
       onCerrar={onCerrar}
       onElegirCiudad={(d) => {
         try {

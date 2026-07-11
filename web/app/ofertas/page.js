@@ -90,12 +90,15 @@ export default function PaginaOfertas() {
           </div>
         </div>
 
-        {/* Componente Ofertas (reutilizado del home) */}
+        {/* Componente Ofertas (reutilizado del home). sinCabecera: esta
+            pagina ya tiene su propio H1 arriba — sin la prop se veia el
+            titulo dos veces seguidas. */}
         <Ofertas
           t={t}
           lang={lang}
           rango={fechaInicio && fechaFin ? { inicio: fechaInicio, fin: fechaFin } : null}
           onPlanear={planear}
+          sinCabecera
         />
       </main>
 
