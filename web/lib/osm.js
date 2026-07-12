@@ -132,10 +132,34 @@ export const CATEGORIAS = {
     icono: "mountain",
     filtros: ['node["tourism"="viewpoint"]["name"]'],
   },
+  // Compras y souvenirs (request 2026-07-11): donde llevarse un recuerdo.
+  // Enfoque VIAJERO: tiendas de regalos/souvenirs, mercados y artesanias
+  // (las joyas: mercado artesanal, pulgas), centros comerciales y grandes
+  // tiendas. Deliberadamente SIN shop=clothes ni supermercados sueltos —
+  // hay uno en cada esquina y ahogarian los resultados relevantes; los
+  // malls ya cubren "ropa + super" en un solo punto turistico-util.
+  compras: {
+    nombre: "Compras",
+    icono: "bag",
+    filtros: [
+      'node["shop"~"gift|souvenir|craft|art"]["name"]',
+      'node["amenity"="marketplace"]["name"]',
+      'way["amenity"="marketplace"]["name"]',
+      'node["shop"~"mall|department_store"]["name"]',
+      'way["shop"~"mall|department_store"]["name"]',
+    ],
+  },
 };
 
 // Traduce etiquetas de OSM a categorías legibles en español.
 const ETIQUETAS = {
+  gift: "Souvenirs",
+  souvenir: "Souvenirs",
+  craft: "Artesanías",
+  art: "Arte y artesanías",
+  marketplace: "Mercado",
+  mall: "Centro comercial",
+  department_store: "Gran tienda",
   attraction: "Atracción",
   museum: "Museo",
   viewpoint: "Mirador",
@@ -315,7 +339,7 @@ function procesarElementos(datos, categoria, lat, lon, limite, catNombre, precal
     if (!coord) continue;
 
     const tipoRaw =
-      t.tourism || t.historic || t.amenity || "";
+      t.tourism || t.historic || t.amenity || t.shop || "";
     const cocina = t.cuisine ? t.cuisine.split(";")[0].replace(/_/g, " ") : null;
 
     // PUNTUACIÓN DE CALIDAD: para priorizar lugares famosos/bien establecidos
@@ -489,6 +513,11 @@ function esRuido(nombre, notable) {
 }
 
 function sugerirMinutos(categoria, tipo) {
+  if (categoria === "compras") {
+    // Mercados y malls dan para más rato que una tienda de souvenirs.
+    if (tipo === "marketplace" || tipo === "mall") return 90;
+    return 45;
+  }
   if (categoria === "restaurantes") return 75;
   if (categoria === "cafes") return 30;
   if (categoria === "bares") return 90;

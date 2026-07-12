@@ -66,6 +66,15 @@ const FILTROS = {
   cafes: ['node["amenity"~"cafe|coffee_shop"]["name"]'],
   bares: ['node["amenity"~"bar|pub|nightclub"]["name"]'],
   miradores: ['node["tourism"="viewpoint"]["name"]'],
+  // Compras y souvenirs (2026-07-11): tiendas de regalos/artesanias, mercados,
+  // malls y grandes tiendas. Mismos filtros que el cliente (lib/osm.js).
+  compras: [
+    'node["shop"~"gift|souvenir|craft|art"]["name"]',
+    'node["amenity"="marketplace"]["name"]',
+    'way["amenity"="marketplace"]["name"]',
+    'node["shop"~"mall|department_store"]["name"]',
+    'way["shop"~"mall|department_store"]["name"]',
+  ],
 };
 
 // Para RADIO AMPLIO (>=30 km): consulta LIVIANA = solo nodos NOTABLES (con
@@ -99,6 +108,7 @@ const TERMINOS_PHOTON = {
   cafes: ["cafe", "coffee", "bakery", "tea"],
   bares: ["bar", "pub", "club", "lounge", "brewery"],
   miradores: ["viewpoint", "tower", "lookout", "observation"],
+  compras: ["market", "mall", "souvenir", "craft", "shopping", "bazaar", "mercado", "artesania"],
 };
 
 // User-Agent identificable: varias APIs gratuitas (Photon/Nominatim/Overpass)

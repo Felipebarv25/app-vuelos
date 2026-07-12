@@ -17,13 +17,18 @@ function esImagenMala(url) {
 }
 
 // Busca la mejor foto para "nombre" (en una ciudad para desambiguar).
-// Estrategia en cascada para maximizar cobertura de fotos:
+// Estrategia en cascada para MAXIMA cobertura (no-negociable 2026-07-11:
+// "en todos los lugares debe haber foto"):
 //  1) Wikipedia (artículo con imagen) — lugares famosos, además trae descripción.
-//  2) Wikimedia Commons — fotos de muchos más lugares (sin necesidad de artículo).
-export async function fotoDeLugar(nombre, ciudad = "") {
-  // img3: clave nueva (la anterior podía haber cacheado mapas de localización /
-  // escudos. Ahora descartamos esas imágenes y solo cacheamos fotos reales).
-  const clave = `img3:${nombre}|${ciudad}`.toLowerCase();
+//  2) Wikimedia Commons por TEXTO — muchos más lugares (sin artículo).
+//  3) Wikimedia Commons por GEOLOCALIZACION — fotos tomadas EN las coordenadas
+//     del lugar (radio 150m). Cubre los POIs sin artículo ni título que
+//     coincida: la foto es del sitio real, tomada ahí.
+// coord = [lat, lon] opcional; sin coord la cascada llega hasta el paso 2.
+export async function fotoDeLugar(nombre, ciudad = "", coord = null) {
+  // img4: clave nueva — la cascada ahora incluye geosearch (antes había
+  // lugares cacheados "sin foto" que hoy sí la tendrían).
+  const clave = `img4:${nombre}|${ciudad}`.toLowerCase();
   return cacheado(
     clave,
     TTL,
@@ -31,15 +36,53 @@ export async function fotoDeLugar(nombre, ciudad = "") {
       // 1) Wikipedia
       const wiki = await fotoWikipedia(nombre, ciudad);
       if (wiki?.url) return wiki;
-      // 2) Wikimedia Commons (respaldo: muchas más fotos)
+      // 2) Wikimedia Commons por texto (respaldo: muchas más fotos)
       const commons = await fotoCommons(nombre, ciudad);
       if (commons?.url) return { ...commons, extracto: wiki?.extracto || null };
-      // 3) Sin foto: devolvemos la descripción si la había
+      // 3) Commons por coordenadas: fotos hechas en el sitio exacto.
+      if (coord?.length === 2) {
+        const geo = await fotoCommonsGeo(coord[0], coord[1]);
+        if (geo?.url) return { ...geo, extracto: wiki?.extracto || null };
+      }
+      // 4) Sin foto: devolvemos la descripción si la había
       return wiki || null;
     },
     // Solo cachear si conseguimos una URL de foto; si no, reintentar luego.
     (d) => !!(d && d.url)
   );
+}
+
+// Fotos de Commons GEOETIQUETADAS cerca de [lat, lon]. No dependen del nombre:
+// son fotos que alguien tomó parado en ese lugar. Radio corto (150m) para no
+// traer la cuadra de al lado. Se prefieren archivos JPG grandes y se filtran
+// mapas/escudos igual que el resto.
+async function fotoCommonsGeo(lat, lon) {
+  try {
+    const r = await fetchRapido(
+      `https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*` +
+        `&generator=geosearch&ggscoord=${lat}%7C${lon}&ggsradius=150&ggslimit=10&ggsnamespace=6` +
+        `&prop=imageinfo&iiprop=url|size&iiurlwidth=800`
+    );
+    if (!r.ok) return null;
+    const d = await r.json();
+    const paginas = Object.values(d.query?.pages || {});
+    if (!paginas.length) return null;
+    // Mejor candidata: no-mala, suficientemente grande, la más grande primero.
+    const candidatas = paginas
+      .map((p) => p?.imageinfo?.[0])
+      .filter((i) => i && (i.thumburl || i.url) && !esImagenMala(i.thumburl || i.url))
+      .filter((i) => (i.width || 0) >= 500)
+      .sort((a, b) => (b.width || 0) - (a.width || 0));
+    const mejor = candidatas[0];
+    if (!mejor) return null;
+    return {
+      url: mejor.thumburl || mejor.url,
+      ancho: mejor.thumbwidth || mejor.width || null,
+      link: mejor.descriptionurl || null,
+    };
+  } catch {
+    return null;
+  }
 }
 
 // UNA sola llamada a Wikipedia: busca el artículo y, de paso, trae su miniatura
