@@ -54,6 +54,8 @@ const AlertasChip = dynamic(() => import("@/components/AlertasChip"), { ssr: fal
 const MusicaCiudad = dynamic(() => import("@/components/MusicaCiudad"));
 // "Estás en {ciudad}": ruta de visita de la ciudad actual (geo IP).
 const EstasEnCiudad = dynamic(() => import("@/components/EstasEnCiudad"), { ssr: false });
+// Tira de fotos de la ciudad bajo el titulo de la vista de ruta.
+const FotosCiudadHeader = dynamic(() => import("@/components/FotosCiudadHeader"), { ssr: false });
 // Anduve Live: agenda social de eventos de la ciudad (yo voy + chat).
 const EventosCiudad = dynamic(() => import("@/components/EventosCiudad"), { ssr: false });
 // Chat grupal de viajeros de la ciudad abierta (presencia + mensajes).
@@ -395,6 +397,34 @@ export default function Home() {
 
   // Anduve Live: panel de eventos abierto para { ciudad, iso } o null.
   const [eventosDe, setEventosDe] = useState(null);
+
+  // Vaivén suave de los chips de categorías (feedback 2026-07-11): al abrir
+  // una ciudad, la fila se desliza lentamente ida-y-vuelta un par de ciclos
+  // para ENSEÑAR que hay más tipos (Compras, Miradores...) sin que el
+  // usuario tenga que descubrir el scroll. Se detiene para siempre al primer
+  // toque/rueda/arrastre del usuario.
+  const chipsRef = useRef(null);
+  useEffect(() => {
+    const el = chipsRef.current;
+    if (!el || !ciudad) return;
+    if (el.scrollWidth <= el.clientWidth + 8) return; // no hay overflow
+    let raf, t0 = null, parado = false;
+    const amplitud = Math.min(160, el.scrollWidth - el.clientWidth);
+    const parar = () => { parado = true; if (raf) cancelAnimationFrame(raf); };
+    const paso = (ts) => {
+      if (parado) return;
+      if (t0 == null) t0 = ts;
+      const t = (ts - t0) / 1000;
+      if (t > 12) { el.scrollLeft = 0; return; } // ~2 ciclos de 6s y descansa
+      el.scrollLeft = amplitud * (0.5 - 0.5 * Math.cos((t / 6) * 2 * Math.PI));
+      raf = requestAnimationFrame(paso);
+    };
+    const arranque = setTimeout(() => { raf = requestAnimationFrame(paso); }, 1200);
+    el.addEventListener("pointerdown", parar, { once: true });
+    el.addEventListener("wheel", parar, { once: true, passive: true });
+    el.addEventListener("touchstart", parar, { once: true, passive: true });
+    return () => { parado = true; clearTimeout(arranque); if (raf) cancelAnimationFrame(raf); };
+  }, [ciudad]);
 
   // GPS
   const [gpsOn, setGpsOn] = useState(false);
@@ -1626,6 +1656,9 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Fotos de la ciudad (Commons, todas las ciudades sin curar) */}
+            <FotosCiudadHeader ciudad={ciudad.nombre} pais={ciudad.pais} />
+
             {/* Requisitos de entrada al país destino (visa, pasaporte, salud) */}
             <RequisitosViaje
               ciudad={ciudad}
@@ -1713,8 +1746,8 @@ export default function Home() {
               </div>
             </details>
 
-            {/* Categorías */}
-            <div className="sin-scrollbar mb-2 flex gap-2 overflow-x-auto pb-2">
+            {/* Categorías (vaivén automático suave — ver efecto chipsRef) */}
+            <div ref={chipsRef} className="sin-scrollbar mb-2 flex gap-2 overflow-x-auto pb-2">
               {Object.entries(CATEGORIAS).map(([k, c]) => (
                 <Chip key={k} activo={categoria === k} onClick={() => cargarCategoria(k)}>
                   <span className="inline-flex items-center gap-1.5">
@@ -1756,12 +1789,35 @@ export default function Home() {
               </div>
             )}
 
-            {/* Pestañas de días */}
+            {/* Pestañas de días + GPS (movido aqui desde el fondo de la
+                pagina — feedback 2026-07-11: "parecia oculto"). Boton pill
+                destacado a la derecha de los dias: verde pulsante cuando
+                esta activo. */}
             {plan.length > 0 && (
-              <div className="sin-scrollbar mb-3.5 flex gap-2 overflow-x-auto">
+              <div className="sin-scrollbar mb-3.5 flex items-center gap-2 overflow-x-auto">
                 {plan.map((d, i) => (d.paradas.length > 0 ? (
                   <Chip key={i} activo={diaVisible === i} onClick={() => setDiaVisible(i)}>{t("dia")} {i + 1}</Chip>
                 ) : null))}
+                <button
+                  type="button"
+                  onClick={() => setGpsOn((v) => !v)}
+                  title={t("activarGps")}
+                  className={`ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-bold shadow-suave transition ${
+                    gpsOn
+                      ? "bg-emerald-500 text-white"
+                      : "border-[1.5px] border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:bg-slate-800 dark:text-emerald-300"
+                  }`}
+                >
+                  {gpsOn ? (
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+                    </span>
+                  ) : (
+                    <Icono nombre="pin" size={13} />
+                  )}
+                  GPS {gpsOn ? "ON" : "OFF"}
+                </button>
               </div>
             )}
 
@@ -1846,14 +1902,9 @@ export default function Home() {
               </div>
             )}
 
-            {/* GPS toggle */}
-            <label className={`mt-3.5 flex cursor-pointer items-center gap-2.5 rounded-2xl border border-slate-100 p-4 shadow-suave transition dark:border-slate-700 ${gpsOn ? "bg-emerald-50 dark:bg-emerald-900/20" : "bg-white dark:bg-slate-800"}`}>
-              <input type="checkbox" checked={gpsOn} onChange={(e) => setGpsOn(e.target.checked)} />
-              <span className="inline-flex items-center gap-1.5 text-sm">
-                <Icono nombre="pin" size={15} className="text-marca-600" /> {t("activarGps")}
-                {gpsOn && gps && <span className="font-semibold text-emerald-600"> · {t("activo")}</span>}
-              </span>
-            </label>
+            {/* GPS: el toggle vive ahora arriba, junto a las pestañas de dias
+                (boton "GPS ON/OFF") — antes era un checkbox perdido aqui al
+                fondo (feedback 2026-07-11). */}
           </div>
 
           {/* Panel derecho: mapa (arriba en móvil, fijo a la derecha en escritorio) */}

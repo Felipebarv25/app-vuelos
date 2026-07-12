@@ -16,6 +16,12 @@ export const AFILIADOS = {
                             // si lo dejas vacio, el link de eSIM lleva al store normal.
   ektaPartner: "",         // EKTA Insurance (https://ektatraveling.com/partners) -
                             // si lo dejas vacio, lleva al sitio normal.
+  // trs (traffic source) de Travelpayouts: SIN el, los redirects tp.media
+  // responden "traffic_source is not valid" (bug reportado 2026-07-11).
+  // Se saca del dashboard de Travelpayouts (Tools -> Links, el numero "trs").
+  // Mientras este vacio, eSIM/seguro enlazan DIRECTO a Airalo/EKTA (funciona,
+  // sin comision) en vez de a un redirect roto.
+  tpTrs: "",
 };
 
 // ¿Hay al menos un programa configurado? (para decidir si mostrar la nota de afiliados)
@@ -97,10 +103,13 @@ export function linkESIM({ pais = "", iso2 = "" } = {}) {
   if (AFILIADOS.airaloPartner) {
     return `https://www.airalo.com/?partner_id=${encodeURIComponent(AFILIADOS.airaloPartner)}${iso2 ? `&country=${iso2}` : ""}`;
   }
-  // Fallback Travelpayouts eSIM (Yesim/Airalo redirector con marker).
-  if (AFILIADOS.travelpayouts) {
-    return `https://tp.media/r?marker=${AFILIADOS.travelpayouts}&trs=&p=4115&u=https%3A%2F%2Fwww.airalo.com%2F&campaign_id=541`;
+  // Redirect afiliado tp.media SOLO si hay marker Y trs (sin trs el redirect
+  // muere en "traffic_source is not valid" — mejor link directo sin comision
+  // que un link roto).
+  if (AFILIADOS.travelpayouts && AFILIADOS.tpTrs) {
+    return `https://tp.media/r?marker=${AFILIADOS.travelpayouts}&trs=${AFILIADOS.tpTrs}&p=4115&u=https%3A%2F%2Fwww.airalo.com%2F&campaign_id=541`;
   }
+  return "https://www.airalo.com/";
   return `https://www.airalo.com/${iso2 ? `?country=${iso2.toLowerCase()}` : ""}`;
 }
 
@@ -114,9 +123,9 @@ export function linkSeguro({ pais = "", dias = 7 } = {}) {
     p.set("partner", AFILIADOS.ektaPartner);
     return `https://ektatraveling.com/?${p.toString()}`;
   }
-  // Fallback Travelpayouts seguro (EKTA/Cherehapa redirector con marker).
-  if (AFILIADOS.travelpayouts) {
-    return `https://tp.media/r?marker=${AFILIADOS.travelpayouts}&trs=&p=5095&u=https%3A%2F%2Fcherehapa.ru%2F&campaign_id=121`;
+  // Redirect afiliado tp.media SOLO si hay marker Y trs (ver nota en linkESIM).
+  if (AFILIADOS.travelpayouts && AFILIADOS.tpTrs) {
+    return `https://tp.media/r?marker=${AFILIADOS.travelpayouts}&trs=${AFILIADOS.tpTrs}&p=5095&u=https%3A%2F%2Fektatraveling.com%2F&campaign_id=121`;
   }
   return "https://ektatraveling.com/";
 }
