@@ -72,7 +72,7 @@ export default async function DestinoPt({ params }) {
   const presup = d.vuelo + d.dia * diasSugeridos;
   const seo = datosSeoDe(d, "pt");
   const faqs = faqsDe(d, "pt");
-  const foto = await fotoCiudad(d.ciudad, d.pais);
+  const foto = await fotoCiudad(d.ciudad, d.pais, d.lat, d.lon);
 
   const jsonLd = { "@context": "https://schema.org", "@type": "TouristDestination", name: nombre, description: `Informações de viagem para ${nombre}.`, url: `${SITIO}/pt/destino/${slug}`, geo: { "@type": "GeoCoordinates", latitude: d.lat, longitude: d.lon }, address: { "@type": "PostalAddress", addressCountry: d.pais } };
   const breadcrumbs = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [

@@ -102,7 +102,7 @@ export default async function DestinationPage({ params }) {
   const presupuestoSugerido = d.vuelo + d.dia * diasSugeridos;
   const seo = datosSeoDe(d, "en");
   const faqs = faqsDe(d, "en");
-  const foto = await fotoCiudad(d.ciudad, d.pais);
+  const foto = await fotoCiudad(d.ciudad, d.pais, d.lat, d.lon);
 
   const jsonLd = {
     "@context": "https://schema.org",

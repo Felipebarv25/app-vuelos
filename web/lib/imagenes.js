@@ -94,7 +94,7 @@ async function fotoWikidata(qid) {
 // (agrega Flickr CC, Wikimedia y más). Sin API key (rate limit anónimo
 // generoso para nuestro volumen con caché de 30 días). Verificamos que el
 // título corresponda al lugar para no colar resultados ajenos.
-async function fotoOpenverse(nombre, ciudad) {
+export async function fotoOpenverse(nombre, ciudad) {
   try {
     const q = ciudad ? `${nombre} ${ciudad}` : nombre;
     const r = await fetchRapido(
@@ -130,7 +130,7 @@ async function fotoCalle(lat, lon) {
 // son fotos que alguien tomó parado en ese lugar. Radio corto (150m) para no
 // traer la cuadra de al lado. Se prefieren archivos JPG grandes y se filtran
 // mapas/escudos igual que el resto.
-async function fotoCommonsGeo(lat, lon) {
+export async function fotoCommonsGeo(lat, lon) {
   try {
     const r = await fetchRapido(
       `https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*` +
@@ -224,7 +224,7 @@ function tituloCoincide(nombreLugar, titulo) {
   return comunes / palabrasA.length >= 0.5;
 }
 
-async function fotoCommons(nombre, ciudad) {
+export async function fotoCommons(nombre, ciudad) {
   const lista = await fotosCommons(nombre, ciudad, 1);
   return lista?.[0] || null;
 }
