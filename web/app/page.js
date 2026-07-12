@@ -55,6 +55,8 @@ const MusicaCiudad = dynamic(() => import("@/components/MusicaCiudad"));
 const EstasEnCiudad = dynamic(() => import("@/components/EstasEnCiudad"), { ssr: false });
 // Tira de fotos de la ciudad bajo el titulo de la vista de ruta.
 const FotosCiudadHeader = dynamic(() => import("@/components/FotosCiudadHeader"), { ssr: false });
+// Buscador del punto de partida (hotel/barrio) de la ruta.
+const InicioRuta = dynamic(() => import("@/components/InicioRuta"), { ssr: false });
 // Anduve Live: agenda social de eventos de la ciudad (yo voy + chat).
 const EventosCiudad = dynamic(() => import("@/components/EventosCiudad"), { ssr: false });
 // Chat grupal de viajeros de la ciudad abierta (presencia + mensajes).
@@ -397,6 +399,10 @@ export default function Home() {
   // Anduve Live: panel de eventos abierto para { ciudad, iso } o null.
   const [eventosDe, setEventosDe] = useState(null);
 
+  // Hospedaje: punto de partida de la ruta ("mi hotel esta en X"). Cuando
+  // esta seteado, el itinerario se optimiza desde ahi en vez del centro.
+  const [hospedaje, setHospedaje] = useState(null); // { nombre, lat, lon } | null
+
   // Vaivén suave de los chips de categorías (feedback 2026-07-11): al abrir
   // una ciudad, la fila se desliza lentamente ida-y-vuelta un par de ciclos
   // para ENSEÑAR que hay más tipos (Compras, Miradores...) sin que el
@@ -719,6 +725,7 @@ export default function Home() {
       momento,
       categoria,
       seleccion,
+      hospedaje, // punto de partida (hotel) — se restaura al reabrir
     };
     const arr = await guardarViajeAsync(usuario, v);
     setViajesGuardados(arr);
@@ -739,7 +746,8 @@ export default function Home() {
     setError(null);
     setDetalle(null);
     setRutaTrazada(null);
-    reconstruir(v.seleccion || [], v.ciudad, v.dias);
+    setHospedaje(v.hospedaje || null);
+    reconstruir(v.seleccion || [], v.ciudad, v.dias, v.hospedaje || null);
     // Refrescar alternativas en segundo plano (sin alterar el plan restaurado).
     traerLugares(v.categoria || "imperdibles", v.ciudad.lat, v.ciudad.lon)
       .then((l) => l?.length && setLugaresBase(l))
@@ -809,6 +817,7 @@ export default function Home() {
     setPlan([]);
     setRutaTrazada(null);
     setDetalle(null);
+    setHospedaje(null); // el hotel es de LA ciudad anterior
   }
 
   function elegirCiudad(sug) {
@@ -925,17 +934,23 @@ export default function Home() {
     }
   }
 
-  function reconstruir(sel = seleccion, c = ciudad, diasOverride) {
+  function reconstruir(sel = seleccion, c = ciudad, diasOverride, hospedajeOverride) {
     if (!c || !sel.length) {
       setPlan([]);
       return;
     }
-    // Punto de partida: el centro de la ciudad destino.
-    // Solo usamos el GPS si el usuario YA está físicamente en esa ciudad
-    // (a menos de ~60 km). Así, planear NY desde Colombia no rompe el día.
+    // Punto de partida, en orden de prioridad (2026-07-11):
+    //  1. HOSPEDAJE elegido por el usuario ("mi hotel esta en X") — cada dia
+    //     arranca y se optimiza desde ahi: menos traslados, ruta realista.
+    //  2. GPS si YA esta fisicamente en esa ciudad (<~60 km).
+    //  3. Centro de la ciudad (default). hospedajeOverride permite que
+    //     reabrirViaje/los handlers pasen el valor sin esperar al state.
+    const h = hospedajeOverride === undefined ? hospedaje : hospedajeOverride;
     const centro = [c.lat, c.lon];
     let inicio = centro;
-    if (gps) {
+    if (h?.lat != null) {
+      inicio = [h.lat, h.lon];
+    } else if (gps) {
       const cerca =
         Math.hypot(gps[0] - c.lat, gps[1] - c.lon) < 0.6; // ~60 km
       if (cerca) inicio = gps;
@@ -1770,6 +1785,19 @@ export default function Home() {
                   {momento === "nocturno" ? t("nocturnoDesc") : t("diurnoDesc")}
                 </span>
               </div>
+
+              {/* Hospedaje: punto de partida de la ruta ("mi hotel esta en X").
+                  Al elegirlo, la ruta se rearma optimizada desde ese punto. */}
+              <div className="mt-3">
+                <div className="mb-1.5 text-[12px] font-semibold text-slate-600 dark:text-slate-400">{t("hospedajeLabel")}</div>
+                <InicioRuta
+                  ciudad={ciudad}
+                  hospedaje={hospedaje}
+                  t={t}
+                  onElegir={(h) => { setHospedaje(h); reconstruir(seleccion, ciudad, undefined, h); }}
+                  onQuitar={() => { setHospedaje(null); reconstruir(seleccion, ciudad, undefined, null); }}
+                />
+              </div>
               </div>
             </details>
 
@@ -1944,6 +1972,7 @@ export default function Home() {
                   centro={[ciudad.lat, ciudad.lon]}
                   lugares={lugaresDelDia}
                   ubicacionUsuario={gps}
+                  hospedaje={hospedaje}
                   rutaTrazada={rutaTrazada}
                   onClicLugar={(l) => { setRutaTrazada(null); setDetalle(l); }}
                   lang={lang}

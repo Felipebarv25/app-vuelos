@@ -27,6 +27,7 @@ export default function Mapa({
   centro,
   lugares = [],
   ubicacionUsuario = null,
+  hospedaje = null, // { nombre, lat, lon } — hotel/punto de partida de la ruta
   rutaTrazada = null,
   onClicLugar = null,
   lang = "es",
@@ -118,6 +119,28 @@ export default function Mapa({
         puntos.push(l.coord);
       });
 
+      // Marcador del HOSPEDAJE (hotel/punto de partida). Distintivo: pin
+      // morado con 🏨 — el usuario ve de un vistazo desde dónde arranca
+      // cada día de su ruta.
+      if (hospedaje?.lat != null) {
+        const icon = L.divIcon({
+          className: "",
+          html: `<div style="background:#7c3aed;width:32px;height:32px;border-radius:50% 50% 50% 4px;
+            display:flex;align-items:center;justify-content:center;font-size:15px;
+            border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);transform:rotate(0deg)">🏨</div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 30],
+        });
+        const m = L.marker([hospedaje.lat, hospedaje.lon], { icon }).addTo(mapa);
+        m.bindTooltip(
+          `<div style="font-weight:800;font-size:12.5px;color:#052b28">🏨 ${hospedaje.nombre}</div>
+           <div style="font-size:11px;color:#64748b">Tu ruta arranca aquí cada día</div>`,
+          { direction: "top", offset: [0, -14], opacity: 1, className: "anduve-tooltip" }
+        );
+        capaRef.current.push(m);
+        puntos.push([hospedaje.lat, hospedaje.lon]);
+      }
+
       // Marcador del usuario (GPS) — solo se DIBUJA si está cerca de la ciudad.
       const gpsCerca =
         ubicacionUsuario && centro && !lejos(ubicacionUsuario, centro);
@@ -179,7 +202,7 @@ export default function Mapa({
     return () => {
       cancelado = true;
     };
-  }, [centro, lugares, ubicacionUsuario, rutaTrazada, lang]);
+  }, [centro, lugares, ubicacionUsuario, hospedaje, rutaTrazada, lang]);
 
   return (
     <div
