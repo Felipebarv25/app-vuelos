@@ -785,6 +785,18 @@ export default function Home() {
     return () => clearTimeout(debounce.current);
   }, [consulta]);
 
+  // Convierte errores tecnicos ("Failed to fetch", "AbortError"...) en un
+  // mensaje humano. Los mensajes propios (ya en español, p.ej. "No encontré
+  // esa ciudad") pasan tal cual. Bug 2026-07-11: el usuario vio un banner
+  // con texto tecnico crudo al fallar la creacion de una ruta.
+  function mensajeError(err) {
+    const m = err?.message || "";
+    if (!m || /fetch|network|abort|timeout|load failed|NetworkError/i.test(m)) {
+      return "No pudimos conectar para armar la ruta. Revisa tu internet e intenta de nuevo.";
+    }
+    return m;
+  }
+
   // Limpia los resultados de la ciudad anterior para no mostrar marcadores ni
   // itinerario viejos mientras carga la nueva (evita ver "París en Medellín").
   function limpiarParaNuevaCiudad() {
@@ -839,7 +851,7 @@ export default function Home() {
       registrarEvento({ tipo: "busqueda", ciudad: c.nombre, pais: c.pais });
       cargarCategoria("imperdibles", c); // lugares en segundo plano
     } catch (err) {
-      setError(err.message);
+      setError(mensajeError(err));
       setCiudad(null);
       setCargando(false);
       track("busqueda_fallida", { q }); // demanda no resuelta (para el panel)
@@ -903,7 +915,7 @@ export default function Home() {
       track("prueba_rapida", { q, dias: d, momento: m });
       cargarCategoria("imperdibles", c, m || momento, d);
     } catch (err) {
-      setError(err.message);
+      setError(mensajeError(err));
       setCargando(false);
       track("busqueda_fallida", { q });
     }
@@ -1467,13 +1479,24 @@ export default function Home() {
         </div>
       </header>
 
+      {/* Banner de error. relative z-20: el panel del home tiene margen
+          NEGATIVO (-mt-8/-mt-12) y sin stacking lo tapaba/cortaba (bug
+          reportado 2026-07-11). Ademas ahora es descartable con ✕ — antes
+          quedaba pegado en el home sin salida. */}
       {error && (
-        <div className="mx-auto mt-3.5 max-w-7xl px-4 print:hidden lg:px-8">
+        <div className="relative z-20 mx-auto mt-3.5 max-w-7xl px-4 pb-4 print:hidden lg:px-8">
           <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-red-100 bg-red-50 p-4 text-red-800 shadow-suave dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300"><Icono nombre="alert" size={18} /></span>
             <p className="flex-1 text-sm">{error}</p>
             <button onClick={reintentar} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:brightness-110">
               <span className="inline-flex items-center gap-1.5"><Icono nombre="refresh" size={15} /> {t("recalcular")}</span>
+            </button>
+            <button
+              onClick={() => setError(null)}
+              aria-label="Cerrar"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red-400 transition hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-900/40"
+            >
+              <Icono nombre="x" size={15} />
             </button>
           </div>
         </div>
