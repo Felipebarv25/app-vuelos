@@ -15,12 +15,18 @@ import { useEffect, useRef } from "react";
 // navegar fuera. Si el usuario cierra manualmente (X / clic en backdrop), el
 // efecto se limpia haciendo history.back() para no dejar una entrada extra.
 //
-// Limitación conocida: si se apilan 2 modales simultáneos y el usuario cierra
-// el de ABAJO primero (sin cerrar el de arriba), el history.back() podría
-// cerrar el de arriba también. En la app actual los modales no se apilan
-// (Paywall sobre Presupuesto es la única combinación, y Paywall siempre se
-// cierra antes de volver a Presupuesto). Si esto crece, migrar a un Context
-// con stack global de closers.
+// BUG CORREGIDO (2026-07-11, reportado por el usuario: "clic en una ruta me
+// devuelve al menú principal"): el history.back() de limpieza es ASINCRONO.
+// Si el usuario cerraba un modal (Presupuesto/Eventos) y de inmediato abría
+// la vista de ciudad, la ciudad alcanzaba a empujar SU entrada de protección
+// y el back() pendiente se la comía → popstate → la ciudad interpretaba un
+// "atrás" del usuario → irAlInicio() → menú principal. FIX: contador global
+// `popsDeLimpieza`. El handler que recibe un pop de limpieza ajeno NO cierra:
+// repone su marker y sigue abierto. Un timeout de seguridad descuenta pops
+// que nadie consumió (cuando ningún otro modal estaba abierto).
+let popsDeLimpieza = 0;
+let tokenSeq = 0;
+
 export function useBrowserBackClose(isOpen, onClose) {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -30,16 +36,26 @@ export function useBrowserBackClose(isOpen, onClose) {
     if (typeof window === "undefined") return;
 
     let cerradoPorBack = false;
+    const token = ++tokenSeq;
 
     try {
       // Token único para reconocer "esta entrada de history es nuestra" y no
-      // mezclarla con SSG nav previa del usuario.
-      window.history.pushState({ anduveModal: Date.now() }, "");
+      // mezclarla con navegación previa real del usuario.
+      window.history.pushState({ anduveModal: token }, "");
     } catch {
       return;
     }
 
     function handlePopstate() {
+      if (popsDeLimpieza > 0) {
+        // Este pop NO es el usuario apretando ←: es la limpieza asíncrona de
+        // otro modal que se cerró justo antes de que este se abriera y nos
+        // tumbó la entrada. Consumimos el pop, reponemos nuestro marker y
+        // seguimos abiertos como si nada.
+        popsDeLimpieza--;
+        try { window.history.pushState({ anduveModal: token }, ""); } catch {}
+        return;
+      }
       cerradoPorBack = true;
       onCloseRef.current?.();
     }
@@ -51,7 +67,18 @@ export function useBrowserBackClose(isOpen, onClose) {
       // Si el cierre fue voluntario (X / backdrop), limpiamos la entrada
       // artificial que metimos para que el ← natural siga al sitio correcto.
       if (!cerradoPorBack && typeof window !== "undefined" && window.history.state?.anduveModal) {
-        try { window.history.back(); } catch {}
+        popsDeLimpieza++;
+        try {
+          window.history.back();
+        } catch {
+          popsDeLimpieza = Math.max(0, popsDeLimpieza - 1);
+        }
+        // Red de seguridad: si ningún handler consumió este pop (no había
+        // otro modal/vista abierta), descontarlo para que el PRÓXIMO modal
+        // no se trague un ← real del usuario.
+        setTimeout(() => {
+          popsDeLimpieza = Math.max(0, popsDeLimpieza - 1);
+        }, 400);
       }
     };
   }, [isOpen]);
