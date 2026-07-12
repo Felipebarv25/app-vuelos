@@ -82,16 +82,37 @@ export default function Mapa({
           iconAnchor: [14, 14],
         });
         const m = L.marker(l.coord, { icon }).addTo(mapa);
-        // HOVER preview (feedback 2026-07-11): pasar el mouse sobre el punto
-        // muestra una mini-card del lugar SIN clic (nombre, tipo, tiempo de
-        // visita). El clic sigue abriendo el detalle completo. En tactil no
-        // hay hover: el tap dispara el click de siempre.
-        m.bindTooltip(
-          `<div style="font-weight:800;font-size:13px;color:#052b28">${i + 1}. ${nombreLocalizado(l, lang)}</div>
+        // HOVER preview CON FOTO (feedback 2026-07-11): pasar el mouse sobre
+        // el punto muestra mini-card con la foto del lugar sin clic. La foto
+        // se carga perezosa al primer hover (usa la misma cascada cacheada
+        // Wikipedia -> Commons -> geo -> calle de fotoDeLugar) y se inyecta
+        // en el tooltip abierto. El clic sigue abriendo el detalle completo.
+        const nombreLoc = nombreLocalizado(l, lang);
+        const infoHtml =
+          `<div style="font-weight:800;font-size:13px;color:#052b28">${i + 1}. ${nombreLoc}</div>
            <div style="font-size:11.5px;color:#64748b;margin-top:1px">${l.categoria || ""}${l.minutos ? ` · ~${l.minutos} min` : ""}${l.wiki ? " · ★ famoso" : ""}</div>
-           <div style="font-size:10.5px;color:#4f46e5;font-weight:600;margin-top:2px">Clic para foto y cómo llegar</div>`,
-          { direction: "top", offset: [0, -12], opacity: 1, sticky: false, className: "anduve-tooltip" }
-        );
+           <div style="font-size:10.5px;color:#4f46e5;font-weight:600;margin-top:2px">Clic para detalles y cómo llegar</div>`;
+        const fotoBox = (inner) =>
+          `<div style="width:210px;height:110px;border-radius:9px;overflow:hidden;background:#e2e8f0;margin-bottom:6px;display:flex;align-items:center;justify-content:center">${inner}</div>`;
+        m.bindTooltip(infoHtml, {
+          direction: "top", offset: [0, -12], opacity: 1, sticky: false, className: "anduve-tooltip",
+        });
+        let fotoPedida = false;
+        m.on("mouseover", () => {
+          if (fotoPedida) return;
+          fotoPedida = true;
+          // Skeleton mientras llega la foto; luego se reemplaza en caliente.
+          m.setTooltipContent(fotoBox(`<span style="font-size:11px;color:#94a3b8">Cargando foto…</span>`) + infoHtml);
+          import("@/lib/imagenes").then(({ fotoDeLugar }) =>
+            fotoDeLugar(nombreLoc, "", l.coord).then((f) => {
+              m.setTooltipContent(
+                (f?.url
+                  ? fotoBox(`<img src="${f.url}" style="width:100%;height:100%;object-fit:cover" alt="">`)
+                  : "") + infoHtml
+              );
+            })
+          ).catch(() => m.setTooltipContent(infoHtml));
+        });
         if (onClicLugar) m.on("click", () => onClicLugar(l));
         capaRef.current.push(m);
         puntos.push(l.coord);

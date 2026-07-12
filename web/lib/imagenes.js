@@ -43,13 +43,30 @@ export async function fotoDeLugar(nombre, ciudad = "", coord = null) {
       if (coord?.length === 2) {
         const geo = await fotoCommonsGeo(coord[0], coord[1]);
         if (geo?.url) return { ...geo, extracto: wiki?.extracto || null };
+        // 4) Mapillary (nivel calle): cubre bares/discotecas/tiendas que
+        // Commons no tiene. Via nuestro endpoint (token server-side). Si no
+        // hay MAPILLARY_TOKEN configurado, responde ok:false y seguimos.
+        const calle = await fotoCalle(coord[0], coord[1]);
+        if (calle?.url) return { ...calle, extracto: wiki?.extracto || null };
       }
-      // 4) Sin foto: devolvemos la descripción si la había
+      // 5) Sin foto: devolvemos la descripción si la había
       return wiki || null;
     },
     // Solo cachear si conseguimos una URL de foto; si no, reintentar luego.
     (d) => !!(d && d.url)
   );
+}
+
+// Foto a nivel de calle via /api/foto-calle (Mapillary, token en el server).
+async function fotoCalle(lat, lon) {
+  try {
+    const r = await fetchRapido(`/api/foto-calle?lat=${lat}&lon=${lon}`);
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d?.ok && d.url ? { url: d.url, ancho: 1024, link: null } : null;
+  } catch {
+    return null;
+  }
 }
 
 // Fotos de Commons GEOETIQUETADAS cerca de [lat, lon]. No dependen del nombre:
