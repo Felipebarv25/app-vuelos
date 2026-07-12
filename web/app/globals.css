@@ -448,3 +448,20 @@ button:active {
 
 /* Selección de texto */
 .dark ::selection { background: rgba(29, 150, 144, 0.3); }
+
+/* Tooltip de hover sobre los pines del mapa (mini-card del lugar) */
+.anduve-tooltip {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 28px rgba(2, 6, 23, 0.2);
+  padding: 8px 11px;
+  background: #ffffff;
+}
+.dark .anduve-tooltip { background: #1e293b; }
+.dark .anduve-tooltip div { color: #e2e8f0 !important; }
+
+/* Filas scrolleables sin barra visible (chips de categorías, etc.).
+   El scroll sigue funcionando con swipe/rueda — solo se oculta la barra
+   gris que ensuciaba la UI (feedback mobile 2026-07-11). */
+.sin-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.sin-scrollbar::-webkit-scrollbar { display: none; }

@@ -56,6 +56,8 @@ const MusicaCiudad = dynamic(() => import("@/components/MusicaCiudad"));
 const EstasEnCiudad = dynamic(() => import("@/components/EstasEnCiudad"), { ssr: false });
 // Anduve Live: agenda social de eventos de la ciudad (yo voy + chat).
 const EventosCiudad = dynamic(() => import("@/components/EventosCiudad"), { ssr: false });
+// Chat grupal de viajeros de la ciudad abierta (presencia + mensajes).
+const ChatViajeros = dynamic(() => import("@/components/ChatViajeros"), { ssr: false });
 
 // Destinos destacados con foto (fotos libres de Wikimedia Commons).
 // visitantes: turistas internacionales/año (millones, datos publicos UNWTO,
@@ -1667,14 +1669,31 @@ export default function Home() {
               <div className="flex flex-wrap items-end gap-3">
                 <label className="flex flex-col gap-1 text-[13px] font-semibold text-slate-600">
                   <span className="inline-flex items-center gap-1.5"><Icono nombre="calendar" size={15} /> {t("dias")}</span>
-                  <select value={dias} onChange={(e) => setDias(+e.target.value)} disabled={!!(fechaInicio && fechaFin)}
+                  {/* Cambiar los dias RECALCULA solo (feedback 2026-07-11):
+                      nadie deberia tener que apretar "Recalcular" tras elegir
+                      4 dias. El boton queda para re-barajar a voluntad. El
+                      cupo de lugares crece con los dias (5/dia, como en
+                      cargarCategoria) para que los dias nuevos no queden
+                      vacios. */}
+                  <select value={dias} onChange={(e) => {
+                    const n = +e.target.value;
+                    setDias(n);
+                    const cupo = Math.max(n * 5, 6);
+                    const sel = lugaresBase.length ? lugaresBase.slice(0, cupo) : seleccion;
+                    if (lugaresBase.length) setSeleccion(sel);
+                    reconstruir(sel, ciudad, n);
+                  }} disabled={!!(fechaInicio && fechaFin)}
                     className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[15px] disabled:bg-slate-100 disabled:text-slate-400">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </label>
                 <label className="flex flex-col gap-1 text-[13px] font-semibold text-slate-600">
                   <span className="inline-flex items-center gap-1.5"><Icono nombre="clock" size={15} /> {t("horasDia")}</span>
-                  <select value={horas} onChange={(e) => setHoras(+e.target.value)}
+                  {/* Horas/dia tambien recalcula en vivo. reconstruir() lee
+                      `horas` del state (aun viejo en este tick), asi que
+                      pasamos el plan por el camino de siempre en el proximo
+                      render usando setTimeout 0 con el valor ya aplicado. */}
+                  <select value={horas} onChange={(e) => { setHoras(+e.target.value); setTimeout(() => reconstruir(), 0); }}
                     className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[15px]">
                     {[4, 5, 6, 7, 8, 9, 10, 12].map((n) => <option key={n} value={n}>{n}h</option>)}
                   </select>
@@ -1695,7 +1714,7 @@ export default function Home() {
             </details>
 
             {/* Categorías */}
-            <div className="mb-2 flex gap-2 overflow-x-auto pb-2">
+            <div className="sin-scrollbar mb-2 flex gap-2 overflow-x-auto pb-2">
               {Object.entries(CATEGORIAS).map(([k, c]) => (
                 <Chip key={k} activo={categoria === k} onClick={() => cargarCategoria(k)}>
                   <span className="inline-flex items-center gap-1.5">
@@ -1739,7 +1758,7 @@ export default function Home() {
 
             {/* Pestañas de días */}
             {plan.length > 0 && (
-              <div className="mb-3.5 flex gap-2 overflow-x-auto">
+              <div className="sin-scrollbar mb-3.5 flex gap-2 overflow-x-auto">
                 {plan.map((d, i) => (d.paradas.length > 0 ? (
                   <Chip key={i} activo={diaVisible === i} onClick={() => setDiaVisible(i)}>{t("dia")} {i + 1}</Chip>
                 ) : null))}
@@ -1873,6 +1892,13 @@ export default function Home() {
           onTrazarRuta={(r) => { setRutaTrazada(r); setDetalle(null); }}
           onAgregar={plan[diaVisible] ? (l) => { agregarParada(l); setDetalle(null); } : undefined}
         />
+      )}
+
+      {/* Chat de viajeros de la ciudad abierta (boton flotante 💬) */}
+      {ciudad && (
+        <div className="print:hidden">
+          <ChatViajeros ciudad={ciudad.nombre} />
+        </div>
       )}
 
       {/* Asesor de viajes (guía gratis + IA opcional, chat flotante) */}

@@ -82,9 +82,15 @@ export default function Mapa({
           iconAnchor: [14, 14],
         });
         const m = L.marker(l.coord, { icon }).addTo(mapa);
-        m.bindPopup(
-          `<b>${i + 1}. ${nombreLocalizado(l, lang)}</b><br>${l.categoria || ""}<br>
-           <span style="color:#4f46e5;font-weight:600">Toca el pin para ver detalles →</span>`
+        // HOVER preview (feedback 2026-07-11): pasar el mouse sobre el punto
+        // muestra una mini-card del lugar SIN clic (nombre, tipo, tiempo de
+        // visita). El clic sigue abriendo el detalle completo. En tactil no
+        // hay hover: el tap dispara el click de siempre.
+        m.bindTooltip(
+          `<div style="font-weight:800;font-size:13px;color:#052b28">${i + 1}. ${nombreLocalizado(l, lang)}</div>
+           <div style="font-size:11.5px;color:#64748b;margin-top:1px">${l.categoria || ""}${l.minutos ? ` · ~${l.minutos} min` : ""}${l.wiki ? " · ★ famoso" : ""}</div>
+           <div style="font-size:10.5px;color:#4f46e5;font-weight:600;margin-top:2px">Clic para foto y cómo llegar</div>`,
+          { direction: "top", offset: [0, -12], opacity: 1, sticky: false, className: "anduve-tooltip" }
         );
         if (onClicLugar) m.on("click", () => onClicLugar(l));
         capaRef.current.push(m);

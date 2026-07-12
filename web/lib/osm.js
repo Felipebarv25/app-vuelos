@@ -209,7 +209,7 @@ export async function geocodificar(consulta) {
 // v25: ciudades TOP servidas desde precálculo estático (WDQS) → instantáneo y con
 // los íconos garantizados (Eiffel, Sagrada Familia, Coliseo…). El motor en vivo
 // queda como respaldo liviano para ciudades no precalculadas. Invalida cachés.
-const API_VER = "31";
+const API_VER = "32"; // 32: mezcla por tipo en imperdibles (2026-07-11)
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.
@@ -392,10 +392,40 @@ function procesarElementos(datos, categoria, lat, lon, limite, catNombre, precal
   // Ordenar por calidad (score), los mejores primero.
   lugares.sort((a, b) => b.score - a.score);
 
+  // DIVERSIDAD en "imperdibles" (feedback 2026-07-11: Medellín devolvía solo
+  // museos porque el scoring premia museum+wikipedia y el itinerario toma los
+  // primeros N en orden). Round-robin por tipo: se agrupa por categoria
+  // (Museo, Monumento, Parque, Mirador...) y se toma el mejor de cada grupo
+  // por turnos. Los grupos entran ordenados por su mejor score, así los
+  // íconos de verdad siguen arriba pero la mezcla queda variada. Quien quiera
+  // SOLO museos tiene el chip "Museos".
+  const mezclar = (lista) => {
+    if (categoria !== "imperdibles" || lista.length <= 3) return lista;
+    const grupos = new Map();
+    for (const l of lista) {
+      const k = l.categoria || "otro";
+      if (!grupos.has(k)) grupos.set(k, []);
+      grupos.get(k).push(l); // ya vienen en orden de score
+    }
+    const colas = [...grupos.values()].sort((a, b) => b[0].score - a[0].score);
+    const out = [];
+    let quedan = true;
+    while (quedan) {
+      quedan = false;
+      for (const cola of colas) {
+        if (cola.length) {
+          out.push(cola.shift());
+          quedan = quedan || cola.length > 0;
+        }
+      }
+    }
+    return out;
+  };
+
   // Datos precalculados: ya están curados (famosos y dentro del radio de la
   // ciudad), así que NO les aplicamos la regla anti-zigzag (evita descartar por
   // error íconos algo alejados, p. ej. Versalles).
-  if (precalc) return lugares.slice(0, limite);
+  if (precalc) return mezclar(lugares).slice(0, limite);
 
   // REGLA ANTI-ZIGZAG: los lugares cercanos al centro siempre entran; las
   // excursiones lejanas (>25 km) SOLO si son famosas (Wikipedia) y como máximo
@@ -420,7 +450,7 @@ function procesarElementos(datos, categoria, lat, lon, limite, catNombre, precal
   // muy pocos lugares). Ya quitamos los nombres basura (nombreBasura) y el orden
   // por calidad pone los notables arriba; el relleno válido queda disponible para
   // tener variedad suficiente.
-  return filtrados.slice(0, limite);
+  return mezclar(filtrados).slice(0, limite);
 }
 
 // Nombres genéricos/sin valor (solo el tipo, sin nombre propio) que no aportan.
