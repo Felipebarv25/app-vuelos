@@ -408,14 +408,19 @@ export default function Home() {
     if (!el || !ciudad) return;
     if (el.scrollWidth <= el.clientWidth + 8) return; // no hay overflow
     let raf, t0 = null, parado = false;
-    const amplitud = Math.min(160, el.scrollWidth - el.clientWidth);
+    // Recorrido COMPLETO: hasta el ultimo chip de la derecha (feedback
+    // 2026-07-11: con amplitud capada solo se veia una parte). La duracion
+    // escala con la distancia (~45 px/s) para que la velocidad se sienta
+    // igual de calmada en filas cortas y largas.
+    const amplitud = el.scrollWidth - el.clientWidth;
+    const periodo = Math.max(11, (amplitud / 45) * 2); // ida+vuelta
     const parar = () => { parado = true; if (raf) cancelAnimationFrame(raf); };
     const paso = (ts) => {
       if (parado) return;
       if (t0 == null) t0 = ts;
       const t = (ts - t0) / 1000;
-      if (t > 22) { el.scrollLeft = 0; return; } // ~2 ciclos de 11s y descansa
-      el.scrollLeft = amplitud * (0.5 - 0.5 * Math.cos((t / 11) * 2 * Math.PI));
+      if (t > periodo * 2) { el.scrollLeft = 0; return; } // 2 ciclos y descansa
+      el.scrollLeft = amplitud * (0.5 - 0.5 * Math.cos((t / periodo) * 2 * Math.PI));
       raf = requestAnimationFrame(paso);
     };
     const arranque = setTimeout(() => { raf = requestAnimationFrame(paso); }, 1200);
