@@ -25,14 +25,20 @@ function esImagenMala(url) {
 //     del lugar (radio 150m). Cubre los POIs sin artículo ni título que
 //     coincida: la foto es del sitio real, tomada ahí.
 // coord = [lat, lon] opcional; sin coord la cascada llega hasta el paso 2.
-export async function fotoDeLugar(nombre, ciudad = "", coord = null) {
-  // img4: clave nueva — la cascada ahora incluye geosearch (antes había
-  // lugares cacheados "sin foto" que hoy sí la tendrían).
-  const clave = `img4:${nombre}|${ciudad}`.toLowerCase();
+export async function fotoDeLugar(nombre, ciudad = "", coord = null, wd = null) {
+  // img5: clave nueva — cascada con Wikidata P18 (nivel 0) y Openverse.
+  const clave = `img5:${nombre}|${ciudad}`.toLowerCase();
   return cacheado(
     clave,
     TTL,
     async () => {
+      // 0) Wikidata P18: la imagen OFICIAL de la entidad. Muchos lugares
+      // traen su QID desde OSM/precalc (`wd`) y es la señal más precisa que
+      // existe — cero riesgo de foto equivocada.
+      if (wd) {
+        const oficial = await fotoWikidata(wd);
+        if (oficial?.url) return oficial;
+      }
       // 1) Wikipedia
       const wiki = await fotoWikipedia(nombre, ciudad);
       if (wiki?.url) return wiki;
@@ -49,12 +55,63 @@ export async function fotoDeLugar(nombre, ciudad = "", coord = null) {
         const calle = await fotoCalle(coord[0], coord[1]);
         if (calle?.url) return { ...calle, extracto: wiki?.extracto || null };
       }
-      // 5) Sin foto: devolvemos la descripción si la había
+      // 5) Openverse (CC search de WordPress: Flickr y otras fuentes libres,
+      // sin API key). Con verificación de título para no colar fotos ajenas.
+      const ov = await fotoOpenverse(nombre, ciudad);
+      if (ov?.url) return { ...ov, extracto: wiki?.extracto || null };
+      // 6) Sin foto: devolvemos la descripción si la había
       return wiki || null;
     },
     // Solo cachear si conseguimos una URL de foto; si no, reintentar luego.
     (d) => !!(d && d.url)
   );
+}
+
+// Imagen oficial de una entidad Wikidata (propiedad P18) → URL directa via
+// Special:FilePath (redirige al archivo en Commons; ?width= lo sirve ya
+// escalado). Es la fuente MÁS precisa: la comunidad eligió esa foto para
+// representar exactamente ese lugar.
+async function fotoWikidata(qid) {
+  try {
+    const r = await fetchRapido(
+      `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${encodeURIComponent(qid)}&property=P18&format=json&origin=*`
+    );
+    if (!r.ok) return null;
+    const d = await r.json();
+    const archivo = d?.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
+    if (!archivo || esImagenMala(archivo)) return null;
+    return {
+      url: `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(archivo)}?width=800`,
+      ancho: 800,
+      link: `https://www.wikidata.org/wiki/${qid}`,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// Openverse (api.openverse.org): buscador de imágenes con licencia libre
+// (agrega Flickr CC, Wikimedia y más). Sin API key (rate limit anónimo
+// generoso para nuestro volumen con caché de 30 días). Verificamos que el
+// título corresponda al lugar para no colar resultados ajenos.
+async function fotoOpenverse(nombre, ciudad) {
+  try {
+    const q = ciudad ? `${nombre} ${ciudad}` : nombre;
+    const r = await fetchRapido(
+      `https://api.openverse.org/v1/images/?q=${encodeURIComponent(q)}&page_size=8&mature=false&filter_dead=false`
+    );
+    if (!r.ok) return null;
+    const d = await r.json();
+    for (const img of d?.results || []) {
+      const url = img?.url || img?.thumbnail;
+      if (!url || esImagenMala(url)) continue;
+      if (!tituloCoincide(nombre, img?.title || "")) continue;
+      return { url, ancho: img?.width || null, link: img?.foreign_landing_url || null };
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 // Foto a nivel de calle via /api/foto-calle (Mapillary, token en el server).

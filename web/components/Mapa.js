@@ -104,7 +104,7 @@ export default function Mapa({
           // Skeleton mientras llega la foto; luego se reemplaza en caliente.
           m.setTooltipContent(fotoBox(`<span style="font-size:11px;color:#94a3b8">Cargando foto…</span>`) + infoHtml);
           import("@/lib/imagenes").then(({ fotoDeLugar }) =>
-            fotoDeLugar(nombreLoc, "", l.coord).then((f) => {
+            fotoDeLugar(nombreLoc, "", l.coord, l.wd).then((f) => {
               m.setTooltipContent(
                 (f?.url
                   ? fotoBox(`<img src="${f.url}" style="width:100%;height:100%;object-fit:cover" alt="">`)

@@ -13,13 +13,13 @@ import { track } from "@/lib/track";
 // Miniatura de la parada: carga la foto de forma perezosa. Cascada Wikipedia
 // -> Commons texto -> Commons GEO (con `coord` del lugar): asi TODOS los
 // lugares tienen foto, no solo los famosos (no-negociable 2026-07-11).
-function FotoMini({ nombre, ciudad, coord = null, onClick }) {
+function FotoMini({ nombre, ciudad, coord = null, wd = null, onClick }) {
   const [url, setUrl] = useState(null);
   const [cargando, setCargando] = useState(true);
   useEffect(() => {
     let vivo = true;
     setCargando(true);
-    fotoDeLugar(nombre, ciudad, coord).then((f) => {
+    fotoDeLugar(nombre, ciudad, coord, wd).then((f) => {
       if (vivo) {
         setUrl(f?.url || null);
         setCargando(false);
@@ -234,7 +234,7 @@ export default function Itinerario({
                 </div>
               </div>
 
-              <FotoMini nombre={nombreLocalizado(p, lang)} ciudad={ciudad} coord={p.coord} onClick={() => onVerLugar?.(p)} />
+              <FotoMini nombre={nombreLocalizado(p, lang)} ciudad={ciudad} coord={p.coord} wd={p.wd} onClick={() => onVerLugar?.(p)} />
             </div>
           </div>
         </div>

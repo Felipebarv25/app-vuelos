@@ -68,7 +68,7 @@ export default function DetalleLugar({ lugar, ciudad, origen, husoDestino, onCer
     setFoto(null);
     setGaleria([]);
     setIFoto(0);
-    fotoDeLugar(nombreLug, ciudad?.nombre, lugar?.coord).then((f) => {
+    fotoDeLugar(nombreLug, ciudad?.nombre, lugar?.coord, lugar?.wd).then((f) => {
       if (vivo) {
         setFoto(f);
         setCargandoFoto(false);
