@@ -54,6 +54,8 @@ const AlertasChip = dynamic(() => import("@/components/AlertasChip"), { ssr: fal
 const MusicaCiudad = dynamic(() => import("@/components/MusicaCiudad"));
 // "Estás en {ciudad}": ruta de visita de la ciudad actual (geo IP).
 const EstasEnCiudad = dynamic(() => import("@/components/EstasEnCiudad"), { ssr: false });
+// Anduve Live: agenda social de eventos de la ciudad (yo voy + chat).
+const EventosCiudad = dynamic(() => import("@/components/EventosCiudad"), { ssr: false });
 
 // Destinos destacados con foto (fotos libres de Wikimedia Commons).
 // visitantes: turistas internacionales/año (millones, datos publicos UNWTO,
@@ -388,6 +390,9 @@ export default function Home() {
   const [copiado, setCopiado] = useState(false);
   const [viajesGuardados, setViajesGuardados] = useState([]);
   const [guardado, setGuardado] = useState(false);
+
+  // Anduve Live: panel de eventos abierto para { ciudad, iso } o null.
+  const [eventosDe, setEventosDe] = useState(null);
 
   // GPS
   const [gpsOn, setGpsOn] = useState(false);
@@ -1455,12 +1460,22 @@ export default function Home() {
               (2026-07-11). */}
           <EstasEnCiudad
             t={t}
-            onCrear={(q) => pruebaRapida({ q, dias: 1 })}
+            onCrear={(q, momento) => pruebaRapida({ q, dias: 1, momento })}
+            onEventos={(g) => setEventosDe(g)}
             onCorregir={() => {
               setMostrarBuscarCiudad(true);
               if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
             }}
           />
+
+          {/* Panel Anduve Live (eventos + yo voy + chat) de la ciudad actual */}
+          {eventosDe && (
+            <EventosCiudad
+              ciudad={eventosDe.ciudad}
+              paisIso={eventosDe.iso}
+              onCerrar={() => setEventosDe(null)}
+            />
+          )}
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <EntryCard
