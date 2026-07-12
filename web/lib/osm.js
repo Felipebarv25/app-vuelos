@@ -186,6 +186,7 @@ const ETIQUETAS = {
 };
 
 import { cacheado, fetchRapido } from "./cache";
+import { zonasCerca, zonaComoLugar } from "./zonasNocturnas";
 import { distanciaMetros } from "./rutas";
 import { PRECALC } from "./precalcIndex";
 
@@ -233,7 +234,7 @@ export async function geocodificar(consulta) {
 // v25: ciudades TOP servidas desde precálculo estático (WDQS) → instantáneo y con
 // los íconos garantizados (Eiffel, Sagrada Familia, Coliseo…). El motor en vivo
 // queda como respaldo liviano para ciudades no precalculadas. Invalida cachés.
-const API_VER = "32"; // 32: mezcla por tipo en imperdibles (2026-07-11)
+const API_VER = "33"; // 33: zonas de rumba curadas en bares (2026-07-11)
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.
@@ -257,7 +258,7 @@ export async function traerLugares(categoria, lat, lon, radio, limite = 60) {
   if (!cat) throw new Error("Categoría desconocida");
   const r = radio || RADIO_POR_CAT[categoria] || 12000;
   const clave = `lug${API_VER}:${categoria}:${lat.toFixed(3)},${lon.toFixed(3)}`;
-  return cacheado(
+  const lista = await cacheado(
     clave,
     TTL_LUGARES,
     async () => {
@@ -283,6 +284,22 @@ export async function traerLugares(categoria, lat, lon, radio, limite = 60) {
     // se reintente la próxima en vez de quedar la ciudad vacía 12 horas.
     (d) => Array.isArray(d) && d.length > 0
   );
+
+  // ZONAS DE RUMBA CURADAS (feedback 2026-07-11): en "bares" (= modo
+  // Nocturno) las zonas populares reales de la ciudad (Provenza, La 70,
+  // Zona T...) van ARRIBA de los bares individuales de OSM. Se inyectan
+  // fuera del cache (costo cero) y se deduplican por nombre.
+  if (categoria === "bares" && Array.isArray(lista)) {
+    const zonas = zonasCerca(lat, lon).map(zonaComoLugar);
+    if (zonas.length) {
+      const nombresZona = new Set(zonas.map((z) => z.nombre.toLowerCase()));
+      return [
+        ...zonas,
+        ...lista.filter((l) => !nombresZona.has((l.nombre || "").toLowerCase())),
+      ];
+    }
+  }
+  return lista;
 }
 
 async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
