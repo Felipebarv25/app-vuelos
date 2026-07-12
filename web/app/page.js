@@ -8,7 +8,6 @@ import { compartirEnlace } from "@/lib/compartir";
 import { getDestinoPorSlug } from "@/lib/destinos";
 import { construirItinerario, agregarLugarADia, fmtMin } from "@/lib/itinerario";
 import { isoDesdeNombre, infoPais } from "@/lib/requisitos";
-import { CIUDADES_POPULARES } from "@/lib/ciudadesPopulares";
 import { sugerirCiudades } from "@/lib/autocompletar";
 import { useGeo } from "@/lib/useGeo";
 import { Chip } from "@/components/ui";
@@ -415,8 +414,8 @@ export default function Home() {
       if (parado) return;
       if (t0 == null) t0 = ts;
       const t = (ts - t0) / 1000;
-      if (t > 12) { el.scrollLeft = 0; return; } // ~2 ciclos de 6s y descansa
-      el.scrollLeft = amplitud * (0.5 - 0.5 * Math.cos((t / 6) * 2 * Math.PI));
+      if (t > 22) { el.scrollLeft = 0; return; } // ~2 ciclos de 11s y descansa
+      el.scrollLeft = amplitud * (0.5 - 0.5 * Math.cos((t / 11) * 2 * Math.PI));
       raf = requestAnimationFrame(paso);
     };
     const arranque = setTimeout(() => { raf = requestAnimationFrame(paso); }, 1200);
@@ -1124,10 +1123,10 @@ export default function Home() {
           </>
         )}
 
-        {/* Lista de ciudades compartida por ambos buscadores */}
-        <datalist id="ciudades-pop">
-          {CIUDADES_POPULARES.map((c) => (<option key={c} value={c} />))}
-        </datalist>
+        {/* datalist nativo ELIMINADO (bug 2026-07-11): el navegador abria su
+            propio dropdown blanco encima de nuestro autocompletado estilizado
+            — dos listas a la vez. El autocompletado propio (sugerirCiudades)
+            cubre lo mismo con nuestros colores. */}
 
         <div className={`relative mx-auto max-w-[1480px] px-3 lg:px-5 ${esHero ? "pt-3 pb-16 lg:pb-24" : "pt-2 pb-3"}`}>
           {/* Barra de navegación superior. max-w aumentado y px reducido para
@@ -1401,7 +1400,7 @@ export default function Home() {
                       onChange={(e) => setConsulta(e.target.value)}
                       onFocus={() => sugerencias.length && setMostrarSug(true)}
                       placeholder={t("buscarPlaceholder")}
-                      list="ciudades-pop"
+
                       className="flex-1 rounded-xl border-0 bg-transparent px-4 py-2.5 text-[15px] text-slate-800 outline-none placeholder:text-slate-400"
                     />
                     <button type="submit" aria-label={t("buscar")} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-4 text-[14px] font-bold text-white shadow-md transition hover:brightness-110">
@@ -1457,7 +1456,7 @@ export default function Home() {
                   onChange={(e) => setConsulta(e.target.value)}
                   onFocus={() => sugerencias.length && setMostrarSug(true)}
                   placeholder={t("buscarPlaceholder")}
-                  list="ciudades-pop"
+
                   className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-base text-slate-800 outline-none transition focus:border-marca-400 focus:bg-white"
                 />
                 <button type="submit" aria-label={t("buscar")} className="flex items-center justify-center rounded-2xl bg-gradient-to-r from-marca-500 to-marca-600 px-5 font-bold text-white shadow-marca transition hover:brightness-110">
@@ -1769,8 +1768,10 @@ export default function Home() {
               </div>
             </details>
 
-            {/* Categorías (vaivén automático suave — ver efecto chipsRef) */}
-            <div ref={chipsRef} className="sin-scrollbar mb-2 flex gap-2 overflow-x-auto pb-2">
+            {/* Categorías (vaivén automático suave — ver efecto chipsRef).
+                py-1: sin padding vertical el borde superior de los chips se
+                CORTABA contra el overflow del contenedor (bug 2026-07-11). */}
+            <div ref={chipsRef} className="sin-scrollbar mb-2 flex gap-2 overflow-x-auto px-0.5 py-1">
               {Object.entries(CATEGORIAS).map(([k, c]) => (
                 <Chip key={k} activo={categoria === k} onClick={() => cargarCategoria(k)}>
                   <span className="inline-flex items-center gap-1.5">

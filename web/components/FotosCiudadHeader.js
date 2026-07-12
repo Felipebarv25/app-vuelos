@@ -14,8 +14,18 @@ export default function FotosCiudadHeader({ ciudad, pais = "" }) {
   useEffect(() => {
     let vivo = true;
     setFotos([]);
-    galeriaDeLugar(ciudad, pais, 4).then((g) => {
-      if (vivo) setFotos((g?.urls || []).slice(0, 4));
+    galeriaDeLugar(ciudad, pais, 8).then((g) => {
+      if (!vivo) return;
+      // Solo JPG/JPEG: los PNG de Commons suelen ser logos, planos y
+      // diagramas (bug 2026-07-11: salia el logo del "Plan de Ordenamiento
+      // Territorial" y un mapa antiguo). Ademas blocklist de palabras que
+      // delatan no-fotos.
+      const malas = /logo|escudo|plan[_ %]de[_ %]ordenamiento|diagrama|plano|croquis|chart|emblem|seal|bandera|flag/i;
+      const buenas = (g?.urls || [])
+        .filter((u) => /\.jpe?g(\?|$)/i.test(u))
+        .filter((u) => { try { return !malas.test(decodeURIComponent(u)); } catch { return !malas.test(u); } })
+        .slice(0, 3);
+      setFotos(buenas);
     }).catch(() => {});
     return () => { vivo = false; };
   }, [ciudad, pais]);
@@ -23,14 +33,14 @@ export default function FotosCiudadHeader({ ciudad, pais = "" }) {
   if (fotos.length < 2) return null;
 
   return (
-    <div className="sin-scrollbar mb-4 flex gap-2 overflow-x-auto">
+    <div className="sin-scrollbar mb-4 flex gap-2.5 overflow-x-auto">
       {fotos.map((url, i) => (
         <img
           key={url}
           src={url}
           alt={`${ciudad} ${i + 1}`}
           loading="lazy"
-          className={`h-20 rounded-xl object-cover shadow-suave ${i === 0 ? "w-40" : "w-28"} shrink-0`}
+          className={`h-28 rounded-2xl object-cover shadow-suave sm:h-36 ${i === 0 ? "w-56 sm:w-72" : "w-40 sm:w-52"} shrink-0`}
         />
       ))}
     </div>
