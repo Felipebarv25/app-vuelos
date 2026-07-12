@@ -273,7 +273,12 @@ export async function traerLugares(categoria, lat, lon, radio, limite = 60) {
             if (res.ok) {
               const datos = await res.json();
               const lista = procesarElementos(datos, categoria, lat, lon, limite, cat.nombre, true);
-              if (lista.length > 0) return lista;
+              // Umbral de calidad (2026-07-11): en pueblos chicos Wikidata
+              // trae 1-8 lugares (Salento salio con 1, Cartagena con 8) y la
+              // ruta quedaba pobre. Si el precalculo es flaco, mejor ir EN
+              // VIVO a Overpass/Photon que traen mucho mas. El precalculo
+              // solo gana cuando esta gordo (ciudades grandes).
+              if (lista.length >= 12) return lista;
             }
           } catch {}
         }

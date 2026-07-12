@@ -1,0 +1,215 @@
+[1/213] Lima: ya existe, omitir
+[2/213] Cusco: ya existe, omitir
+[3/213] Quito: ya existe, omitir
+[4/213] Santiago: ya existe, omitir
+[5/213] Buenos Aires: ya existe, omitir
+[6/213] Mendoza: ya existe, omitir
+[7/213] Río de Janeiro: ya existe, omitir
+[8/213] São Paulo: ya existe, omitir
+[9/213] Montevideo: ya existe, omitir
+[10/213] La Paz: ya existe, omitir
+[11/213] Ciudad de México: ya existe, omitir
+[12/213] Cancún: ya existe, omitir
+[13/213] Ciudad de Panamá: ya existe, omitir
+[14/213] San José: ya existe, omitir
+[15/213] Miami: ya existe, omitir
+[16/213] Nueva York: ya existe, omitir
+[17/213] Los Ángeles: ya existe, omitir
+[18/213] Toronto: ya existe, omitir
+[19/213] La Habana: ya existe, omitir
+[20/213] Madrid: ya existe, omitir
+[21/213] Barcelona: ya existe, omitir
+[22/213] Sevilla: ya existe, omitir
+[23/213] Lisboa: ya existe, omitir
+[24/213] Oporto: ya existe, omitir
+[25/213] París: ya existe, omitir
+[26/213] Niza: ya existe, omitir
+[27/213] Roma: ya existe, omitir
+[28/213] Florencia: ya existe, omitir
+[29/213] Venecia: ya existe, omitir
+[30/213] Milán: ya existe, omitir
+[31/213] Londres: ya existe, omitir
+[32/213] Ámsterdam: ya existe, omitir
+[33/213] Bruselas: ya existe, omitir
+[34/213] Berlín: ya existe, omitir
+[35/213] Múnich: ya existe, omitir
+[36/213] Viena: ya existe, omitir
+[37/213] Praga: ya existe, omitir
+[38/213] Budapest: ya existe, omitir
+[39/213] Atenas: ya existe, omitir
+[40/213] Estambul: ya existe, omitir
+[41/213] Tokio: ya existe, omitir
+[42/213] Kioto: ya existe, omitir
+[43/213] Seúl: ya existe, omitir
+[44/213] Bangkok: ya existe, omitir
+[45/213] Bali: ya existe, omitir
+[46/213] Singapur: ya existe, omitir
+[47/213] Dubái: ya existe, omitir
+[48/213] Abu Dabi: ya existe, omitir
+[49/213] Pekín: ya existe, omitir
+[50/213] Shanghái: ya existe, omitir
+[51/213] Hong Kong: ya existe, omitir
+[52/213] Osaka: ya existe, omitir
+[53/213] Bombay: ya existe, omitir
+[54/213] Phuket: ya existe, omitir
+[55/213] Guayaquil: ya existe, omitir
+[56/213] Arequipa: ya existe, omitir
+[57/213] Florianópolis: ya existe, omitir
+[58/213] Bariloche: ya existe, omitir
+[59/213] Asunción: ya existe, omitir
+[60/213] Guadalajara: ya existe, omitir
+[61/213] Playa del Carmen: ya existe, omitir
+[62/213] San Francisco: ya existe, omitir
+[63/213] Las Vegas: ya existe, omitir
+[64/213] Chicago: ya existe, omitir
+[65/213] Orlando: ya existe, omitir
+[66/213] Montreal: ya existe, omitir
+[67/213] Ciudad de Guatemala: ya existe, omitir
+[68/213] Valencia: ya existe, omitir
+[69/213] Nápoles: ya existe, omitir
+[70/213] Edimburgo: ya existe, omitir
+[71/213] Dublín: ya existe, omitir
+[72/213] Copenhague: ya existe, omitir
+[73/213] Estocolmo: ya existe, omitir
+[74/213] Zúrich: ya existe, omitir
+[75/213] Varsovia: ya existe, omitir
+[76/213] El Cairo: ya existe, omitir
+[77/213] Marrakech: ya existe, omitir
+[78/213] Ciudad del Cabo: ya existe, omitir
+[79/213] Sídney: ya existe, omitir
+[80/213] Melbourne: ya existe, omitir
+[81/213] Auckland: ya existe, omitir
+[82/213] Medellín: ya existe, omitir
+[83/213] Bogotá: ya existe, omitir
+[84/213] Cartagena: ya existe, omitir
+[85/213] Cali: ya existe, omitir
+[86/213] Santa Marta: ya existe, omitir
+[87/213] Barranquilla: ya existe, omitir
+[88/213] Pereira: ya existe, omitir
+[89/213] Bucaramanga: ya existe, omitir
+[90/213] Manizales: ya existe, omitir
+[91/213] Villa de Leyva: ya existe, omitir
+[92/213] San Andrés: 0 (sin datos)
+[93/213] Popayán: ya existe, omitir
+[94/213] Hong Kong: ya existe, omitir
+[95/213] Guatapé: 0 (sin datos)
+[96/213] Salento: 1 -> salento-colombia.json
+[97/213] Leticia: 0 (sin datos)
+[98/213] Barichara: 0 (sin datos)
+[99/213] Mompox: 0 (sin datos)
+[100/213] Oaxaca: 9 -> oaxaca-mexico.json
+[101/213] Mérida: 9 -> merida-mexico.json
+[102/213] San Miguel de Allende: 1 -> san-miguel-de-allende-mexico.json
+[103/213] Puerto Vallarta: 19 -> puerto-vallarta-mexico.json
+[104/213] Tulum: 4 -> tulum-mexico.json
+[105/213] Guanajuato: 10 -> guanajuato-mexico.json
+[106/213] Trujillo: 19 -> trujillo-peru.json
+[107/213] Iquitos: 8 -> iquitos-peru.json
+[108/213] Paracas: 0 (sin datos)
+[109/213] Salta: 15 -> salta-argentina.json
+[110/213] Ushuaia: 5 -> ushuaia-argentina.json
+[111/213] Córdoba: 25 -> cordoba-argentina.json
+[112/213] Valparaíso: 45 -> valparaiso-chile.json
+[113/213] San Pedro de Atacama: 3 -> san-pedro-de-atacama-chile.json
+[114/213] Puerto Varas: 2 -> puerto-varas-chile.json
+[115/213] Salvador: 45 -> salvador-brasil.json
+[116/213] Recife: 45 -> recife-brasil.json
+[117/213] Fortaleza: 23 -> fortaleza-brasil.json
+[118/213] Foz do Iguaçu: 3 -> foz-do-iguacu-brasil.json
+[119/213] Manaos: 21 -> manaos-brasil.json
+[120/213] Cuenca: 12 -> cuenca-ecuador.json
+[121/213] Baños: 1 -> banos-ecuador.json
+[122/213] Uyuni: 0 (sin datos)
+[123/213] Sucre: 11 -> sucre-bolivia.json
+[124/213] Santo Domingo: 21 -> santo-domingo-republica-dominicana.json
+[125/213] San Juan: 28 -> san-juan-puerto-rico.json
+[126/213] Montego Bay: 2 -> montego-bay-jamaica.json
+[127/213] Oranjestad: 21 -> oranjestad-aruba.json
+[128/213] Willemstad: 17 -> willemstad-curazao.json
+[129/213] Granada: 31 -> granada-espana.json
+[130/213] Bilbao: 25 -> bilbao-espana.json
+[131/213] San Sebastián: 25 -> san-sebastian-espana.json
+[132/213] Toledo: 31 -> toledo-espana.json
+[133/213] Córdoba: 26 -> cordoba-espana.json
+[134/213] Palma de Mallorca: 45 -> palma-de-mallorca-espana.json
+[135/213] Brujas: 33 -> brujas-belgica.json
+[136/213] Gante: 22 -> gante-belgica.json
+[137/213] Lyon: 31 -> lyon-francia.json
+[138/213] Marsella: 28 -> marsella-francia.json
+[139/213] Burdeos: 29 -> burdeos-francia.json
+[140/213] Estrasburgo: 30 -> estrasburgo-francia.json
+[141/213] Turín: 38 -> turin-italia.json
+[142/213] Bolonia: 45 -> bolonia-italia.json
+[143/213] Verona: 45 -> verona-italia.json
+[144/213] Palermo: 32 -> palermo-italia.json
+[145/213] Santorini: 11 -> santorini-grecia.json
+[146/213] Mykonos: 36 -> mykonos-grecia.json
+[147/213] Heraclión: 23 -> heraclion-grecia.json
+[148/213] Dubrovnik: 31 -> dubrovnik-croacia.json
+[149/213] Split: 27 -> split-croacia.json
+[150/213] Liubliana: 39 -> liubliana-eslovenia.json
+[151/213] Cracovia: 36 -> cracovia-polonia.json
+[152/213] Gdansk: 28 -> gdansk-polonia.json
+[153/213] Salzburgo: 41 -> salzburgo-austria.json
+[154/213] Innsbruck: 41 -> innsbruck-austria.json
+[155/213] Hamburgo: 24 -> hamburgo-alemania.json
+[156/213] Colonia: 43 -> colonia-alemania.json
+[157/213] Dresde: 26 -> dresde-alemania.json
+[158/213] Rotterdam: 26 -> rotterdam-paises-bajos.json
+[159/213] Oxford: 24 -> oxford-reino-unido.json
+[160/213] Cambridge: 29 -> cambridge-reino-unido.json
+[161/213] Liverpool: 24 -> liverpool-reino-unido.json
+[162/213] Glasgow: 25 -> glasgow-reino-unido.json
+[163/213] Ginebra: 35 -> ginebra-suiza.json
+[164/213] Lucerna: 41 -> lucerna-suiza.json
+[165/213] Interlaken: 11 -> interlaken-suiza.json
+[166/213] Reikiavik: 27 -> reikiavik-islandia.json
+[167/213] Helsinki: 36 -> helsinki-finlandia.json
+[168/213] Oslo: 25 -> oslo-noruega.json
+[169/213] Bergen: 45 -> bergen-noruega.json
+[170/213] Tallin: 25 -> tallin-estonia.json
+[171/213] Riga: 31 -> riga-letonia.json
+[172/213] Nara: 12 -> nara-japon.json
+[173/213] Hiroshima: 17 -> hiroshima-japon.json
+[174/213] Sapporo: 18 -> sapporo-japon.json
+[175/213] Busán: 11 -> busan-corea-del-sur.json
+[176/213] Chiang Mai: 9 -> chiang-mai-tailandia.json
+[177/213] Krabi: 2 -> krabi-tailandia.json
+[178/213] Hanói: 33 -> hanoi-vietnam.json
+[179/213] Ho Chi Minh: 23 -> ho-chi-minh-vietnam.json
+[180/213] Da Nang: 12 -> da-nang-vietnam.json
+[181/213] Siem Reap: 42 -> siem-reap-camboya.json
+[182/213] Kuala Lumpur: 37 -> kuala-lumpur-malasia.json
+[183/213] Manila: 21 -> manila-filipinas.json
+[184/213] Cebú: 10 -> cebu-filipinas.json
+[185/213] Taipéi: 21 -> taipei-taiwan.json
+[186/213] Katmandú: 25 -> katmandu-nepal.json
+[187/213] Nueva Delhi: 31 -> nueva-delhi-india.json
+[188/213] Agra: 12 -> agra-india.json
+[189/213] Jaipur: 14 -> jaipur-india.json
+[190/213] Colombo: 28 -> colombo-sri-lanka.json
+[191/213] Tel Aviv: 33 -> tel-aviv-israel.json
+[192/213] Jerusalén: 45 -> jerusalen-israel.json
+[193/213] Amán: 25 -> aman-jordania.json
+[194/213] Doha: 26 -> doha-catar.json
+[195/213] Mascate: 8 -> mascate-oman.json
+[196/213] Casablanca: 26 -> casablanca-marruecos.json
+[197/213] Fez: 30 -> fez-marruecos.json
+[198/213] Túnez: 45 -> tunez-tunez.json
+[199/213] Nairobi: 13 -> nairobi-kenia.json
+[200/213] Zanzíbar: 8 -> zanzibar-tanzania.json
+[201/213] Johannesburgo: 13 -> johannesburgo-sudafrica.json
+[202/213] Boston: 25 -> boston-estados-unidos.json
+[203/213] Washington: 36 -> washington-estados-unidos.json
+[204/213] Seattle: 30 -> seattle-estados-unidos.json
+[205/213] Nueva Orleans: 35 -> nueva-orleans-estados-unidos.json
+[206/213] Honolulu: 39 -> honolulu-estados-unidos.json
+[207/213] Vancouver: 23 -> vancouver-canada.json
+[208/213] Quebec: 43 -> quebec-canada.json
+[209/213] Brisbane: 18 -> brisbane-australia.json
+[210/213] Perth: 45 -> perth-australia.json
+[211/213] Cairns: 9 -> cairns-australia.json
+[212/213] Queenstown: 1 -> queenstown-nueva-zelanda.json
+[213/213] Wellington: 27 -> wellington-nueva-zelanda.json
+
+Listo: 206 ciudades en el índice.
