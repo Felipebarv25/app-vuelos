@@ -52,6 +52,8 @@ const AlertasChip = dynamic(() => import("@/components/AlertasChip"), { ssr: fal
 // Banda sonora de la ciudad: solo se necesita dentro de una ciudad, fuera
 // del bundle inicial.
 const MusicaCiudad = dynamic(() => import("@/components/MusicaCiudad"));
+// "Estás en {ciudad}": ruta de visita de la ciudad actual (geo IP).
+const EstasEnCiudad = dynamic(() => import("@/components/EstasEnCiudad"), { ssr: false });
 
 // Destinos destacados con foto (fotos libres de Wikimedia Commons).
 // visitantes: turistas internacionales/año (millones, datos publicos UNWTO,
@@ -1447,7 +1449,20 @@ export default function Home() {
               ya no apila destinos/ofertas/fechas/viajes en scroll largo. En su
               lugar cards que llevan a cada sección con su propia URL.
               Recomendados se mantiene si hay perfil. */}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Ruta de la ciudad ACTUAL: "Estás en Medellín — crea tu ruta de
+              hoy". Detecta por IP (sin permiso GPS) y dispara el motor de
+              itinerarios con 1 dia. Restaurado por request del usuario
+              (2026-07-11). */}
+          <EstasEnCiudad
+            t={t}
+            onCrear={(q) => pruebaRapida({ q, dias: 1 })}
+            onCorregir={() => {
+              setMostrarBuscarCiudad(true);
+              if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <EntryCard
               href="/destino"
               icono="globe"
