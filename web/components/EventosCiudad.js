@@ -37,11 +37,32 @@ const TXT = {
   chatLogin: "Inicia sesión para escribir en el chat (leer es gratis).",
   chatNormas: "Sé buena gente. Sin links. Los mensajes son públicos.",
   enviar: "Enviar",
+  reportar: "Reportar mensaje",
+  borrar: "Borrar mi mensaje",
+  seguro: "¿Seguro?",
+  avisoLenguaje: "Cuidemos el lenguaje 🙏 Ese mensaje no se envió.",
+  avisoLinks: "Los links no están permitidos en el chat.",
+  avisoRapido: "Vas muy rápido — espera unos segundos.",
 };
-function tx(k, vars = {}) {
-  let s = TXT[k] || k;
-  for (const [kk, v] of Object.entries(vars)) s = s.replace(`{${kk}}`, v);
-  return s;
+// i18n (2026-07-13): las claves viven en lib/idiomas.js con prefijo ev_
+// (o chat_ para las compartidas con ChatViajeros). TXT queda como fallback
+// ES por si el padre no pasa `t` (leccion del bug del trial: los defaults
+// silenciosos muestran claves crudas).
+const CLAVE_GLOBAL = {
+  reportar: "chat_reportar", borrar: "chat_borrar", seguro: "chat_seguro",
+  avisoLenguaje: "chat_avisoLenguaje", avisoLinks: "chat_avisoLinks", avisoRapido: "chat_avisoRapido",
+};
+function crearTx(t) {
+  return (k, vars = {}) => {
+    if (t) {
+      const clave = CLAVE_GLOBAL[k] || "ev_" + k;
+      const v = t(clave, vars);
+      if (v !== clave) return v; // la clave existe en el diccionario global
+    }
+    let s = TXT[k] || k;
+    for (const [kk, v] of Object.entries(vars)) s = s.replace(`{${kk}}`, v);
+    return s;
+  };
 }
 
 const ICONO_TIPO = { musica: "🎵", deporte: "⚽", arte: "🎭", cine: "🎬", otro: "🎟️" };
@@ -58,7 +79,8 @@ function authHeaders() {
 
 function iso(d) { return d.toISOString().slice(0, 10); }
 
-export default function EventosCiudad({ ciudad, paisIso = "", onCerrar }) {
+export default function EventosCiudad({ ciudad, paisIso = "", onCerrar, t = null }) {
+  const tx = crearTx(t);
   useBrowserBackClose(true, onCerrar);
   const [montado, setMontado] = useState(false);
   useEffect(() => { setMontado(true); }, []);
@@ -280,7 +302,7 @@ export default function EventosCiudad({ ciudad, paisIso = "", onCerrar }) {
                   </div>
                 </div>
               </div>
-              {chatAbierto === ev.id && <ChatEvento idEvento={ev.id} />}
+              {chatAbierto === ev.id && <ChatEvento idEvento={ev.id} tx={tx} />}
             </div>
           ))}
         </div>
@@ -291,19 +313,44 @@ export default function EventosCiudad({ ciudad, paisIso = "", onCerrar }) {
 }
 
 // ---------- Chat de un evento ----------
-function ChatEvento({ idEvento }) {
+function ChatEvento({ idEvento, tx = crearTx(null) }) {
   const [mensajes, setMensajes] = useState(null); // null = cargando
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [necesitaLogin, setNecesitaLogin] = useState(false);
+  const [confirmando, setConfirmando] = useState(null); // "ts:uid" esperando confirmacion
+  const [aviso, setAviso] = useState(null); // rechazo del servidor (lenguaje, links, rate limit)
   const finRef = useRef(null);
   const miUid = useRef(null);
+  // Lo que YO reporte no debe reaparecer con el proximo poll aunque aun no
+  // alcance el umbral global de ocultamiento.
+  const reportados = useRef(new Set());
 
   async function cargar() {
     try {
       const r = await fetch(`/api/eventos/chat?id=${encodeURIComponent(idEvento)}`);
       const d = await r.json().catch(() => null);
-      if (d?.ok) setMensajes(d.mensajes || []);
+      if (d?.ok) setMensajes((d.mensajes || []).filter((m) => !reportados.current.has(`${m.ts}:${m.uid}`)));
+    } catch {}
+  }
+
+  async function reportar(m) {
+    const marca = `${m.ts}:${m.uid}`;
+    if (confirmando !== marca) { setConfirmando(marca); return; }
+    setConfirmando(null);
+    try {
+      const r = await fetch("/api/eventos/chat/reportar", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ id: idEvento, ts: m.ts, uid: m.uid }),
+      });
+      if (r.status === 401) { setNecesitaLogin(true); return; }
+      const d = await r.json().catch(() => null);
+      if (d?.ok) {
+        reportados.current.add(marca);
+        setMensajes((arr) => (arr || []).filter((x) => `${x.ts}:${x.uid}` !== marca));
+        track("chat_reportar", { evento: idEvento, propio: !!d.propio });
+      }
     } catch {}
   }
 
@@ -335,6 +382,12 @@ function ChatEvento({ idEvento }) {
         miUid.current = d.mensaje.uid;
         setMensajes((m) => [...(m || []), d.mensaje]);
         setTexto("");
+      } else if (d?.motivo === "lenguaje") {
+        setAviso(tx("avisoLenguaje"));
+      } else if (d?.motivo === "sin-links") {
+        setAviso(tx("avisoLinks"));
+      } else if (d?.motivo === "muy-rapido") {
+        setAviso(tx("avisoRapido"));
       }
     } catch {} finally {
       setEnviando(false);
@@ -352,14 +405,31 @@ function ChatEvento({ idEvento }) {
         )}
         {mensajes?.map((m, i) => {
           const mio = miUid.current && m.uid === miUid.current;
+          const marca = `${m.ts}:${m.uid}`;
+          const botonReporte = (
+            <button
+              onClick={() => reportar(m)}
+              className={`shrink-0 self-center rounded-full px-1.5 py-0.5 text-[10px] transition ${
+                confirmando === marca
+                  ? "bg-rose-100 font-bold text-rose-600 dark:bg-rose-900/40 dark:text-rose-300"
+                  : "text-slate-300 opacity-40 hover:text-rose-400 dark:text-slate-500 sm:opacity-0 sm:group-hover:opacity-100"
+              }`}
+              aria-label={mio ? tx("borrar") : tx("reportar")}
+              title={mio ? tx("borrar") : tx("reportar")}
+            >
+              {confirmando === marca ? tx("seguro") : mio ? "🗑" : "⚑"}
+            </button>
+          );
           return (
-            <div key={`${m.ts}-${i}`} className={`flex ${mio ? "justify-end" : "justify-start"}`}>
+            <div key={`${m.ts}-${i}`} className={`group flex items-end gap-1 ${mio ? "justify-end" : "justify-start"}`}>
+              {mio && botonReporte}
               <div className={`max-w-[85%] rounded-2xl px-3 py-1.5 text-[13px] leading-snug ${
                 mio ? "bg-marca-600 text-white" : "bg-white text-slate-700 shadow-suave dark:bg-slate-800 dark:text-slate-200"
               }`}>
                 {!mio && <span className="mr-1.5 font-bold text-marca-600 dark:text-marca-300">{m.de}</span>}
                 {m.texto}
               </div>
+              {!mio && botonReporte}
             </div>
           );
         })}
@@ -377,7 +447,7 @@ function ChatEvento({ idEvento }) {
         <form onSubmit={enviar} className="mt-2 flex gap-2">
           <input
             value={texto}
-            onChange={(e) => setTexto(e.target.value)}
+            onChange={(e) => { setTexto(e.target.value); if (aviso) setAviso(null); }}
             maxLength={280}
             placeholder={tx("chatPlaceholder")}
             className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13.5px] outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
@@ -390,6 +460,11 @@ function ChatEvento({ idEvento }) {
             {tx("enviar")}
           </button>
         </form>
+      )}
+      {aviso && (
+        <div className="mt-1.5 rounded-lg bg-rose-50 px-2 py-1 text-center text-[11.5px] font-bold text-rose-600 dark:bg-rose-900/30 dark:text-rose-300">
+          {aviso}
+        </div>
       )}
       <div className="mt-1.5 text-center text-[10.5px] text-slate-400">{tx("chatNormas")}</div>
     </div>

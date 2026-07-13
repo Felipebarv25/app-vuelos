@@ -272,6 +272,37 @@ export function AppProvider({ children }) {
   // el token email haya sido validado.
   const listo = listoLocal && listoEmail && status !== "loading";
 
+  // Auto-cierre por inactividad (pedido 2026-07-13): con sesion activa, 15 min
+  // sin interaccion (mouse/teclado/touch/scroll) cierran la sesion y devuelven
+  // al landing pre-login. Chequeo cada 30 s + al volver a la pestana (si
+  // estuvo oculta mas de 15 min, expira de inmediato).
+  const haySesion = !!usuario;
+  useEffect(() => {
+    if (!haySesion) return;
+    const LIMITE = 15 * 60 * 1000;
+    let ultima = Date.now();
+    let cerrando = false;
+    const marcar = () => { ultima = Date.now(); };
+    const expirar = () => {
+      if (cerrando) return;
+      cerrando = true;
+      Promise.resolve(salir()).finally(() => {
+        try { window.location.href = "/"; } catch {}
+      });
+    };
+    const chequear = () => { if (Date.now() - ultima >= LIMITE) expirar(); };
+    const evs = ["pointerdown", "pointermove", "keydown", "wheel", "scroll", "touchstart"];
+    evs.forEach((e) => window.addEventListener(e, marcar, { passive: true }));
+    const intervalo = setInterval(chequear, 30000);
+    document.addEventListener("visibilitychange", chequear);
+    return () => {
+      evs.forEach((e) => window.removeEventListener(e, marcar));
+      clearInterval(intervalo);
+      document.removeEventListener("visibilitychange", chequear);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [haySesion]);
+
   const t = traductor(lang);
 
   return (

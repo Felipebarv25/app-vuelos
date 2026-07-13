@@ -402,6 +402,10 @@ export default function Home() {
   // Hospedaje: punto de partida de la ruta ("mi hotel esta en X"). Cuando
   // esta seteado, el itinerario se optimiza desde ahi en vez del centro.
   const [hospedaje, setHospedaje] = useState(null); // { nombre, lat, lon } | null
+  // Modo "elegir inicio en el mapa" (2026-07-13): el proximo clic/tap sobre
+  // el mapa fija el punto de partida de la ruta.
+  const [eligiendoEnMapa, setEligiendoEnMapa] = useState(false);
+  const mapaBoxRef = useRef(null);
 
   // Vaivén suave de los chips de categorías (feedback 2026-07-11): al abrir
   // una ciudad, la fila se desliza lentamente ida-y-vuelta un par de ciclos
@@ -1548,6 +1552,7 @@ export default function Home() {
               ciudad={eventosDe.ciudad}
               paisIso={eventosDe.iso}
               onCerrar={() => setEventosDe(null)}
+              t={t}
             />
           )}
 
@@ -1796,6 +1801,11 @@ export default function Home() {
                   t={t}
                   onElegir={(h) => { setHospedaje(h); reconstruir(seleccion, ciudad, undefined, h); }}
                   onQuitar={() => { setHospedaje(null); reconstruir(seleccion, ciudad, undefined, null); }}
+                  onElegirEnMapa={() => {
+                    setEligiendoEnMapa(true);
+                    // Llevar la vista al mapa (en movil queda arriba).
+                    setTimeout(() => mapaBoxRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+                  }}
                 />
               </div>
               </div>
@@ -1967,14 +1977,36 @@ export default function Home() {
           {/* Panel derecho: mapa (arriba en móvil, fijo a la derecha en escritorio) */}
           <div className="order-1 lg:order-2 lg:w-[44%] lg:shrink-0">
             <div className="lg:sticky lg:top-[var(--v360-header-h,150px)]">
-              <div className="h-[42vh] min-h-[260px] overflow-hidden lg:h-[calc(100vh-var(--v360-header-h,150px)-22px)] lg:rounded-2xl lg:shadow-media">
+              <div ref={mapaBoxRef} className="relative h-[42vh] min-h-[260px] overflow-hidden lg:h-[calc(100vh-var(--v360-header-h,150px)-22px)] lg:rounded-2xl lg:shadow-media">
+                {/* Banner del modo "elegir inicio en el mapa": el proximo tap fija el punto. */}
+                {eligiendoEnMapa && (
+                  <div className="absolute inset-x-2 top-2 z-[1000] flex items-center justify-between gap-2 rounded-xl bg-marca-800/95 px-3 py-2 text-white shadow-lg">
+                    <span className="text-[12.5px] font-bold">👆 {t("hospedajeMapaBanner")}</span>
+                    <button
+                      onClick={() => setEligiendoEnMapa(false)}
+                      className="shrink-0 rounded-full bg-white/20 px-2.5 py-1 text-[11.5px] font-bold hover:bg-white/30"
+                    >
+                      {t("cancelar")}
+                    </button>
+                  </div>
+                )}
                 <Mapa
                   centro={[ciudad.lat, ciudad.lon]}
                   lugares={lugaresDelDia}
                   ubicacionUsuario={gps}
                   hospedaje={hospedaje}
                   rutaTrazada={rutaTrazada}
-                  onClicLugar={(l) => { setRutaTrazada(null); setDetalle(l); }}
+                  onClicLugar={(l) => {
+                    if (eligiendoEnMapa) return; // en modo elegir, el clic es para fijar el punto
+                    setRutaTrazada(null); setDetalle(l);
+                  }}
+                  onClicMapa={eligiendoEnMapa ? (lat, lon) => {
+                    const h = { nombre: t("hospedajePuntoMapa"), lat, lon, mapa: true };
+                    setEligiendoEnMapa(false);
+                    setHospedaje(h);
+                    reconstruir(seleccion, ciudad, undefined, h);
+                    track("hospedaje_set", { ciudad: ciudad?.nombre, lugar: "mapa", origen: "mapa" });
+                  } : null}
                   lang={lang}
                 />
               </div>
@@ -2006,7 +2038,7 @@ export default function Home() {
       {/* Chat de viajeros de la ciudad abierta (boton flotante 💬) */}
       {ciudad && (
         <div className="print:hidden">
-          <ChatViajeros ciudad={ciudad.nombre} />
+          <ChatViajeros ciudad={ciudad.nombre} t={t} />
         </div>
       )}
 

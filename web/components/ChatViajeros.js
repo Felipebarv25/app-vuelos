@@ -34,7 +34,49 @@ function authHeaders() {
   return h;
 }
 
-export default function ChatViajeros({ ciudad }) {
+// i18n (2026-07-13): claves en lib/idiomas.js con prefijo chatvj_ (o chat_/
+// ev_ para las compartidas). TXT es el fallback ES si el padre no pasa `t`.
+const TXT = {
+  boton: "Viajeros",
+  titulo: "Viajeros en {ciudad}",
+  aria: "Chat de viajeros en {ciudad}",
+  subVacio: "Comparte tips, planes o júntense",
+  subUno: "1 viajero anda por aquí",
+  subVarios: "{n} viajeros andan por aquí",
+  presencia: "📍 Yo también ando por aquí",
+  presenciaOn: "📍 Ando por aquí ✓",
+  vacio: "Nadie ha escrito aún. Rompe el hielo: ¿qué lugar te sorprendió hoy?",
+  login: "Crea tu cuenta gratis para escribir (leer es libre)",
+  placeholder: "Escribe a los viajeros de la ciudad…",
+  enviar: "Enviar",
+  normas: "Sé buena gente. Sin links. Los mensajes son públicos y viven 120 días.",
+  reportar: "Reportar mensaje",
+  borrar: "Borrar mi mensaje",
+  seguro: "¿Seguro?",
+  avisoLenguaje: "Cuidemos el lenguaje 🙏 Ese mensaje no se envió.",
+  avisoLinks: "Los links no están permitidos en el chat.",
+  avisoRapido: "Vas muy rápido — espera unos segundos.",
+};
+const CLAVE_GLOBAL = {
+  reportar: "chat_reportar", borrar: "chat_borrar", seguro: "chat_seguro",
+  avisoLenguaje: "chat_avisoLenguaje", avisoLinks: "chat_avisoLinks", avisoRapido: "chat_avisoRapido",
+  enviar: "ev_enviar",
+};
+function crearTx(t) {
+  return (k, vars = {}) => {
+    if (t) {
+      const clave = CLAVE_GLOBAL[k] || "chatvj_" + k;
+      const v = t(clave, vars);
+      if (v !== clave) return v; // la clave existe en el diccionario global
+    }
+    let s = TXT[k] || k;
+    for (const [kk, v] of Object.entries(vars)) s = s.replace(`{${kk}}`, v);
+    return s;
+  };
+}
+
+export default function ChatViajeros({ ciudad, t = null }) {
+  const tx = crearTx(t);
   const [abierto, setAbierto] = useState(false);
   useBrowserBackClose(abierto, () => setAbierto(false));
   const id = slugCiudad(ciudad);
@@ -45,14 +87,39 @@ export default function ChatViajeros({ ciudad }) {
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [necesitaLogin, setNecesitaLogin] = useState(false);
+  const [confirmando, setConfirmando] = useState(null); // "ts:uid" esperando confirmacion
+  const [aviso, setAviso] = useState(null); // rechazo del servidor (lenguaje, links, rate limit)
   const finRef = useRef(null);
   const miUid = useRef(null);
+  // Lo que YO reporte no debe reaparecer con el proximo poll aunque aun no
+  // alcance el umbral global de ocultamiento.
+  const reportados = useRef(new Set());
 
   async function cargar() {
     try {
       const r = await fetch(`/api/eventos/chat?id=${encodeURIComponent(id)}`);
       const d = await r.json().catch(() => null);
-      if (d?.ok) setMensajes(d.mensajes || []);
+      if (d?.ok) setMensajes((d.mensajes || []).filter((m) => !reportados.current.has(`${m.ts}:${m.uid}`)));
+    } catch {}
+  }
+
+  async function reportar(m) {
+    const marca = `${m.ts}:${m.uid}`;
+    if (confirmando !== marca) { setConfirmando(marca); return; }
+    setConfirmando(null);
+    try {
+      const r = await fetch("/api/eventos/chat/reportar", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ id, ts: m.ts, uid: m.uid }),
+      });
+      if (r.status === 401) { setNecesitaLogin(true); return; }
+      const d = await r.json().catch(() => null);
+      if (d?.ok) {
+        reportados.current.add(marca);
+        setMensajes((arr) => (arr || []).filter((x) => `${x.ts}:${x.uid}` !== marca));
+        track("chat_reportar", { ciudad, propio: !!d.propio });
+      }
     } catch {}
   }
 
@@ -103,6 +170,12 @@ export default function ChatViajeros({ ciudad }) {
         setTexto("");
         // Escribir en el chat implica "ando por aqui": presencia automatica.
         if (!aquiYo) marcarPresencia(true);
+      } else if (d?.motivo === "lenguaje") {
+        setAviso(tx("avisoLenguaje"));
+      } else if (d?.motivo === "sin-links") {
+        setAviso(tx("avisoLinks"));
+      } else if (d?.motivo === "muy-rapido") {
+        setAviso(tx("avisoRapido"));
       }
     } catch {} finally {
       setEnviando(false);
@@ -116,10 +189,10 @@ export default function ChatViajeros({ ciudad }) {
         <button
           onClick={() => setAbierto(true)}
           className="fixed bottom-36 right-4 z-[3400] flex items-center gap-2 rounded-full bg-white px-4 py-3 text-marca-800 shadow-[0_10px_30px_rgba(2,6,23,.25)] ring-1 ring-slate-200 transition hover:-translate-y-0.5 dark:bg-slate-800 dark:text-marca-200 dark:ring-slate-600 md:bottom-24 md:right-5"
-          aria-label={`Chat de viajeros en ${ciudad}`}
+          aria-label={tx("aria", { ciudad })}
         >
           <span className="text-lg">💬</span>
-          <span className="text-[13px] font-bold">Viajeros</span>
+          <span className="text-[13px] font-bold">{tx("boton")}</span>
         </button>
       )}
 
@@ -130,9 +203,9 @@ export default function ChatViajeros({ ciudad }) {
             <div className="bg-gradient-to-br from-marca-600 to-marca-800 px-4 py-3.5 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[15px] font-bold leading-tight">💬 Viajeros en {ciudad}</div>
+                  <div className="text-[15px] font-bold leading-tight">💬 {tx("titulo", { ciudad })}</div>
                   <div className="text-[11.5px] text-white/80">
-                    {nAqui > 0 ? `${nAqui} ${nAqui === 1 ? "viajero anda" : "viajeros andan"} por aquí` : "Comparte tips, planes o júntense"}
+                    {nAqui > 0 ? (nAqui === 1 ? tx("subUno") : tx("subVarios", { n: nAqui })) : tx("subVacio")}
                   </div>
                 </div>
                 <button onClick={() => setAbierto(false)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15"><Icono nombre="x" size={16} /></button>
@@ -143,7 +216,7 @@ export default function ChatViajeros({ ciudad }) {
                   aquiYo ? "bg-emerald-400 text-emerald-950" : "bg-white/15 text-white hover:bg-white/25"
                 }`}
               >
-                {aquiYo ? "📍 Ando por aquí ✓" : "📍 Yo también ando por aquí"}
+                {aquiYo ? tx("presenciaOn") : tx("presencia")}
               </button>
             </div>
 
@@ -154,19 +227,36 @@ export default function ChatViajeros({ ciudad }) {
               )}
               {mensajes?.length === 0 && (
                 <div className="px-6 py-8 text-center text-[13px] leading-relaxed text-slate-400">
-                  Nadie ha escrito aún. Rompe el hielo: ¿qué lugar te sorprendió hoy?
+                  {tx("vacio")}
                 </div>
               )}
               {mensajes?.map((m, i) => {
                 const mio = miUid.current && m.uid === miUid.current;
+                const marca = `${m.ts}:${m.uid}`;
+                const botonReporte = (
+                  <button
+                    onClick={() => reportar(m)}
+                    className={`shrink-0 self-center rounded-full px-1.5 py-0.5 text-[10px] transition ${
+                      confirmando === marca
+                        ? "bg-rose-100 font-bold text-rose-600 dark:bg-rose-900/40 dark:text-rose-300"
+                        : "text-slate-300 opacity-40 hover:text-rose-400 dark:text-slate-500 sm:opacity-0 sm:group-hover:opacity-100"
+                    }`}
+                    aria-label={mio ? tx("borrar") : tx("reportar")}
+                    title={mio ? tx("borrar") : tx("reportar")}
+                  >
+                    {confirmando === marca ? tx("seguro") : mio ? "🗑" : "⚑"}
+                  </button>
+                );
                 return (
-                  <div key={`${m.ts}-${i}`} className={`flex ${mio ? "justify-end" : "justify-start"}`}>
+                  <div key={`${m.ts}-${i}`} className={`group flex items-end gap-1 ${mio ? "justify-end" : "justify-start"}`}>
+                    {mio && botonReporte}
                     <div className={`max-w-[85%] rounded-2xl px-3 py-1.5 text-[13.5px] leading-snug ${
                       mio ? "bg-marca-600 text-white" : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200"
                     }`}>
                       {!mio && <span className="mr-1.5 font-bold text-marca-600 dark:text-marca-300">{m.de}</span>}
                       {m.texto}
                     </div>
+                    {!mio && botonReporte}
                   </div>
                 );
               })}
@@ -177,15 +267,15 @@ export default function ChatViajeros({ ciudad }) {
             <div className="border-t border-slate-100 px-3 py-2.5 dark:border-slate-700">
               {necesitaLogin ? (
                 <a href="/?login=1" className="block rounded-xl bg-marca-700 py-2.5 text-center text-[13px] font-bold text-white">
-                  Crea tu cuenta gratis para escribir (leer es libre)
+                  {tx("login")}
                 </a>
               ) : (
                 <form onSubmit={enviar} className="flex gap-2">
                   <input
                     value={texto}
-                    onChange={(e) => setTexto(e.target.value)}
+                    onChange={(e) => { setTexto(e.target.value); if (aviso) setAviso(null); }}
                     maxLength={280}
-                    placeholder="Escribe a los viajeros de la ciudad…"
+                    placeholder={tx("placeholder")}
                     className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13.5px] outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
                   />
                   <button
@@ -193,12 +283,17 @@ export default function ChatViajeros({ ciudad }) {
                     disabled={enviando || !texto.trim()}
                     className="rounded-xl bg-marca-700 px-4 py-2 text-[13px] font-bold text-white disabled:opacity-50"
                   >
-                    Enviar
+                    {tx("enviar")}
                   </button>
                 </form>
               )}
+              {aviso && (
+                <div className="mt-1.5 rounded-lg bg-rose-50 px-2 py-1 text-center text-[11.5px] font-bold text-rose-600 dark:bg-rose-900/30 dark:text-rose-300">
+                  {aviso}
+                </div>
+              )}
               <div className="mt-1.5 text-center text-[10px] text-slate-400">
-                Sé buena gente. Sin links. Los mensajes son públicos y viven 120 días.
+                {tx("normas")}
               </div>
             </div>
           </div>

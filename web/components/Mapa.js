@@ -30,6 +30,7 @@ export default function Mapa({
   hospedaje = null, // { nombre, lat, lon } — hotel/punto de partida de la ruta
   rutaTrazada = null,
   onClicLugar = null,
+  onClicMapa = null, // (lat, lon) al hacer clic/tap en el fondo del mapa (modo "elegir inicio")
   lang = "es",
 }) {
   const ref = useRef(null);
@@ -37,6 +38,10 @@ export default function Mapa({
   const capaRef = useRef([]);
   const rutaRef = useRef(null);
   const centroAnterior = useRef(null);
+  // Callback vivo del clic en el mapa: el listener de Leaflet se registra UNA
+  // vez, y lee de aca para no quedarse con un closure viejo entre renders.
+  const onClicMapaRef = useRef(null);
+  onClicMapaRef.current = onClicMapa;
 
   useEffect(() => {
     let L;
@@ -53,8 +58,13 @@ export default function Mapa({
           maxZoom: 19,
           attribution: "© OpenStreetMap",
         }).addTo(mapaRef.current);
+        mapaRef.current.on("click", (e) => {
+          onClicMapaRef.current?.(e.latlng.lat, e.latlng.lng);
+        });
       }
       const mapa = mapaRef.current;
+      // Cursor de mira mientras se espera el clic para fijar el inicio.
+      try { ref.current.style.cursor = onClicMapa ? "crosshair" : ""; } catch {}
 
       // ¿Cambió la ciudad? Si el centro es nuevo, recentramos SIEMPRE ahí.
       // Esto evita que el mapa se quede mostrando la ciudad anterior.
@@ -202,7 +212,7 @@ export default function Mapa({
     return () => {
       cancelado = true;
     };
-  }, [centro, lugares, ubicacionUsuario, hospedaje, rutaTrazada, lang]);
+  }, [centro, lugares, ubicacionUsuario, hospedaje, rutaTrazada, lang, !!onClicMapa]);
 
   return (
     <div

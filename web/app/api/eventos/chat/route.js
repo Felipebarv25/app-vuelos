@@ -14,6 +14,7 @@ export const runtime = "nodejs";
 
 import { kv, kvActivo, pipeline } from "@/lib/kv";
 import { identificarUsuario, hashEmail } from "@/lib/identidad";
+import { contieneLenguajeOfensivo } from "@/lib/moderacion";
 
 const TTL = 60 * 60 * 24 * 120;
 const MAX_MENSAJES = 200;
@@ -27,11 +28,16 @@ export async function GET(req) {
   const id = new URL(req.url).searchParams.get("id") || "";
   if (!validarId(id)) return Response.json({ ok: false, motivo: "datos-invalidos" }, { status: 400 });
 
-  const raw = (await kv(["LRANGE", `ev:chat:${id}`, "0", "99"])) || [];
+  const [raw, ocultosRaw] = await pipeline([
+    ["LRANGE", `ev:chat:${id}`, "0", "99"],
+    ["SMEMBERS", `ev:ocultos:${id}`],
+  ]);
+  // Mensajes reportados/borrados: se filtran aca, no se reescriben en la lista.
+  const ocultos = new Set(ocultosRaw || []);
   // LPUSH guarda el mas nuevo primero; la UI quiere cronologico.
-  const mensajes = raw
+  const mensajes = (raw || [])
     .map((s) => { try { return JSON.parse(s); } catch { return null; } })
-    .filter(Boolean)
+    .filter((m) => m && !ocultos.has(`${m.ts}:${m.uid}`))
     .reverse();
   return Response.json({ ok: true, mensajes });
 }
@@ -52,6 +58,10 @@ export async function POST(req) {
   // Anti-spam basico: sin links. El chat es para coordinarse, no para phishing.
   if (/https?:\/\/|www\./i.test(texto)) {
     return Response.json({ ok: false, motivo: "sin-links" }, { status: 422 });
+  }
+  // Lenguaje: groserias/obscenidades no pasan (pedido del usuario 2026-07-13).
+  if (contieneLenguajeOfensivo(texto)) {
+    return Response.json({ ok: false, motivo: "lenguaje" }, { status: 422 });
   }
 
   // Rate limit 1 msg / 5 s por usuario.
