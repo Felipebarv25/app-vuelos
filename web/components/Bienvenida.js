@@ -39,7 +39,10 @@ export default function Bienvenida() {
   } = useApp();
 
   const [nombre, setNombre] = useState("");
-  const [recordar, setRecordar] = useState(true);
+  // Permiso EXPLICITO de mantener la sesion abierta entre visitas (pedido
+  // 2026-07-13): por defecto NO — sin marcarlo, reabrir la app despues de
+  // 15 min de inactividad vuelve a pedir login. Aplica a Google y a email.
+  const [recordar, setRecordar] = useState(false);
   const [mostrarLogin, setMostrarLogin] = useState(false);
   const [montado, setMontado] = useState(false);
   // Trial anonimo del Presupuesto (audit B1 - 2026-06-25). El visitante puede
@@ -498,7 +501,7 @@ export default function Bienvenida() {
 
             <div className="mt-5">
               <button
-                onClick={authConfig.google ? entrarGoogle : undefined}
+                onClick={authConfig.google ? () => entrarGoogle(recordar) : undefined}
                 disabled={!authConfig.google}
                 className={`flex w-full items-center justify-center gap-3 rounded-2xl border py-3.5 text-[15px] font-bold shadow-suave transition ${
                   authConfig.google

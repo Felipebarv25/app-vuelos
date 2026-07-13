@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { idiomaInicial, traductor } from "./idiomas";
 
@@ -196,12 +196,23 @@ export function AppProvider({ children }) {
         localStorage.removeItem("anduve_auth_token");
       }
     } catch {}
+    guardarMantener(recordar);
     setUsuarioEmail({ ...data.usuario, token: data.token, email_login: true });
     return { ok: true };
   }
 
-  // Login GOOGLE: redirige a /api/auth/signin/google.
-  function entrarGoogle() {
+  // Permiso "mantener sesion abierta" (2026-07-13): sin el, reabrir la app
+  // despues de >15 min de la ultima actividad exige login de nuevo, aunque
+  // la cookie de Google o el token sigan tecnicamente vivos.
+  function guardarMantener(si) {
+    try { localStorage.setItem("anduve_mantener", si ? "1" : "0"); } catch {}
+  }
+
+  // Login GOOGLE: redirige a /api/auth/signin/google. `recordar` = permiso
+  // de mantener la sesion abierta entre visitas (se persiste ANTES del
+  // redirect porque el flujo OAuth recarga la pagina).
+  function entrarGoogle(recordar = true) {
+    guardarMantener(recordar !== false);
     signIn("google");
   }
 
@@ -244,6 +255,8 @@ export function AppProvider({ children }) {
       localStorage.removeItem("usuario");
       localStorage.removeItem("anduve_auth_token");
       sessionStorage.removeItem("anduve_auth_token");
+      localStorage.removeItem("anduve_mantener");
+      localStorage.removeItem("anduve_ult_act");
     } catch {}
   }
 
@@ -275,14 +288,25 @@ export function AppProvider({ children }) {
   // Auto-cierre por inactividad (pedido 2026-07-13): con sesion activa, 15 min
   // sin interaccion (mouse/teclado/touch/scroll) cierran la sesion y devuelven
   // al landing pre-login. Chequeo cada 30 s + al volver a la pestana (si
-  // estuvo oculta mas de 15 min, expira de inmediato).
+  // estuvo oculta mas de 15 min, expira de inmediato). La ultima actividad se
+  // persiste en localStorage para que el mismo limite aplique al REABRIR el
+  // navegador (apagar el PC no debe dejar la sesion abierta) salvo que el
+  // usuario haya dado permiso de mantenerla ("anduve_mantener").
   const haySesion = !!usuario;
+  const LIMITE_INACTIVIDAD = 15 * 60 * 1000;
   useEffect(() => {
     if (!haySesion) return;
-    const LIMITE = 15 * 60 * 1000;
     let ultima = Date.now();
+    let ultimaGuardada = 0;
     let cerrando = false;
-    const marcar = () => { ultima = Date.now(); };
+    const persistir = () => {
+      // A lo sumo una escritura cada 20 s: suficiente resolucion para un
+      // limite de 15 min sin castigar el hilo con cada pointermove.
+      if (Date.now() - ultimaGuardada < 20000) return;
+      ultimaGuardada = Date.now();
+      try { localStorage.setItem("anduve_ult_act", String(ultima)); } catch {}
+    };
+    const marcar = () => { ultima = Date.now(); persistir(); };
     const expirar = () => {
       if (cerrando) return;
       cerrando = true;
@@ -290,11 +314,25 @@ export function AppProvider({ children }) {
         try { window.location.href = "/"; } catch {}
       });
     };
-    const chequear = () => { if (Date.now() - ultima >= LIMITE) expirar(); };
+    const chequear = () => {
+      // Con permiso explicito ("Mantener sesion iniciada") no se expira nunca
+      // por inactividad — el checkbox es la palabra del usuario.
+      let mantener = false;
+      let ult = ultima;
+      try {
+        mantener = localStorage.getItem("anduve_mantener") === "1";
+        // Otra pestana pudo registrar actividad mas reciente: no expirar
+        // esta mientras el usuario trabaja en aquella.
+        ult = Math.max(ult, Number(localStorage.getItem("anduve_ult_act") || 0));
+      } catch {}
+      if (!mantener && Date.now() - ult >= LIMITE_INACTIVIDAD) expirar();
+      else persistir();
+    };
     const evs = ["pointerdown", "pointermove", "keydown", "wheel", "scroll", "touchstart"];
     evs.forEach((e) => window.addEventListener(e, marcar, { passive: true }));
     const intervalo = setInterval(chequear, 30000);
     document.addEventListener("visibilitychange", chequear);
+    persistir();
     return () => {
       evs.forEach((e) => window.removeEventListener(e, marcar));
       clearInterval(intervalo);
@@ -302,6 +340,28 @@ export function AppProvider({ children }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [haySesion]);
+
+  // Chequeo de REAPERTURA (2026-07-13): al cargar la app con una sesion viva
+  // (cookie Google / token email / usuario local), si el usuario NO dio
+  // permiso de mantenerla abierta y su ultima actividad registrada fue hace
+  // mas de 15 min, se cierra la sesion y queda en el landing pre-login.
+  const reaperturaChequeada = useRef(false);
+  useEffect(() => {
+    if (!listo || !haySesion || reaperturaChequeada.current) return;
+    reaperturaChequeada.current = true;
+    try {
+      const mantener = localStorage.getItem("anduve_mantener") === "1";
+      const ult = Number(localStorage.getItem("anduve_ult_act") || 0);
+      // Sin registro de actividad previa no expiramos: es un login reciente
+      // (el flujo OAuth recarga la pagina antes del primer "marcar").
+      if (!mantener && ult && Date.now() - ult > LIMITE_INACTIVIDAD) {
+        Promise.resolve(salir()).finally(() => {
+          try { window.location.href = "/"; } catch {}
+        });
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listo, haySesion]);
 
   const t = traductor(lang);
 
