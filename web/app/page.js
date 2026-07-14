@@ -7,6 +7,7 @@ import { traducirLoteWD, nombreLocalizado } from "@/lib/nombres";
 import { compartirEnlace } from "@/lib/compartir";
 import { getDestinoPorSlug } from "@/lib/destinos";
 import { construirItinerario, agregarLugarADia, fmtMin } from "@/lib/itinerario";
+import { leerGustos, guardarGustos, categoriasDeGustos, intercalarLugares, HORAS_POR_RITMO } from "@/lib/gustos";
 import { isoDesdeNombre, infoPais } from "@/lib/requisitos";
 import { sugerirCiudades } from "@/lib/autocompletar";
 import { useGeo } from "@/lib/useGeo";
@@ -57,6 +58,8 @@ const EstasEnCiudad = dynamic(() => import("@/components/EstasEnCiudad"), { ssr:
 const FotosCiudadHeader = dynamic(() => import("@/components/FotosCiudadHeader"), { ssr: false });
 // Buscador del punto de partida (hotel/barrio) de la ruta.
 const InicioRuta = dynamic(() => import("@/components/InicioRuta"), { ssr: false });
+// Wizard "tu ruta a tu medida": 3 preguntas de filtro que ponderan el plan.
+const PersonalizarRuta = dynamic(() => import("@/components/PersonalizarRuta"), { ssr: false });
 // Anduve Live: agenda social de eventos de la ciudad (yo voy + chat).
 const EventosCiudad = dynamic(() => import("@/components/EventosCiudad"), { ssr: false });
 // Chat grupal de viajeros de la ciudad abierta (presencia + mensajes).
@@ -406,6 +409,22 @@ export default function Home() {
   // el mapa fija el punto de partida de la ruta.
   const [eligiendoEnMapa, setEligiendoEnMapa] = useState(false);
   const mapaBoxRef = useRef(null);
+  // Gustos del viajero (wizard de 3 preguntas, 2026-07-13). Cargados de
+  // localStorage al montar; cuando existen, el itinerario de toda ciudad se
+  // arma mezclando SUS categorias en vez del bloque generico de imperdibles.
+  const [gustos, setGustos] = useState(null);
+  const [mostrarPersonalizar, setMostrarPersonalizar] = useState(false);
+  useEffect(() => { setGustos(leerGustos()); }, []);
+  // Primera ciudad que abre en su vida: ofrecer el wizard UNA sola vez.
+  useEffect(() => {
+    if (!ciudad) return;
+    try {
+      if (leerGustos() || localStorage.getItem("anduve_gustos_visto")) return;
+      localStorage.setItem("anduve_gustos_visto", "1");
+      setMostrarPersonalizar(true);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ciudad?.nombre]);
 
   // Vaivén suave de los chips de categorías (feedback 2026-07-11): al abrir
   // una ciudad, la fila se desliza lentamente ida-y-vuelta un par de ciclos
@@ -878,21 +897,49 @@ export default function Home() {
   // Carga lugares SIN bloquear la pantalla: usa un indicador propio (cargandoLugares).
   // diasOverride: para que los chips de "ideas para empezar" reciban su nº de días
   // ANTES de que React aplique el setDias (evita un re-render con el plan corto).
-  async function cargarCategoria(cat, c = ciudad, mom = momento, diasOverride) {
+  // Mezcla de lugares segun los GUSTOS del wizard: una lista por categoria
+  // elegida, intercaladas round-robin (variedad) y con imperdibles de relleno
+  // si la mezcla queda corta (pueblos chicos).
+  async function traerLugaresGustos(g, c, mom) {
+    const cats = categoriasDeGustos(g, mom);
+    if (!cats.length) {
+      return traerLugares(mom === "nocturno" ? "bares" : "imperdibles", c.lat, c.lon);
+    }
+    const listas = await Promise.all(
+      cats.map((k) => traerLugares(k, c.lat, c.lon).catch(() => []))
+    );
+    let lugares = intercalarLugares(listas);
+    if (lugares.length < 12) {
+      const relleno = await traerLugares("imperdibles", c.lat, c.lon).catch(() => []);
+      lugares = intercalarLugares([lugares.concat(relleno)]); // concat + dedupe, gustos primero
+    }
+    return lugares;
+  }
+
+  async function cargarCategoria(cat, c = ciudad, mom = momento, diasOverride, horasOverride) {
     if (!c) return;
     setError(null);
     setCategoria(cat);
     setCargandoLugares(true);
-    const catReal = mom === "nocturno" && cat === "imperdibles" ? "bares" : cat;
     const nDias = diasOverride || dias;
     try {
-      const lugares = await traerLugares(catReal, c.lat, c.lon);
+      // "Imperdibles" es la vista default de toda ciudad: si hay gustos
+      // guardados, ahi es donde se personaliza. Las demas categorias (chips)
+      // siguen siendo puras.
+      const g = cat === "imperdibles" ? leerGustos() : null;
+      let lugares;
+      if (g) {
+        lugares = await traerLugaresGustos(g, c, mom);
+      } else {
+        const catReal = mom === "nocturno" && cat === "imperdibles" ? "bares" : cat;
+        lugares = await traerLugares(catReal, c.lat, c.lon);
+      }
       setLugaresBase(lugares);
       // Tomamos hasta 5 lugares por día (con margen) para llenar bien cada día.
       const cupo = Math.max(nDias * 5, 6);
       const sel = lugares.slice(0, cupo);
       setSeleccion(sel);
-      reconstruir(sel, c, nDias);
+      reconstruir(sel, c, nDias, undefined, horasOverride);
     } catch (err) {
       setError("Tardó demasiado en cargar lugares. Toca una categoría para reintentar.");
     } finally {
@@ -938,7 +985,7 @@ export default function Home() {
     }
   }
 
-  function reconstruir(sel = seleccion, c = ciudad, diasOverride, hospedajeOverride) {
+  function reconstruir(sel = seleccion, c = ciudad, diasOverride, hospedajeOverride, horasOverride) {
     if (!c || !sel.length) {
       setPlan([]);
       return;
@@ -960,7 +1007,7 @@ export default function Home() {
       if (cerca) inicio = gps;
     }
     const nDias = diasOverride || dias;
-    const p = construirItinerario(sel, { dias: nDias, horasPorDia: horas, inicio });
+    const p = construirItinerario(sel, { dias: nDias, horasPorDia: horasOverride || horas, inicio });
     setPlan(p);
     setDiaVisible(0);
   }
@@ -1023,6 +1070,20 @@ export default function Home() {
   function cambiarMomento(mom) {
     setMomento(mom);
     cargarCategoria("imperdibles", ciudad, mom);
+  }
+
+  // Aplicar los gustos del wizard: guardar, ajustar momento + ritmo (horas)
+  // y rearmar la ruta de la ciudad abierta con la mezcla personalizada.
+  function aplicarGustos(g) {
+    guardarGustos(g);
+    setGustos(g);
+    setMostrarPersonalizar(false);
+    setMomento(g.momento);
+    const h = HORAS_POR_RITMO[g.ritmo] || 8;
+    setHoras(h);
+    track("gustos_aplicar", { intereses: g.intereses.join(","), ritmo: g.ritmo, momento: g.momento });
+    registrarEvento({ tipo: "gustos", intereses: g.intereses, ritmo: g.ritmo, momento: g.momento });
+    if (ciudad) cargarCategoria("imperdibles", ciudad, g.momento, undefined, h);
   }
 
   // Agregar un lugar (de la lista completa) al día visible del itinerario.
@@ -1556,6 +1617,16 @@ export default function Home() {
             />
           )}
 
+          {/* Wizard de gustos: 3 preguntas que ponderan la ruta (✨ A tu medida) */}
+          {mostrarPersonalizar && (
+            <PersonalizarRuta
+              inicial={gustos}
+              onAplicar={aplicarGustos}
+              onCerrar={() => setMostrarPersonalizar(false)}
+              t={t}
+            />
+          )}
+
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <EntryCard
               href="/destino"
@@ -1815,6 +1886,11 @@ export default function Home() {
                 py-1: sin padding vertical el borde superior de los chips se
                 CORTABA contra el overflow del contenedor (bug 2026-07-11). */}
             <div ref={chipsRef} className="sin-scrollbar mb-2 flex gap-2 overflow-x-auto px-0.5 py-1">
+              {/* Chip del wizard de gustos: primero, y "activo" cuando la vista
+                  imperdibles esta personalizada (indicador "ruta a tu medida"). */}
+              <Chip activo={!!gustos && categoria === "imperdibles"} onClick={() => setMostrarPersonalizar(true)}>
+                <span className="inline-flex items-center gap-1.5">✨ {t("gustos_chip")}</span>
+              </Chip>
               {Object.entries(CATEGORIAS).map(([k, c]) => (
                 <Chip key={k} activo={categoria === k} onClick={() => cargarCategoria(k)}>
                   <span className="inline-flex items-center gap-1.5">
