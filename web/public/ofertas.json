@@ -1,5 +1,5 @@
 {
-  "generado": "2026-07-17T13:28:16+00:00",
+  "generado": "2026-07-17T16:17:47+00:00",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -33,7 +33,7 @@
       "mediana": 64,
       "descuento": 20,
       "esGanga": true,
-      "visto": "2026-07-17T08:10:48+00:00",
+      "visto": "2026-07-17T10:48:59+00:00",
       "link": "https://www.aviasales.com/search/MAD2509MIL28091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MAD%20a%20Mil%C3%A1n%202026-09-25%202026-09-28"
     },
@@ -55,7 +55,7 @@
       "mediana": 71,
       "descuento": 24,
       "esGanga": true,
-      "visto": "2026-07-17T08:10:53+00:00",
+      "visto": "2026-07-17T10:49:03+00:00",
       "link": "https://www.aviasales.com/search/MAD2509LON28091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MAD%20a%20Londres%202026-09-25%202026-09-28"
     },
@@ -66,20 +66,20 @@
       "pais": "Italia",
       "bandera": "🇮🇹",
       "q": "Roma, Italia",
-      "precio": 69,
+      "precio": 62,
       "moneda": "USD",
-      "fecha_ida": "2026-11-27",
-      "fecha_vuelta": "2026-11-29",
+      "fecha_ida": "2026-10-02",
+      "fecha_vuelta": "2026-10-14",
       "aerolinea": "W4",
       "escalas_ida": null,
       "escalas_vuelta": null,
       "umbral": 800,
       "mediana": 81,
-      "descuento": 15,
+      "descuento": 23,
       "esGanga": true,
-      "visto": "2026-07-17T08:10:47+00:00",
-      "link": "https://www.aviasales.com/search/MAD2711ROM29111",
-      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MAD%20a%20Roma%202026-11-27%202026-11-29"
+      "visto": "2026-07-17T16:17:08+00:00",
+      "link": "https://www.aviasales.com/search/MAD0210ROM14101",
+      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MAD%20a%20Roma%202026-10-02%202026-10-14"
     },
     {
       "origen": "MAD",
@@ -121,7 +121,7 @@
       "mediana": 211,
       "descuento": 60,
       "esGanga": true,
-      "visto": "2026-07-17T08:11:24+00:00",
+      "visto": "2026-07-17T10:49:34+00:00",
       "link": "https://www.aviasales.com/search/MIA0810NYC11101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MIA%20a%20Nueva%20York%202026-10-08%202026-10-11"
     },
@@ -140,10 +140,10 @@
       "escalas_ida": null,
       "escalas_vuelta": null,
       "umbral": 750,
-      "mediana": 112,
+      "mediana": 111,
       "descuento": 9,
       "esGanga": true,
-      "visto": "2026-07-17T08:10:45+00:00",
+      "visto": "2026-07-17T10:48:56+00:00",
       "link": "https://www.aviasales.com/search/MAD1108BCN17081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MAD%20a%20Barcelona%202026-08-11%202026-08-17"
     },
@@ -165,7 +165,7 @@
       "mediana": 176,
       "descuento": 17,
       "esGanga": true,
-      "visto": "2026-07-17T08:09:39+00:00",
+      "visto": "2026-07-17T10:47:50+00:00",
       "link": "https://www.aviasales.com/search/SCL0811BUE17111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20SCL%20a%20Buenos%20Aires%202026-11-08%202026-11-17"
     },
@@ -187,7 +187,7 @@
       "mediana": 249,
       "descuento": 37,
       "esGanga": true,
-      "visto": "2026-07-17T08:09:39+00:00",
+      "visto": "2026-07-17T10:47:50+00:00",
       "link": "https://www.aviasales.com/search/SCL0608LIM18081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20SCL%20a%20Lima%202026-08-06%202026-08-18"
     },
@@ -209,7 +209,7 @@
       "mediana": 311,
       "descuento": 25,
       "esGanga": true,
-      "visto": "2026-07-17T08:10:24+00:00",
+      "visto": "2026-07-17T10:48:35+00:00",
       "link": "https://www.aviasales.com/search/GRU2908BUE31081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20GRU%20a%20Buenos%20Aires%202026-08-29%202026-08-31"
     },
@@ -231,7 +231,7 @@
       "mediana": 310,
       "descuento": 24,
       "esGanga": true,
-      "visto": "2026-07-17T08:09:18+00:00",
+      "visto": "2026-07-17T10:47:31+00:00",
       "link": "https://www.aviasales.com/search/LIM1009BUE17091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20LIM%20a%20Buenos%20Aires%202026-09-10%202026-09-17"
     },
@@ -253,7 +253,7 @@
       "mediana": 344,
       "descuento": 30,
       "esGanga": true,
-      "visto": "2026-07-17T08:09:02+00:00",
+      "visto": "2026-07-17T10:47:13+00:00",
       "link": "https://www.aviasales.com/search/UIO1708LIM23081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20UIO%20a%20Lima%202026-08-17%202026-08-23"
     },
@@ -275,7 +275,7 @@
       "mediana": 399,
       "descuento": 36,
       "esGanga": true,
-      "visto": "2026-07-17T08:10:27+00:00",
+      "visto": "2026-07-17T10:48:38+00:00",
       "link": "https://www.aviasales.com/search/GRU0708LIM09081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20GRU%20a%20Lima%202026-08-07%202026-08-09"
     },
@@ -297,7 +297,7 @@
       "mediana": 267,
       "descuento": 3,
       "esGanga": true,
-      "visto": "2026-07-17T08:09:36+00:00",
+      "visto": "2026-07-17T10:47:48+00:00",
       "link": "https://www.aviasales.com/search/SCL1008SAO10081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20SCL%20a%20S%C3%A3o%20Paulo%202026-08-10%202026-08-10"
     },
@@ -316,10 +316,10 @@
       "escalas_ida": null,
       "escalas_vuelta": null,
       "umbral": 450,
-      "mediana": 334,
-      "descuento": 20,
+      "mediana": 348,
+      "descuento": 24,
       "esGanga": true,
-      "visto": "2026-07-17T08:09:58+00:00",
+      "visto": "2026-07-17T10:48:09+00:00",
       "link": "https://www.aviasales.com/search/EZE2008SAO23081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20EZE%20a%20S%C3%A3o%20Paulo%202026-08-20%202026-08-23"
     },
@@ -341,7 +341,7 @@
       "mediana": 341,
       "descuento": 20,
       "esGanga": true,
-      "visto": "2026-07-17T08:08:26+00:00",
+      "visto": "2026-07-17T10:46:38+00:00",
       "link": "https://www.aviasales.com/search/MDE1109LIM18091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Lima%202026-09-11%202026-09-18"
     },
@@ -363,7 +363,7 @@
       "mediana": 375,
       "descuento": 25,
       "esGanga": true,
-      "visto": "2026-07-17T08:10:02+00:00",
+      "visto": "2026-07-17T10:48:13+00:00",
       "link": "https://www.aviasales.com/search/EZE0209LIM09091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20EZE%20a%20Lima%202026-09-02%202026-09-09"
     },
@@ -385,7 +385,7 @@
       "mediana": 397,
       "descuento": 25,
       "esGanga": true,
-      "visto": "2026-07-17T08:09:17+00:00",
+      "visto": "2026-07-17T10:47:29+00:00",
       "link": "https://www.aviasales.com/search/LIM1610SAO20101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20LIM%20a%20S%C3%A3o%20Paulo%202026-10-16%202026-10-20"
     },
@@ -407,7 +407,7 @@
       "mediana": 399,
       "descuento": 21,
       "esGanga": true,
-      "visto": "2026-07-17T08:11:30+00:00",
+      "visto": "2026-07-17T10:49:39+00:00",
       "link": "https://www.aviasales.com/search/MIA0709LIM23091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MIA%20a%20Lima%202026-09-07%202026-09-23"
     },
@@ -429,7 +429,7 @@
       "mediana": 393,
       "descuento": 19,
       "esGanga": true,
-      "visto": "2026-07-17T08:08:11+00:00",
+      "visto": "2026-07-17T10:46:23+00:00",
       "link": "https://www.aviasales.com/search/BOG1009LIM21091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Lima%202026-09-10%202026-09-21"
     },
@@ -451,7 +451,7 @@
       "mediana": 374,
       "descuento": 10,
       "esGanga": true,
-      "visto": "2026-07-17T08:08:20+00:00",
+      "visto": "2026-07-17T10:46:32+00:00",
       "link": "https://www.aviasales.com/search/MDE1009MIA28091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Miami%202026-09-10%202026-09-28"
     },
@@ -473,7 +473,7 @@
       "mediana": 496,
       "descuento": 29,
       "esGanga": true,
-      "visto": "2026-07-17T08:08:39+00:00",
+      "visto": "2026-07-17T10:46:51+00:00",
       "link": "https://www.aviasales.com/search/MEX1009NYC13091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MEX%20a%20Nueva%20York%202026-09-10%202026-09-13"
     },
@@ -495,7 +495,7 @@
       "mediana": 412,
       "descuento": 14,
       "esGanga": true,
-      "visto": "2026-07-17T08:08:21+00:00",
+      "visto": "2026-07-17T10:46:33+00:00",
       "link": "https://www.aviasales.com/search/MDE0910NYC16101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Nueva%20York%202026-10-09%202026-10-16"
     },
@@ -517,7 +517,7 @@
       "mediana": 526,
       "descuento": 20,
       "esGanga": true,
-      "visto": "2026-07-17T08:08:05+00:00",
+      "visto": "2026-07-17T10:46:17+00:00",
       "link": "https://www.aviasales.com/search/BOG1709NYC29091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Nueva%20York%202026-09-17%202026-09-29"
     },
@@ -539,7 +539,7 @@
       "mediana": 570,
       "descuento": 25,
       "esGanga": true,
-      "visto": "2026-07-17T08:09:00+00:00",
+      "visto": "2026-07-17T10:47:12+00:00",
       "link": "https://www.aviasales.com/search/UIO1809BUE26091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20UIO%20a%20Buenos%20Aires%202026-09-18%202026-09-26"
     },
@@ -561,7 +561,7 @@
       "mediana": 695,
       "descuento": 36,
       "esGanga": true,
-      "visto": "2026-07-17T08:08:43+00:00",
+      "visto": "2026-07-17T10:46:55+00:00",
       "link": "https://www.aviasales.com/search/MEX1509SAO22091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MEX%20a%20S%C3%A3o%20Paulo%202026-09-15%202026-09-22"
     },
@@ -583,7 +583,7 @@
       "mediana": 618,
       "descuento": 22,
       "esGanga": true,
-      "visto": "2026-07-17T08:10:59+00:00",
+      "visto": "2026-07-17T10:49:09+00:00",
       "link": "https://www.aviasales.com/search/MAD0611MIA13111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MAD%20a%20Miami%202026-11-06%202026-11-13"
     },
@@ -605,7 +605,7 @@
       "mediana": 635,
       "descuento": 21,
       "esGanga": true,
-      "visto": "2026-07-17T08:11:10+00:00",
+      "visto": "2026-07-17T10:49:20+00:00",
       "link": "https://www.aviasales.com/search/MIA2411MAD30111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MIA%20a%20Madrid%202026-11-24%202026-11-30"
     },
@@ -627,7 +627,7 @@
       "mediana": 627,
       "descuento": 18,
       "esGanga": true,
-      "visto": "2026-07-17T08:11:16+00:00",
+      "visto": "2026-07-17T10:49:25+00:00",
       "link": "https://www.aviasales.com/search/MIA2209PAR26091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MIA%20a%20Par%C3%ADs%202026-09-22%202026-09-26"
     },
@@ -649,7 +649,7 @@
       "mediana": 627,
       "descuento": 16,
       "esGanga": true,
-      "visto": "2026-07-17T08:11:28+00:00",
+      "visto": "2026-07-17T10:49:38+00:00",
       "link": "https://www.aviasales.com/search/MIA1109BUE25091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MIA%20a%20Buenos%20Aires%202026-09-11%202026-09-25"
     },
@@ -671,7 +671,7 @@
       "mediana": 717,
       "descuento": 19,
       "esGanga": true,
-      "visto": "2026-07-17T08:10:57+00:00",
+      "visto": "2026-07-17T10:49:07+00:00",
       "link": "https://www.aviasales.com/search/MAD0111BJS26111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MAD%20a%20Pek%C3%ADn%202026-11-01%202026-11-26"
     },
@@ -693,7 +693,7 @@
       "mediana": 723,
       "descuento": 15,
       "esGanga": true,
-      "visto": "2026-07-17T08:08:45+00:00",
+      "visto": "2026-07-17T10:46:57+00:00",
       "link": "https://www.aviasales.com/search/MEX1509BUE22091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MEX%20a%20Buenos%20Aires%202026-09-15%202026-09-22"
     },
@@ -715,7 +715,7 @@
       "mediana": 714,
       "descuento": 11,
       "esGanga": true,
-      "visto": "2026-07-17T08:11:13+00:00",
+      "visto": "2026-07-17T10:49:22+00:00",
       "link": "https://www.aviasales.com/search/MIA0809ROM29091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MIA%20a%20Roma%202026-09-08%202026-09-29"
     },
@@ -737,9 +737,31 @@
       "mediana": 669,
       "descuento": 4,
       "esGanga": true,
-      "visto": "2026-07-17T08:11:14+00:00",
+      "visto": "2026-07-17T10:49:24+00:00",
       "link": "https://www.aviasales.com/search/MIA1410MIL20101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MIA%20a%20Mil%C3%A1n%202026-10-14%202026-10-20"
+    },
+    {
+      "origen": "MIA",
+      "destino": "BCN",
+      "ciudad": "Barcelona",
+      "pais": "España",
+      "bandera": "🇪🇸",
+      "q": "Barcelona, España",
+      "precio": 683,
+      "moneda": "USD",
+      "fecha_ida": "2026-08-12",
+      "fecha_vuelta": "2026-08-19",
+      "aerolinea": "TP",
+      "escalas_ida": null,
+      "escalas_vuelta": null,
+      "umbral": 750,
+      "mediana": 854,
+      "descuento": 20,
+      "esGanga": true,
+      "visto": "2026-07-17T16:17:29+00:00",
+      "link": "https://www.aviasales.com/search/MIA1208BCN19081",
+      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MIA%20a%20Barcelona%202026-08-12%202026-08-19"
     },
     {
       "origen": "MAD",
@@ -759,7 +781,7 @@
       "mediana": 868,
       "descuento": 21,
       "esGanga": true,
-      "visto": "2026-07-17T08:10:55+00:00",
+      "visto": "2026-07-17T10:49:06+00:00",
       "link": "https://www.aviasales.com/search/MAD0412TYO18121",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MAD%20a%20Tokio%202026-12-04%202026-12-18"
     },
@@ -781,7 +803,7 @@
       "mediana": 1162,
       "descuento": 29,
       "esGanga": true,
-      "visto": "2026-07-17T08:11:18+00:00",
+      "visto": "2026-07-17T10:49:28+00:00",
       "link": "https://www.aviasales.com/search/MIA0509TYO23091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MIA%20a%20Tokio%202026-09-05%202026-09-23"
     },
@@ -803,7 +825,7 @@
       "mediana": 1215,
       "descuento": 26,
       "esGanga": true,
-      "visto": "2026-07-17T08:08:35+00:00",
+      "visto": "2026-07-17T10:46:47+00:00",
       "link": "https://www.aviasales.com/search/MEX0109TYO13091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MEX%20a%20Tokio%202026-09-01%202026-09-13"
     },
@@ -825,7 +847,7 @@
       "mediana": 1242,
       "descuento": 23,
       "esGanga": true,
-      "visto": "2026-07-17T08:09:44+00:00",
+      "visto": "2026-07-17T10:47:55+00:00",
       "link": "https://www.aviasales.com/search/EZE1611BCN24111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20EZE%20a%20Barcelona%202026-11-16%202026-11-24"
     },
@@ -847,7 +869,7 @@
       "mediana": 1226,
       "descuento": 16,
       "esGanga": true,
-      "visto": "2026-07-17T08:09:47+00:00",
+      "visto": "2026-07-17T10:47:58+00:00",
       "link": "https://www.aviasales.com/search/EZE1008MIL27081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20EZE%20a%20Mil%C3%A1n%202026-08-10%202026-08-27"
     },
@@ -869,7 +891,7 @@
       "mediana": 1522,
       "descuento": 15,
       "esGanga": true,
-      "visto": "2026-07-17T08:10:13+00:00",
+      "visto": "2026-07-17T10:48:25+00:00",
       "link": "https://www.aviasales.com/search/GRU1108TYO18081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20GRU%20a%20Tokio%202026-08-11%202026-08-18"
     },
@@ -891,7 +913,7 @@
       "mediana": 1385,
       "descuento": 0,
       "esGanga": true,
-      "visto": "2026-07-17T08:08:37+00:00",
+      "visto": "2026-07-17T10:46:49+00:00",
       "link": "https://www.aviasales.com/search/MEX0111BJS15111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MEX%20a%20Pek%C3%ADn%202026-11-01%202026-11-15"
     },
@@ -913,7 +935,7 @@
       "mediana": 377,
       "descuento": 6,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:06+00:00",
+      "visto": "2026-07-17T10:46:18+00:00",
       "link": "https://www.aviasales.com/search/BOG1308MEX18081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Ciudad%20de%20M%C3%A9xico%202026-08-13%202026-08-18"
     },
@@ -935,7 +957,7 @@
       "mediana": 365,
       "descuento": 1,
       "esGanga": false,
-      "visto": "2026-07-17T08:11:26+00:00",
+      "visto": "2026-07-17T10:49:35+00:00",
       "link": "https://www.aviasales.com/search/MIA0808MEX23081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MIA%20a%20Ciudad%20de%20M%C3%A9xico%202026-08-08%202026-08-23"
     },
@@ -957,7 +979,7 @@
       "mediana": 401,
       "descuento": 9,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:23+00:00",
+      "visto": "2026-07-17T10:46:34+00:00",
       "link": "https://www.aviasales.com/search/MDE1308MEX17081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Ciudad%20de%20M%C3%A9xico%202026-08-13%202026-08-17"
     },
@@ -976,10 +998,10 @@
       "escalas_ida": null,
       "escalas_vuelta": null,
       "umbral": 400,
-      "mediana": 434,
+      "mediana": 433,
       "descuento": 12,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:13+00:00",
+      "visto": "2026-07-17T10:47:25+00:00",
       "link": "https://www.aviasales.com/search/LIM2108MIA31081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20LIM%20a%20Miami%202026-08-21%202026-08-31"
     },
@@ -1001,7 +1023,7 @@
       "mediana": 423,
       "descuento": 9,
       "esGanga": false,
-      "visto": "2026-07-17T08:11:00+00:00",
+      "visto": "2026-07-17T10:49:10+00:00",
       "link": "https://www.aviasales.com/search/MAD1509NYC22091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MAD%20a%20Nueva%20York%202026-09-15%202026-09-22"
     },
@@ -1023,7 +1045,7 @@
       "mediana": 386,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:03+00:00",
+      "visto": "2026-07-17T10:46:16+00:00",
       "link": "https://www.aviasales.com/search/BOG1308MIA22081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Miami%202026-08-13%202026-08-22"
     },
@@ -1045,7 +1067,7 @@
       "mediana": 415,
       "descuento": 1,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:47+00:00",
+      "visto": "2026-07-17T10:46:59+00:00",
       "link": "https://www.aviasales.com/search/MEX0409LIM12091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MEX%20a%20Lima%202026-09-04%202026-09-12"
     },
@@ -1067,7 +1089,7 @@
       "mediana": 464,
       "descuento": 7,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:55+00:00",
+      "visto": "2026-07-17T10:47:07+00:00",
       "link": "https://www.aviasales.com/search/UIO1108MIA16081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20UIO%20a%20Miami%202026-08-11%202026-08-16"
     },
@@ -1089,7 +1111,7 @@
       "mediana": 410,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:16+00:00",
+      "visto": "2026-07-17T10:47:29+00:00",
       "link": "https://www.aviasales.com/search/LIM0912MEX13121",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20LIM%20a%20Ciudad%20de%20M%C3%A9xico%202026-12-09%202026-12-13"
     },
@@ -1111,7 +1133,7 @@
       "mediana": 590,
       "descuento": 13,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:15+00:00",
+      "visto": "2026-07-17T10:47:27+00:00",
       "link": "https://www.aviasales.com/search/LIM0409NYC14091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20LIM%20a%20Nueva%20York%202026-09-04%202026-09-14"
     },
@@ -1133,7 +1155,7 @@
       "mediana": 607,
       "descuento": 14,
       "esGanga": false,
-      "visto": "2026-07-17T08:11:27+00:00",
+      "visto": "2026-07-17T10:49:37+00:00",
       "link": "https://www.aviasales.com/search/MIA0408SAO12081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MIA%20a%20S%C3%A3o%20Paulo%202026-08-04%202026-08-12"
     },
@@ -1155,7 +1177,7 @@
       "mediana": 565,
       "descuento": 7,
       "esGanga": false,
-      "visto": "2026-07-17T08:10:17+00:00",
+      "visto": "2026-07-17T10:48:28+00:00",
       "link": "https://www.aviasales.com/search/GRU1208MIA18081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20GRU%20a%20Miami%202026-08-12%202026-08-18"
     },
@@ -1177,7 +1199,7 @@
       "mediana": 593,
       "descuento": 9,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:09+00:00",
+      "visto": "2026-07-17T10:46:21+00:00",
       "link": "https://www.aviasales.com/search/BOG1709BUE30091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Buenos%20Aires%202026-09-17%202026-09-30"
     },
@@ -1199,7 +1221,7 @@
       "mediana": 557,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:58+00:00",
+      "visto": "2026-07-17T10:47:11+00:00",
       "link": "https://www.aviasales.com/search/UIO0112MEX04121",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20UIO%20a%20Ciudad%20de%20M%C3%A9xico%202026-12-01%202026-12-04"
     },
@@ -1221,7 +1243,7 @@
       "mediana": 584,
       "descuento": 1,
       "esGanga": false,
-      "visto": "2026-07-17T08:10:21+00:00",
+      "visto": "2026-07-17T10:48:32+00:00",
       "link": "https://www.aviasales.com/search/GRU0909MEX13091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20GRU%20a%20Ciudad%20de%20M%C3%A9xico%202026-09-09%202026-09-13"
     },
@@ -1243,7 +1265,7 @@
       "mediana": 635,
       "descuento": 5,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:53+00:00",
+      "visto": "2026-07-17T10:48:04+00:00",
       "link": "https://www.aviasales.com/search/EZE0709MIA15091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20EZE%20a%20Miami%202026-09-07%202026-09-15"
     },
@@ -1265,7 +1287,7 @@
       "mediana": 604,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:33+00:00",
+      "visto": "2026-07-17T10:47:44+00:00",
       "link": "https://www.aviasales.com/search/SCL1608MIA22081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20SCL%20a%20Miami%202026-08-16%202026-08-22"
     },
@@ -1287,7 +1309,7 @@
       "mediana": 666,
       "descuento": 4,
       "esGanga": false,
-      "visto": "2026-07-17T08:10:19+00:00",
+      "visto": "2026-07-17T10:48:30+00:00",
       "link": "https://www.aviasales.com/search/GRU1509NYC25091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20GRU%20a%20Nueva%20York%202026-09-15%202026-09-25"
     },
@@ -1309,7 +1331,7 @@
       "mediana": 555,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:25+00:00",
+      "visto": "2026-07-17T10:46:37+00:00",
       "link": "https://www.aviasales.com/search/MDE2312BUE31121",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Buenos%20Aires%202026-12-23%202026-12-31"
     },
@@ -1331,7 +1353,7 @@
       "mediana": 705,
       "descuento": 6,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:57+00:00",
+      "visto": "2026-07-17T10:48:08+00:00",
       "link": "https://www.aviasales.com/search/EZE1311MEX20111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20EZE%20a%20Ciudad%20de%20M%C3%A9xico%202026-11-13%202026-11-20"
     },
@@ -1353,7 +1375,7 @@
       "mediana": 798,
       "descuento": 10,
       "esGanga": false,
-      "visto": "2026-07-17T08:10:03+00:00",
+      "visto": "2026-07-17T10:48:15+00:00",
       "link": "https://www.aviasales.com/search/GRU0608MAD13081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20GRU%20a%20Madrid%202026-08-06%202026-08-13"
     },
@@ -1375,7 +1397,7 @@
       "mediana": 738,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:34+00:00",
+      "visto": "2026-07-17T10:47:45+00:00",
       "link": "https://www.aviasales.com/search/SCL2009NYC27091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20SCL%20a%20Nueva%20York%202026-09-20%202026-09-27"
     },
@@ -1397,9 +1419,31 @@
       "mediana": 862,
       "descuento": 11,
       "esGanga": false,
-      "visto": "2026-07-17T08:07:56+00:00",
+      "visto": "2026-07-17T10:46:08+00:00",
       "link": "https://www.aviasales.com/search/BOG0611MIL22111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Mil%C3%A1n%202026-11-06%202026-11-22"
+    },
+    {
+      "origen": "MAD",
+      "destino": "SAO",
+      "ciudad": "São Paulo",
+      "pais": "Brasil",
+      "bandera": "🇧🇷",
+      "q": "São Paulo, Brasil",
+      "precio": 772,
+      "moneda": "USD",
+      "fecha_ida": "2026-10-21",
+      "fecha_vuelta": "2026-10-27",
+      "aerolinea": "TK",
+      "escalas_ida": null,
+      "escalas_vuelta": null,
+      "umbral": 450,
+      "mediana": 899,
+      "descuento": 14,
+      "esGanga": false,
+      "visto": "2026-07-17T16:17:23+00:00",
+      "link": "https://www.aviasales.com/search/MAD2110SAO27101",
+      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MAD%20a%20S%C3%A3o%20Paulo%202026-10-21%202026-10-27"
     },
     {
       "origen": "GRU",
@@ -1419,7 +1463,7 @@
       "mediana": 866,
       "descuento": 11,
       "esGanga": false,
-      "visto": "2026-07-17T08:10:07+00:00",
+      "visto": "2026-07-17T10:48:18+00:00",
       "link": "https://www.aviasales.com/search/GRU1208ROM30081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20GRU%20a%20Roma%202026-08-12%202026-08-30"
     },
@@ -1441,7 +1485,7 @@
       "mediana": 483,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:57+00:00",
+      "visto": "2026-07-17T10:47:09+00:00",
       "link": "https://www.aviasales.com/search/UIO0308NYC09081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20UIO%20a%20Nueva%20York%202026-08-03%202026-08-09"
     },
@@ -1463,7 +1507,7 @@
       "mediana": 874,
       "descuento": 8,
       "esGanga": false,
-      "visto": "2026-07-17T08:07:54+00:00",
+      "visto": "2026-07-17T10:46:06+00:00",
       "link": "https://www.aviasales.com/search/BOG0611ROM28111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Roma%202026-11-06%202026-11-28"
     },
@@ -1485,7 +1529,7 @@
       "mediana": 821,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:10:40+00:00",
+      "visto": "2026-07-17T10:48:51+00:00",
       "link": "https://www.aviasales.com/search/CCS1409BUE29091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20CCS%20a%20Buenos%20Aires%202026-09-14%202026-09-29"
     },
@@ -1507,7 +1551,7 @@
       "mediana": 980,
       "descuento": 15,
       "esGanga": false,
-      "visto": "2026-07-17T08:10:12+00:00",
+      "visto": "2026-07-17T10:48:24+00:00",
       "link": "https://www.aviasales.com/search/GRU1510LON31101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20GRU%20a%20Londres%202026-10-15%202026-10-31"
     },
@@ -1529,31 +1573,9 @@
       "mediana": 925,
       "descuento": 10,
       "esGanga": false,
-      "visto": "2026-07-17T08:11:08+00:00",
+      "visto": "2026-07-17T10:49:18+00:00",
       "link": "https://www.aviasales.com/search/MAD0511LIM22111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MAD%20a%20Lima%202026-11-05%202026-11-22"
-    },
-    {
-      "origen": "MIA",
-      "destino": "BCN",
-      "ciudad": "Barcelona",
-      "pais": "España",
-      "bandera": "🇪🇸",
-      "q": "Barcelona, España",
-      "precio": 837,
-      "moneda": "USD",
-      "fecha_ida": "2026-08-14",
-      "fecha_vuelta": "2026-08-17",
-      "aerolinea": "UA",
-      "escalas_ida": null,
-      "escalas_vuelta": null,
-      "umbral": 750,
-      "mediana": 854,
-      "descuento": 2,
-      "esGanga": false,
-      "visto": "2026-07-17T08:11:11+00:00",
-      "link": "https://www.aviasales.com/search/MIA1408BCN17081",
-      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MIA%20a%20Barcelona%202026-08-14%202026-08-17"
     },
     {
       "origen": "MEX",
@@ -1573,7 +1595,7 @@
       "mediana": 901,
       "descuento": 5,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:28+00:00",
+      "visto": "2026-07-17T10:46:40+00:00",
       "link": "https://www.aviasales.com/search/MEX1011MAD20111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MEX%20a%20Madrid%202026-11-10%202026-11-20"
     },
@@ -1595,31 +1617,9 @@
       "mediana": 710,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:36+00:00",
+      "visto": "2026-07-17T10:47:47+00:00",
       "link": "https://www.aviasales.com/search/SCL0801MEX09011",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20SCL%20a%20Ciudad%20de%20M%C3%A9xico%202027-01-08%202027-01-09"
-    },
-    {
-      "origen": "MAD",
-      "destino": "SAO",
-      "ciudad": "São Paulo",
-      "pais": "Brasil",
-      "bandera": "🇧🇷",
-      "q": "São Paulo, Brasil",
-      "precio": 866,
-      "moneda": "USD",
-      "fecha_ida": "2026-09-15",
-      "fecha_vuelta": "2026-09-28",
-      "aerolinea": "NI",
-      "escalas_ida": null,
-      "escalas_vuelta": null,
-      "umbral": 450,
-      "mediana": 899,
-      "descuento": 4,
-      "esGanga": false,
-      "visto": "2026-07-17T08:11:03+00:00",
-      "link": "https://www.aviasales.com/search/MAD1509SAO28091",
-      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MAD%20a%20S%C3%A3o%20Paulo%202026-09-15%202026-09-28"
     },
     {
       "origen": "SCL",
@@ -1639,7 +1639,7 @@
       "mediana": 870,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:23+00:00",
+      "visto": "2026-07-17T10:47:35+00:00",
       "link": "https://www.aviasales.com/search/SCL1008MAD28081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20SCL%20a%20Madrid%202026-08-10%202026-08-28"
     },
@@ -1661,7 +1661,7 @@
       "mediana": 881,
       "descuento": 1,
       "esGanga": false,
-      "visto": "2026-07-17T08:10:05+00:00",
+      "visto": "2026-07-17T10:48:16+00:00",
       "link": "https://www.aviasales.com/search/GRU2008BCN30081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20GRU%20a%20Barcelona%202026-08-20%202026-08-30"
     },
@@ -1683,7 +1683,7 @@
       "mediana": 898,
       "descuento": 2,
       "esGanga": false,
-      "visto": "2026-07-17T08:10:10+00:00",
+      "visto": "2026-07-17T10:48:21+00:00",
       "link": "https://www.aviasales.com/search/GRU2008PAR27081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20GRU%20a%20Par%C3%ADs%202026-08-20%202026-08-27"
     },
@@ -1705,7 +1705,7 @@
       "mediana": 918,
       "descuento": 2,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:33+00:00",
+      "visto": "2026-07-17T10:46:45+00:00",
       "link": "https://www.aviasales.com/search/MEX0909LON18091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MEX%20a%20Londres%202026-09-09%202026-09-18"
     },
@@ -1727,7 +1727,7 @@
       "mediana": 936,
       "descuento": 4,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:24+00:00",
+      "visto": "2026-07-17T10:47:36+00:00",
       "link": "https://www.aviasales.com/search/SCL1508BCN25081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20SCL%20a%20Barcelona%202026-08-15%202026-08-25"
     },
@@ -1749,7 +1749,7 @@
       "mediana": 944,
       "descuento": 3,
       "esGanga": false,
-      "visto": "2026-07-17T08:07:57+00:00",
+      "visto": "2026-07-17T10:46:09+00:00",
       "link": "https://www.aviasales.com/search/BOG1009PAR25091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Par%C3%ADs%202026-09-10%202026-09-25"
     },
@@ -1771,7 +1771,7 @@
       "mediana": 911,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:55+00:00",
+      "visto": "2026-07-17T10:48:06+00:00",
       "link": "https://www.aviasales.com/search/EZE1909NYC26091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20EZE%20a%20Nueva%20York%202026-09-19%202026-09-26"
     },
@@ -1793,7 +1793,7 @@
       "mediana": 1002,
       "descuento": 8,
       "esGanga": false,
-      "visto": "2026-07-17T08:11:05+00:00",
+      "visto": "2026-07-17T10:49:15+00:00",
       "link": "https://www.aviasales.com/search/MAD0710BUE19101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MAD%20a%20Buenos%20Aires%202026-10-07%202026-10-19"
     },
@@ -1815,7 +1815,7 @@
       "mediana": 975,
       "descuento": 5,
       "esGanga": false,
-      "visto": "2026-07-17T08:07:50+00:00",
+      "visto": "2026-07-17T10:46:01+00:00",
       "link": "https://www.aviasales.com/search/BOG0611MAD22111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Madrid%202026-11-06%202026-11-22"
     },
@@ -1837,7 +1837,7 @@
       "mediana": 963,
       "descuento": 3,
       "esGanga": false,
-      "visto": "2026-07-17T08:07:52+00:00",
+      "visto": "2026-07-17T10:46:05+00:00",
       "link": "https://www.aviasales.com/search/BOG0611BCN22111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Barcelona%202026-11-06%202026-11-22"
     },
@@ -1859,7 +1859,7 @@
       "mediana": 938,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:10:39+00:00",
+      "visto": "2026-07-17T10:48:50+00:00",
       "link": "https://www.aviasales.com/search/CCS3110SAO31101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20CCS%20a%20S%C3%A3o%20Paulo%202026-10-31%202026-10-31"
     },
@@ -1881,7 +1881,7 @@
       "mediana": 997,
       "descuento": 6,
       "esGanga": false,
-      "visto": "2026-07-17T08:10:30+00:00",
+      "visto": "2026-07-17T10:48:41+00:00",
       "link": "https://www.aviasales.com/search/CCS0710MAD21101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20CCS%20a%20Madrid%202026-10-07%202026-10-21"
     },
@@ -1903,7 +1903,7 @@
       "mediana": 1043,
       "descuento": 9,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:42+00:00",
+      "visto": "2026-07-17T10:47:53+00:00",
       "link": "https://www.aviasales.com/search/EZE1111MAD30111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20EZE%20a%20Madrid%202026-11-11%202026-11-30"
     },
@@ -1925,7 +1925,7 @@
       "mediana": 1051,
       "descuento": 10,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:00+00:00",
+      "visto": "2026-07-17T10:46:12+00:00",
       "link": "https://www.aviasales.com/search/BOG1311LON22111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Londres%202026-11-13%202026-11-22"
     },
@@ -1947,7 +1947,7 @@
       "mediana": 977,
       "descuento": 3,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:29+00:00",
+      "visto": "2026-07-17T10:46:41+00:00",
       "link": "https://www.aviasales.com/search/MEX1909BCN29091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MEX%20a%20Barcelona%202026-09-19%202026-09-29"
     },
@@ -1969,7 +1969,7 @@
       "mediana": 1137,
       "descuento": 14,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:29+00:00",
+      "visto": "2026-07-17T10:47:41+00:00",
       "link": "https://www.aviasales.com/search/SCL0908LON24081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20SCL%20a%20Londres%202026-08-09%202026-08-24"
     },
@@ -1991,7 +1991,7 @@
       "mediana": 1091,
       "descuento": 9,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:13+00:00",
+      "visto": "2026-07-17T10:46:25+00:00",
       "link": "https://www.aviasales.com/search/MDE0511MAD18111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Madrid%202026-11-05%202026-11-18"
     },
@@ -2013,7 +2013,7 @@
       "mediana": 971,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:31+00:00",
+      "visto": "2026-07-17T10:46:43+00:00",
       "link": "https://www.aviasales.com/search/MEX1509MIL22091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MEX%20a%20Mil%C3%A1n%202026-09-15%202026-09-22"
     },
@@ -2035,7 +2035,7 @@
       "mediana": 1007,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:10:09+00:00",
+      "visto": "2026-07-17T10:48:20+00:00",
       "link": "https://www.aviasales.com/search/GRU1410MIL19101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20GRU%20a%20Mil%C3%A1n%202026-10-14%202026-10-19"
     },
@@ -2057,7 +2057,7 @@
       "mediana": 1188,
       "descuento": 14,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:09+00:00",
+      "visto": "2026-07-17T10:47:22+00:00",
       "link": "https://www.aviasales.com/search/LIM2310LON29101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20LIM%20a%20Londres%202026-10-23%202026-10-29"
     },
@@ -2079,7 +2079,7 @@
       "mediana": 851,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:32+00:00",
+      "visto": "2026-07-17T10:46:44+00:00",
       "link": "https://www.aviasales.com/search/MEX1409PAR21091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MEX%20a%20Par%C3%ADs%202026-09-14%202026-09-21"
     },
@@ -2101,7 +2101,7 @@
       "mediana": 1026,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:26+00:00",
+      "visto": "2026-07-17T10:47:38+00:00",
       "link": "https://www.aviasales.com/search/SCL1508MIL25081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20SCL%20a%20Mil%C3%A1n%202026-08-15%202026-08-25"
     },
@@ -2123,7 +2123,7 @@
       "mediana": 1133,
       "descuento": 8,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:04+00:00",
+      "visto": "2026-07-17T10:47:15+00:00",
       "link": "https://www.aviasales.com/search/LIM2310MAD29101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20LIM%20a%20Madrid%202026-10-23%202026-10-29"
     },
@@ -2145,7 +2145,7 @@
       "mediana": 1127,
       "descuento": 4,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:25+00:00",
+      "visto": "2026-07-17T10:47:37+00:00",
       "link": "https://www.aviasales.com/search/SCL0908ROM19081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20SCL%20a%20Roma%202026-08-09%202026-08-19"
     },
@@ -2167,7 +2167,7 @@
       "mediana": 1094,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:28+00:00",
+      "visto": "2026-07-17T10:47:40+00:00",
       "link": "https://www.aviasales.com/search/SCL0908PAR19081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20SCL%20a%20Par%C3%ADs%202026-08-09%202026-08-19"
     },
@@ -2189,7 +2189,7 @@
       "mediana": 1094,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:10:34+00:00",
+      "visto": "2026-07-17T10:48:45+00:00",
       "link": "https://www.aviasales.com/search/CCS0310LON11101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20CCS%20a%20Londres%202026-10-03%202026-10-11"
     },
@@ -2211,7 +2211,7 @@
       "mediana": 1227,
       "descuento": 9,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:07+00:00",
+      "visto": "2026-07-17T10:47:19+00:00",
       "link": "https://www.aviasales.com/search/LIM0808PAR15081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20LIM%20a%20Par%C3%ADs%202026-08-08%202026-08-15"
     },
@@ -2233,7 +2233,7 @@
       "mediana": 1125,
       "descuento": 1,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:07+00:00",
+      "visto": "2026-07-17T10:47:19+00:00",
       "link": "https://www.aviasales.com/search/LIM0809MIL30091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20LIM%20a%20Mil%C3%A1n%202026-09-08%202026-09-30"
     },
@@ -2255,7 +2255,7 @@
       "mediana": 1292,
       "descuento": 12,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:48+00:00",
+      "visto": "2026-07-17T10:47:59+00:00",
       "link": "https://www.aviasales.com/search/EZE0808PAR24081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20EZE%20a%20Par%C3%ADs%202026-08-08%202026-08-24"
     },
@@ -2274,10 +2274,10 @@
       "escalas_ida": null,
       "escalas_vuelta": null,
       "umbral": 800,
-      "mediana": 1295,
+      "mediana": 1292,
       "descuento": 11,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:17+00:00",
+      "visto": "2026-07-17T10:46:29+00:00",
       "link": "https://www.aviasales.com/search/MDE0308LON16081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20MDE%20a%20Londres%202026-08-03%202026-08-16"
     },
@@ -2299,7 +2299,7 @@
       "mediana": 1200,
       "descuento": 3,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:05+00:00",
+      "visto": "2026-07-17T10:47:16+00:00",
       "link": "https://www.aviasales.com/search/LIM0210BCN30101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20LIM%20a%20Barcelona%202026-10-02%202026-10-30"
     },
@@ -2321,7 +2321,7 @@
       "mediana": 1323,
       "descuento": 12,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:48+00:00",
+      "visto": "2026-07-17T10:47:00+00:00",
       "link": "https://www.aviasales.com/search/UIO0111MAD10111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20UIO%20a%20Madrid%202026-11-01%202026-11-10"
     },
@@ -2343,7 +2343,7 @@
       "mediana": 1345,
       "descuento": 10,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:45+00:00",
+      "visto": "2026-07-17T10:47:56+00:00",
       "link": "https://www.aviasales.com/search/EZE0908ROM15081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20EZE%20a%20Roma%202026-08-09%202026-08-15"
     },
@@ -2365,7 +2365,7 @@
       "mediana": 1388,
       "descuento": 2,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:53+00:00",
+      "visto": "2026-07-17T10:47:05+00:00",
       "link": "https://www.aviasales.com/search/UIO0812LON10121",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20UIO%20a%20Londres%202026-12-08%202026-12-10"
     },
@@ -2387,7 +2387,7 @@
       "mediana": 1471,
       "descuento": 6,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:01+00:00",
+      "visto": "2026-07-17T10:46:13+00:00",
       "link": "https://www.aviasales.com/search/BOG0211TYO15111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Tokio%202026-11-02%202026-11-15"
     },
@@ -2409,7 +2409,7 @@
       "mediana": 1492,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:49+00:00",
+      "visto": "2026-07-17T10:47:01+00:00",
       "link": "https://www.aviasales.com/search/UIO0608BCN13081",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20UIO%20a%20Barcelona%202026-08-06%202026-08-13"
     },
@@ -2431,7 +2431,7 @@
       "mediana": 1732,
       "descuento": 10,
       "esGanga": false,
-      "visto": "2026-07-17T08:08:03+00:00",
+      "visto": "2026-07-17T10:46:15+00:00",
       "link": "https://www.aviasales.com/search/BOG0111BJS15111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20BOG%20a%20Pek%C3%ADn%202026-11-01%202026-11-15"
     },
@@ -2453,31 +2453,9 @@
       "mediana": 1814,
       "descuento": 11,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:52+00:00",
+      "visto": "2026-07-17T10:48:03+00:00",
       "link": "https://www.aviasales.com/search/EZE0710BJS28101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20EZE%20a%20Pek%C3%ADn%202026-10-07%202026-10-28"
-    },
-    {
-      "origen": "GRU",
-      "destino": "BJS",
-      "ciudad": "Pekín",
-      "pais": "China",
-      "bandera": "🇨🇳",
-      "q": "Pekín, China",
-      "precio": 1640,
-      "moneda": "USD",
-      "fecha_ida": "2026-08-03",
-      "fecha_vuelta": "2026-08-14",
-      "aerolinea": "TK",
-      "escalas_ida": null,
-      "escalas_vuelta": null,
-      "umbral": 1700,
-      "mediana": 1640,
-      "descuento": 0,
-      "esGanga": false,
-      "visto": "2026-07-17T08:10:15+00:00",
-      "link": "https://www.aviasales.com/search/GRU0308BJS14081",
-      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20GRU%20a%20Pek%C3%ADn%202026-08-03%202026-08-14"
     },
     {
       "origen": "SCL",
@@ -2497,9 +2475,31 @@
       "mediana": 1701,
       "descuento": 2,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:30+00:00",
+      "visto": "2026-07-17T10:47:42+00:00",
       "link": "https://www.aviasales.com/search/SCL2009TYO27091",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20SCL%20a%20Tokio%202026-09-20%202026-09-27"
+    },
+    {
+      "origen": "GRU",
+      "destino": "BJS",
+      "ciudad": "Pekín",
+      "pais": "China",
+      "bandera": "🇨🇳",
+      "q": "Pekín, China",
+      "precio": 1677,
+      "moneda": "USD",
+      "fecha_ida": "2026-09-04",
+      "fecha_vuelta": "2026-09-13",
+      "aerolinea": "UA",
+      "escalas_ida": null,
+      "escalas_vuelta": null,
+      "umbral": 1700,
+      "mediana": 1640,
+      "descuento": 0,
+      "esGanga": false,
+      "visto": "2026-07-17T10:48:27+00:00",
+      "link": "https://www.aviasales.com/search/GRU0409BJS13091",
+      "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20GRU%20a%20Pek%C3%ADn%202026-09-04%202026-09-13"
     },
     {
       "origen": "LIM",
@@ -2519,7 +2519,7 @@
       "mediana": 1897,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:11+00:00",
+      "visto": "2026-07-17T10:47:23+00:00",
       "link": "https://www.aviasales.com/search/LIM1611TYO19111",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20LIM%20a%20Tokio%202026-11-16%202026-11-19"
     },
@@ -2538,10 +2538,10 @@
       "escalas_ida": null,
       "escalas_vuelta": null,
       "umbral": 1300,
-      "mediana": 1909,
+      "mediana": 1925,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:51+00:00",
+      "visto": "2026-07-17T10:48:02+00:00",
       "link": "https://www.aviasales.com/search/EZE1310TYO23101",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20EZE%20a%20Tokio%202026-10-13%202026-10-23"
     },
@@ -2563,7 +2563,7 @@
       "mediana": 2571,
       "descuento": 0,
       "esGanga": false,
-      "visto": "2026-07-17T08:09:12+00:00",
+      "visto": "2026-07-17T10:47:25+00:00",
       "link": "https://www.aviasales.com/search/LIM0101BJS04011",
       "link_google": "https://www.google.com/travel/flights?q=vuelos%20desde%20LIM%20a%20Pek%C3%ADn%202027-01-01%202027-01-04"
     }
