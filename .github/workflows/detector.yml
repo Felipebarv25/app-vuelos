@@ -2,8 +2,10 @@ name: Detector de vuelos
 
 on:
   schedule:
-    # Cada 3 horas (cerca de "tiempo real"). Detecta y avisa apenas hay ganga.
-    - cron: "0 */3 * * *"
+    # Cada hora (2026-07-18, antes cada 3h): el repo es publico asi que los
+    # minutos de Actions son gratis. Nota: el cron de GitHub puede correr con
+    # unos minutos de retraso en horas pico — es normal.
+    - cron: "0 * * * *"
   workflow_dispatch:        # permite ejecutarlo a mano desde la pestaña Actions
 
 permissions:

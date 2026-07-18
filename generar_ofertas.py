@@ -64,10 +64,10 @@ META = {
 DESCUENTO_GANGA = 0.15  # 15% bajo la mediana = oferta destacada
 # Ventana de frescura del precio "actual" (audit 2026-07-05: usuario reporto
 # precio de hace 18h muy distinto a Google). Solo se muestra el precio como
-# vigente si fue verificado en las ultimas 6 horas. Si es mas viejo, la ruta
-# se OMITE del ofertas.json. Con el detector corriendo cada 3h esto deja 1
-# corrida de margen antes de considerar el precio obsoleto.
-HORAS_FRESCO = 6
+# vigente si fue verificado en las ultimas 3 horas. Si es mas viejo, la ruta
+# se OMITE del ofertas.json. Con el detector corriendo cada hora (2026-07-18)
+# esto deja 2 corridas de margen antes de considerar el precio obsoleto.
+HORAS_FRESCO = 3
 
 
 def _ddmm(iso):

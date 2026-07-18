@@ -113,7 +113,7 @@ export default async function AlertaDetalle({ params }) {
               Aún no tenemos suficiente historial para esta ruta
             </div>
             <p className="mt-1.5 text-[13.5px] text-slate-600 dark:text-slate-400">
-              El detector escanea precios cada 3 horas. En unos días tendremos suficientes muestras para
+              El detector escanea precios cada hora. En unos días tendremos suficientes muestras para
               mostrarte el mejor mes y el promedio. Tu alerta sigue activa — te llegará un email cuando
               baje de {fmt(alerta.umbral)}.
             </p>
