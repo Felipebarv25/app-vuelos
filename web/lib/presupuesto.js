@@ -13,6 +13,9 @@ import { costoTramoReal } from "./tramos";
 
 // Costo diario por persona (gama media) y vuelo i/v aproximado desde Colombia.
 // dia = hospedaje + comida + transporte local + actividades/extras (USD/día).
+// Recalibrado 2026-07-18 (feedback del usuario): los paises CAROS estaban muy
+// subvalorados (Suiza/nordicos/EEUU grandes). Referencias: hotel 3* + comer
+// fuera 2 veces + transporte publico + 1 actividad, temporada media.
 export const DESTINOS_PRESUPUESTO = [
   // ---- Sudamérica (vuelos baratos desde Colombia) ----
   { ciudad: "Lima", pais: "Perú", region: "sudamerica", bandera: "🇵🇪", vuelo: 320, dia: 55, lat: -12.0464, lon: -77.0428 },
@@ -28,12 +31,12 @@ export const DESTINOS_PRESUPUESTO = [
 
   // ---- Norte y Centroamérica ----
   { ciudad: "Ciudad de México", pais: "México", region: "norteamerica", bandera: "🇲🇽", vuelo: 380, dia: 60, lat: 19.4326, lon: -99.1332 },
-  { ciudad: "Cancún", pais: "México", region: "norteamerica", bandera: "🇲🇽", vuelo: 420, dia: 80, lat: 21.1619, lon: -86.8515 },
+  { ciudad: "Cancún", pais: "México", region: "norteamerica", bandera: "🇲🇽", vuelo: 420, dia: 90, lat: 21.1619, lon: -86.8515 },
   { ciudad: "Ciudad de Panamá", pais: "Panamá", region: "norteamerica", bandera: "🇵🇦", vuelo: 280, dia: 65, lat: 8.9824, lon: -79.5199 },
   { ciudad: "San José", pais: "Costa Rica", region: "norteamerica", bandera: "🇨🇷", vuelo: 360, dia: 70, lat: 9.9281, lon: -84.0907 },
-  { ciudad: "Miami", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 400, dia: 120, lat: 25.7617, lon: -80.1918 },
-  { ciudad: "Nueva York", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 480, dia: 150, lat: 40.7128, lon: -74.006 },
-  { ciudad: "Los Ángeles", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 520, dia: 140, lat: 34.0522, lon: -118.2437 },
+  { ciudad: "Miami", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 400, dia: 150, lat: 25.7617, lon: -80.1918 },
+  { ciudad: "Nueva York", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 480, dia: 200, lat: 40.7128, lon: -74.006 },
+  { ciudad: "Los Ángeles", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 520, dia: 170, lat: 34.0522, lon: -118.2437 },
   { ciudad: "Toronto", pais: "Canadá", region: "norteamerica", bandera: "🇨🇦", vuelo: 560, dia: 120, lat: 43.6532, lon: -79.3832 },
   { ciudad: "La Habana", pais: "Cuba", region: "norteamerica", bandera: "🇨🇺", vuelo: 420, dia: 60, lat: 23.1136, lon: -82.3666 },
 
@@ -43,14 +46,14 @@ export const DESTINOS_PRESUPUESTO = [
   { ciudad: "Sevilla", pais: "España", region: "europa", bandera: "🇪🇸", vuelo: 830, dia: 90, lat: 37.3891, lon: -5.9845 },
   { ciudad: "Lisboa", pais: "Portugal", region: "europa", bandera: "🇵🇹", vuelo: 780, dia: 90, lat: 38.7223, lon: -9.1393 },
   { ciudad: "Oporto", pais: "Portugal", region: "europa", bandera: "🇵🇹", vuelo: 790, dia: 85, lat: 41.1579, lon: -8.6291 },
-  { ciudad: "París", pais: "Francia", region: "europa", bandera: "🇫🇷", vuelo: 850, dia: 130, lat: 48.8566, lon: 2.3522 },
+  { ciudad: "París", pais: "Francia", region: "europa", bandera: "🇫🇷", vuelo: 850, dia: 150, lat: 48.8566, lon: 2.3522 },
   { ciudad: "Niza", pais: "Francia", region: "europa", bandera: "🇫🇷", vuelo: 870, dia: 120, lat: 43.7102, lon: 7.262 },
   { ciudad: "Roma", pais: "Italia", region: "europa", bandera: "🇮🇹", vuelo: 880, dia: 110, lat: 41.9028, lon: 12.4964 },
   { ciudad: "Florencia", pais: "Italia", region: "europa", bandera: "🇮🇹", vuelo: 880, dia: 110, lat: 43.7696, lon: 11.2558 },
-  { ciudad: "Venecia", pais: "Italia", region: "europa", bandera: "🇮🇹", vuelo: 890, dia: 120, lat: 45.4408, lon: 12.3155 },
+  { ciudad: "Venecia", pais: "Italia", region: "europa", bandera: "🇮🇹", vuelo: 890, dia: 140, lat: 45.4408, lon: 12.3155 },
   { ciudad: "Milán", pais: "Italia", region: "europa", bandera: "🇮🇹", vuelo: 860, dia: 120, lat: 45.4642, lon: 9.19 },
-  { ciudad: "Londres", pais: "Reino Unido", region: "europa", bandera: "🇬🇧", vuelo: 900, dia: 150, lat: 51.5074, lon: -0.1278 },
-  { ciudad: "Ámsterdam", pais: "Países Bajos", region: "europa", bandera: "🇳🇱", vuelo: 880, dia: 130, lat: 52.3676, lon: 4.9041 },
+  { ciudad: "Londres", pais: "Reino Unido", region: "europa", bandera: "🇬🇧", vuelo: 900, dia: 170, lat: 51.5074, lon: -0.1278 },
+  { ciudad: "Ámsterdam", pais: "Países Bajos", region: "europa", bandera: "🇳🇱", vuelo: 880, dia: 160, lat: 52.3676, lon: 4.9041 },
   { ciudad: "Bruselas", pais: "Bélgica", region: "europa", bandera: "🇧🇪", vuelo: 870, dia: 115, lat: 50.8503, lon: 4.3517 },
   { ciudad: "Berlín", pais: "Alemania", region: "europa", bandera: "🇩🇪", vuelo: 870, dia: 110, lat: 52.52, lon: 13.405 },
   { ciudad: "Múnich", pais: "Alemania", region: "europa", bandera: "🇩🇪", vuelo: 880, dia: 120, lat: 48.1351, lon: 11.582 },
@@ -66,12 +69,12 @@ export const DESTINOS_PRESUPUESTO = [
   { ciudad: "Seúl", pais: "Corea del Sur", region: "asia", bandera: "🇰🇷", vuelo: 1250, dia: 100, lat: 37.5665, lon: 126.978 },
   { ciudad: "Bangkok", pais: "Tailandia", region: "asia", bandera: "🇹🇭", vuelo: 1100, dia: 55, lat: 13.7563, lon: 100.5018 },
   { ciudad: "Bali", pais: "Indonesia", region: "asia", bandera: "🇮🇩", vuelo: 1250, dia: 60, lat: -8.3405, lon: 115.092 },
-  { ciudad: "Singapur", pais: "Singapur", region: "asia", bandera: "🇸🇬", vuelo: 1300, dia: 110, lat: 1.3521, lon: 103.8198 },
-  { ciudad: "Dubái", pais: "Emiratos Árabes", region: "asia", bandera: "🇦🇪", vuelo: 1000, dia: 130, lat: 25.2048, lon: 55.2708 },
+  { ciudad: "Singapur", pais: "Singapur", region: "asia", bandera: "🇸🇬", vuelo: 1300, dia: 150, lat: 1.3521, lon: 103.8198 },
+  { ciudad: "Dubái", pais: "Emiratos Árabes", region: "asia", bandera: "🇦🇪", vuelo: 1000, dia: 150, lat: 25.2048, lon: 55.2708 },
   { ciudad: "Abu Dabi", pais: "Emiratos Árabes", region: "asia", bandera: "🇦🇪", vuelo: 1000, dia: 120, lat: 24.4539, lon: 54.3773 },
   { ciudad: "Pekín", pais: "China", region: "asia", bandera: "🇨🇳", vuelo: 1150, dia: 80, lat: 39.9042, lon: 116.4074 },
   { ciudad: "Shanghái", pais: "China", region: "asia", bandera: "🇨🇳", vuelo: 1180, dia: 90, lat: 31.2304, lon: 121.4737 },
-  { ciudad: "Hong Kong", pais: "China", region: "asia", bandera: "🇭🇰", vuelo: 1250, dia: 120, lat: 22.3193, lon: 114.1694 },
+  { ciudad: "Hong Kong", pais: "China", region: "asia", bandera: "🇭🇰", vuelo: 1250, dia: 140, lat: 22.3193, lon: 114.1694 },
   { ciudad: "Osaka", pais: "Japón", region: "asia", bandera: "🇯🇵", vuelo: 1200, dia: 110, lat: 34.6937, lon: 135.5023 },
   { ciudad: "Bombay", pais: "India", region: "asia", bandera: "🇮🇳", vuelo: 1300, dia: 60, lat: 19.076, lon: 72.8777 },
   { ciudad: "Phuket", pais: "Tailandia", region: "asia", bandera: "🇹🇭", vuelo: 1200, dia: 60, lat: 7.8804, lon: 98.3923 },
@@ -86,9 +89,9 @@ export const DESTINOS_PRESUPUESTO = [
   // ---- Más Norte y Centroamérica ----
   { ciudad: "Guadalajara", pais: "México", region: "norteamerica", bandera: "🇲🇽", vuelo: 400, dia: 60, lat: 20.6597, lon: -103.3496 },
   { ciudad: "Playa del Carmen", pais: "México", region: "norteamerica", bandera: "🇲🇽", vuelo: 430, dia: 85, lat: 20.6296, lon: -87.0739 },
-  { ciudad: "San Francisco", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 560, dia: 160, lat: 37.7749, lon: -122.4194 },
-  { ciudad: "Las Vegas", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 540, dia: 130, lat: 36.1699, lon: -115.1398 },
-  { ciudad: "Chicago", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 520, dia: 140, lat: 41.8781, lon: -87.6298 },
+  { ciudad: "San Francisco", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 560, dia: 200, lat: 37.7749, lon: -122.4194 },
+  { ciudad: "Las Vegas", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 540, dia: 150, lat: 36.1699, lon: -115.1398 },
+  { ciudad: "Chicago", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 520, dia: 150, lat: 41.8781, lon: -87.6298 },
   { ciudad: "Orlando", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 460, dia: 120, lat: 28.5383, lon: -81.3792 },
   { ciudad: "Montreal", pais: "Canadá", region: "norteamerica", bandera: "🇨🇦", vuelo: 560, dia: 115, lat: 45.5019, lon: -73.5674 },
   { ciudad: "Ciudad de Guatemala", pais: "Guatemala", region: "norteamerica", bandera: "🇬🇹", vuelo: 340, dia: 55, lat: 14.6349, lon: -90.5069 },
@@ -97,10 +100,10 @@ export const DESTINOS_PRESUPUESTO = [
   { ciudad: "Valencia", pais: "España", region: "europa", bandera: "🇪🇸", vuelo: 820, dia: 95, lat: 39.4699, lon: -0.3763 },
   { ciudad: "Nápoles", pais: "Italia", region: "europa", bandera: "🇮🇹", vuelo: 890, dia: 100, lat: 40.8518, lon: 14.2681 },
   { ciudad: "Edimburgo", pais: "Reino Unido", region: "europa", bandera: "🇬🇧", vuelo: 910, dia: 130, lat: 55.9533, lon: -3.1883 },
-  { ciudad: "Dublín", pais: "Irlanda", region: "europa", bandera: "🇮🇪", vuelo: 900, dia: 120, lat: 53.3498, lon: -6.2603 },
-  { ciudad: "Copenhague", pais: "Dinamarca", region: "europa", bandera: "🇩🇰", vuelo: 950, dia: 140, lat: 55.6761, lon: 12.5683 },
-  { ciudad: "Estocolmo", pais: "Suecia", region: "europa", bandera: "🇸🇪", vuelo: 980, dia: 140, lat: 59.3293, lon: 18.0686 },
-  { ciudad: "Zúrich", pais: "Suiza", region: "europa", bandera: "🇨🇭", vuelo: 950, dia: 160, lat: 47.3769, lon: 8.5417 },
+  { ciudad: "Dublín", pais: "Irlanda", region: "europa", bandera: "🇮🇪", vuelo: 900, dia: 140, lat: 53.3498, lon: -6.2603 },
+  { ciudad: "Copenhague", pais: "Dinamarca", region: "europa", bandera: "🇩🇰", vuelo: 950, dia: 170, lat: 55.6761, lon: 12.5683 },
+  { ciudad: "Estocolmo", pais: "Suecia", region: "europa", bandera: "🇸🇪", vuelo: 980, dia: 165, lat: 59.3293, lon: 18.0686 },
+  { ciudad: "Zúrich", pais: "Suiza", region: "europa", bandera: "🇨🇭", vuelo: 950, dia: 230, lat: 47.3769, lon: 8.5417 },
   { ciudad: "Varsovia", pais: "Polonia", region: "europa", bandera: "🇵🇱", vuelo: 920, dia: 80, lat: 52.2297, lon: 21.0122 },
 
   // ---- África ----
@@ -109,8 +112,8 @@ export const DESTINOS_PRESUPUESTO = [
   { ciudad: "Ciudad del Cabo", pais: "Sudáfrica", region: "africa", bandera: "🇿🇦", vuelo: 1300, dia: 95, lat: -33.9249, lon: 18.4241 },
 
   // ---- Oceanía ----
-  { ciudad: "Sídney", pais: "Australia", region: "oceania", bandera: "🇦🇺", vuelo: 1800, dia: 140, lat: -33.8688, lon: 151.2093 },
-  { ciudad: "Melbourne", pais: "Australia", region: "oceania", bandera: "🇦🇺", vuelo: 1850, dia: 130, lat: -37.8136, lon: 144.9631 },
+  { ciudad: "Sídney", pais: "Australia", region: "oceania", bandera: "🇦🇺", vuelo: 1800, dia: 160, lat: -33.8688, lon: 151.2093 },
+  { ciudad: "Melbourne", pais: "Australia", region: "oceania", bandera: "🇦🇺", vuelo: 1850, dia: 150, lat: -37.8136, lon: 144.9631 },
   { ciudad: "Auckland", pais: "Nueva Zelanda", region: "oceania", bandera: "🇳🇿", vuelo: 1900, dia: 130, lat: -36.8485, lon: 174.7633 },
   // ==== EXPANSION SEO 2026-07-11: ~100 destinos nuevos. vuelo = i/v aprox
   // USD desde Colombia (calibrado contra los existentes: Lima 320, Madrid
@@ -153,14 +156,14 @@ export const DESTINOS_PRESUPUESTO = [
   { ciudad: "Mérida", pais: "México", region: "norteamerica", bandera: "🇲🇽", vuelo: 500, dia: 55, lat: 20.9674, lon: -89.5926 },
   { ciudad: "San Miguel de Allende", pais: "México", region: "norteamerica", bandera: "🇲🇽", vuelo: 520, dia: 60, lat: 20.9144, lon: -100.7452 },
   { ciudad: "Puerto Vallarta", pais: "México", region: "norteamerica", bandera: "🇲🇽", vuelo: 520, dia: 70, lat: 20.6534, lon: -105.2253 },
-  { ciudad: "Tulum", pais: "México", region: "norteamerica", bandera: "🇲🇽", vuelo: 450, dia: 75, lat: 20.2114, lon: -87.4654 },
+  { ciudad: "Tulum", pais: "México", region: "norteamerica", bandera: "🇲🇽", vuelo: 450, dia: 95, lat: 20.2114, lon: -87.4654 },
   { ciudad: "Guanajuato", pais: "México", region: "norteamerica", bandera: "🇲🇽", vuelo: 520, dia: 50, lat: 21.019, lon: -101.2574 },
-  { ciudad: "Boston", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 520, dia: 120, lat: 42.3601, lon: -71.0589 },
-  { ciudad: "Washington", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 500, dia: 110, lat: 38.9072, lon: -77.0369 },
-  { ciudad: "Seattle", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 600, dia: 110, lat: 47.6062, lon: -122.3321 },
+  { ciudad: "Boston", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 520, dia: 160, lat: 42.3601, lon: -71.0589 },
+  { ciudad: "Washington", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 500, dia: 140, lat: 38.9072, lon: -77.0369 },
+  { ciudad: "Seattle", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 600, dia: 150, lat: 47.6062, lon: -122.3321 },
   { ciudad: "Nueva Orleans", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 520, dia: 100, lat: 29.9511, lon: -90.0715 },
-  { ciudad: "Honolulu", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 900, dia: 130, lat: 21.3069, lon: -157.8583 },
-  { ciudad: "Vancouver", pais: "Canadá", region: "norteamerica", bandera: "🇨🇦", vuelo: 650, dia: 110, lat: 49.2827, lon: -123.1207 },
+  { ciudad: "Honolulu", pais: "Estados Unidos", region: "norteamerica", bandera: "🇺🇸", vuelo: 900, dia: 190, lat: 21.3069, lon: -157.8583 },
+  { ciudad: "Vancouver", pais: "Canadá", region: "norteamerica", bandera: "🇨🇦", vuelo: 650, dia: 140, lat: 49.2827, lon: -123.1207 },
   { ciudad: "Quebec", pais: "Canadá", region: "norteamerica", bandera: "🇨🇦", vuelo: 650, dia: 95, lat: 46.8139, lon: -71.208 },
   { ciudad: "Santo Domingo", pais: "República Dominicana", region: "norteamerica", bandera: "🇩🇴", vuelo: 350, dia: 60, lat: 18.4861, lon: -69.9312 },
   { ciudad: "San Juan", pais: "Puerto Rico", region: "norteamerica", bandera: "🇵🇷", vuelo: 400, dia: 90, lat: 18.4655, lon: -66.1057 },
@@ -184,8 +187,8 @@ export const DESTINOS_PRESUPUESTO = [
   { ciudad: "Bolonia", pais: "Italia", region: "europa", bandera: "🇮🇹", vuelo: 900, dia: 95, lat: 44.4949, lon: 11.3426 },
   { ciudad: "Verona", pais: "Italia", region: "europa", bandera: "🇮🇹", vuelo: 900, dia: 95, lat: 45.4384, lon: 10.9916 },
   { ciudad: "Palermo", pais: "Italia", region: "europa", bandera: "🇮🇹", vuelo: 950, dia: 85, lat: 38.1157, lon: 13.3615 },
-  { ciudad: "Santorini", pais: "Grecia", region: "europa", bandera: "🇬🇷", vuelo: 1050, dia: 110, lat: 36.3932, lon: 25.4615 },
-  { ciudad: "Mykonos", pais: "Grecia", region: "europa", bandera: "🇬🇷", vuelo: 1050, dia: 120, lat: 37.4467, lon: 25.3289 },
+  { ciudad: "Santorini", pais: "Grecia", region: "europa", bandera: "🇬🇷", vuelo: 1050, dia: 140, lat: 36.3932, lon: 25.4615 },
+  { ciudad: "Mykonos", pais: "Grecia", region: "europa", bandera: "🇬🇷", vuelo: 1050, dia: 160, lat: 37.4467, lon: 25.3289 },
   { ciudad: "Heraclión", pais: "Grecia", region: "europa", bandera: "🇬🇷", vuelo: 1050, dia: 85, lat: 35.3387, lon: 25.1442 },
   { ciudad: "Dubrovnik", pais: "Croacia", region: "europa", bandera: "🇭🇷", vuelo: 1000, dia: 90, lat: 42.6507, lon: 18.0944 },
   { ciudad: "Split", pais: "Croacia", region: "europa", bandera: "🇭🇷", vuelo: 1000, dia: 80, lat: 43.5081, lon: 16.4402 },
@@ -202,13 +205,13 @@ export const DESTINOS_PRESUPUESTO = [
   { ciudad: "Cambridge", pais: "Reino Unido", region: "europa", bandera: "🇬🇧", vuelo: 950, dia: 110, lat: 52.2053, lon: 0.1218 },
   { ciudad: "Liverpool", pais: "Reino Unido", region: "europa", bandera: "🇬🇧", vuelo: 900, dia: 95, lat: 53.4084, lon: -2.9916 },
   { ciudad: "Glasgow", pais: "Reino Unido", region: "europa", bandera: "🇬🇧", vuelo: 950, dia: 95, lat: 55.8642, lon: -4.2518 },
-  { ciudad: "Ginebra", pais: "Suiza", region: "europa", bandera: "🇨🇭", vuelo: 950, dia: 130, lat: 46.2044, lon: 6.1432 },
-  { ciudad: "Lucerna", pais: "Suiza", region: "europa", bandera: "🇨🇭", vuelo: 980, dia: 130, lat: 47.0502, lon: 8.3093 },
-  { ciudad: "Interlaken", pais: "Suiza", region: "europa", bandera: "🇨🇭", vuelo: 980, dia: 135, lat: 46.6863, lon: 7.8632 },
-  { ciudad: "Reikiavik", pais: "Islandia", region: "europa", bandera: "🇮🇸", vuelo: 1000, dia: 140, lat: 64.1466, lon: -21.9426 },
+  { ciudad: "Ginebra", pais: "Suiza", region: "europa", bandera: "🇨🇭", vuelo: 950, dia: 220, lat: 46.2044, lon: 6.1432 },
+  { ciudad: "Lucerna", pais: "Suiza", region: "europa", bandera: "🇨🇭", vuelo: 980, dia: 210, lat: 47.0502, lon: 8.3093 },
+  { ciudad: "Interlaken", pais: "Suiza", region: "europa", bandera: "🇨🇭", vuelo: 980, dia: 220, lat: 46.6863, lon: 7.8632 },
+  { ciudad: "Reikiavik", pais: "Islandia", region: "europa", bandera: "🇮🇸", vuelo: 1000, dia: 200, lat: 64.1466, lon: -21.9426 },
   { ciudad: "Helsinki", pais: "Finlandia", region: "europa", bandera: "🇫🇮", vuelo: 1000, dia: 110, lat: 60.1699, lon: 24.9384 },
-  { ciudad: "Oslo", pais: "Noruega", region: "europa", bandera: "🇳🇴", vuelo: 1000, dia: 125, lat: 59.9139, lon: 10.7522 },
-  { ciudad: "Bergen", pais: "Noruega", region: "europa", bandera: "🇳🇴", vuelo: 1050, dia: 120, lat: 60.3913, lon: 5.3221 },
+  { ciudad: "Oslo", pais: "Noruega", region: "europa", bandera: "🇳🇴", vuelo: 1000, dia: 180, lat: 59.9139, lon: 10.7522 },
+  { ciudad: "Bergen", pais: "Noruega", region: "europa", bandera: "🇳🇴", vuelo: 1050, dia: 170, lat: 60.3913, lon: 5.3221 },
   { ciudad: "Tallin", pais: "Estonia", region: "europa", bandera: "🇪🇪", vuelo: 980, dia: 75, lat: 59.437, lon: 24.7536 },
   { ciudad: "Riga", pais: "Letonia", region: "europa", bandera: "🇱🇻", vuelo: 980, dia: 70, lat: 56.9496, lon: 24.1052 },
   // Asia
@@ -247,7 +250,7 @@ export const DESTINOS_PRESUPUESTO = [
   { ciudad: "Brisbane", pais: "Australia", region: "oceania", bandera: "🇦🇺", vuelo: 1900, dia: 110, lat: -27.4698, lon: 153.0251 },
   { ciudad: "Perth", pais: "Australia", region: "oceania", bandera: "🇦🇺", vuelo: 2000, dia: 105, lat: -31.9505, lon: 115.8605 },
   { ciudad: "Cairns", pais: "Australia", region: "oceania", bandera: "🇦🇺", vuelo: 2000, dia: 110, lat: -16.9186, lon: 145.7781 },
-  { ciudad: "Queenstown", pais: "Nueva Zelanda", region: "oceania", bandera: "🇳🇿", vuelo: 2100, dia: 120, lat: -45.0312, lon: 168.6626 },
+  { ciudad: "Queenstown", pais: "Nueva Zelanda", region: "oceania", bandera: "🇳🇿", vuelo: 2100, dia: 160, lat: -45.0312, lon: 168.6626 },
   { ciudad: "Wellington", pais: "Nueva Zelanda", region: "oceania", bandera: "🇳🇿", vuelo: 2000, dia: 105, lat: -41.2866, lon: 174.7756 },
 ];
 
@@ -328,23 +331,42 @@ export function ciudadesDeRegion(region) {
 
 // ---------- Modo 1: un destino ----------
 
-// Helper local: obtiene la oferta del detector para (destino, origen). Acepta
-// tanto el nuevo formato { porOrigen, mejor } como el viejo (oferta plana) por
-// compatibilidad con otros llamadores. Tambien devuelve `mejor` para que la
-// UI pueda recomendar "desde X te ahorras Y".
-function ofertaPara(preciosReales, llave, origen) {
+// Helper local: obtiene la oferta del detector para (destino, origen).
+//
+// ⚠️ REGLA DE ORO (bug 2026-07-18): el detector escanea desde MUCHOS origenes
+// (BOG/MDE pero tambien MAD, MIA, GRU, SCL... para las landings SEO). Un
+// MAD→Milan a US$51 NO es el vuelo de un usuario que sale de Rionegro. Por
+// eso el fallback NUNCA cruza de pais: si no hay oferta del aeropuerto
+// exacto, solo se consideran los demas aeropuertos del MISMO pais del
+// usuario (`origenes`); si tampoco hay, se usa el ESTIMADO del catalogo.
+function mejorEntre(reg, origenes) {
+  let m = null;
+  for (const o of origenes || []) {
+    const of = reg.porOrigen?.[o];
+    if (of && (!m || of.precio < m.precio)) m = of;
+  }
+  return m;
+}
+
+function ofertaPara(preciosReales, llave, origen, origenes = null) {
   const reg = preciosReales?.[llave];
   if (!reg) return null;
   if (reg.precio) return reg; // formato viejo (plana)
   if (origen && reg.porOrigen?.[origen]) return reg.porOrigen[origen];
-  return reg.mejor || null;
+  // Fallback restringido a los aeropuertos del pais del usuario. Sin lista y
+  // con origen fijado: estricto (solo ese aeropuerto). Sin origen ni lista:
+  // sin datos reales (mejor un estimado honesto que un precio de otro pais).
+  const permitidos = origenes || (origen ? [origen] : null);
+  return permitidos ? mejorEntre(reg, permitidos) : null;
 }
 
-// Helper: devuelve la mejor oferta entre todos los origenes (para comparar).
-function mejorOferta(preciosReales, llave) {
+// Helper: la mejor oferta DENTRO de los origenes permitidos (para el chip
+// "💡 desde X te ahorras Y" — comparar BOG vs MDE, nunca vs Madrid).
+function mejorOferta(preciosReales, llave, origenes = null) {
   const reg = preciosReales?.[llave];
   if (!reg) return null;
   if (reg.precio) return reg;
+  if (origenes) return mejorEntre(reg, origenes);
   return reg.mejor || null;
 }
 
@@ -353,15 +375,15 @@ function mejorOferta(preciosReales, llave) {
 // usa el precio REAL en vez del estimado y marca esReal=true en el resultado.
 // `origen` (opcional, "BOG"|"MDE"): usa el precio desde ESE aeropuerto. Si no
 // hay datos para ese origen, cae al "mejor" disponible.
-export function calcularDestinos({ presupuestoUsd, dias, personas, region, preciosReales = {}, origen = null }) {
+export function calcularDestinos({ presupuestoUsd, dias, personas, region, preciosReales = {}, origen = null, origenes = null }) {
   const lista = DESTINOS_PRESUPUESTO.filter(
     (d) => region === "todas" || d.region === region
   );
 
   const resultados = lista.map((d) => {
     const llave = llaveCiudad(d);
-    const real = ofertaPara(preciosReales, llave, origen);
-    const mejor = mejorOferta(preciosReales, llave);
+    const real = ofertaPara(preciosReales, llave, origen, origenes);
+    const mejor = mejorOferta(preciosReales, llave, origenes || (origen ? [origen] : null));
     // Recomendacion: si el usuario eligio origen X pero hay otro origen mas
     // barato, calcular el ahorro y exponerlo a la UI.
     let ahorroDesde = null;
@@ -493,6 +515,7 @@ export function construirRuta({
   excluir = [],
   preciosReales = {},
   origen = null,
+  origenes = null, // aeropuertos del pais del usuario (p.ej. ["MDE","BOG"])
   ritmo = "normal", // "normal" (DIAS_MIN=2, mas ciudades) | "tranquilo" (DIAS_MIN=3, menos)
 }) {
   const fuera = new Set(excluir);
@@ -505,7 +528,7 @@ export function construirRuta({
       (region === "todas" || d.region === region) && !fuera.has(llaveCiudad(d))
   ).map((d) => {
     const llave = llaveCiudad(d);
-    const real = ofertaPara(preciosReales, llave, origen);
+    const real = ofertaPara(preciosReales, llave, origen, origenes);
     return real
       ? { ...d, vuelo: real.precio, esReal: true, vueloReal: real }
       : { ...d, esReal: false, vueloReal: null };

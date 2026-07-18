@@ -22,6 +22,21 @@ def _asegurar_archivo(ruta, campos):
     if not os.path.exists(ruta):
         with open(ruta, "w", newline="", encoding="utf-8") as f:
             csv.writer(f).writerow(campos)
+        return
+    # Migracion de header (bug 2026-07-18): al agregar columnas nuevas (p.ej.
+    # escalas_ida/vuelta) el header viejo se quedaba corto y DictReader tiraba
+    # los valores extra de las filas nuevas a la basura — por eso las escalas
+    # nunca llegaban a ofertas.json. Si el header actual es un PREFIJO del
+    # esperado, se reescribe solo la primera linea (las filas viejas cortas
+    # se leen con None en las columnas nuevas, que es el comportamiento OK).
+    with open(ruta, "r", newline="", encoding="utf-8") as f:
+        primera = f.readline().rstrip("\r\n")
+        resto = f.read()
+    esperado = ",".join(campos)
+    actuales = primera.split(",")
+    if primera != esperado and actuales == campos[: len(actuales)]:
+        with open(ruta, "w", newline="", encoding="utf-8") as f:
+            f.write(esperado + "\n" + resto)
 
 
 def guardar_precio(origen, destino, fecha_ida, fecha_vuelta, oferta):

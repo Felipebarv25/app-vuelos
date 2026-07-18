@@ -196,6 +196,19 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   const hubsPais = paisActual.hubs;
   const detectorCubre = paisActual.tieneDetector;
 
+  // Allowlist de aeropuertos del pais del usuario (el elegido primero). El
+  // presupuesto SOLO acepta ofertas del detector desde estos origenes: el
+  // detector tambien escanea MAD/MIA/GRU/SCL... para las landings, y un
+  // MAD→Milan US$51 NO es el vuelo de quien sale de Rionegro (bug 2026-07-18).
+  const iatasPais = useMemo(
+    () =>
+      origen
+        ? [origen, ...hubsPais.map((h) => h.iata).filter((x) => x !== origen)]
+        : hubsPais.map((h) => h.iata),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [origen, paisOrigen]
+  );
+
   // Ruta
   const [inicio, setInicio] = useState(""); // llaveCiudad de la ciudad de salida
   const [semilla, setSemilla] = useState(0);
@@ -230,10 +243,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
     // Prioriza el IATA elegido por el usuario, y como fallback usa los hubs
     // curados del país (si está en catálogo). Si el país no está en
     // PAISES_ORIGEN, hubsPais=[] y solo se intenta `origen`.
-    const iatasUsuario = origen
-      ? [origen, ...hubsPais.map((h) => h.iata).filter((x) => x !== origen)]
-      : hubsPais.map((h) => h.iata);
-    const r = await buscarVueloEnVivo(d.ciudad, d.pais, iatasUsuario);
+    const r = await buscarVueloEnVivo(d.ciudad, d.pais, iatasPais);
     if (r) {
       // Lo guardamos en el shape nuevo (porOrigen + mejor) para que el resto
       // del codigo lo trate igual que los datos del detector.
@@ -307,8 +317,8 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   }, [presupuestoUsd, dias, personas, region]);
 
   const resultados = useMemo(
-    () => calcularDestinos({ presupuestoUsd, dias, personas, region, preciosReales, origen }),
-    [presupuestoUsd, dias, personas, region, preciosReales, origen]
+    () => calcularDestinos({ presupuestoUsd, dias, personas, region, preciosReales, origen, origenes: iatasPais }),
+    [presupuestoUsd, dias, personas, region, preciosReales, origen, iatasPais]
   );
   const caben = resultados.filter((r) => r.cabe);
 
@@ -332,8 +342,8 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
 
   const ruta = useMemo(
     () =>
-      construirRuta({ presupuestoUsd, dias, personas, region, inicio, semilla, excluir: excluidos, preciosReales, origen, ritmo }),
-    [presupuestoUsd, dias, personas, region, inicio, semilla, excluidos, preciosReales, origen, ritmo]
+      construirRuta({ presupuestoUsd, dias, personas, region, inicio, semilla, excluir: excluidos, preciosReales, origen, origenes: iatasPais, ritmo }),
+    [presupuestoUsd, dias, personas, region, inicio, semilla, excluidos, preciosReales, origen, iatasPais, ritmo]
   );
 
   // Modo RUTA: cuando hay ruta y la entrada todavía no tiene precio real,
@@ -754,6 +764,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   }
                   vivoEstadoEntrada={vivoEstado[llaveCiudad(ruta.entrada)] || null}
                   onPedirVivoEntrada={() => pedirVivo(ruta.entrada)}
+                  origenElegido={origen}
                 />
                 </>
               )}
@@ -873,7 +884,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                           badge={d.esReal ? t("presupPrecioReal") : t("presupEstimado")}
                           badgeReal={d.esReal}
                         />
-                        {d.esReal && <FechasOferta vueloReal={d.vueloReal} t={t} />}
+                        {d.esReal && <FechasOferta vueloReal={d.vueloReal} t={t} origenElegido={origen} />}
                         <Fila
                           nombre={t("presupHospedaje")}
                           valor={fmtUsd(d.desglose.hospedaje)}
@@ -1127,15 +1138,25 @@ function fmtEscalas(ida, vuelta) {
   return distintos ? `máx ${n} ${palabra}` : `${n} ${palabra}`;
 }
 
-function FechasOferta({ vueloReal, t }) {
+function FechasOferta({ vueloReal, t, origenElegido = null }) {
   if (!vueloReal || (!vueloReal.fecha_ida && !vueloReal.fecha_vuelta)) return null;
   const visto = vueloReal.visto || vueloReal.generado;
   const hace = visto ? fmtHaceCorto(visto, t) : "";
   const escalas = fmtEscalas(vueloReal.escalas_ida, vueloReal.escalas_vuelta);
+  // Transparencia de origen: si la oferta es de OTRO aeropuerto del pais del
+  // usuario (eligio MDE pero el precio real es desde BOG), decirlo aqui mismo.
+  const otroOrigen = origenElegido && vueloReal.origen && vueloReal.origen !== origenElegido
+    ? vueloReal.origen
+    : null;
   return (
     <div className="-mt-0.5 mb-1 pl-0.5 text-[11px] font-medium text-emerald-700">
       {t("presupOfertaPara")} {fmtFechaCorta(vueloReal.fecha_ida)}
       {vueloReal.fecha_vuelta ? ` – ${fmtFechaCorta(vueloReal.fecha_vuelta)}` : ""}
+      {otroOrigen && (
+        <span className="ml-1.5 font-bold text-amber-600">
+          · {t("presupDesdeOrigen").replace("{origen}", nombreDeIATA(otroOrigen))}
+        </span>
+      )}
       {escalas && (
         <span className={`ml-1.5 font-normal ${escalas === "directo" ? "text-emerald-700" : "text-emerald-700/80"}`}>
           · {escalas}
@@ -1181,6 +1202,7 @@ function RutaCard({
   onExcluir,
   vivoEstadoEntrada,
   onPedirVivoEntrada,
+  origenElegido = null,
 }) {
   const { ciudades, desglose, total, cabe, sobra, diasTotales } = ruta;
   return (
@@ -1274,7 +1296,7 @@ function RutaCard({
           badge={ruta.esRealEntrada ? t("presupPrecioReal") : t("presupEstimado")}
           badgeReal={ruta.esRealEntrada}
         />
-        {ruta.esRealEntrada && <FechasOferta vueloReal={ruta.vueloRealEntrada} t={t} />}
+        {ruta.esRealEntrada && <FechasOferta vueloReal={ruta.vueloRealEntrada} t={t} origenElegido={origenElegido} />}
 
         {/* Precio real EN VIVO para el vuelo internacional cuando todavía es estimado. */}
         {!ruta.esRealEntrada && (

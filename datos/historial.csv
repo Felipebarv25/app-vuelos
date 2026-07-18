@@ -1,4 +1,4 @@
-timestamp,origen,destino,fecha_ida,fecha_vuelta,precio,moneda,aerolinea
+timestamp,origen,destino,fecha_ida,fecha_vuelta,precio,moneda,aerolinea,escalas_ida,escalas_vuelta
 2026-05-31T14:43:37,BOG,MAD,2026-06-06,2026-06-15,1009.0,USD,AC
 2026-05-31T14:43:38,BOG,MAD,2026-07-10,2026-07-19,1273.0,USD,AM
 2026-05-31T14:43:39,BOG,MAD,2026-08-06,2026-08-18,1072.0,USD,AC

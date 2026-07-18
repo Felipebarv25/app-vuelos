@@ -54,6 +54,22 @@ const TRAMOS = {
   "Florencia|Italia→Milán|Italia": { medio: "tren", operador: "Frecciarossa", precio_usd: 50, duracion_h: 1.8 },
   "Florencia|Italia→Roma|Italia": null,
 
+  // ----------------- Suiza y conexiones (2026-07-18: los trenes suizos son
+  // caros y el fallback geometrico los subestimaba a "bus US$30") -----------
+  "Milán|Italia→Zúrich|Suiza": { medio: "tren", operador: "EuroCity", precio_usd: 68, duracion_h: 3.3 },
+  "Milán|Italia→Interlaken|Suiza": { medio: "tren", operador: "EC + IC (via Spiez)", precio_usd: 75, duracion_h: 3.2 },
+  "Milán|Italia→Lucerna|Suiza": { medio: "tren", operador: "EuroCity", precio_usd: 70, duracion_h: 3.5 },
+  "Milán|Italia→Turín|Italia": { medio: "tren", operador: "Frecciarossa", precio_usd: 25, duracion_h: 1 },
+  "Zúrich|Suiza→Lucerna|Suiza": { medio: "tren", operador: "SBB IR", precio_usd: 28, duracion_h: 0.8 },
+  "Zúrich|Suiza→Interlaken|Suiza": { medio: "tren", operador: "SBB IC", precio_usd: 50, duracion_h: 2 },
+  "Lucerna|Suiza→Interlaken|Suiza": { medio: "tren", operador: "Luzern-Interlaken Express", precio_usd: 38, duracion_h: 1.9 },
+  "Ginebra|Suiza→Zúrich|Suiza": { medio: "tren", operador: "SBB IC", precio_usd: 62, duracion_h: 2.7 },
+  "Ginebra|Suiza→Lucerna|Suiza": { medio: "tren", operador: "SBB IC", precio_usd: 60, duracion_h: 3 },
+  "Ginebra|Suiza→Interlaken|Suiza": { medio: "tren", operador: "SBB IC", precio_usd: 58, duracion_h: 3 },
+  "Ginebra|Suiza→París|Francia": { medio: "tren", operador: "TGV Lyria", precio_usd: 85, duracion_h: 3.2 },
+  "Ginebra|Suiza→Lyon|Francia": { medio: "tren", operador: "SNCF", precio_usd: 35, duracion_h: 2 },
+  "Zúrich|Suiza→Múnich|Alemania": { medio: "tren", operador: "EC", precio_usd: 70, duracion_h: 3.5 },
+
   // ----------------- Centro Europa -----------------
   "Berlín|Alemania→Múnich|Alemania": { medio: "tren", operador: "ICE", precio_usd: 85, duracion_h: 4 },
   "Berlín|Alemania→Praga|Chequia": { medio: "tren", operador: "EC", precio_usd: 50, duracion_h: 4.5 },
@@ -111,6 +127,14 @@ const TRAMOS_NORMALIZADOS = (() => {
   return out;
 })();
 
+// Paises donde el transporte terrestre es notablemente mas caro que el
+// promedio. Si cualquier punta del tramo esta aca, el fallback geometrico
+// se multiplica ×1.8 (los curados no se tocan: ya son cifras reales).
+const PAISES_TRANSPORTE_CARO = new Set([
+  "Suiza", "Noruega", "Suecia", "Dinamarca", "Islandia", "Finlandia",
+  "Reino Unido", "Irlanda",
+]);
+
 // Devuelve el costo + medio + duración real para un tramo entre dos ciudades,
 // o un fallback geométrico por km si no tenemos curado el tramo. SIEMPRE
 // retorna un objeto (nunca null) para que construirRuta lo use sin checks.
@@ -130,12 +154,16 @@ export function costoTramoReal(a, b, km) {
   }
   // Fallback geométrico (la heurística vieja). Sirve para tramos no comunes
   // donde NO tenemos cifra de mercado. Mostrar la etiqueta "aprox" en la UI.
+  // Paises de transporte caro (2026-07-18): un "bus US$30" no existe en
+  // Suiza/nordicos — se multiplica el estimado y en cortas el medio es tren.
+  const caro = PAISES_TRANSPORTE_CARO.has(a.pais) || PAISES_TRANSPORTE_CARO.has(b.pais);
   let precio, medio, dur;
-  if (km < 300)       { precio = 30;  medio = "bus";   dur = km / 60; }
+  if (km < 300)       { precio = 30;  medio = caro ? "tren" : "bus"; dur = km / (caro ? 90 : 60); }
   else if (km < 700)  { precio = 60;  medio = "tren";  dur = km / 100; }
   else if (km < 1500) { precio = 110; medio = "vuelo"; dur = 2 + km / 800; }
   else if (km < 3000) { precio = 180; medio = "vuelo"; dur = 3 + km / 800; }
   else                { precio = 300; medio = "vuelo"; dur = 4 + km / 800; }
+  if (caro && medio !== "vuelo") precio = Math.round(precio * 1.8);
   return {
     precio,
     medio,
