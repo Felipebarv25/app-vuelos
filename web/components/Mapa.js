@@ -74,6 +74,9 @@ export default function Mapa({
           style: ESTILO,
           center: [centro[1], centro[0]],
           zoom: 13,
+          pitch: 50,
+          bearing: -12,
+          maxPitch: 70,
         });
         try { mapa.setProjection({ type: "globe" }); } catch {}
         mapa.addControl(
@@ -109,7 +112,7 @@ export default function Mapa({
           centroAnterior.current[0] !== centro[0] ||
           centroAnterior.current[1] !== centro[1]);
       if (centroCambio) {
-        mapa.flyTo({ center: [centro[1], centro[0]], zoom: 13, duration: 1500 });
+        mapa.flyTo({ center: [centro[1], centro[0]], zoom: 13, pitch: 50, bearing: -12, duration: 1500 });
         centroAnterior.current = centro;
       }
 
