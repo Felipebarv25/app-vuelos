@@ -25,32 +25,23 @@ const COLORES_DIA = [
 const ESTILO = {
   version: 8,
   sources: {
-    satellite: {
+    carto: {
       type: "raster",
       tiles: [
-        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+        "https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+        "https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+        "https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
       ],
       tileSize: 256,
-      maxzoom: 19,
-      attribution: "Esri, Maxar, Earthstar Geographics",
-    },
-    labels: {
-      type: "raster",
-      tiles: [
-        "https://a.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png",
-        "https://b.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png",
-        "https://c.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png",
-      ],
-      tileSize: 256,
-      maxzoom: 20,
+      attribution:
+        '© <a href="https://www.openstreetmap.org/copyright">OSM</a> · © <a href="https://carto.com/">CARTO</a>',
     },
   },
-  layers: [
-    { id: "bg", type: "background", paint: { "background-color": "#050510" } },
-    { id: "satellite", type: "raster", source: "satellite" },
-    { id: "labels", type: "raster", source: "labels", minzoom: 5 },
-  ],
+  layers: [{ id: "carto", type: "raster", source: "carto" }],
 };
+
+const ZOOM_PARALLAX = 7;
 
 export default function Mapa({
   centro,
@@ -87,31 +78,65 @@ export default function Mapa({
           container: ref.current,
           style: ESTILO,
           center: [centro[1], centro[0]],
-          zoom: 1.8,
+          zoom: 2.5,
           pitch: 0,
           bearing: 0,
-          maxPitch: 70,
+          maxPitch: 60,
         });
-        try { mapa.setProjection({ type: "globe" }); } catch {}
+
         mapa.addControl(
-          new maplibregl.NavigationControl({ showCompass: true }),
+          new maplibregl.NavigationControl({ showCompass: false }),
           "top-left",
         );
+
         mapa.on("click", (e) => {
           onClicMapaRef.current?.(e.lngLat.lat, e.lngLat.lng);
         });
-        mapa.on("style.load", () => {
-          try {
-            mapa.setFog({
-              range: [0.5, 10],
-              color: "rgba(135, 206, 235, 0.5)",
-              "high-color": "rgba(36, 92, 223, 0.5)",
-              "horizon-blend": 0.04,
-              "space-color": "rgba(5, 5, 15, 1)",
-              "star-intensity": 0.6,
-            });
-          } catch {}
+
+        // --- Parallax: scroll = rotar longitud con inercia (zoom < ZOOM_PARALLAX) ---
+        let vel = 0;
+        let animando = false;
+        let congelado = false;
+
+        function rotar() {
+          if (Math.abs(vel) < 0.01 || congelado) {
+            animando = false;
+            vel = 0;
+            return;
+          }
+          const c = mapa.getCenter();
+          mapa.jumpTo({ center: [c.lng + vel, c.lat] });
+          vel *= 0.93;
+          requestAnimationFrame(rotar);
+        }
+
+        const onWheel = (e) => {
+          if (mapa.getZoom() >= ZOOM_PARALLAX) return;
+          e.preventDefault();
+          e.stopPropagation();
+          if (congelado) return;
+          vel += e.deltaY * 0.015;
+          vel = Math.max(-3, Math.min(3, vel));
+          if (!animando) {
+            animando = true;
+            requestAnimationFrame(rotar);
+          }
+        };
+
+        ref.current.addEventListener("wheel", onWheel, {
+          capture: true,
+          passive: false,
         });
+
+        mapa.scrollZoom.disable();
+        mapa.on("zoomend", () => {
+          if (mapa.getZoom() >= ZOOM_PARALLAX) mapa.scrollZoom.enable();
+          else mapa.scrollZoom.disable();
+        });
+
+        mapa._congelarRotacion = () => { congelado = true; };
+        mapa._descongelarRotacion = () => { congelado = false; };
+
         mapaRef.current = mapa;
       }
 
@@ -120,7 +145,6 @@ export default function Mapa({
         ref.current.style.cursor = onClicMapa ? "crosshair" : "";
       } catch {}
 
-      // Clean old markers
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
 
@@ -156,6 +180,7 @@ export default function Mapa({
         let fotoUrl = null;
 
         el.addEventListener("mouseenter", () => {
+          mapa._congelarRotacion?.();
           popup = new maplibregl.Popup({
             offset: 15,
             closeButton: false,
@@ -204,6 +229,7 @@ export default function Mapa({
         });
 
         el.addEventListener("mouseleave", () => {
+          mapa._descongelarRotacion?.();
           if (popup) {
             popup.remove();
             popup = null;
@@ -233,6 +259,7 @@ export default function Mapa({
 
         let popup = null;
         el.addEventListener("mouseenter", () => {
+          mapa._congelarRotacion?.();
           popup = new maplibregl.Popup({
             offset: 15,
             closeButton: false,
@@ -246,6 +273,7 @@ export default function Mapa({
             .addTo(mapa);
         });
         el.addEventListener("mouseleave", () => {
+          mapa._descongelarRotacion?.();
           popup?.remove();
           popup = null;
         });
@@ -267,7 +295,6 @@ export default function Mapa({
         puntos.push([ubicacionUsuario[1], ubicacionUsuario[0]]);
       }
 
-      // Route polyline
       if (puntos.length > 1) {
         const rutaCoords = [
           ...(hospedaje?.lat != null
@@ -314,7 +341,6 @@ export default function Mapa({
         else mapa.once("style.load", addRoute);
       }
 
-      // Ruta trazada (GPS trace)
       if (rutaTrazada?.coords?.length > 1) {
         const addRuta = () => {
           try {
@@ -348,7 +374,7 @@ export default function Mapa({
         else mapa.once("style.load", addRuta);
       }
 
-      // Camera positioning
+      // Posicionamiento de cámara
       if (esNuevo && primeraCarga.current) {
         primeraCarga.current = false;
         const doFly = () => {
@@ -361,8 +387,6 @@ export default function Mapa({
               mapa.flyTo({
                 center: [c.lng, c.lat],
                 zoom: 13,
-                pitch: 45,
-                bearing: -12,
                 duration: 2500,
                 essential: true,
               });
@@ -370,8 +394,6 @@ export default function Mapa({
               mapa.flyTo({
                 center: [centro[1], centro[0]],
                 zoom: 13,
-                pitch: 45,
-                bearing: -12,
                 duration: 2500,
                 essential: true,
               });
@@ -392,8 +414,6 @@ export default function Mapa({
           mapa.flyTo({
             center: [centro[1], centro[0]],
             zoom: 13,
-            pitch: 45,
-            bearing: -12,
             duration: 1500,
           });
           centroAnterior.current = centro;

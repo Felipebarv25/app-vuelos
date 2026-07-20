@@ -2125,8 +2125,8 @@ export default function Home() {
           {/* Panel derecho: mapa (arriba en móvil, fijo a la derecha en escritorio) */}
           <div className="order-1 lg:order-2 lg:w-[44%] lg:shrink-0">
             <div className="lg:sticky lg:top-[var(--v360-header-h,150px)]">
-              <div ref={mapaBoxRef} className="relative aspect-square w-full overflow-hidden rounded-2xl bg-[#050510] shadow-[0_12px_40px_rgba(0,0,0,0.3)]">
-                {/* Banner del modo "elegir inicio en el mapa": el proximo tap fija el punto. */}
+              <div ref={mapaBoxRef} className="relative mx-auto aspect-square w-[82vw] max-w-[420px] overflow-hidden rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.18)] ring-[3px] ring-white/80 dark:ring-slate-700/80 lg:mx-0 lg:w-full lg:max-w-none">
+                <div className="pointer-events-none absolute inset-0 z-[2] rounded-full" style={{ background: "radial-gradient(circle, transparent 50%, rgba(0,0,0,0.06) 62%, rgba(0,0,0,0.18) 75%, rgba(0,0,0,0.38) 88%, rgba(0,0,0,0.55) 100%)" }} />
                 {eligiendoEnMapa && (
                   <div className="absolute inset-x-2 top-2 z-[1000] flex items-center justify-between gap-2 rounded-xl bg-marca-800/95 px-3 py-2 text-white shadow-lg">
                     <span className="text-[12.5px] font-bold">👆 {t("hospedajeMapaBanner")}</span>
