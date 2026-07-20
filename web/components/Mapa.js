@@ -2,232 +2,352 @@
 import { useEffect, useRef } from "react";
 import { nombreLocalizado } from "@/lib/nombres";
 
-// Distancia simple en grados (para decidir si el GPS está cerca de la ciudad).
 function lejos(a, b) {
-  return Math.hypot(a[0] - b[0], a[1] - b[1]) > 0.6; // ~60 km
+  return Math.hypot(a[0] - b[0], a[1] - b[1]) > 0.6;
 }
 
-// Carga el CSS de Leaflet SOLO cuando se necesita un mapa (no en cada página).
-// Antes estaba en el <head> y bloqueaba el render del inicio aunque ahí no haya mapa.
-function asegurarCssLeaflet() {
+function asegurarCss() {
   if (typeof document === "undefined") return;
-  if (document.getElementById("leaflet-css")) return;
+  if (document.getElementById("maplibre-css")) return;
   const link = document.createElement("link");
-  link.id = "leaflet-css";
+  link.id = "maplibre-css";
   link.rel = "stylesheet";
-  link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-  link.integrity = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
+  link.href = "https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css";
   link.crossOrigin = "";
   document.head.appendChild(link);
 }
 
-// Colores por día para las polylines (Itinio-style: cada día un color distinto).
 const COLORES_DIA = [
-  "#4f46e5", // indigo — día 1
-  "#ea580c", // naranja — día 2
-  "#7c3aed", // violeta — día 3
-  "#0d9488", // teal — día 4
-  "#c026d3", // fucsia — día 5
-  "#0284c7", // sky — día 6
-  "#65a30d", // lima — día 7
+  "#4f46e5", "#ea580c", "#7c3aed", "#0d9488",
+  "#c026d3", "#0284c7", "#65a30d",
 ];
 
-// Mapa Leaflet (OpenStreetMap). Recibe lugares con {coord, nombre} y dibuja
-// marcadores numerados + polylines sólidas que trazan la ruta del día.
+const ESTILO = {
+  version: 8,
+  sources: {
+    carto: {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+        "https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+        "https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+        "https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+      ],
+      tileSize: 256,
+      attribution:
+        '© <a href="https://www.openstreetmap.org/copyright">OSM</a> · © <a href="https://carto.com/">CARTO</a>',
+    },
+  },
+  layers: [{ id: "carto", type: "raster", source: "carto" }],
+};
+
 export default function Mapa({
   centro,
   lugares = [],
   ubicacionUsuario = null,
-  hospedaje = null, // { nombre, lat, lon } — hotel/punto de partida de la ruta
+  hospedaje = null,
   rutaTrazada = null,
   onClicLugar = null,
-  onClicMapa = null, // (lat, lon) al hacer clic/tap en el fondo del mapa (modo "elegir inicio")
-  colorDia = 0, // índice del día visible (para el color de la polyline)
+  onClicMapa = null,
+  colorDia = 0,
   lang = "es",
 }) {
   const ref = useRef(null);
   const mapaRef = useRef(null);
-  const capaRef = useRef([]);
-  const rutaRef = useRef(null);
+  const markersRef = useRef([]);
   const centroAnterior = useRef(null);
-  // Callback vivo del clic en el mapa: el listener de Leaflet se registra UNA
-  // vez, y lee de aca para no quedarse con un closure viejo entre renders.
   const onClicMapaRef = useRef(null);
   onClicMapaRef.current = onClicMapa;
 
   useEffect(() => {
-    let L;
+    let maplibregl;
     let cancelado = false;
 
     async function init() {
-      asegurarCssLeaflet();
-      L = (await import("leaflet")).default;
+      asegurarCss();
+      maplibregl = (await import("maplibre-gl")).default;
       if (cancelado || !ref.current) return;
 
       if (!mapaRef.current) {
-        mapaRef.current = L.map(ref.current, { zoomControl: true });
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-          maxZoom: 20,
-          subdomains: "abcd",
-          attribution: '© <a href="https://www.openstreetmap.org/copyright">OSM</a> · © <a href="https://carto.com/">CARTO</a>',
-        }).addTo(mapaRef.current);
-        mapaRef.current.on("click", (e) => {
-          onClicMapaRef.current?.(e.latlng.lat, e.latlng.lng);
+        const mapa = new maplibregl.Map({
+          container: ref.current,
+          style: ESTILO,
+          center: [centro[1], centro[0]],
+          zoom: 13,
         });
+        try { mapa.setProjection({ type: "globe" }); } catch {}
+        mapa.addControl(
+          new maplibregl.NavigationControl({ showCompass: false }),
+          "top-left",
+        );
+        mapa.on("click", (e) => {
+          onClicMapaRef.current?.(e.lngLat.lat, e.lngLat.lng);
+        });
+        mapa.on("style.load", () => {
+          try {
+            mapa.setFog({
+              range: [0.5, 10],
+              color: "rgba(186,210,235,0.8)",
+              "high-color": "rgba(36,92,223,0.4)",
+              "horizon-blend": 0.1,
+              "space-color": "rgba(11,11,25,1)",
+              "star-intensity": 0.15,
+            });
+          } catch {}
+        });
+        mapaRef.current = mapa;
       }
-      const mapa = mapaRef.current;
-      // Cursor de mira mientras se espera el clic para fijar el inicio.
-      try { ref.current.style.cursor = onClicMapa ? "crosshair" : ""; } catch {}
 
-      // ¿Cambió la ciudad? Si el centro es nuevo, recentramos SIEMPRE ahí.
-      // Esto evita que el mapa se quede mostrando la ciudad anterior.
+      const mapa = mapaRef.current;
+      try {
+        ref.current.style.cursor = onClicMapa ? "crosshair" : "";
+      } catch {}
+
       const centroCambio =
         centro &&
         (!centroAnterior.current ||
           centroAnterior.current[0] !== centro[0] ||
           centroAnterior.current[1] !== centro[1]);
       if (centroCambio) {
-        mapa.setView(centro, 13);
+        mapa.flyTo({ center: [centro[1], centro[0]], zoom: 13, duration: 1500 });
         centroAnterior.current = centro;
       }
 
-      // Limpiar capas previas (marcadores y líneas).
-      capaRef.current.forEach((c) => mapa.removeLayer(c));
-      capaRef.current = [];
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
+
+      ["route-shadow", "route-line", "ruta-trazada"].forEach((id) => {
+        try { mapa.removeLayer(id); } catch {}
+      });
+      ["route", "ruta-trazada"].forEach((id) => {
+        try { mapa.removeSource(id); } catch {}
+      });
 
       const color = COLORES_DIA[colorDia % COLORES_DIA.length];
       const puntos = [];
+
       lugares.forEach((l, i) => {
-        const icon = L.divIcon({
-          className: "",
-          html: `<div style="background:${color};color:#fff;width:28px;height:28px;border-radius:50%;
-            display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;
-            border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)">${i + 1}</div>`,
-          iconSize: [28, 28],
-          iconAnchor: [14, 14],
-        });
-        const m = L.marker(l.coord, { icon }).addTo(mapa);
-        // HOVER preview CON FOTO (feedback 2026-07-11): pasar el mouse sobre
-        // el punto muestra mini-card con la foto del lugar sin clic. La foto
-        // se carga perezosa al primer hover (usa la misma cascada cacheada
-        // Wikipedia -> Commons -> geo -> calle de fotoDeLugar) y se inyecta
-        // en el tooltip abierto. El clic sigue abriendo el detalle completo.
+        const el = document.createElement("div");
+        el.innerHTML = `<div style="background:${color};color:#fff;width:28px;height:28px;border-radius:50%;
+          display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;
+          border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer">${i + 1}</div>`;
+
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat([l.coord[1], l.coord[0]])
+          .addTo(mapa);
+
         const nombreLoc = nombreLocalizado(l, lang);
-        const infoHtml =
-          `<div style="font-weight:800;font-size:13px;color:#052b28">${i + 1}. ${nombreLoc}</div>
-           <div style="font-size:11.5px;color:#64748b;margin-top:1px">${l.categoria || ""}${l.minutos ? ` · ~${l.minutos} min` : ""}${l.wiki ? " · ★ famoso" : ""}</div>
-           <div style="font-size:10.5px;color:#4f46e5;font-weight:600;margin-top:2px">Clic para detalles y cómo llegar</div>`;
+        const infoHtml = `<div style="font-weight:800;font-size:13px;color:#052b28">${i + 1}. ${nombreLoc}</div>
+          <div style="font-size:11.5px;color:#64748b;margin-top:1px">${l.categoria || ""}${l.minutos ? ` · ~${l.minutos} min` : ""}${l.wiki ? " · ★ famoso" : ""}</div>
+          <div style="font-size:10.5px;color:#4f46e5;font-weight:600;margin-top:2px">Clic para detalles</div>`;
         const fotoBox = (inner) =>
           `<div style="width:210px;height:110px;border-radius:9px;overflow:hidden;background:#e2e8f0;margin-bottom:6px;display:flex;align-items:center;justify-content:center">${inner}</div>`;
-        m.bindTooltip(infoHtml, {
-          direction: "top", offset: [0, -12], opacity: 1, sticky: false, className: "anduve-tooltip",
-        });
+
+        let popup = null;
         let fotoPedida = false;
-        m.on("mouseover", () => {
-          if (fotoPedida) return;
-          fotoPedida = true;
-          // Skeleton mientras llega la foto; luego se reemplaza en caliente.
-          m.setTooltipContent(fotoBox(`<span style="font-size:11px;color:#94a3b8">Cargando foto…</span>`) + infoHtml);
-          import("@/lib/imagenes").then(({ fotoDeLugar }) =>
-            fotoDeLugar(nombreLoc, "", l.coord, l.wd).then((f) => {
-              m.setTooltipContent(
-                (f?.url
-                  ? fotoBox(`<img src="${f.url}" style="width:100%;height:100%;object-fit:cover" alt="">`)
-                  : "") + infoHtml
-              );
-            })
-          ).catch(() => m.setTooltipContent(infoHtml));
+        let fotoUrl = null;
+
+        el.addEventListener("mouseenter", () => {
+          popup = new maplibregl.Popup({
+            offset: 15,
+            closeButton: false,
+            closeOnClick: false,
+            maxWidth: "250px",
+          })
+            .setLngLat([l.coord[1], l.coord[0]])
+            .setHTML(
+              fotoPedida && fotoUrl
+                ? fotoBox(
+                    `<img src="${fotoUrl}" style="width:100%;height:100%;object-fit:cover" alt="">`,
+                  ) + infoHtml
+                : fotoPedida
+                  ? infoHtml
+                  : fotoBox(
+                      `<span style="font-size:11px;color:#94a3b8">Cargando foto…</span>`,
+                    ) + infoHtml,
+            )
+            .addTo(mapa);
+
+          if (!fotoPedida) {
+            fotoPedida = true;
+            import("@/lib/imagenes")
+              .then(({ fotoDeLugar }) =>
+                fotoDeLugar(nombreLoc, "", l.coord, l.wd).then((f) => {
+                  fotoUrl = f?.url || null;
+                  try {
+                    if (popup && popup.isOpen()) {
+                      popup.setHTML(
+                        (fotoUrl
+                          ? fotoBox(
+                              `<img src="${fotoUrl}" style="width:100%;height:100%;object-fit:cover" alt="">`,
+                            )
+                          : "") + infoHtml,
+                      );
+                    }
+                  } catch {}
+                }),
+              )
+              .catch(() => {
+                try {
+                  if (popup && popup.isOpen()) popup.setHTML(infoHtml);
+                } catch {}
+              });
+          }
         });
-        if (onClicLugar) m.on("click", () => onClicLugar(l));
-        capaRef.current.push(m);
-        puntos.push(l.coord);
+
+        el.addEventListener("mouseleave", () => {
+          if (popup) {
+            popup.remove();
+            popup = null;
+          }
+        });
+
+        if (onClicLugar) {
+          el.addEventListener("click", (e) => {
+            e.stopPropagation();
+            onClicLugar(l);
+          });
+        }
+
+        markersRef.current.push(marker);
+        puntos.push([l.coord[1], l.coord[0]]);
       });
 
-      // Marcador del HOSPEDAJE (hotel/punto de partida). Distintivo: pin
-      // morado con 🏨 — el usuario ve de un vistazo desde dónde arranca
-      // cada día de su ruta.
       if (hospedaje?.lat != null) {
-        const icon = L.divIcon({
-          className: "",
-          html: `<div style="background:#7c3aed;width:32px;height:32px;border-radius:50% 50% 50% 4px;
-            display:flex;align-items:center;justify-content:center;font-size:15px;
-            border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);transform:rotate(0deg)">🏨</div>`,
-          iconSize: [32, 32],
-          iconAnchor: [16, 30],
+        const el = document.createElement("div");
+        el.innerHTML = `<div style="background:#7c3aed;width:32px;height:32px;border-radius:50% 50% 50% 4px;
+          display:flex;align-items:center;justify-content:center;font-size:15px;
+          border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45)">🏨</div>`;
+
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat([hospedaje.lon, hospedaje.lat])
+          .addTo(mapa);
+
+        let popup = null;
+        el.addEventListener("mouseenter", () => {
+          popup = new maplibregl.Popup({
+            offset: 15,
+            closeButton: false,
+            closeOnClick: false,
+          })
+            .setLngLat([hospedaje.lon, hospedaje.lat])
+            .setHTML(
+              `<div style="font-weight:800;font-size:12.5px;color:#052b28">🏨 ${hospedaje.nombre}</div>
+              <div style="font-size:11px;color:#64748b">Tu ruta arranca aquí cada día</div>`,
+            )
+            .addTo(mapa);
         });
-        const m = L.marker([hospedaje.lat, hospedaje.lon], { icon }).addTo(mapa);
-        m.bindTooltip(
-          `<div style="font-weight:800;font-size:12.5px;color:#052b28">🏨 ${hospedaje.nombre}</div>
-           <div style="font-size:11px;color:#64748b">Tu ruta arranca aquí cada día</div>`,
-          { direction: "top", offset: [0, -14], opacity: 1, className: "anduve-tooltip" }
-        );
-        capaRef.current.push(m);
-        puntos.push([hospedaje.lat, hospedaje.lon]);
+        el.addEventListener("mouseleave", () => {
+          popup?.remove();
+          popup = null;
+        });
+
+        markersRef.current.push(marker);
+        puntos.push([hospedaje.lon, hospedaje.lat]);
       }
 
-      // Marcador del usuario (GPS) — solo se DIBUJA si está cerca de la ciudad.
       const gpsCerca =
         ubicacionUsuario && centro && !lejos(ubicacionUsuario, centro);
       if (gpsCerca) {
-        const icon = L.divIcon({
-          className: "",
-          html: `<div style="background:#16a34a;width:18px;height:18px;border-radius:50%;
-            border:3px solid #fff;box-shadow:0 0 0 4px rgba(22,163,74,.3)"></div>`,
-          iconSize: [18, 18],
-          iconAnchor: [9, 9],
-        });
-        const m = L.marker(ubicacionUsuario, { icon }).addTo(mapa);
-        m.bindPopup("📍 Tú estás aquí");
-        capaRef.current.push(m);
-        puntos.push(ubicacionUsuario);
+        const el = document.createElement("div");
+        el.innerHTML = `<div style="background:#16a34a;width:18px;height:18px;border-radius:50%;
+          border:3px solid #fff;box-shadow:0 0 0 4px rgba(22,163,74,.3)"></div>`;
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat([ubicacionUsuario[1], ubicacionUsuario[0]])
+          .addTo(mapa);
+        markersRef.current.push(marker);
+        puntos.push([ubicacionUsuario[1], ubicacionUsuario[0]]);
       }
 
-      // Encuadre: ajustamos a los puntos (lugares + GPS cercano). El GPS lejano
-      // ya quedó excluido, así que el mapa nunca se va a otra ciudad/país.
       if (puntos.length > 1) {
-        // Coordenadas de la polyline: hospedaje (si existe) → lugar 1 → lugar 2 → ...
         const rutaCoords = [
-          ...(hospedaje?.lat != null ? [[hospedaje.lat, hospedaje.lon]] : []),
-          ...lugares.map((l) => l.coord),
+          ...(hospedaje?.lat != null
+            ? [[hospedaje.lon, hospedaje.lat]]
+            : []),
+          ...lugares.map((l) => [l.coord[1], l.coord[0]]),
         ];
-        // Sombra suave debajo de la polyline para contraste sobre cualquier tile.
-        const sombra = L.polyline(rutaCoords,
-          { color: "#000", weight: 6, opacity: 0.12, lineCap: "round", lineJoin: "round" }
-        ).addTo(mapa);
-        capaRef.current.push(sombra);
-        const linea = L.polyline(rutaCoords,
-          { color, weight: 4, opacity: 0.85, lineCap: "round", lineJoin: "round" }
-        ).addTo(mapa);
-        capaRef.current.push(linea);
+
+        const addRoute = () => {
+          try {
+            mapa.addSource("route", {
+              type: "geojson",
+              data: {
+                type: "Feature",
+                geometry: { type: "LineString", coordinates: rutaCoords },
+              },
+            });
+            mapa.addLayer({
+              id: "route-shadow",
+              type: "line",
+              source: "route",
+              paint: {
+                "line-color": "#000",
+                "line-width": 6,
+                "line-opacity": 0.12,
+              },
+              layout: { "line-cap": "round", "line-join": "round" },
+            });
+            mapa.addLayer({
+              id: "route-line",
+              type: "line",
+              source: "route",
+              paint: {
+                "line-color": color,
+                "line-width": 4,
+                "line-opacity": 0.85,
+              },
+              layout: { "line-cap": "round", "line-join": "round" },
+            });
+          } catch {}
+        };
+
+        if (mapa.isStyleLoaded()) addRoute();
+        else mapa.once("style.load", addRoute);
+
         try {
-          mapa.fitBounds(L.latLngBounds(puntos).pad(0.18));
+          const bounds = new maplibregl.LngLatBounds();
+          puntos.forEach((p) => bounds.extend(p));
+          mapa.fitBounds(bounds, { padding: 60, maxZoom: 16 });
         } catch {}
       } else if (puntos.length === 1) {
-        mapa.setView(puntos[0], 14);
+        mapa.flyTo({ center: puntos[0], zoom: 14 });
       }
-      // Si no hay puntos, ya recentramos en la ciudad arriba (centroCambio).
 
-      // Ruta trazada (camino real entre el usuario y un lugar).
-      if (rutaRef.current) {
-        mapa.removeLayer(rutaRef.current);
-        rutaRef.current = null;
-      }
       if (rutaTrazada?.coords?.length > 1) {
-        rutaRef.current = L.polyline(rutaTrazada.coords, {
-          color: "#ea580c",
-          weight: 5,
-          opacity: 0.85,
-        }).addTo(mapa);
-        try {
-          mapa.fitBounds(L.latLngBounds(rutaTrazada.coords).pad(0.25));
-        } catch {}
+        const addRuta = () => {
+          try {
+            mapa.addSource("ruta-trazada", {
+              type: "geojson",
+              data: {
+                type: "Feature",
+                geometry: {
+                  type: "LineString",
+                  coordinates: rutaTrazada.coords.map((c) => [c[1], c[0]]),
+                },
+              },
+            });
+            mapa.addLayer({
+              id: "ruta-trazada",
+              type: "line",
+              source: "ruta-trazada",
+              paint: {
+                "line-color": "#ea580c",
+                "line-width": 5,
+                "line-opacity": 0.85,
+              },
+              layout: { "line-cap": "round", "line-join": "round" },
+            });
+            const bounds = new maplibregl.LngLatBounds();
+            rutaTrazada.coords.forEach((c) => bounds.extend([c[1], c[0]]));
+            mapa.fitBounds(bounds, { padding: 80 });
+          } catch {}
+        };
+        if (mapa.isStyleLoaded()) addRuta();
+        else mapa.once("style.load", addRuta);
       }
 
-      // Recalcular tamaño (evita el mapa "roto"/gris al cambiar de vista).
       setTimeout(() => {
-        try {
-          mapa.invalidateSize();
-        } catch {}
+        try { mapa.resize(); } catch {}
       }, 100);
     }
 
@@ -235,7 +355,16 @@ export default function Mapa({
     return () => {
       cancelado = true;
     };
-  }, [centro, lugares, ubicacionUsuario, hospedaje, rutaTrazada, lang, colorDia, !!onClicMapa]);
+  }, [
+    centro,
+    lugares,
+    ubicacionUsuario,
+    hospedaje,
+    rutaTrazada,
+    lang,
+    colorDia,
+    !!onClicMapa,
+  ]);
 
   return (
     <div
