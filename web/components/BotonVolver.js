@@ -25,7 +25,7 @@ export default function BotonVolver({ href = null, etiqueta = "Volver" }) {
   }
 
   return (
-    <div className="fixed left-0 top-[60px] z-[60] px-4 sm:px-6">
+    <div className="fixed left-0 top-[90px] z-[60] px-4 sm:px-6">
       <button
         type="button"
         onClick={volver}

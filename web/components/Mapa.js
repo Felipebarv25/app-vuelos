@@ -25,20 +25,31 @@ const COLORES_DIA = [
 const ESTILO = {
   version: 8,
   sources: {
-    carto: {
+    satellite: {
       type: "raster",
       tiles: [
-        "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-        "https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-        "https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-        "https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       ],
       tileSize: 256,
-      attribution:
-        '© <a href="https://www.openstreetmap.org/copyright">OSM</a> · © <a href="https://carto.com/">CARTO</a>',
+      maxzoom: 19,
+      attribution: "Esri, Maxar, Earthstar Geographics",
+    },
+    labels: {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png",
+        "https://b.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png",
+        "https://c.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png",
+      ],
+      tileSize: 256,
+      maxzoom: 20,
     },
   },
-  layers: [{ id: "carto", type: "raster", source: "carto" }],
+  layers: [
+    { id: "bg", type: "background", paint: { "background-color": "#050510" } },
+    { id: "satellite", type: "raster", source: "satellite" },
+    { id: "labels", type: "raster", source: "labels", minzoom: 5 },
+  ],
 };
 
 export default function Mapa({
@@ -57,6 +68,7 @@ export default function Mapa({
   const markersRef = useRef([]);
   const centroAnterior = useRef(null);
   const onClicMapaRef = useRef(null);
+  const primeraCarga = useRef(true);
   onClicMapaRef.current = onClicMapa;
 
   useEffect(() => {
@@ -68,19 +80,21 @@ export default function Mapa({
       maplibregl = (await import("maplibre-gl")).default;
       if (cancelado || !ref.current) return;
 
-      if (!mapaRef.current) {
+      const esNuevo = !mapaRef.current;
+
+      if (esNuevo) {
         const mapa = new maplibregl.Map({
           container: ref.current,
           style: ESTILO,
           center: [centro[1], centro[0]],
-          zoom: 13,
-          pitch: 50,
-          bearing: -12,
+          zoom: 1.8,
+          pitch: 0,
+          bearing: 0,
           maxPitch: 70,
         });
         try { mapa.setProjection({ type: "globe" }); } catch {}
         mapa.addControl(
-          new maplibregl.NavigationControl({ showCompass: false }),
+          new maplibregl.NavigationControl({ showCompass: true }),
           "top-left",
         );
         mapa.on("click", (e) => {
@@ -90,11 +104,11 @@ export default function Mapa({
           try {
             mapa.setFog({
               range: [0.5, 10],
-              color: "rgba(186,210,235,0.8)",
-              "high-color": "rgba(36,92,223,0.4)",
-              "horizon-blend": 0.1,
-              "space-color": "rgba(11,11,25,1)",
-              "star-intensity": 0.15,
+              color: "rgba(135, 206, 235, 0.5)",
+              "high-color": "rgba(36, 92, 223, 0.5)",
+              "horizon-blend": 0.04,
+              "space-color": "rgba(5, 5, 15, 1)",
+              "star-intensity": 0.6,
             });
           } catch {}
         });
@@ -106,16 +120,7 @@ export default function Mapa({
         ref.current.style.cursor = onClicMapa ? "crosshair" : "";
       } catch {}
 
-      const centroCambio =
-        centro &&
-        (!centroAnterior.current ||
-          centroAnterior.current[0] !== centro[0] ||
-          centroAnterior.current[1] !== centro[1]);
-      if (centroCambio) {
-        mapa.flyTo({ center: [centro[1], centro[0]], zoom: 13, pitch: 50, bearing: -12, duration: 1500 });
-        centroAnterior.current = centro;
-      }
-
+      // Clean old markers
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
 
@@ -262,6 +267,7 @@ export default function Mapa({
         puntos.push([ubicacionUsuario[1], ubicacionUsuario[0]]);
       }
 
+      // Route polyline
       if (puntos.length > 1) {
         const rutaCoords = [
           ...(hospedaje?.lat != null
@@ -306,16 +312,9 @@ export default function Mapa({
 
         if (mapa.isStyleLoaded()) addRoute();
         else mapa.once("style.load", addRoute);
-
-        try {
-          const bounds = new maplibregl.LngLatBounds();
-          puntos.forEach((p) => bounds.extend(p));
-          mapa.fitBounds(bounds, { padding: 60, maxZoom: 16 });
-        } catch {}
-      } else if (puntos.length === 1) {
-        mapa.flyTo({ center: puntos[0], zoom: 14 });
       }
 
+      // Ruta trazada (GPS trace)
       if (rutaTrazada?.coords?.length > 1) {
         const addRuta = () => {
           try {
@@ -347,6 +346,66 @@ export default function Mapa({
         };
         if (mapa.isStyleLoaded()) addRuta();
         else mapa.once("style.load", addRuta);
+      }
+
+      // Camera positioning
+      if (esNuevo && primeraCarga.current) {
+        primeraCarga.current = false;
+        const doFly = () => {
+          if (cancelado) return;
+          setTimeout(() => {
+            if (puntos.length > 1) {
+              const bounds = new maplibregl.LngLatBounds();
+              puntos.forEach((p) => bounds.extend(p));
+              const c = bounds.getCenter();
+              mapa.flyTo({
+                center: [c.lng, c.lat],
+                zoom: 13,
+                pitch: 45,
+                bearing: -12,
+                duration: 2500,
+                essential: true,
+              });
+            } else {
+              mapa.flyTo({
+                center: [centro[1], centro[0]],
+                zoom: 13,
+                pitch: 45,
+                bearing: -12,
+                duration: 2500,
+                essential: true,
+              });
+            }
+          }, 500);
+        };
+        if (mapa.loaded()) doFly();
+        else mapa.once("load", doFly);
+        centroAnterior.current = centro;
+      } else if (!esNuevo) {
+        const centroCambio =
+          centro &&
+          (!centroAnterior.current ||
+            centroAnterior.current[0] !== centro[0] ||
+            centroAnterior.current[1] !== centro[1]);
+
+        if (centroCambio) {
+          mapa.flyTo({
+            center: [centro[1], centro[0]],
+            zoom: 13,
+            pitch: 45,
+            bearing: -12,
+            duration: 1500,
+          });
+          centroAnterior.current = centro;
+        } else if (puntos.length > 1) {
+          try {
+            const bounds = new maplibregl.LngLatBounds();
+            puntos.forEach((p) => bounds.extend(p));
+            mapa.fitBounds(bounds, { padding: 60, maxZoom: 16 });
+          } catch {}
+        } else if (puntos.length === 1) {
+          mapa.flyTo({ center: puntos[0], zoom: 14, duration: 800 });
+        }
       }
 
       setTimeout(() => {
