@@ -144,7 +144,7 @@ export default function PaginaPro() {
                 ["Precio real de vuelo según tu origen", "✓", "✓"],
                 ["Calculadora de presupuesto multi-país", "✓", "✓"],
                 ["Armar itinerario día por día", "✓", "✓"],
-                ["80+ landing pages SEO", "✓", "✓"],
+                ["200+ landing pages SEO", "✓", "✓"],
                 ["Viajes guardados", "1", "Ilimitados, sincronizados"],
                 ["Alertas de precio", "1", "Ilimitadas"],
                 ["Export PDF (offline)", "—", "✓"],

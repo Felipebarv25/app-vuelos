@@ -21,8 +21,19 @@ function asegurarCssLeaflet() {
   document.head.appendChild(link);
 }
 
+// Colores por día para las polylines (Itinio-style: cada día un color distinto).
+const COLORES_DIA = [
+  "#4f46e5", // indigo — día 1
+  "#ea580c", // naranja — día 2
+  "#7c3aed", // violeta — día 3
+  "#0d9488", // teal — día 4
+  "#c026d3", // fucsia — día 5
+  "#0284c7", // sky — día 6
+  "#65a30d", // lima — día 7
+];
+
 // Mapa Leaflet (OpenStreetMap). Recibe lugares con {coord, nombre} y dibuja
-// marcadores numerados + una línea que une la ruta del día.
+// marcadores numerados + polylines sólidas que trazan la ruta del día.
 export default function Mapa({
   centro,
   lugares = [],
@@ -31,6 +42,7 @@ export default function Mapa({
   rutaTrazada = null,
   onClicLugar = null,
   onClicMapa = null, // (lat, lon) al hacer clic/tap en el fondo del mapa (modo "elegir inicio")
+  colorDia = 0, // índice del día visible (para el color de la polyline)
   lang = "es",
 }) {
   const ref = useRef(null);
@@ -54,9 +66,10 @@ export default function Mapa({
 
       if (!mapaRef.current) {
         mapaRef.current = L.map(ref.current, { zoomControl: true });
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          maxZoom: 19,
-          attribution: "© OpenStreetMap",
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+          maxZoom: 20,
+          subdomains: "abcd",
+          attribution: '© <a href="https://www.openstreetmap.org/copyright">OSM</a> · © <a href="https://carto.com/">CARTO</a>',
         }).addTo(mapaRef.current);
         mapaRef.current.on("click", (e) => {
           onClicMapaRef.current?.(e.latlng.lat, e.latlng.lng);
@@ -82,11 +95,12 @@ export default function Mapa({
       capaRef.current.forEach((c) => mapa.removeLayer(c));
       capaRef.current = [];
 
+      const color = COLORES_DIA[colorDia % COLORES_DIA.length];
       const puntos = [];
       lugares.forEach((l, i) => {
         const icon = L.divIcon({
           className: "",
-          html: `<div style="background:#4f46e5;color:#fff;width:28px;height:28px;border-radius:50%;
+          html: `<div style="background:${color};color:#fff;width:28px;height:28px;border-radius:50%;
             display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;
             border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)">${i + 1}</div>`,
           iconSize: [28, 28],
@@ -171,9 +185,18 @@ export default function Mapa({
       // Encuadre: ajustamos a los puntos (lugares + GPS cercano). El GPS lejano
       // ya quedó excluido, así que el mapa nunca se va a otra ciudad/país.
       if (puntos.length > 1) {
-        const linea = L.polyline(
-          lugares.map((l) => l.coord),
-          { color: "#4f46e5", weight: 3, opacity: 0.5, dashArray: "6,8" }
+        // Coordenadas de la polyline: hospedaje (si existe) → lugar 1 → lugar 2 → ...
+        const rutaCoords = [
+          ...(hospedaje?.lat != null ? [[hospedaje.lat, hospedaje.lon]] : []),
+          ...lugares.map((l) => l.coord),
+        ];
+        // Sombra suave debajo de la polyline para contraste sobre cualquier tile.
+        const sombra = L.polyline(rutaCoords,
+          { color: "#000", weight: 6, opacity: 0.12, lineCap: "round", lineJoin: "round" }
+        ).addTo(mapa);
+        capaRef.current.push(sombra);
+        const linea = L.polyline(rutaCoords,
+          { color, weight: 4, opacity: 0.85, lineCap: "round", lineJoin: "round" }
         ).addTo(mapa);
         capaRef.current.push(linea);
         try {
@@ -212,7 +235,7 @@ export default function Mapa({
     return () => {
       cancelado = true;
     };
-  }, [centro, lugares, ubicacionUsuario, hospedaje, rutaTrazada, lang, !!onClicMapa]);
+  }, [centro, lugares, ubicacionUsuario, hospedaje, rutaTrazada, lang, colorDia, !!onClicMapa]);
 
   return (
     <div

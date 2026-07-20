@@ -1,12 +1,13 @@
 ﻿"use client";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { geocodificar, traerLugares, CATEGORIAS } from "@/lib/osm";
 import { traducirLoteWD, nombreLocalizado } from "@/lib/nombres";
 import { compartirEnlace } from "@/lib/compartir";
 import { getDestinoPorSlug } from "@/lib/destinos";
-import { construirItinerario, agregarLugarADia, fmtMin } from "@/lib/itinerario";
+import { DESTINOS_PRESUPUESTO } from "@/lib/presupuesto";
+import { construirItinerario, agregarLugarADia, optimizarRutaDia, moverParadaADia, reordenarParada, fmtMin } from "@/lib/itinerario";
 import { leerGustos, guardarGustos, categoriasDeGustos, intercalarLugares, HORAS_POR_RITMO } from "@/lib/gustos";
 import { isoDesdeNombre, infoPais } from "@/lib/requisitos";
 import { sugerirCiudades } from "@/lib/autocompletar";
@@ -292,22 +293,59 @@ function EntryIcono({ nombre }) {
 function MensajeCargandoLugares({ t }) {
   const [fase, setFase] = useState(0);
   useEffect(() => {
-    const t1 = setTimeout(() => setFase(1), 2500);
-    const t2 = setTimeout(() => setFase(2), 5500);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    const timers = [
+      setTimeout(() => setFase(1), 800),
+      setTimeout(() => setFase(2), 2000),
+      setTimeout(() => setFase(3), 3500),
+      setTimeout(() => setFase(4), 5200),
+    ];
+    return () => timers.forEach(clearTimeout);
   }, []);
-  const msgs = [t("cargandoFase1"), t("cargandoFase2"), t("cargandoFase3")];
+
+  const pasos = [
+    { icono: "✨", clave: "loadCreando", sub: "loadCreandoSub" },
+    { icono: "🎯", clave: "loadPreferencias", sub: "loadPreferenciasSub" },
+    { icono: "🗺️", clave: "loadMapeando", sub: "loadMapeandoSub" },
+    { icono: "📍", clave: "loadEnriqueciendo", sub: "loadEnriqueSub" },
+    { icono: "⚡", clave: "loadOptimizando", sub: "loadOptimizandoSub" },
+  ];
+
   return (
-    <div className="px-0.5">
-      <div className="text-[12.5px] font-semibold text-slate-500 transition-all">
-        {msgs[fase]}
+    <div className="rounded-2xl border border-marca-100 bg-gradient-to-br from-marca-50/50 to-violet-50/50 p-5 dark:border-slate-700 dark:from-slate-800 dark:to-slate-800">
+      <div className="mb-4 text-[17px] font-extrabold tracking-tight text-marca-900">
+        {t("loadTitulo")}
       </div>
-      {/* Barra de progreso indeterminada (avanza suave para sensacion de vida). */}
-      <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-100">
-        <div
-          className="h-full rounded-full bg-marca-500 transition-all duration-700"
-          style={{ width: fase === 0 ? "30%" : fase === 1 ? "65%" : "90%" }}
-        />
+      <div className="space-y-2.5">
+        {pasos.map((p, i) => {
+          const done = i < fase;
+          const active = i === fase;
+          return (
+            <div
+              key={i}
+              className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all duration-500 ${
+                done ? "bg-white shadow-sm dark:bg-slate-700" :
+                active ? "bg-white shadow-md ring-1 ring-marca-200 dark:bg-slate-700 dark:ring-marca-800" :
+                "opacity-40"
+              }`}
+            >
+              <span className="text-lg">{p.icono}</span>
+              <div className="min-w-0 flex-1">
+                <div className={`text-[13.5px] font-bold ${done || active ? "text-slate-800 dark:text-slate-100" : "text-slate-400"}`}>
+                  {t(p.clave)}
+                </div>
+                <div className={`text-[12px] ${done || active ? "text-slate-500 dark:text-slate-400" : "text-slate-300"}`}>
+                  {t(p.sub)}
+                </div>
+              </div>
+              {done && (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+              )}
+              {active && (
+                <span className="spin" />
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -956,7 +994,7 @@ export default function Home() {
     setPresupuestoInicial({ monto, moneda });
     track("presupuesto_hero", { monto, moneda });
     registrarEvento({ tipo: "presupuesto" });
-    setMostrarPresupuesto(true);
+    startTransition(() => setMostrarPresupuesto(true));
   }
 
   // Disparador de las ideas rápidas del HERO: pre-fija ciudad, días y/o momento
@@ -1091,6 +1129,26 @@ export default function Home() {
     if (!plan[diaVisible]) return;
     setPlan((p) => agregarLugarADia(p, diaVisible, lugar));
     setSeleccion((s) => (s.some((x) => x.id === lugar.id) ? s : [...s, lugar]));
+  }
+
+  function obtenerInicio() {
+    if (hospedaje?.lat != null) return [hospedaje.lat, hospedaje.lon];
+    if (ciudad) return [ciudad.lat, ciudad.lon];
+    return null;
+  }
+
+  function handleOptimizar() {
+    setPlan((p) => optimizarRutaDia(p, diaVisible, obtenerInicio()));
+    track("optimizar_ruta", { dia: diaVisible + 1 });
+  }
+
+  function handleMoverParada(paradaIdx, destinoDia) {
+    setPlan((p) => moverParadaADia(p, diaVisible, paradaIdx, destinoDia));
+    track("mover_parada", { desde: diaVisible + 1, hacia: destinoDia + 1 });
+  }
+
+  function handleReordenar(paradaIdx, delta) {
+    setPlan((p) => reordenarParada(p, diaVisible, paradaIdx, delta));
   }
 
   // Reintentar tras un error (geocodificación o carga de lugares).
@@ -1389,11 +1447,11 @@ export default function Home() {
                   e.preventDefault();
                   if (montoHero > 0) abrirPresupuestoCon(montoHero, monedaHero);
                 }}
-                className="mx-auto mt-4 max-w-xl rounded-xl bg-white shadow-card ring-1 ring-slate-200/80"
+                className={`mx-auto mt-4 max-w-xl rounded-xl bg-white shadow-card ring-1 transition-shadow duration-700 ${montoHero > 0 ? "ring-marca-300 shadow-[0_4px_20px_rgba(15,118,110,.12)]" : "ring-slate-200/80 animate-[pulseRing_2.5s_ease-in-out_infinite]"}`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-stretch">
                   <div className="flex flex-1 items-center gap-3 px-4 py-3.5 sm:border-r sm:border-slate-100">
-                    <span className="select-none text-[12px] font-semibold uppercase tracking-wider text-slate-400">
+                    <span className="select-none text-[13px] font-bold uppercase tracking-wider text-slate-500">
                       {simboloMoneda(monedaHero)}
                     </span>
                     <input
@@ -1407,9 +1465,9 @@ export default function Home() {
                         if (!Number.isNaN(n)) setMontoHero(n);
                       }}
                       onFocus={(e) => { try { e.target.select(); } catch {} }}
-                      placeholder="0"
+                      placeholder={t("heroPlaceholderMonto")}
                       aria-label={t("heroH1Budget")}
-                      className="w-full border-0 bg-transparent text-left text-[22px] font-semibold tracking-tight text-slate-900 outline-none placeholder:text-slate-300 lg:text-[26px]"
+                      className="w-full border-0 bg-transparent text-left text-[22px] font-semibold tracking-tight text-slate-900 outline-none placeholder:text-slate-500/60 lg:text-[26px]"
                     />
                     <SelectorMoneda
                       value={monedaHero}
@@ -1425,7 +1483,11 @@ export default function Home() {
                   <button
                     type="submit"
                     disabled={montoHero <= 0}
-                    className="inline-flex items-center justify-center gap-2 rounded-b-xl bg-marca-700 px-6 py-3.5 text-[14.5px] font-semibold text-white transition hover:bg-marca-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:hover:bg-slate-300 sm:rounded-bl-none sm:rounded-r-xl"
+                    className={`inline-flex items-center justify-center gap-2 rounded-b-xl px-6 py-3.5 text-[14.5px] font-semibold text-white transition-all duration-300 sm:rounded-bl-none sm:rounded-r-xl ${
+                      montoHero > 0
+                        ? "bg-marca-700 shadow-[0_4px_12px_rgba(15,118,110,.3)] hover:bg-marca-800 hover:shadow-[0_6px_16px_rgba(15,118,110,.4)] active:scale-[0.97]"
+                        : "cursor-not-allowed bg-slate-300"
+                    }`}
                   >
                     {t("heroVerOpciones")} <Icono nombre="arrowRight" size={16} />
                   </button>
@@ -1631,26 +1693,26 @@ export default function Home() {
             <EntryCard
               href="/destino"
               icono="globe"
-              titulo="Destinos populares"
-              subtitulo="80+ ciudades del mundo"
-              cta="Ver destinos"
+              titulo={t("cardDestinosTit")}
+              subtitulo={t("cardDestinosSub").replace("{n}", DESTINOS_PRESUPUESTO.length)}
+              cta={t("cardDestinosCta")}
               bg="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=70"
             />
             <EntryCard
               href="/ofertas"
               icono="plane"
-              titulo="Vuelos baratos"
-              subtitulo="Detectados cada 3 horas"
-              cta="Ver ofertas"
+              titulo={t("cardOfertasTit")}
+              subtitulo={t("cardOfertasSub")}
+              cta={t("cardOfertasCta")}
               bg="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=70"
             />
             <EntryCard
               href={viajesGuardados.length > 0 ? "/mis-viajes" : null}
               onClick={viajesGuardados.length > 0 ? null : () => setMostrarPresupuesto(true)}
               icono="bookmark"
-              titulo="Mis viajes"
-              subtitulo={viajesGuardados.length > 0 ? `${viajesGuardados.length} guardado${viajesGuardados.length === 1 ? "" : "s"}` : "Empieza a planear tu primer viaje"}
-              cta={viajesGuardados.length > 0 ? "Ver mis viajes" : "Planear viaje"}
+              titulo={t("cardViajesTit")}
+              subtitulo={viajesGuardados.length > 0 ? `${viajesGuardados.length} guardado${viajesGuardados.length === 1 ? "" : "s"}` : t("cardViajesSubVacio")}
+              cta={viajesGuardados.length > 0 ? t("cardViajesCtaVer") : t("cardViajesCta")}
               bg="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=70"
             />
           </div>
@@ -1939,7 +2001,12 @@ export default function Home() {
             {plan.length > 0 && (
               <div className="sin-scrollbar mb-3.5 flex items-center gap-2 overflow-x-auto">
                 {plan.map((d, i) => (d.paradas.length > 0 ? (
-                  <Chip key={i} activo={diaVisible === i} onClick={() => setDiaVisible(i)}>{t("dia")} {i + 1}</Chip>
+                  <Chip key={i} activo={diaVisible === i} onClick={() => setDiaVisible(i)}>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: ["#4f46e5","#ea580c","#7c3aed","#0d9488","#c026d3","#0284c7","#65a30d"][i % 7] }} />
+                      {t("dia")} {i + 1}
+                    </span>
+                  </Chip>
                 ) : null))}
                 <button
                   type="button"
@@ -1969,9 +2036,11 @@ export default function Home() {
                 key={diaVisible}
                 dia={plan[diaVisible]}
                 numeroDia={diaVisible + 1}
+                totalDias={plan.length}
                 alternativas={lugaresBase}
                 gps={gps}
                 ciudad={ciudad?.nombre}
+                hospedaje={hospedaje}
                 fechaInicio={fechaInicio}
                 husoDestino={(() => {
                   const iso = isoDesdeNombre(ciudad?.pais);
@@ -1982,6 +2051,9 @@ export default function Home() {
                 onCambiarParada={(idx) => cambiarParada(diaVisible, idx)}
                 onQuitarParada={(idx) => quitarParada(diaVisible, idx)}
                 onVerLugar={(p) => { setRutaTrazada(null); setDetalle(p); }}
+                onOptimizar={handleOptimizar}
+                onMoverParada={handleMoverParada}
+                onReordenar={handleReordenar}
               />
             )}
 
@@ -2071,6 +2143,7 @@ export default function Home() {
                   lugares={lugaresDelDia}
                   ubicacionUsuario={gps}
                   hospedaje={hospedaje}
+                  colorDia={diaVisible}
                   rutaTrazada={rutaTrazada}
                   onClicLugar={(l) => {
                     if (eligiendoEnMapa) return; // en modo elegir, el clic es para fijar el punto

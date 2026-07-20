@@ -83,6 +83,22 @@ export default function EstasEnCiudad({ t = (k) => k, onCrear, onEventos = null,
               </>
             )}
           </div>
+          {musica?.emblema && (
+            <button
+              type="button"
+              onClick={() => {
+                track("estas_en_musica", { ciudad: geo.ciudad });
+                window.open(linkSpotify(`${musica.emblema.c} ${musica.emblema.a}`), "_blank", "noopener");
+              }}
+              className="mt-1.5 inline-flex max-w-full items-center gap-1 text-[11px] text-slate-500 transition hover:text-marca-700 dark:text-slate-400 dark:hover:text-marca-300"
+            >
+              <Icono nombre="music" size={11} />
+              <span className="truncate">
+                {t("estasEnMusica")} {musica.emblema.c} — {musica.emblema.a}
+              </span>
+              <span className="shrink-0 text-[#1DB954]">▶</span>
+            </button>
+          )}
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
           <button
@@ -105,24 +121,6 @@ export default function EstasEnCiudad({ t = (k) => k, onCrear, onEventos = null,
           )}
         </div>
       </div>
-
-      {/* Musica local: la cancion emblema de la ciudad, 1 tap a Spotify. */}
-      {musica?.emblema && (
-        <button
-          type="button"
-          onClick={() => {
-            track("estas_en_musica", { ciudad: geo.ciudad });
-            window.open(linkSpotify(`${musica.emblema.c} ${musica.emblema.a}`), "_blank", "noopener");
-          }}
-          className="mt-2.5 inline-flex max-w-full items-center gap-1.5 rounded-full border border-marca-200/70 bg-white/70 px-3 py-1.5 text-[12px] font-semibold text-marca-800 transition hover:border-marca-300 hover:bg-white dark:border-marca-700 dark:bg-slate-800/70 dark:text-marca-200"
-        >
-          <Icono nombre="music" size={13} />
-          <span className="truncate">
-            {t("estasEnMusica")} "{musica.emblema.c}" — {musica.emblema.a}
-          </span>
-          <span className="shrink-0 text-[#1DB954]">▶</span>
-        </button>
-      )}
     </div>
   );
 }

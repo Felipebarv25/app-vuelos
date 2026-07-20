@@ -1,5 +1,5 @@
 "use client";
-import { linkTours, linkHoteles, linkVuelos, linkESIM, linkSeguro } from "@/lib/afiliados";
+import { linkTours, linkHoteles, linkVuelos, linkESIM, linkSeguro, linkCivitatis } from "@/lib/afiliados";
 import { track } from "@/lib/track";
 import { Icono } from "./Icono";
 
@@ -52,6 +52,14 @@ export function AfiliadosCiudad({ ciudad, t = (k) => k }) {
           color="marca"
         />
         <CtaReserva
+          href={linkCivitatis({ ciudad: nombre })}
+          icono="compass"
+          titulo={t("afCivitatis")}
+          desc={t("afCivitatisDesc")}
+          tipo="civitatis"
+          color="emerald"
+        />
+        <CtaReserva
           href={linkHoteles({ ciudad: nombre, lat, lon })}
           icono="bed"
           titulo={t("afHoteles")}
@@ -92,9 +100,12 @@ export function AfiliadosCiudad({ ciudad, t = (k) => k }) {
   );
 }
 
-// Botón contextual para el panel de detalle de un lugar: tours cerca de ESE punto.
+const SIN_TOUR = /^(cafe|restaurant|bar|fast_food|pub|ice_cream|bakery|supermarket|pharmacy|bank|atm|fuel|parking|toilets)/i;
+
 export function BotonTourLugar({ lugar, ciudad, t = (k) => k }) {
   if (!lugar?.coord) return null;
+  if (lugar.minutos && lugar.minutos < 45) return null;
+  if (lugar.cat && SIN_TOUR.test(lugar.cat)) return null;
   const href = linkTours({
     q: ciudad?.nombre || lugar.nombre,
     lat: lugar.coord[0],
@@ -109,6 +120,23 @@ export function BotonTourLugar({ lugar, ciudad, t = (k) => k }) {
       className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-acento-400 to-acento-600 px-3.5 py-2 text-[13px] font-bold text-white shadow-suave transition hover:brightness-105"
     >
       <Icono nombre="ticket" size={15} /> {t("afTourCerca")}
+    </a>
+  );
+}
+
+// Botón Civitatis contextual para el detalle de un lugar.
+export function BotonCivitatisLugar({ lugar, ciudad, t = (k) => k }) {
+  if (!lugar?.coord) return null;
+  const href = linkCivitatis({ ciudad: ciudad?.nombre || "" });
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="sponsored noopener"
+      onClick={() => track("afiliado_clic", { cat: "civitatis_lugar" })}
+      className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-400 to-orange-600 px-3.5 py-2 text-[13px] font-bold text-white shadow-suave transition hover:brightness-105"
+    >
+      <Icono nombre="compass" size={15} /> Civitatis
     </a>
   );
 }

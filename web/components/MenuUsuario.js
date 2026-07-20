@@ -129,7 +129,7 @@ export default function MenuUsuario({ oscuro = false }) {
           {/* Mis alertas */}
           <div className="px-4 py-3">
             <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {t("menuMisAlertas")} ({alertas.length})
+              {t("menuMisAlertas")} ({alertas.filter((a) => a.activa !== false).length})
             </div>
             {alertas.length === 0 ? (
               <div className="mt-1 text-[12.5px] text-slate-400 dark:text-slate-500">
@@ -190,12 +190,13 @@ export default function MenuUsuario({ oscuro = false }) {
                 {t("menuGestionarPro")} ↗
               </a>
             )}
-            <a
+            <Link
               href="/pro"
+              onClick={() => setAbierto(false)}
               className="block w-full px-4 py-3 text-left text-[13.5px] font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700"
             >
               {t("menuPlanes")}
-            </a>
+            </Link>
             <button
               type="button"
               onClick={() => { setAbierto(false); setMostrarFeedback(true); }}

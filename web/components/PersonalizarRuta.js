@@ -78,7 +78,7 @@ export default function PersonalizarRuta({ inicial = null, onAplicar, onCerrar, 
       <div
         role="dialog"
         aria-modal="true"
-        className="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl animar-subir dark:bg-slate-900 sm:rounded-3xl"
+        className="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl animar-subir dark:bg-slate-900 sm:rounded-3xl lg:max-w-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Cabecera */}
@@ -99,62 +99,70 @@ export default function PersonalizarRuta({ inicial = null, onAplicar, onCerrar, 
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
-          {/* ① Intereses */}
-          <div className="text-[13px] font-bold text-slate-700 dark:text-slate-200">{tx("p1")}</div>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {Object.entries(INTERESES).map(([k, v]) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => toggleInteres(k)}
-                className={`rounded-full border px-3.5 py-2 text-[13px] font-bold transition ${
-                  intereses.has(k)
-                    ? "border-marca-600 bg-marca-600 text-white shadow-suave"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-marca-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                }`}
-              >
-                {v.emoji} {tx("int_" + k)}
-              </button>
-            ))}
-          </div>
+          <div className="lg:grid lg:grid-cols-3 lg:gap-6">
+            {/* ① Intereses */}
+            <div>
+              <div className="text-[13px] font-bold text-slate-700 dark:text-slate-200">{tx("p1")}</div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {Object.entries(INTERESES).map(([k, v]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => toggleInteres(k)}
+                    className={`rounded-full border px-3.5 py-2 text-[13px] font-bold transition ${
+                      intereses.has(k)
+                        ? "border-marca-600 bg-marca-600 text-white shadow-suave"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-marca-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                    }`}
+                  >
+                    {v.emoji} {tx("int_" + k)}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          {/* ② Ritmo */}
-          <div className="mt-5 text-[13px] font-bold text-slate-700 dark:text-slate-200">{tx("p2")}</div>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {[["relajado", "🌤️"], ["intenso", "⚡"]].map(([k, emoji]) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setRitmo(k)}
-                className={`rounded-2xl border px-3 py-3 text-left transition ${
-                  ritmo === k
-                    ? "border-marca-600 bg-marca-50 dark:bg-marca-900/30"
-                    : "border-slate-200 bg-white hover:border-marca-300 dark:border-slate-600 dark:bg-slate-800"
-                }`}
-              >
-                <div className="text-[14px] font-extrabold text-slate-800 dark:text-slate-100">{emoji} {tx(k)}</div>
-                <div className="mt-0.5 text-[11.5px] text-slate-500 dark:text-slate-400">{tx(k + "Sub")}</div>
-              </button>
-            ))}
-          </div>
+            {/* ② Ritmo */}
+            <div className="mt-5 lg:mt-0">
+              <div className="text-[13px] font-bold text-slate-700 dark:text-slate-200">{tx("p2")}</div>
+              <div className="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-1">
+                {[["relajado", "🌤️"], ["intenso", "⚡"]].map(([k, emoji]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setRitmo(k)}
+                    className={`rounded-2xl border px-3 py-3 text-left transition ${
+                      ritmo === k
+                        ? "border-marca-600 bg-marca-50 dark:bg-marca-900/30"
+                        : "border-slate-200 bg-white hover:border-marca-300 dark:border-slate-600 dark:bg-slate-800"
+                    }`}
+                  >
+                    <div className="text-[14px] font-extrabold text-slate-800 dark:text-slate-100">{emoji} {tx(k)}</div>
+                    <div className="mt-0.5 text-[11.5px] text-slate-500 dark:text-slate-400">{tx(k + "Sub")}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          {/* ③ Momento */}
-          <div className="mt-5 text-[13px] font-bold text-slate-700 dark:text-slate-200">{tx("p3")}</div>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {[["diurno", "☀️"], ["nocturno", "🌙"]].map(([k, emoji]) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setMomento(k)}
-                className={`rounded-2xl border px-3 py-3 text-center text-[14px] font-extrabold transition ${
-                  momento === k
-                    ? "border-marca-600 bg-marca-50 text-slate-800 dark:bg-marca-900/30 dark:text-slate-100"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-marca-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                }`}
-              >
-                {emoji} {tx(k)}
-              </button>
-            ))}
+            {/* ③ Momento */}
+            <div className="mt-5 lg:mt-0">
+              <div className="text-[13px] font-bold text-slate-700 dark:text-slate-200">{tx("p3")}</div>
+              <div className="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-1">
+                {[["diurno", "☀️"], ["nocturno", "🌙"]].map(([k, emoji]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setMomento(k)}
+                    className={`rounded-2xl border px-3 py-3 text-center text-[14px] font-extrabold transition ${
+                      momento === k
+                        ? "border-marca-600 bg-marca-50 text-slate-800 dark:bg-marca-900/30 dark:text-slate-100"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-marca-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                    }`}
+                  >
+                    {emoji} {tx(k)}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 

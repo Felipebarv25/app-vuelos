@@ -6,7 +6,7 @@ import { distanciaMetros } from "@/lib/rutas";
 import { fmtMin } from "@/lib/itinerario";
 import { monedaDePais, costoLocal, costoUsd } from "@/lib/monedasPais";
 import { obtenerTasas } from "@/lib/fx";
-import { BotonTourLugar } from "./Afiliados";
+import { BotonTourLugar, BotonCivitatisLugar } from "./Afiliados";
 import { Icono, iconoCategoria } from "./Icono";
 import BadgeApertura from "./BadgeApertura";
 import { nombreLocalizado } from "@/lib/nombres";
@@ -192,6 +192,31 @@ export default function DetalleLugar({ lugar, ciudad, origen, husoDestino, onCer
               <Icono nombre="map" size={15} /> Google Maps
             </a>
             <BotonTourLugar lugar={lugar} ciudad={ciudad} t={t} />
+            <BotonCivitatisLugar lugar={lugar} ciudad={ciudad} t={t} />
+          </div>
+
+          {/* Tips rápidos: duración sugerida + mejor momento */}
+          <div className="mb-3.5 flex flex-wrap gap-2">
+            {lugar.minutos && (
+              <div className="inline-flex items-center gap-1.5 rounded-lg border border-marca-100 bg-marca-50/60 px-2.5 py-1.5 text-[12.5px] font-semibold text-marca-700 dark:border-marca-800 dark:bg-marca-900/20 dark:text-marca-300">
+                <Icono nombre="clock" size={13} /> {t("detDuracion")}: {fmtMin(lugar.minutos)}
+              </div>
+            )}
+            {lugar.categoria && (
+              <div className="inline-flex items-center gap-1.5 rounded-lg border border-amber-100 bg-amber-50/60 px-2.5 py-1.5 text-[12.5px] font-semibold text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+                <Icono nombre="sun" size={13} /> {t("detTip")}
+              </div>
+            )}
+            {lugar.wiki && (
+              <a
+                href={`https://${lang}.wikipedia.org/wiki/${encodeURIComponent(nombreLug.replace(/ /g, "_"))}`}
+                target="_blank"
+                rel="noopener"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[12.5px] font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              >
+                📖 Wikipedia
+              </a>
+            )}
           </div>
 
           {/* QW1 — Estado de apertura. Solo aparece si el POI tiene

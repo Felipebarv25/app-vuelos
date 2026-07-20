@@ -291,6 +291,11 @@ button:active {
   }
 }
 
+@keyframes pulseRing {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(15, 118, 110, 0); }
+  50% { box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12); }
+}
+
 /* Scrollbars sutiles */
 ::-webkit-scrollbar {
   height: 6px;

@@ -158,11 +158,11 @@ export function costoTramoReal(a, b, km) {
   // Suiza/nordicos — se multiplica el estimado y en cortas el medio es tren.
   const caro = PAISES_TRANSPORTE_CARO.has(a.pais) || PAISES_TRANSPORTE_CARO.has(b.pais);
   let precio, medio, dur;
-  if (km < 300)       { precio = 30;  medio = caro ? "tren" : "bus"; dur = km / (caro ? 90 : 60); }
-  else if (km < 700)  { precio = 60;  medio = "tren";  dur = km / 100; }
-  else if (km < 1500) { precio = 110; medio = "vuelo"; dur = 2 + km / 800; }
-  else if (km < 3000) { precio = 180; medio = "vuelo"; dur = 3 + km / 800; }
-  else                { precio = 300; medio = "vuelo"; dur = 4 + km / 800; }
+  if (km < 300)       { precio = Math.max(10, Math.round(km * 0.12)); medio = caro ? "tren" : "bus"; dur = km / (caro ? 90 : 60); }
+  else if (km < 700)  { precio = Math.round(25 + km * 0.06);         medio = "tren";  dur = km / 100; }
+  else if (km < 1500) { precio = Math.round(50 + km * 0.05);         medio = "vuelo"; dur = 2 + km / 800; }
+  else if (km < 3000) { precio = Math.round(80 + km * 0.04);         medio = "vuelo"; dur = 3 + km / 800; }
+  else                { precio = Math.round(120 + km * 0.05);        medio = "vuelo"; dur = 4 + km / 800; }
   if (caro && medio !== "vuelo") precio = Math.round(precio * 1.8);
   return {
     precio,

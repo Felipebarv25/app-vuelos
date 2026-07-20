@@ -154,6 +154,101 @@ export function resumenDia(dia) {
   };
 }
 
+// Optimiza el orden de las paradas de UN día usando 2-opt (mejora iterativa
+// sobre la ruta existente hasta que no hay swap que reduzca la distancia total).
+// Devuelve un NUEVO plan (no muta). inicio = [lat, lon] del hospedaje/GPS.
+export function optimizarRutaDia(plan, diaIdx, inicio = null) {
+  const nuevo = plan.map((d, i) =>
+    i === diaIdx ? { ...d, paradas: d.paradas.map((p) => ({ ...p })) } : d
+  );
+  const paradas = nuevo[diaIdx].paradas;
+  if (paradas.length < 3) return recalcularTraslados(nuevo, diaIdx, inicio);
+
+  const coords = paradas.map((p) => p.coord);
+  const n = coords.length;
+  const origen = inicio || coords[0];
+
+  function distTotal(order) {
+    let d = distanciaMetros(origen, coords[order[0]]);
+    for (let i = 1; i < order.length; i++)
+      d += distanciaMetros(coords[order[i - 1]], coords[order[i]]);
+    return d;
+  }
+
+  let order = paradas.map((_, i) => i);
+  let mejoro = true;
+  while (mejoro) {
+    mejoro = false;
+    for (let i = 0; i < n - 1; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const nueva = order.slice();
+        nueva.splice(i, j - i + 1, ...order.slice(i, j + 1).reverse());
+        if (distTotal(nueva) < distTotal(order)) {
+          order = nueva;
+          mejoro = true;
+        }
+      }
+    }
+  }
+
+  nuevo[diaIdx].paradas = order.map((i) => paradas[i]);
+  return recalcularTraslados(nuevo, diaIdx, inicio);
+}
+
+// Mueve una parada de un día a otro. Devuelve un NUEVO plan.
+export function moverParadaADia(plan, origenDia, paradaIdx, destinoDia) {
+  const nuevo = plan.map((d) => ({ ...d, paradas: d.paradas.slice() }));
+  const [parada] = nuevo[origenDia].paradas.splice(paradaIdx, 1);
+  nuevo[destinoDia].paradas.push(parada);
+  const p1 = recalcularTraslados(nuevo, origenDia);
+  return recalcularTraslados(p1, destinoDia);
+}
+
+// Sube o baja una parada dentro de su día (delta: -1 = subir, +1 = bajar).
+export function reordenarParada(plan, diaIdx, paradaIdx, delta) {
+  const nuevoIdx = paradaIdx + delta;
+  const nuevo = plan.map((d, i) =>
+    i === diaIdx ? { ...d, paradas: d.paradas.slice() } : d
+  );
+  const arr = nuevo[diaIdx].paradas;
+  if (nuevoIdx < 0 || nuevoIdx >= arr.length) return plan;
+  [arr[paradaIdx], arr[nuevoIdx]] = [arr[nuevoIdx], arr[paradaIdx]];
+  return recalcularTraslados(nuevo, diaIdx);
+}
+
+// Recalcula traslados/metros/transporte de TODAS las paradas de un día
+// (tras reordenar, mover, optimizar). Devuelve el plan actualizado.
+function recalcularTraslados(plan, diaIdx, inicio = null) {
+  const dia = plan[diaIdx];
+  let minutosTraslado = 0;
+  let minutosVisita = 0;
+  for (let i = 0; i < dia.paradas.length; i++) {
+    const p = dia.paradas[i];
+    const visita = p.minutos || 60;
+    minutosVisita += visita;
+    if (i === 0) {
+      const metros = inicio ? distanciaMetros(inicio, p.coord) : 0;
+      const traslado = inicio ? minutosDesplazamiento(metros) : 0;
+      p.traslado = traslado;
+      p.metros = Math.round(metros);
+      p.transporte = recomendarTransporte(metros);
+      minutosTraslado += traslado;
+    } else {
+      const prev = dia.paradas[i - 1].coord;
+      const metros = distanciaMetros(prev, p.coord);
+      const traslado = minutosDesplazamiento(metros);
+      p.traslado = traslado;
+      p.metros = Math.round(metros);
+      p.transporte = recomendarTransporte(metros);
+      minutosTraslado += traslado;
+    }
+  }
+  dia.minutosTraslado = minutosTraslado;
+  dia.minutosVisita = minutosVisita;
+  dia.minutosUsados = minutosTraslado + minutosVisita;
+  return plan;
+}
+
 // Formatea minutos como "1h 20m" o "45 min".
 export function fmtMin(min) {
   if (min < 60) return `${min} min`;

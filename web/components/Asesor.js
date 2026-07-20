@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { construirRuta, REGIONES, MONEDAS } from "@/lib/presupuesto";
+import { obtenerTasas, aUsdDe } from "@/lib/fx";
 import { Icono } from "./Icono";
 import { useBrowserBackClose } from "@/lib/useBrowserBack";
 
@@ -40,7 +41,7 @@ export default function Asesor({ t = (k) => k, usuario, onPlanear, onAbrirPresup
   return (
     <>
       {!abierto && (
-        <div className="fixed bottom-20 right-4 z-[3500] md:bottom-5 md:right-5">
+        <div className="fixed bottom-[72px] right-3 z-[3500] md:bottom-5 md:right-5">
           {tipVisible && (
             <div className="animar-subir relative mb-3 max-w-[260px] rounded-2xl bg-white p-3.5 shadow-[0_18px_45px_rgba(15,118,110,.35)] ring-1 ring-marca-100 dark:bg-slate-800 dark:ring-slate-700">
               <div className="flex items-start gap-2.5">
@@ -78,10 +79,10 @@ export default function Asesor({ t = (k) => k, usuario, onPlanear, onAbrirPresup
           )}
           <button
             onClick={() => { ocultarTip(); setAbierto(true); }}
-            className={`relative flex items-center gap-2 rounded-full bg-gradient-to-r from-marca-500 to-marca-700 px-5 py-3.5 text-white shadow-[0_10px_30px_rgba(15,118,110,.45)] transition hover:brightness-110 ${tipVisible ? "animate-pulse" : ""}`}
+            className={`relative flex items-center gap-2 rounded-full bg-gradient-to-r from-marca-500 to-marca-700 py-3.5 text-white shadow-[0_10px_30px_rgba(15,118,110,.45)] transition hover:brightness-110 ${tipVisible ? "animate-pulse" : ""} px-3.5 sm:px-5`}
           >
             <Icono nombre="compass" size={20} />
-            <span className="text-sm font-bold">{t("asesorBoton")}</span>
+            <span className="hidden text-sm font-bold sm:inline">{t("asesorBoton")}</span>
           </button>
         </div>
       )}
@@ -128,12 +129,29 @@ function Burbuja({ role, children }) {
 }
 
 // ---------- MODO GRATIS: guía por botones con nuestro motor ----------
+function primerNombre(raw) {
+  if (!raw) return "";
+  const primer = raw.trim().split(/\s+/)[0];
+  return primer.charAt(0).toUpperCase() + primer.slice(1).toLowerCase();
+}
+
 function GuiaGratis({ t, usuario, onPlanear, onAbrirPresupuesto, cerrar, finRef }) {
-  const nombre = usuario?.nombre ? `, ${usuario.nombre}` : "";
+  const nombre = usuario?.nombre ? `, ${primerNombre(usuario.nombre)}` : "";
   const [historia, setHistoria] = useState([{ de: "bot", texto: t("guiaSaludo").replace("{nombre}", nombre) }]);
   const [paso, setPaso] = useState("region");
   const [datos, setDatos] = useState({ region: "europa", montoCOP: 10000000, dias: 10 });
   const [semilla, setSemilla] = useState(0);
+
+  const [tasaCop, setTasaCop] = useState(MONEDAS.COP.aUsd);
+  useEffect(() => {
+    let vivo = true;
+    obtenerTasas().then((r) => {
+      if (!vivo) return;
+      const live = aUsdDe(r?.porUsd, "COP");
+      if (live) setTasaCop(live);
+    });
+    return () => { vivo = false; };
+  }, []);
 
   const PRESUPUESTOS = [
     ["3.000.000", 3000000], ["6.000.000", 6000000], ["10.000.000", 10000000],
@@ -143,7 +161,7 @@ function GuiaGratis({ t, usuario, onPlanear, onAbrirPresupuesto, cerrar, finRef 
 
   function push(b) { setHistoria((h) => [...h, b]); }
   function fmtUsd(v) { return "US$ " + Math.round(v).toLocaleString("en-US"); }
-  function fmtCop(usd) { return "$ " + Math.round(usd / MONEDAS.COP.aUsd).toLocaleString("es-CO") + " COP"; }
+  function fmtCop(usd) { return "$ " + Math.round(usd / tasaCop).toLocaleString("es-CO") + " COP"; }
 
   function elegirRegion(k) {
     push({ de: "user", texto: REGIONES[k] });
@@ -164,7 +182,7 @@ function GuiaGratis({ t, usuario, onPlanear, onAbrirPresupuesto, cerrar, finRef 
     mostrarRuta(datos2, 0);
   }
   function mostrarRuta(d, sem) {
-    const presupuestoUsd = d.montoCOP * MONEDAS.COP.aUsd;
+    const presupuestoUsd = d.montoCOP * tasaCop;
     const ruta = construirRuta({ presupuestoUsd, dias: d.dias, personas: 1, region: d.region, semilla: sem });
     if (!ruta || !ruta.ciudades.length) {
       push({ de: "bot", texto: t("guiaSinRuta") });

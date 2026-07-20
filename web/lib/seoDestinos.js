@@ -621,6 +621,8 @@ const DATOS_POR_LANG = {
 // Se usan como fallback en generico() para las ciudades sin entrada específica.
 // El idioma/moneda es objetivo; los platos son los más representativos del país.
 const DATOS_PAIS = {
+  // Colombia
+  "Colombia":       { idioma: "Español", moneda: "Peso colombiano (COP)", platos: ["Bandeja paisa", "Ajiaco", "Arepa", "Sancocho"] },
   // Sudamérica
   "Perú":           { idioma: "Español", moneda: "Sol peruano (PEN)", platos: ["Ceviche", "Lomo saltado", "Ají de gallina", "Anticuchos"] },
   "Ecuador":        { idioma: "Español", moneda: "Dólar estadounidense (USD)", platos: ["Encebollado", "Llapingachos", "Seco de pollo", "Ceviche de camarones"] },
@@ -638,6 +640,11 @@ const DATOS_PAIS = {
   "Canadá":         { idioma: "Inglés y francés", moneda: "Dólar canadiense (CAD)", platos: ["Poutine", "Smoked meat", "Butter tart", "Nanaimo bar"] },
   "Cuba":           { idioma: "Español", moneda: "Peso cubano (CUP)", platos: ["Ropa vieja", "Arroz moros y cristianos", "Lechón asado", "Croquetas"] },
   "Guatemala":      { idioma: "Español", moneda: "Quetzal guatemalteco (GTQ)", platos: ["Pepián", "Jocon", "Kak'ik", "Tamales colorados"] },
+  "República Dominicana": { idioma: "Español", moneda: "Peso dominicano (DOP)", platos: ["La bandera", "Mangú", "Sancocho", "Tostones"] },
+  "Puerto Rico":    { idioma: "Español e inglés", moneda: "Dólar estadounidense (USD)", platos: ["Mofongo", "Arroz con gandules", "Lechón asado", "Alcapurria"] },
+  "Jamaica":        { idioma: "Inglés y patois jamaicano", moneda: "Dólar jamaicano (JMD)", platos: ["Jerk chicken", "Ackee and saltfish", "Patty", "Festival"] },
+  "Aruba":          { idioma: "Neerlandés y papiamento", moneda: "Florín arubeño (AWG)", platos: ["Keshi yena", "Pan bati", "Funchi", "Stoba"] },
+  "Curazao":        { idioma: "Neerlandés y papiamento", moneda: "Florín antillano (ANG)", platos: ["Keshi yena", "Stoba di kabritu", "Funchi", "Sòpi di piska"] },
   // Europa
   "España":         { idioma: "Español", moneda: "Euro (EUR)", platos: ["Paella", "Jamón ibérico", "Tortilla española", "Gazpacho"] },
   "Portugal":       { idioma: "Portugués", moneda: "Euro (EUR)", platos: ["Bacalhau", "Pastel de nata", "Caldo verde", "Francesinha"] },
@@ -657,6 +664,13 @@ const DATOS_PAIS = {
   "Suecia":         { idioma: "Sueco", moneda: "Corona sueca (SEK)", platos: ["Köttbullar", "Gravlax", "Smörgåsbord", "Semla"] },
   "Suiza":          { idioma: "Alemán, francés e italiano", moneda: "Franco suizo (CHF)", platos: ["Fondue", "Raclette", "Rösti", "Zürcher Geschnetzeltes"] },
   "Polonia":        { idioma: "Polaco", moneda: "Esloti polaco (PLN)", platos: ["Pierogi", "Bigos", "Żurek", "Kielbasa"] },
+  "Croacia":        { idioma: "Croata", moneda: "Euro (EUR)", platos: ["Peka", "Ćevapi", "Crni rižot", "Štrukli"] },
+  "Eslovenia":      { idioma: "Esloveno", moneda: "Euro (EUR)", platos: ["Potica", "Štruklji", "Jota", "Kremna rezina"] },
+  "Islandia":       { idioma: "Islandés (inglés muy extendido)", moneda: "Corona islandesa (ISK)", platos: ["Plokkfiskur", "Hangikjöt", "Pylsur", "Skyr"] },
+  "Finlandia":      { idioma: "Finés y sueco", moneda: "Euro (EUR)", platos: ["Karjalanpiirakka", "Kalakukko", "Poronkäristys", "Korvapuusti"] },
+  "Noruega":        { idioma: "Noruego", moneda: "Corona noruega (NOK)", platos: ["Brunost", "Fårikål", "Lutefisk", "Rakfisk"] },
+  "Estonia":        { idioma: "Estonio", moneda: "Euro (EUR)", platos: ["Mulgikapsas", "Verivorst", "Kiluvõileib", "Kama"] },
+  "Letonia":        { idioma: "Letón", moneda: "Euro (EUR)", platos: ["Pelēkie zirņi", "Pirāgi", "Sklandrausis", "Rupjmaize"] },
   // Asia
   "Japón":          { idioma: "Japonés (poco inglés)", moneda: "Yen japonés (JPY)", platos: ["Ramen", "Sushi", "Tempura", "Yakitori"] },
   "Corea del Sur":  { idioma: "Coreano", moneda: "Won surcoreano (KRW)", platos: ["Bibimbap", "Bulgogi", "Samgyeopsal", "Kimchi"] },
@@ -666,10 +680,24 @@ const DATOS_PAIS = {
   "Emiratos Árabes":{ idioma: "Árabe (inglés muy extendido)", moneda: "Dírham emiratí (AED)", platos: ["Shawarma", "Hummus", "Harees", "Machboos"] },
   "China":          { idioma: "Mandarín", moneda: "Yuan chino (CNY)", platos: ["Dim sum", "Pato a la pekinesa", "Xiaolongbao", "Mapo tofu"] },
   "India":          { idioma: "Hindi e inglés", moneda: "Rupia india (INR)", platos: ["Biryani", "Butter chicken", "Samosa", "Dosa"] },
+  "Vietnam":        { idioma: "Vietnamita (inglés en turismo)", moneda: "Dong vietnamita (VND)", platos: ["Phở", "Bánh mì", "Bún chả", "Gỏi cuốn"] },
+  "Camboya":        { idioma: "Jemer (inglés en turismo)", moneda: "Riel camboyano (KHR)", platos: ["Amok", "Lok lak", "Nom banh chok", "Bai sach chrouk"] },
+  "Malasia":        { idioma: "Malayo (inglés extendido)", moneda: "Ringgit malayo (MYR)", platos: ["Nasi lemak", "Roti canai", "Laksa", "Satay"] },
+  "Filipinas":      { idioma: "Filipino e inglés", moneda: "Peso filipino (PHP)", platos: ["Adobo", "Sinigang", "Lechón", "Lumpia"] },
+  "Taiwán":         { idioma: "Mandarín", moneda: "Dólar taiwanés (TWD)", platos: ["Beef noodle soup", "Bubble tea", "Gua bao", "Oyster omelette"] },
+  "Nepal":          { idioma: "Nepalí (inglés en turismo)", moneda: "Rupia nepalí (NPR)", platos: ["Dal bhat", "Momo", "Chatamari", "Sel roti"] },
+  "Sri Lanka":      { idioma: "Cingalés y tamil", moneda: "Rupia de Sri Lanka (LKR)", platos: ["Rice and curry", "Kottu roti", "Hoppers", "Pol sambol"] },
+  "Israel":         { idioma: "Hebreo y árabe", moneda: "Nuevo séquel israelí (ILS)", platos: ["Falafel", "Shakshuka", "Hummus", "Sabich"] },
+  "Jordania":       { idioma: "Árabe", moneda: "Dinar jordano (JOD)", platos: ["Mansaf", "Falafel", "Maqluba", "Kunafeh"] },
+  "Catar":          { idioma: "Árabe (inglés extendido)", moneda: "Riyal catarí (QAR)", platos: ["Machboos", "Harees", "Luqaimat", "Balaleet"] },
+  "Omán":           { idioma: "Árabe", moneda: "Rial omaní (OMR)", platos: ["Shuwa", "Harees", "Mashuai", "Halwa omaní"] },
   // África
   "Egipto":         { idioma: "Árabe", moneda: "Libra egipcia (EGP)", platos: ["Koshari", "Ful medames", "Taameya", "Molokhia"] },
   "Marruecos":      { idioma: "Árabe y francés", moneda: "Dírham marroquí (MAD)", platos: ["Tajín de cordero", "Cuscús", "Pastilla", "Harira"] },
   "Sudáfrica":      { idioma: "Inglés y otros 10 idiomas oficiales", moneda: "Rand sudafricano (ZAR)", platos: ["Braai", "Bobotie", "Boerewors", "Bunny chow"] },
+  "Túnez":          { idioma: "Árabe y francés", moneda: "Dinar tunecino (TND)", platos: ["Couscous", "Brik", "Lablabi", "Ojja"] },
+  "Kenia":          { idioma: "Suajili e inglés", moneda: "Chelín keniano (KES)", platos: ["Nyama choma", "Ugali", "Chapati", "Sukuma wiki"] },
+  "Tanzania":       { idioma: "Suajili e inglés", moneda: "Chelín tanzano (TZS)", platos: ["Ugali", "Nyama choma", "Pilau", "Chipsi mayai"] },
   // Oceanía
   "Australia":      { idioma: "Inglés", moneda: "Dólar australiano (AUD)", platos: ["Meat pie", "Barramundi", "Tim Tams", "Vegemite toast"] },
   "Nueva Zelanda":  { idioma: "Inglés y māori", moneda: "Dólar neozelandés (NZD)", platos: ["Hāngi", "Pavlova", "Whitebait fritters", "Lamb rack"] },

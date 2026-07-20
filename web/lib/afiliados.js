@@ -9,6 +9,8 @@
 //                    (sirve para vuelos Aviasales, eSIM y seguros)
 export const AFILIADOS = {
   getYourGuide: "RGTCZOH", // partner_id de GetYourGuide (tours/experiencias)
+  civitatis: "",           // ID afiliado Civitatis (https://www.civitatis.com/es/afiliados/)
+                           // Fuerte en LATAM y España. Comisión ~10%. Si vacío, link normal sin comisión.
   bookingAid: "",          // p.ej. "1234567" (Booking.com → afíliate para activarlo)
   travelpayouts: "734652", // marker de Travelpayouts — sirve para Aviasales (vuelos),
                             //   Hotellook (hoteles), Airalo eSIM y EKTA seguro.
@@ -139,4 +141,23 @@ export function linkTourCerca({ nombre = "", ciudad = "", lat, lon } = {}) {
     lat,
     lon,
   });
+}
+
+// Civitatis: tours y experiencias en español, fuerte en LATAM y Europa.
+// Búsqueda por ciudad; si hay ID de afiliado, se agrega como parámetro.
+export function linkCivitatis({ ciudad = "", q = "" } = {}) {
+  const busqueda = q || ciudad;
+  const slug = busqueda
+    .toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+  let url = `https://www.civitatis.com/es/${slug}/`;
+  if (AFILIADOS.civitatis) url += `?aid=${encodeURIComponent(AFILIADOS.civitatis)}`;
+  return url;
+}
+
+// Civitatis contextual a un lugar específico (busca actividades en esa ciudad).
+export function linkCivitatisCerca({ ciudad = "", nombre = "" } = {}) {
+  return linkCivitatis({ ciudad, q: ciudad });
 }

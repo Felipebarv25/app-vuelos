@@ -1,5 +1,6 @@
 "use client";
 import { useApp } from "@/lib/AppContext";
+import { DESTINOS_PRESUPUESTO } from "@/lib/presupuesto";
 
 // Footer compartido por home + rutas internas. Centraliza atribución legal
 // (OSM/Wikivoyage/Wikidata/Passport Index) y enlaces de navegación a las
@@ -11,19 +12,19 @@ export default function FooterAnduve() {
     <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-slate-400 print:hidden dark:text-slate-500 lg:px-8">
       <div className="mb-3 flex flex-wrap justify-center gap-3 text-[12.5px] font-semibold text-slate-500">
         <a href="/destino" className="hover:text-marca-600 hover:underline">
-          Ver 80 destinos
+          {t("footerVerDestinos").replace("{n}", DESTINOS_PRESUPUESTO.length)}
         </a>
         <span className="text-slate-300">·</span>
         <a href="/comparar" className="hover:text-marca-600 hover:underline">
-          Comparar destinos
+          {t("footerCompararDestinos")}
         </a>
         <span className="text-slate-300">·</span>
         <a href="/privacidad" className="hover:text-marca-600 hover:underline">
-          Privacidad
+          {t("footerPrivacidad")}
         </a>
         <span className="text-slate-300">·</span>
         <a href="/terminos" className="hover:text-marca-600 hover:underline">
-          Términos
+          {t("footerTerminos")}
         </a>
       </div>
       <div>{t("footer")} · Anduve</div>

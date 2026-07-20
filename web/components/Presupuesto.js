@@ -656,17 +656,25 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   <option key={n} value={n}>{n}</option>
                 ))}
               </select>
-              <AvisoPresupuesto
-                recom={recom}
-                dias={dias}
-                personas={personas}
-                presupuestoUsd={presupuestoUsd}
-                presupMinimo={presupMinimo}
-                fmtUsd={fmtUsd}
-                regionLabel={REGIONES[region]}
-                regionesQueCaben={regionesQueCaben}
-                onCambiarRegion={(r) => { setRegion(r); setInicio(""); setSemilla(0); setExcluidos([]); }}
-              />
+              {/* En modo ruta, el RutaCard ya muestra "Te sobra / Te falta"
+                  con el total REAL de las ciudades elegidas. El aviso genérico
+                  usa medianas regionales y puede contradecir el total real
+                  (dice "te faltarían $200" pero la ruta concreta sobra $50).
+                  Solo lo mostramos si NO hay ruta construida o estamos en modo
+                  destino. */}
+              {(modo !== "ruta" || !ruta || ruta.ciudades.length === 0) && (
+                <AvisoPresupuesto
+                  recom={recom}
+                  dias={dias}
+                  personas={personas}
+                  presupuestoUsd={presupuestoUsd}
+                  presupMinimo={presupMinimo}
+                  fmtUsd={fmtUsd}
+                  regionLabel={REGIONES[region]}
+                  regionesQueCaben={regionesQueCaben}
+                  onCambiarRegion={(r) => { setRegion(r); setInicio(""); setSemilla(0); setExcluidos([]); }}
+                />
+              )}
             </div>
 
             {/* Solo modo ruta: ciudad de salida. Listamos TODO el catalogo
@@ -765,6 +773,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   vivoEstadoEntrada={vivoEstado[llaveCiudad(ruta.entrada)] || null}
                   onPedirVivoEntrada={() => pedirVivo(ruta.entrada)}
                   origenElegido={origen}
+                  paisOrigenNombre={paisActual.nombre}
                 />
                 </>
               )}
@@ -1203,6 +1212,7 @@ function RutaCard({
   vivoEstadoEntrada,
   onPedirVivoEntrada,
   origenElegido = null,
+  paisOrigenNombre = null,
 }) {
   const { ciudades, desglose, total, cabe, sobra, diasTotales } = ruta;
   return (
@@ -1291,7 +1301,7 @@ function RutaCard({
       {/* Desglose de costos */}
       <div className="border-t border-slate-100 px-4 py-3">
         <Fila
-          nombre={t("presupVueloIntl")}
+          nombre={paisOrigenNombre && ruta.entrada?.pais === paisOrigenNombre ? t("presupVueloDom") : t("presupVueloIntl")}
           valor={fmtUsd(desglose.vueloIntl)}
           badge={ruta.esRealEntrada ? t("presupPrecioReal") : t("presupEstimado")}
           badgeReal={ruta.esRealEntrada}

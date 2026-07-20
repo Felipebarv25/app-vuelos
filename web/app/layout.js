@@ -128,7 +128,7 @@ export default function RootLayout({ children }) {
                   "@id": "https://anduve-app.vercel.app/#agency",
                   name: "Anduve",
                   url: "https://anduve-app.vercel.app/",
-                  description: "Itinerarios día a día, presupuestos por país, alertas de precios y planificación multiciudad para 80+ destinos.",
+                  description: "Itinerarios día a día, presupuestos por país, alertas de precios y planificación multiciudad para 200+ destinos.",
                   areaServed: { "@type": "Country", name: "Worldwide" },
                   priceRange: "$",
                 },

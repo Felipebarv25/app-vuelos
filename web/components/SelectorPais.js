@@ -72,7 +72,7 @@ function buscarPaises(query, lang) {
 }
 
 export default function SelectorPais({ value, onChange, className = "" }) {
-  const { lang } = useApp();
+  const { lang, t } = useApp();
   const [abierto, setAbierto] = useState(false);
   const [q, setQ] = useState("");
   const [iSeleccion, setISeleccion] = useState(0);
@@ -133,12 +133,12 @@ export default function SelectorPais({ value, onChange, className = "" }) {
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
           <circle cx="12" cy="10" r="3"></circle>
         </svg>
-        <span className="text-white/75">Saliendo desde</span>
+        <span className="text-white/75">{t("selectorSaliendoDesde")}</span>
         <span className="inline-flex items-center gap-1.5">
           {value && <Bandera cc={value} size={18} />}
           <span className="font-bold">{nombreActual}</span>
         </span>
-        <span className="ml-0.5 text-[11.5px] font-medium text-white/75 underline-offset-2 group-hover:underline">cambiar</span>
+        <span className="ml-0.5 text-[11.5px] font-medium text-white/75 underline-offset-2 group-hover:underline">{t("selectorCambiar")}</span>
       </button>
 
       {abierto && (
@@ -149,13 +149,13 @@ export default function SelectorPais({ value, onChange, className = "" }) {
             value={q}
             onChange={(e) => { setQ(e.target.value); setISeleccion(0); }}
             onKeyDown={onKey}
-            placeholder="Buscar país (Colombia, USA, France…)"
+            placeholder={t("selectorBuscarPais")}
             className="w-full border-0 border-b border-slate-100 bg-white px-3 py-2.5 text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
             autoComplete="off"
           />
           <ul role="listbox" className="max-h-72 overflow-y-auto py-1">
             {resultados.length === 0 ? (
-              <li className="px-3 py-2.5 text-[13px] text-slate-400">Sin resultados</li>
+              <li className="px-3 py-2.5 text-[13px] text-slate-400">{t("selectorSinResultados")}</li>
             ) : (
               resultados.map((p, i) => (
                 <li key={p.cc}>

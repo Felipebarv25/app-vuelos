@@ -25,7 +25,7 @@ export default function BotonVolver({ href = null, etiqueta = "Volver" }) {
   }
 
   return (
-    <div className="sticky top-3 z-[60] px-4 pt-3 sm:px-6">
+    <div className="fixed left-0 top-[60px] z-[60] px-4 sm:px-6">
       <button
         type="button"
         onClick={volver}
@@ -37,7 +37,7 @@ export default function BotonVolver({ href = null, etiqueta = "Volver" }) {
         </svg>
         {/* El walker mirando hacia atras (scaleX(-1)): vuelve sobre sus pasos */}
         <span className="inline-block" style={{ transform: "scaleX(-1)" }}>
-          <Logo size={24} />
+          <Logo size={24} animado />
         </span>
         <span className="text-[13px] font-bold text-marca-900 dark:text-slate-100">{etiqueta}</span>
       </button>

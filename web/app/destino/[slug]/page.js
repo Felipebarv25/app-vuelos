@@ -1,5 +1,5 @@
 ﻿// Página estática por destino. SSG: pre-renderizada en build time para SEO.
-// Una URL por ciudad del catálogo (~80) tipo /destino/madrid-espana.
+// Una URL por ciudad del catálogo (~207) tipo /destino/madrid-espana.
 //
 // Contenido pensado para Google: H1 con keyword, descripción, datos clave
 // (vuelo aprox, costo diario, días sugeridos), Top 10 lugares con foto y
@@ -13,7 +13,7 @@ import { datosSeoDe, faqsDe } from "@/lib/seoDestinos";
 import { fotoCiudad } from "@/lib/fotoCiudad";
 import { preciosPorMes } from "@/lib/historialPrecios";
 import { iataDe } from "@/lib/iataCiudades";
-import { linkTours, linkHoteles, linkVuelos, linkESIM, linkSeguro } from "@/lib/afiliados";
+import { linkTours, linkHoteles, linkVuelos, linkESIM, linkSeguro, linkCivitatis } from "@/lib/afiliados";
 import FavToggle from "./FavToggle";
 import AlertaPrecio from "@/components/AlertaPrecio";
 import MusicaCiudad from "@/components/MusicaCiudad";
@@ -374,75 +374,7 @@ export default async function PaginaDestino({ params }) {
         </section>
       )}
       {historial && (
-        <section className="mx-auto max-w-4xl px-6 py-6">
-          <h2 className="text-2xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
-            Cuándo viajar más barato a {d.ciudad}
-          </h2>
-          <p className="mt-1 text-slate-500">
-            Precio mediano de vuelo i/v por mes de salida según
-            nuestro detector (últimos 90 días).
-          </p>
-
-          {/* Resumen mejor/peor */}
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-900/20">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
-                ✨ Más barato
-              </div>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-emerald-700 dark:text-emerald-300">
-                  US$ {historial.mejor.precio}
-                </span>
-                <span className="text-[13px] font-semibold text-emerald-700/80 dark:text-emerald-400">
-                  saliendo en {historial.mejor.label}
-                </span>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">
-                🚫 Más caro
-              </div>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-amber-700 dark:text-amber-300">
-                  US$ {historial.peor.precio}
-                </span>
-                <span className="text-[13px] font-semibold text-amber-700/80 dark:text-amber-400">
-                  saliendo en {historial.peor.label}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Mini gráfico de barras */}
-          <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
-            <div className="flex min-w-fit items-end gap-2">
-              {historial.meses.map((m) => {
-                const max = historial.peor.precio;
-                const altura = Math.max(20, Math.round((m.precio / max) * 160));
-                const color = m.mejor
-                  ? "bg-emerald-500"
-                  : m.peor
-                  ? "bg-amber-400"
-                  : "bg-marca-300";
-                return (
-                  <div key={m.ym} className="flex w-[56px] shrink-0 flex-col items-center">
-                    <div className="text-[11px] font-bold text-slate-600">
-                      ${Math.round(m.precio / 10) * 10}
-                    </div>
-                    <div
-                      className={`mt-1 w-full rounded-t-md ${color}`}
-                      style={{ height: altura }}
-                      title={`${m.label}: US$${m.precio} (${m.muestras} consultas)`}
-                    />
-                    <div className="mt-1.5 text-[11px] font-medium text-slate-500">
-                      {m.label}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
+        <CalendarioPrecios historial={historial} ciudad={d.ciudad} />
       )}
 
       {/* Top lugares */}
@@ -502,6 +434,19 @@ export default async function PaginaDestino({ params }) {
               <div className="min-w-0 flex-1">
                 <div className="text-[14.5px] font-bold leading-tight">Tours y experiencias</div>
                 <div className="truncate text-[12.5px] text-slate-500">Tickets sin filas con GetYourGuide</div>
+              </div>
+              <span className="text-xl">→</span>
+            </a>
+            <a
+              href={linkCivitatis({ ciudad: d.ciudad })}
+              target="_blank"
+              rel="sponsored noopener"
+              className="flex items-center gap-3 rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 to-amber-50 p-3.5 text-orange-700 shadow-suave transition hover:brightness-[0.98] dark:border-orange-800 dark:from-orange-900/30 dark:to-amber-900/20 dark:text-orange-300"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">🧭</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[14.5px] font-bold leading-tight">Civitatis</div>
+                <div className="truncate text-[12.5px] text-slate-500">Tours en español · fuerte en LATAM</div>
               </div>
               <span className="text-xl">→</span>
             </a>
@@ -686,8 +631,117 @@ function OtrosDestinos({ region, actualSlug }) {
           href="/destino"
           className="inline-flex items-center gap-1 text-[13.5px] font-semibold text-marca-600 hover:underline"
         >
-          Ver los 80 destinos →
+          Ver todos los destinos →
         </Link>
+      </div>
+    </section>
+  );
+}
+
+const MESES_CORTO = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+function CalendarioPrecios({ historial, ciudad }) {
+  const { meses, mejor, peor } = historial;
+  const min = mejor.precio;
+  const max = peor.precio;
+  const rango = max - min || 1;
+
+  const porAnio = {};
+  for (const m of meses) {
+    const anio = m.ym.slice(0, 4);
+    const mes = Number(m.ym.slice(5, 7)) - 1;
+    if (!porAnio[anio]) porAnio[anio] = Array(12).fill(null);
+    porAnio[anio][mes] = m;
+  }
+  const anios = Object.keys(porAnio).sort();
+
+  function colorCelda(precio) {
+    const t = (precio - min) / rango;
+    if (t <= 0.25) return "bg-emerald-100 text-emerald-800 ring-emerald-200";
+    if (t <= 0.5) return "bg-emerald-50 text-emerald-700 ring-emerald-100";
+    if (t <= 0.75) return "bg-amber-50 text-amber-700 ring-amber-100";
+    return "bg-red-50 text-red-700 ring-red-100";
+  }
+
+  return (
+    <section className="mx-auto max-w-4xl px-6 py-6">
+      <h2 className="text-2xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
+        ¿Cuándo es más barato volar a {ciudad}?
+      </h2>
+      <p className="mt-1 text-slate-500">
+        Precio mediano de vuelo i/v por mes según nuestro detector (últimos 90 días).
+      </p>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-lg">✨</span>
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Más barato</div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-extrabold text-emerald-700">US$ {mejor.precio}</span>
+              <span className="text-[13px] font-semibold text-emerald-600">{mejor.label}</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/20 text-lg">📈</span>
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-wide text-red-700">Más caro</div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-extrabold text-red-700">US$ {peor.precio}</span>
+              <span className="text-[13px] font-semibold text-red-600">{peor.label}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-suave">
+        <table className="w-full min-w-[640px] border-collapse text-center">
+          <thead>
+            <tr className="border-b border-slate-100 bg-slate-50/80">
+              <th className="px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">Año</th>
+              {MESES_CORTO.map((m) => (
+                <th key={m} className="px-1 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">{m}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {anios.map((anio) => (
+              <tr key={anio} className="border-b border-slate-50 last:border-0">
+                <td className="px-3 py-2 text-left text-[13px] font-extrabold text-marca-900">{anio}</td>
+                {porAnio[anio].map((celda, i) => (
+                  <td key={i} className="px-1 py-1.5">
+                    {celda ? (
+                      <div
+                        className={`mx-auto w-fit rounded-lg px-2 py-1.5 text-[12px] font-bold ring-1 ${colorCelda(celda.precio)} ${celda.mejor ? "ring-2 ring-emerald-500" : ""} ${celda.peor ? "ring-2 ring-red-400" : ""}`}
+                        title={`${celda.label}: US$${celda.precio} (${celda.muestras} consultas)`}
+                      >
+                        ${celda.precio}
+                      </div>
+                    ) : (
+                      <span className="text-[11px] text-slate-300">—</span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-4 text-[11px] text-slate-500">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded bg-emerald-100 ring-1 ring-emerald-200" /> Barato
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded bg-amber-50 ring-1 ring-amber-100" /> Normal
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded bg-red-50 ring-1 ring-red-100" /> Caro
+        </span>
+        <span className="ml-auto text-slate-400">
+          Datos del detector · precios en USD ida y vuelta
+        </span>
       </div>
     </section>
   );

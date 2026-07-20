@@ -188,7 +188,7 @@ export default function ChatViajeros({ ciudad, t = null }) {
       {!abierto && (
         <button
           onClick={() => setAbierto(true)}
-          className="fixed bottom-36 right-4 z-[3400] flex items-center gap-2 rounded-full bg-white px-4 py-3 text-marca-800 shadow-[0_10px_30px_rgba(2,6,23,.25)] ring-1 ring-slate-200 transition hover:-translate-y-0.5 dark:bg-slate-800 dark:text-marca-200 dark:ring-slate-600 md:bottom-24 md:right-5"
+          className="fixed bottom-[132px] right-3 z-[3400] flex items-center gap-2 rounded-full bg-white px-4 py-3 text-marca-800 shadow-[0_10px_30px_rgba(2,6,23,.25)] ring-1 ring-slate-200 transition hover:-translate-y-0.5 dark:bg-slate-800 dark:text-marca-200 dark:ring-slate-600 md:bottom-24 md:right-5"
           aria-label={tx("aria", { ciudad })}
         >
           <span className="text-lg">💬</span>

@@ -71,6 +71,8 @@ const AEROLINEAS = {
   LH: "Lufthansa", BA: "British Airways", AZ: "ITA Airways", LX: "Swiss",
   TK: "Turkish Airlines", EK: "Emirates", QR: "Qatar Airways", ET: "Ethiopian",
   AL: "Air Leisure", "2D": "Aero VIP",
+  FR: "Ryanair", W4: "Wizz Air", BF: "French Bee", G4: "Allegiant",
+  XL: "LATAM Ecuador", PU: "Plus Ultra", F8: "Flair", CA: "Air China", AS: "Alaska Airlines",
 };
 function nombreAerolinea(cod) {
   const c = (cod || "").trim().toUpperCase();
@@ -239,7 +241,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
 
         {/* Filtro de origen: Colombia (BOG+MDE) es el default para que el
             título sea coherente; "Todos" expande a ofertas internacionales. */}
-        <div className="flex gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-700">
+        <div className="flex gap-1 overflow-x-auto rounded-full bg-slate-100 p-1 dark:bg-slate-700">
           {[
             ["colombia", "Colombia"],
             ["BOG", origenes.BOG || "Bogotá"],
@@ -249,7 +251,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
             <button
               key={k}
               onClick={() => { setFiltro(k); setVisibles(LOTE); }}
-              className={`rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition ${
+              className={`shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition ${
                 filtro === k ? "bg-white text-marca-700 shadow dark:bg-slate-600 dark:text-marca-300" : "text-slate-500 dark:text-slate-400"
               }`}
             >

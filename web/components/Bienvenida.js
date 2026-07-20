@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useApp } from "@/lib/AppContext";
 import { IDIOMAS } from "@/lib/idiomas";
+import { DESTINOS_PRESUPUESTO } from "@/lib/presupuesto";
 import { Logo, LogoMarca } from "@/components/Logo";
 import { Icono } from "@/components/Icono";
 
@@ -423,7 +424,7 @@ export default function Bienvenida() {
 
             {/* Stat de producto en línea pequeña como caption de soporte. */}
             <div className="flex items-baseline gap-2.5">
-              <span className="font-display text-[36px] font-extrabold text-acento-400">80+</span>
+              <span className="font-display text-[36px] font-extrabold text-acento-400">{DESTINOS_PRESUPUESTO.length}+</span>
               <span className="text-[13px] font-semibold uppercase tracking-wider text-white/70">
                 {t("landingStatDestinos")}
               </span>
