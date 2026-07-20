@@ -2125,7 +2125,9 @@ export default function Home() {
           {/* Panel derecho: mapa (arriba en móvil, fijo a la derecha en escritorio) */}
           <div className="order-1 lg:order-2 lg:w-[44%] lg:shrink-0">
             <div className="lg:sticky lg:top-[var(--v360-header-h,150px)]">
-              <div ref={mapaBoxRef} className="relative h-[42vh] min-h-[260px] overflow-hidden lg:h-[calc(100vh-var(--v360-header-h,150px)-22px)] lg:rounded-2xl lg:shadow-media">
+              <div ref={mapaBoxRef} className="relative mx-auto aspect-square w-[82vw] max-w-[400px] overflow-hidden rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.18)] ring-[3px] ring-white/80 dark:ring-slate-700/80 lg:mx-0 lg:w-full lg:max-w-none">
+                {/* Overlay de curvatura: sombra interna simula la esfera de un globo */}
+                <div className="pointer-events-none absolute inset-0 z-[2] rounded-full shadow-[inset_0_0_60px_18px_rgba(0,0,0,0.22)]" />
                 {/* Banner del modo "elegir inicio en el mapa": el proximo tap fija el punto. */}
                 {eligiendoEnMapa && (
                   <div className="absolute inset-x-2 top-2 z-[1000] flex items-center justify-between gap-2 rounded-xl bg-marca-800/95 px-3 py-2 text-white shadow-lg">
