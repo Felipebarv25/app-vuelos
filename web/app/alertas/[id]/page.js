@@ -10,11 +10,13 @@
 
 import Link from "next/link";
 import { leerAlerta } from "@/lib/alertas";
-import { preciosPorMes } from "@/lib/historialPrecios";
+import { preciosPorMes, vuelosMasBaratosPorMes } from "@/lib/historialPrecios";
 import NavTop from "@/components/NavTop";
 import BotonVolver from "@/components/BotonVolver";
 import FooterAnduve from "@/components/FooterAnduve";
 import BottomTabBar from "@/components/BottomTabBar";
+import AlertaEditor from "@/components/AlertaEditor";
+import VuelosBaratos from "@/components/VuelosBaratos";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +44,10 @@ export default async function AlertaDetalle({ params }) {
     );
   }
 
-  const datos = await preciosPorMes(alerta.iata);
+  const [datos, datosVuelos] = await Promise.all([
+    preciosPorMes(alerta.iata),
+    vuelosMasBaratosPorMes(alerta.iata),
+  ]);
   const tieneDatos = datos && datos.meses && datos.meses.length >= 2;
 
   // Calculos para resumen — promedio y comparacion vs umbral.
@@ -75,20 +80,7 @@ export default async function AlertaDetalle({ params }) {
         <h1 className="text-[26px] font-extrabold tracking-tight text-slate-900 lg:text-[32px] dark:text-slate-100">
           {alerta.ciudad}, {alerta.pais}
         </h1>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13.5px] text-slate-600 dark:text-slate-400">
-          <span>
-            Te avisamos cuando el vuelo baje de <b className="text-slate-900 dark:text-slate-100">{fmt(alerta.umbral)}</b>
-          </span>
-          {alerta.activa ? (
-            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11.5px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-              · Activa
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[11.5px] font-bold uppercase tracking-wider text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-              · Disparada (pausada)
-            </span>
-          )}
-        </div>
+        <AlertaEditor alerta={alerta} />
 
         {/* Filtro anti-spam (2026-06-29): solo emails cuando precio esta al
             menos 20% bajo el promedio historico. Hace visible al usuario el
@@ -215,6 +207,16 @@ export default async function AlertaDetalle({ params }) {
               Datos del detector propio de Anduve. Solo meses con ≥2 muestras se incluyen.
             </p>
           </>
+        )}
+
+        {/* Vuelos más baratos encontrados por mes (con detalle completo) */}
+        {datosVuelos && datosVuelos.vuelos?.length > 0 && (
+          <VuelosBaratos
+            vuelos={datosVuelos.vuelos}
+            promedio={datosVuelos.promedio}
+            umbral={alerta.umbral}
+            ciudad={alerta.ciudad}
+          />
         )}
       </main>
 

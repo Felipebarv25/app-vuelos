@@ -122,3 +122,21 @@ export async function reactivarAlerta(id) {
   await kv(["SET", `alerta:${id}`, JSON.stringify(a), "EX", String(TTL_ALERTA)]);
   return true;
 }
+
+export async function actualizarAlerta(id, campos) {
+  if (!kvActivo() || !id) return null;
+  const a = await leerAlerta(id);
+  if (!a) return null;
+  if (campos.umbral !== undefined) {
+    const u = Number(campos.umbral);
+    if (!Number.isFinite(u) || u <= 0) return null;
+    a.umbral = Math.round(u);
+  }
+  if (campos.origen !== undefined)
+    a.origen = String(campos.origen || "").toUpperCase().slice(0, 3);
+  if (campos.escalasMax !== undefined)
+    a.escalasMax = Number.isFinite(Number(campos.escalasMax)) ? Number(campos.escalasMax) : 0;
+  if (campos.activa !== undefined) a.activa = !!campos.activa;
+  await kv(["SET", `alerta:${id}`, JSON.stringify(a), "EX", String(TTL_ALERTA)]);
+  return a;
+}

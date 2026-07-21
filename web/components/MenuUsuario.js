@@ -20,6 +20,8 @@ export default function MenuUsuario({ oscuro = false }) {
   const [alertas, setAlertas] = useState([]);
   const [mostrarFeedback, setMostrarFeedback] = useState(false);
   const [graciasFeedback, setGraciasFeedback] = useState(false);
+  const [editandoId, setEditandoId] = useState(null);
+  const [editValor, setEditValor] = useState("");
   const ref = useRef(null);
 
   // Cargar contador de alertas cuando se abre el menu (no en cada render).
@@ -58,15 +60,34 @@ export default function MenuUsuario({ oscuro = false }) {
     : "Pro"
     : "Gratis";
 
-  async function borrarAlerta(id) {
-    const headers = {};
+  function authHdrs() {
+    const h = {};
     try {
       const tk = localStorage.getItem("anduve_auth_token")
               || sessionStorage.getItem("anduve_auth_token");
-      if (tk) headers.Authorization = `Bearer ${tk}`;
+      if (tk) h.Authorization = `Bearer ${tk}`;
     } catch {}
-    await fetch(`/api/alertas?id=${id}`, { method: "DELETE", headers });
+    return h;
+  }
+
+  async function borrarAlerta(id) {
+    await fetch(`/api/alertas?id=${id}`, { method: "DELETE", headers: authHdrs() });
     setAlertas((arr) => arr.filter((a) => a.id !== id));
+  }
+
+  async function guardarUmbral(id) {
+    const nuevo = Math.round(Number(editValor));
+    if (!Number.isFinite(nuevo) || nuevo <= 0) { setEditandoId(null); return; }
+    const viejo = alertas.find((a) => a.id === id);
+    if (viejo && nuevo === viejo.umbral) { setEditandoId(null); return; }
+    const res = await fetch("/api/alertas", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHdrs() },
+      body: JSON.stringify({ id, umbral: nuevo }),
+    });
+    const d = await res.json().catch(() => null);
+    if (d?.ok) setAlertas((arr) => arr.map((a) => (a.id === id ? d.alerta : a)));
+    setEditandoId(null);
   }
 
   return (
@@ -142,20 +163,39 @@ export default function MenuUsuario({ oscuro = false }) {
                     key={a.id}
                     className="flex items-center justify-between rounded-lg bg-slate-50 px-2 py-1.5 text-[12.5px] dark:bg-slate-700/60"
                   >
-                    {/* Link a /alertas/<id> con detalle de mejor precio por mes,
-                        promedio y ahorro estimado. Cierra el dropdown al
-                        navegar para no quedar abierto encima del nuevo render. */}
                     <Link
                       href={`/alertas/${a.id}`}
                       onClick={() => setAbierto(false)}
-                      className="min-w-0 flex-1 truncate"
+                      className="min-w-0 shrink truncate font-semibold text-marca-900 hover:text-marca-700 dark:text-slate-200 dark:hover:text-marca-300"
                     >
-                      <span className="font-semibold text-marca-900 hover:text-marca-700 dark:text-slate-200 dark:hover:text-marca-300">
-                        {a.ciudad}
-                      </span>{" "}
-                      <span className="text-slate-400">·</span>{" "}
-                      <span className="text-amber-700 dark:text-amber-400">≤ US$ {a.umbral}</span>
+                      {a.ciudad}
                     </Link>
+                    <span className="mx-1 text-slate-400">·</span>
+                    {editandoId === a.id ? (
+                      <span className="inline-flex items-center gap-1">
+                        <span className="text-[11px] text-slate-400">US$</span>
+                        <input
+                          type="number"
+                          min="1"
+                          value={editValor}
+                          onChange={(e) => setEditValor(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") guardarUmbral(a.id); if (e.key === "Escape") setEditandoId(null); }}
+                          onBlur={() => guardarUmbral(a.id)}
+                          className="w-[60px] rounded border border-marca-300 bg-white px-1.5 py-0.5 text-[12px] font-bold tabular-nums text-slate-900 outline-none focus:ring-1 focus:ring-marca-400 dark:border-marca-600 dark:bg-slate-700 dark:text-slate-100"
+                          autoFocus
+                        />
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setEditandoId(a.id); setEditValor(String(a.umbral)); }}
+                        className="inline-flex shrink-0 items-center gap-0.5 rounded px-1 py-0.5 text-amber-700 transition hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/30"
+                        title="Editar umbral"
+                      >
+                        ≤&nbsp;US$&nbsp;{a.umbral}
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-0.5 text-slate-400"><path d="M17 3a2.85 2.85 0 114 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => borrarAlerta(a.id)}
