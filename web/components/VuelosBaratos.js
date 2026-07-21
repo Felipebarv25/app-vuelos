@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const AEROLINEAS = {
   AV: "Avianca", LA: "LATAM", DM: "Arajet", JA: "JetSMART", Y4: "Volaris",
@@ -46,18 +46,35 @@ function escalasTexto(n) {
   if (n === 1) return "1 escala";
   return `${n} escalas`;
 }
-export default function VuelosBaratos({ vuelos, promedio, umbral, ciudad }) {
-  const anios = [...new Set(vuelos.map((v) => v.anio))].sort();
-  const [anioSel, setAnioSel] = useState(anios[anios.length - 1] || "");
 
+export default function VuelosBaratos({ iata, umbral, ciudad }) {
+  const [datos, setDatos] = useState(null);
+  const [anioSel, setAnioSel] = useState("");
+
+  useEffect(() => {
+    if (!iata) return;
+    fetch("/historial-resumen.json")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        const d = json?.destinos?.[iata];
+        if (d?.vuelos?.length) {
+          setDatos(d);
+          const anios = [...new Set(d.vuelos.map((v) => v.anio))].sort();
+          setAnioSel(anios[anios.length - 1] || "");
+        }
+      })
+      .catch(() => {});
+  }, [iata]);
+
+  if (!datos) return null;
+
+  const { vuelos, promedio } = datos;
+  const anios = [...new Set(vuelos.map((v) => v.anio))].sort();
   const filtrados = vuelos.filter((v) => v.anio === anioSel);
   const minPrecio = filtrados.length ? Math.min(...filtrados.map((v) => v.precio)) : 0;
 
-  if (!vuelos.length) return null;
-
   return (
     <section className="mt-10">
-      {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-[18px] font-extrabold tracking-tight text-slate-900 lg:text-[20px] dark:text-slate-100">
@@ -67,7 +84,6 @@ export default function VuelosBaratos({ vuelos, promedio, umbral, ciudad }) {
             Precio más bajo detectado por mes hacia {ciudad}. Datos del radar de Anduve.
           </p>
         </div>
-        {/* Year tabs */}
         {anios.length > 1 && (
           <div className="flex gap-1 rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800">
             {anios.map((a) => (
@@ -88,7 +104,6 @@ export default function VuelosBaratos({ vuelos, promedio, umbral, ciudad }) {
         )}
       </div>
 
-      {/* Cards grid */}
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {filtrados.map((v) => {
           const mesIdx = Number(v.ym.slice(5, 7)) - 1;
@@ -108,7 +123,6 @@ export default function VuelosBaratos({ vuelos, promedio, umbral, ciudad }) {
                   : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
               }`}
             >
-              {/* Month header bar */}
               <div className={`flex items-center justify-between px-4 py-2.5 ${
                 esMejor
                   ? "bg-emerald-100/60 dark:bg-emerald-900/30"
@@ -139,7 +153,6 @@ export default function VuelosBaratos({ vuelos, promedio, umbral, ciudad }) {
               </div>
 
               <div className="px-4 pb-4 pt-3">
-                {/* Price */}
                 <div className={`text-[24px] font-extrabold tabular-nums tracking-tight ${
                   esMejor ? "text-emerald-700 dark:text-emerald-300" : "text-slate-900 dark:text-slate-100"
                 }`}>
@@ -147,9 +160,7 @@ export default function VuelosBaratos({ vuelos, promedio, umbral, ciudad }) {
                   <span className="ml-1.5 text-[11px] font-medium text-slate-400">ida y vuelta</span>
                 </div>
 
-                {/* Flight details */}
                 <div className="mt-3 space-y-2">
-                  {/* Airline */}
                   <div className="flex items-center gap-2">
                     <div className="flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 text-[10px] font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                       {(v.aerolinea || "?").slice(0, 2)}
@@ -159,7 +170,6 @@ export default function VuelosBaratos({ vuelos, promedio, umbral, ciudad }) {
                     </span>
                   </div>
 
-                  {/* Route */}
                   <div className="flex items-center gap-2 text-[12.5px] text-slate-600 dark:text-slate-400">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
@@ -171,7 +181,6 @@ export default function VuelosBaratos({ vuelos, promedio, umbral, ciudad }) {
                     </span>
                   </div>
 
-                  {/* Stops */}
                   {(escIda || escVuelta) && (
                     <div className="flex items-center gap-2 text-[12.5px]">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
@@ -185,7 +194,6 @@ export default function VuelosBaratos({ vuelos, promedio, umbral, ciudad }) {
                     </div>
                   )}
 
-                  {/* Dates */}
                   <div className="flex items-center gap-2 text-[12.5px] text-slate-600 dark:text-slate-400">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
@@ -194,7 +202,6 @@ export default function VuelosBaratos({ vuelos, promedio, umbral, ciudad }) {
                   </div>
                 </div>
 
-                {/* CTA */}
                 {v.origen && v.ida && (
                   <a
                     href={`https://www.google.com/travel/flights?q=flights+from+${encodeURIComponent(v.origen)}+to+${encodeURIComponent(ciudad)}+on+${v.ida}${v.vuelta ? `+return+${v.vuelta}` : ""}`}
@@ -214,7 +221,6 @@ export default function VuelosBaratos({ vuelos, promedio, umbral, ciudad }) {
                 )}
               </div>
 
-              {/* Subtle glow for best */}
               {esMejor && (
                 <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-emerald-400/20 blur-2xl" />
               )}
@@ -223,7 +229,6 @@ export default function VuelosBaratos({ vuelos, promedio, umbral, ciudad }) {
         })}
       </div>
 
-      {/* Summary bar */}
       {promedio > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[12.5px] text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400">
           <span>

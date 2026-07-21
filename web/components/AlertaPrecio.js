@@ -26,17 +26,19 @@ function _norm(s) {
   return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 }
 
-export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, label = null }) {
+export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, label = null, alertaExistente = null, abrirDirecto = false, onActualizada = null, onCerrar = null }) {
+  const esEdicion = !!alertaExistente;
   const { t, lang, usuario, abrirPaywall } = useApp();
-  const [abierto, setAbierto] = useState(false);
+  const [abierto, setAbierto] = useState(abrirDirecto);
   // ORIGEN de la alerta (feedback 2026-07-11: usuario de Medellin recibia
   // alertas saliendo de Bogota). Hubs del pais del visitante + "cualquiera".
   // Prioridad del default: eleccion previa (localStorage anduve_hub_origen)
   // > ciudad detectada por IP (/api/geo, header x-vercel-ip-city) > 1er hub.
   const [paisOrigen, setPaisOrigen] = useState(PAIS_DEFAULT);
-  const [hubOrigen, setHubOrigen] = useState("");       // IATA o "" = cualquiera
-  const [escalasMax, setEscalasMax] = useState(0);       // 0 directo | 1 | 99
+  const [hubOrigen, setHubOrigen] = useState(esEdicion ? (alertaExistente.origen || "") : "");
+  const [escalasMax, setEscalasMax] = useState(esEdicion ? (alertaExistente.escalasMax ?? 0) : 0);
   useEffect(() => {
+    if (esEdicion) return;
     let vivo = true;
     let iso = PAIS_DEFAULT;
     try {
@@ -66,11 +68,12 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
       })
       .catch(() => { if (vivo) setHubOrigen(hubs[0]?.iata || ""); });
     return () => { vivo = false; };
-  }, []);
+  }, [esEdicion]);
   // Flecha "atrás" del navegador cierra este modal en vez de salir del sitio.
   useBrowserBackClose(abierto, () => setAbierto(false));
   const [umbral, setUmbral] = useState(() =>
-    precioActual && Number.isFinite(precioActual)
+    esEdicion ? alertaExistente.umbral
+    : precioActual && Number.isFinite(precioActual)
       ? Math.round(precioActual * 0.8)
       : ""
   );
@@ -79,9 +82,15 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
 
   // Auto-cerrar el modal de exito tras 1.8s. Patron Stripe/GitHub: el usuario
   // confirma la accion y sigue, no tiene que dismissear "Hecho".
+  function cerrar() {
+    setAbierto(false);
+    setEstado(null);
+    if (onCerrar) onCerrar();
+  }
+
   useEffect(() => {
     if (estado !== "ok") return;
-    const id = setTimeout(() => { setAbierto(false); setEstado(null); }, 1800);
+    const id = setTimeout(cerrar, 1800);
     return () => clearTimeout(id);
   }, [estado]);
 
@@ -105,9 +114,7 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
   // ESC cierra el modal. Estandar de accesibilidad de cualquier dialog.
   useEffect(() => {
     if (!abierto) return;
-    const onKey = (e) => {
-      if (e.key === "Escape") { setAbierto(false); setEstado(null); }
-    };
+    const onKey = (e) => { if (e.key === "Escape") cerrar(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [abierto]);
@@ -134,9 +141,6 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
     setCargando(true);
     setEstado(null);
     try {
-      // Pasar token Bearer si hay (sesion email magic code o Demo).
-      // BUG FIX: leer también de sessionStorage. Las sesiones Demo se guardan
-      // ahí (no en localStorage), y antes el POST iba sin Authorization.
       const headers = { "Content-Type": "application/json" };
       try {
         const tk = localStorage.getItem("anduve_auth_token")
@@ -144,9 +148,7 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
         if (tk) headers.Authorization = `Bearer ${tk}`;
       } catch {}
 
-      // Recordar el hub elegido para las proximas alertas de este dispositivo.
       try { localStorage.setItem("anduve_hub_origen", hubOrigen); } catch {}
-      // Moneda local del usuario (para que el email muestre USD + su moneda).
       let moneda = "";
       try {
         moneda = sessionStorage.getItem("anduve_moneda_geo")
@@ -154,22 +156,40 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
               || "";
       } catch {}
 
-      const r = await fetch("/api/alertas/crear", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          ciudad, pais, iata, umbral: Number(umbral), lang,
-          origen: hubOrigen, escalasMax, moneda,
-        }),
-      });
-      const data = await r.json().catch(() => ({}));
-      if (r.status === 402) {
-        // Gate Free: ya tiene 1 alerta. Abrimos el paywall en lugar de error.
-        setAbierto(false);
-        abrirPaywall("alerta");
-        return;
+      let r, data;
+      if (esEdicion) {
+        r = await fetch("/api/alertas", {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({
+            id: alertaExistente.id,
+            umbral: Number(umbral),
+            origen: hubOrigen,
+            escalasMax,
+            activa: true,
+          }),
+        });
+        data = await r.json().catch(() => ({}));
+      } else {
+        r = await fetch("/api/alertas/crear", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            ciudad, pais, iata, umbral: Number(umbral), lang,
+            origen: hubOrigen, escalasMax, moneda,
+          }),
+        });
+        data = await r.json().catch(() => ({}));
+        if (r.status === 402) {
+          setAbierto(false);
+          abrirPaywall("alerta");
+          return;
+        }
       }
-      if (data?.ok) setEstado("ok");
+      if (data?.ok) {
+        setEstado("ok");
+        if (esEdicion && onActualizada) onActualizada(data.alerta);
+      }
       else if (data?.motivo === "sin-sesion") setEstado("auth");
       else setEstado("error");
     } catch {
@@ -181,18 +201,20 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
 
   return (
     <>
-      <button
-        type="button"
-        onClick={abrir}
-        className="inline-flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] font-bold text-amber-700 transition hover:bg-amber-100"
-      >
-        🔔 {label || t("alertaBoton")}
-      </button>
+      {!esEdicion && (
+        <button
+          type="button"
+          onClick={abrir}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] font-bold text-amber-700 transition hover:bg-amber-100"
+        >
+          🔔 {label || t("alertaBoton")}
+        </button>
+      )}
 
       {abierto && montado && createPortal(
         <div
           className="fixed inset-0 z-[5400] flex items-end justify-center bg-slate-900/55 p-3 animar-aparecer sm:items-center"
-          onClick={() => { setAbierto(false); setEstado(null); }}
+          onClick={cerrar}
         >
           <div
             role="dialog"
@@ -204,17 +226,21 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
             <div className="relative bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 px-6 pb-6 pt-5 text-white">
               <button
                 type="button"
-                onClick={() => { setAbierto(false); setEstado(null); }}
+                onClick={cerrar}
                 className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30"
               >
                 <Icono nombre="x" size={16} />
               </button>
-              <div className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/85">🔔 {t("alertaModalEyebrow")}</div>
+              <div className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/85">🔔 {esEdicion ? "Editar alerta" : t("alertaModalEyebrow")}</div>
               <h2 className="mt-1 text-2xl font-extrabold tracking-tight">
-                {t("alertaModalTitulo").replace("{ciudad}", ciudad)}
+                {esEdicion
+                  ? `Editar alerta de ${ciudad}`
+                  : t("alertaModalTitulo").replace("{ciudad}", ciudad)}
               </h2>
               <p className="mt-2 text-[14px] text-white/85">
-                {t("alertaModalSub")}
+                {esEdicion
+                  ? "Cambia el umbral, origen o escalas y guarda."
+                  : t("alertaModalSub")}
               </p>
             </div>
 
@@ -225,11 +251,11 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
               {estado === "ok" ? (
                 <div className="text-center">
                   <div className="text-5xl">✓</div>
-                  <div className="mt-3 text-lg font-extrabold text-marca-900">{t("alertaCreada")}</div>
-                  <div className="mt-1 text-[13.5px] text-slate-500">{t("alertaCreadaSub")}</div>
+                  <div className="mt-3 text-lg font-extrabold text-marca-900">{esEdicion ? "Alerta actualizada" : t("alertaCreada")}</div>
+                  <div className="mt-1 text-[13.5px] text-slate-500">{esEdicion ? "Tus cambios ya están activos." : t("alertaCreadaSub")}</div>
                   <button
                     type="button"
-                    onClick={() => { setAbierto(false); setEstado(null); }}
+                    onClick={cerrar}
                     className="mt-5 w-full rounded-2xl bg-gradient-to-r from-marca-500 to-marca-600 py-3 text-[14.5px] font-bold text-white shadow-marca"
                   >
                     {t("alertaCerrar")}
@@ -371,7 +397,7 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
                     disabled={cargando}
                     className="mt-5 w-full rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 py-3 text-[14.5px] font-bold text-white shadow-marca disabled:opacity-60"
                   >
-                    {cargando ? "…" : t("alertaConfirmar")} →
+                    {cargando ? "Guardando…" : esEdicion ? "Guardar cambios →" : `${t("alertaConfirmar")} →`}
                   </button>
 
                   <div className="mt-3 text-center text-[11.5px] text-slate-400">

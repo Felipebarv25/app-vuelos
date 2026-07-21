@@ -19,7 +19,6 @@ function mediana(nums) {
 }
 
 let CACHE = null;
-let CACHE_COMPLETO = null;
 
 // Lee el CSV una vez y devuelve {IATA: {"YYYY-MM": [precios]}}.
 // Solo guarda los últimos 90 días (consultas frescas) y solo origen BOG/MDE.
@@ -61,44 +60,6 @@ async function cargarBruto() {
   return CACHE;
 }
 
-async function cargarCompleto() {
-  if (CACHE_COMPLETO) return CACHE_COMPLETO;
-  let txt;
-  try {
-    txt = await fs.readFile(CSV_PATH, "utf8");
-  } catch {
-    CACHE_COMPLETO = {};
-    return CACHE_COMPLETO;
-  }
-  const lineas = txt.split(/\r?\n/);
-  if (lineas.length < 2) { CACHE_COMPLETO = {}; return CACHE_COMPLETO; }
-  // {destino: {"YYYY-MM": {precio, origen, ida, vuelta, aerolinea, escalas_ida, escalas_vuelta, visto}}}
-  const datos = {};
-  for (let i = 1; i < lineas.length; i++) {
-    const fila = lineas[i].split(",");
-    if (fila.length < 7) continue;
-    const visto = fila[0];
-    const origen = fila[1];
-    const destino = fila[2];
-    const ida = fila[3];
-    const vuelta = fila[4];
-    const precio = Number(fila[5]);
-    const aerolinea = (fila[7] || "").trim();
-    const escalas_ida = fila[8] != null && fila[8] !== "" ? Number(fila[8]) : null;
-    const escalas_vuelta = fila[9] != null && fila[9] !== "" ? Number(fila[9]) : null;
-    if (!destino || !ida || !precio || precio <= 0) continue;
-    const ym = ida.slice(0, 7);
-    if (!/^\d{4}-\d{2}$/.test(ym)) continue;
-    if (!datos[destino]) datos[destino] = {};
-    const actual = datos[destino][ym];
-    if (!actual || precio < actual.precio) {
-      datos[destino][ym] = { precio, origen, ida, vuelta, aerolinea, escalas_ida, escalas_vuelta, visto };
-    }
-  }
-  CACHE_COMPLETO = datos;
-  return CACHE_COMPLETO;
-}
-
 // Devuelve para un IATA destino: { meses: [{ym, label, precio, mejor:bool}], mejor:{ym,precio,label}, peor:{...} }
 // O null si no hay datos.
 export async function preciosPorMes(iata) {
@@ -135,19 +96,3 @@ export async function preciosPorMes(iata) {
   return { meses: conLabel, mejor, peor };
 }
 
-export async function vuelosMasBaratosPorMes(iata) {
-  const bruto = await cargarCompleto();
-  const porMes = bruto[iata];
-  if (!porMes) return null;
-  const filas = Object.entries(porMes)
-    .map(([ym, v]) => {
-      const m = Number(ym.slice(5, 7)) - 1;
-      const y = ym.slice(0, 4);
-      return { ym, anio: y, label: `${MESES_ES[m] || ""} ${y.slice(2)}`, ...v };
-    })
-    .sort((a, b) => a.ym.localeCompare(b.ym));
-  if (!filas.length) return null;
-  const precios = filas.map((f) => f.precio);
-  const promedioGlobal = Math.round(precios.reduce((s, p) => s + p, 0) / precios.length);
-  return { vuelos: filas, promedio: promedioGlobal };
-}

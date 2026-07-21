@@ -25,6 +25,7 @@ load_dotenv()  # marker de afiliado, etc. (en GitHub Actions van como variables)
 RAIZ = os.path.dirname(__file__)
 HISTORIAL = os.path.join(RAIZ, "datos", "historial.csv")
 SALIDA = os.path.join(RAIZ, "web", "public", "ofertas.json")
+SALIDA_RESUMEN = os.path.join(RAIZ, "web", "public", "historial-resumen.json")
 
 # Hubs origen (IATA → ciudad legible) — Fase 2 multi-pais. Debe coincidir con
 # config.ORIGENES y con web/lib/paisesOrigen.js (PAISES_ORIGEN[*].hubs).
@@ -212,5 +213,77 @@ def main():
     print(f"OK: {len(salida)} ofertas escritas en {SALIDA}")
 
 
+MESES_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
+
+
+def generar_resumen():
+    """Genera historial-resumen.json: el vuelo más barato detectado por mes
+    y destino, con todos los datos del vuelo. VuelosBaratos.js lo consume
+    client-side en Vercel (el CSV no está disponible ahí)."""
+    if not os.path.exists(HISTORIAL):
+        print("Resumen: sin historial.")
+        return
+
+    # {destino: {"YYYY-MM": {mejor fila}}}
+    destinos = {}
+    with open(HISTORIAL, newline="", encoding="utf-8") as f:
+        for fila in csv.DictReader(f):
+            try:
+                precio = float(fila["precio"])
+            except (TypeError, ValueError, KeyError):
+                continue
+            if precio <= 0:
+                continue
+            dest = fila.get("destino", "")
+            ida = fila.get("fecha_ida", "")
+            if not dest or len(ida) < 7:
+                continue
+            ym = ida[:7]
+            if dest not in destinos:
+                destinos[dest] = {}
+            actual = destinos[dest].get(ym)
+            if not actual or precio < actual["precio"]:
+                def _esc(v):
+                    try:
+                        s = (v or "").strip()
+                        return int(s) if s != "" else None
+                    except (TypeError, ValueError):
+                        return None
+                destinos[dest][ym] = {
+                    "precio": precio,
+                    "origen": fila.get("origen", ""),
+                    "ida": ida,
+                    "vuelta": fila.get("fecha_vuelta", ""),
+                    "aerolinea": (fila.get("aerolinea") or "").strip(),
+                    "escalas_ida": _esc(fila.get("escalas_ida")),
+                    "escalas_vuelta": _esc(fila.get("escalas_vuelta")),
+                    "visto": fila.get("timestamp", ""),
+                }
+
+    doc = {}
+    for dest, meses in destinos.items():
+        vuelos = []
+        for ym, v in sorted(meses.items()):
+            mi = int(ym[5:7]) - 1
+            anio = ym[:4]
+            vuelos.append({
+                "ym": ym,
+                "anio": anio,
+                "label": f"{MESES_ES[mi]} {anio[2:]}",
+                **v,
+            })
+        precios = [v["precio"] for v in vuelos]
+        promedio = round(sum(precios) / len(precios)) if precios else 0
+        doc[dest] = {"vuelos": vuelos, "promedio": promedio}
+
+    os.makedirs(os.path.dirname(SALIDA_RESUMEN), exist_ok=True)
+    with open(SALIDA_RESUMEN, "w", encoding="utf-8") as f:
+        json.dump({"generado": datetime.now(timezone.utc).isoformat(timespec="seconds"), "destinos": doc}, f, ensure_ascii=False)
+
+    total = sum(len(d["vuelos"]) for d in doc.values())
+    print(f"OK: resumen de {len(doc)} destinos, {total} meses en {SALIDA_RESUMEN}")
+
+
 if __name__ == "__main__":
     main()
+    generar_resumen()

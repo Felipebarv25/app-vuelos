@@ -10,7 +10,7 @@
 
 import Link from "next/link";
 import { leerAlerta } from "@/lib/alertas";
-import { preciosPorMes, vuelosMasBaratosPorMes } from "@/lib/historialPrecios";
+import { preciosPorMes } from "@/lib/historialPrecios";
 import NavTop from "@/components/NavTop";
 import BotonVolver from "@/components/BotonVolver";
 import FooterAnduve from "@/components/FooterAnduve";
@@ -44,10 +44,7 @@ export default async function AlertaDetalle({ params }) {
     );
   }
 
-  const [datos, datosVuelos] = await Promise.all([
-    preciosPorMes(alerta.iata),
-    vuelosMasBaratosPorMes(alerta.iata),
-  ]);
+  const datos = await preciosPorMes(alerta.iata);
   const tieneDatos = datos && datos.meses && datos.meses.length >= 2;
 
   // Calculos para resumen — promedio y comparacion vs umbral.
@@ -209,15 +206,11 @@ export default async function AlertaDetalle({ params }) {
           </>
         )}
 
-        {/* Vuelos más baratos encontrados por mes (con detalle completo) */}
-        {datosVuelos && datosVuelos.vuelos?.length > 0 && (
-          <VuelosBaratos
-            vuelos={datosVuelos.vuelos}
-            promedio={datosVuelos.promedio}
-            umbral={alerta.umbral}
-            ciudad={alerta.ciudad}
-          />
-        )}
+        <VuelosBaratos
+          iata={alerta.iata}
+          umbral={alerta.umbral}
+          ciudad={alerta.ciudad}
+        />
       </main>
 
       <FooterAnduve />
