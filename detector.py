@@ -13,7 +13,7 @@ import requests
 from dotenv import load_dotenv
 
 import config
-from travelpayouts import buscar_oferta_mas_barata
+from travelpayouts import buscar_oferta_mas_barata, buscar_precios_latest
 from almacenamiento import (cargar_precios_por_ruta_mes, guardar_precio,
                             registrar_alerta, ya_se_alerto)
 from notificaciones import notificar
@@ -153,19 +153,29 @@ def evaluar_oferta(precio, umbral, historico):
 def main():
     meses = generar_meses()
     historial = cargar_precios_por_ruta_mes()
-    total = len(config.ORIGENES) * len(config.DESTINOS) * len(meses)
+    n_rutas = len(config.ORIGENES) * len(config.DESTINOS)
+    total_dates = n_rutas * len(meses)
     print(f"Explorando {len(config.ORIGENES)} orígenes x "
           f"{len(config.DESTINOS)} destinos x {len(meses)} meses "
-          f"= {total} consultas...")
+          f"= {total_dates} consultas (dates) + {n_rutas} (latest)...")
     ofertas = 0
 
     for origen in config.ORIGENES:
         for destino, (nombre, umbral) in config.DESTINOS.items():
+            # prices_latest: 1 llamada por ruta, reutilizada para todos los meses
+            try:
+                cache_latest = buscar_precios_latest(
+                    origen, destino, config.MONEDA, config.SOLO_DIRECTOS)
+            except Exception:
+                cache_latest = []
+            time.sleep(config.ESPERA_ENTRE_LLAMADAS)
+
             for mes in meses:
                 try:
                     oferta = buscar_oferta_mas_barata(
                         origen, destino, mes, config.MONEDA,
-                        config.SOLO_DIRECTOS)
+                        config.SOLO_DIRECTOS,
+                        cache_latest=cache_latest)
                 except Exception as e:
                     print(f"  ! Error {origen}->{destino} {mes}: {e}")
                     time.sleep(config.ESPERA_ENTRE_LLAMADAS)

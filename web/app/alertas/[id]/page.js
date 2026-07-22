@@ -108,7 +108,7 @@ export default async function AlertaDetalle({ params }) {
               <p className="mt-1 text-[13.5px] leading-relaxed text-slate-600 dark:text-slate-400">
                 Nuestro detector escanea precios cada hora. En unos días tendremos suficientes muestras
                 para mostrarte el mejor mes y el promedio.{" "}
-                <b className="text-slate-800 dark:text-slate-200">Te llegará un email cuando baje de {fmt(alerta.umbral)}.</b>
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-200/60 px-2 py-0.5 text-[12px] font-bold text-amber-900 dark:bg-amber-800/40 dark:text-amber-200">📩 Te avisaremos por email cuando baje de tu umbral</span>
               </p>
             </div>
           </div>
