@@ -1,7 +1,7 @@
 // Service Worker mínimo: hace que la app abra rápido y funcione como app
 // instalada. Estrategia "network-first" para HTML (siempre lo más nuevo) y
 // caché para los recursos estáticos (mapa, iconos, etc.).
-const CACHE = "anduve-v109";
+const CACHE = "anduve-v110";
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();
@@ -24,7 +24,7 @@ self.addEventListener("fetch", (e) => {
   const ruta = new URL(req.url).pathname;
   // ofertas.json son datos vivos (vuelos): NUNCA caché-primero (iría a la rama
   // red-primero de abajo para mostrar siempre precios frescos).
-  const esDatoVivo = ruta.endsWith("/ofertas.json");
+  const esDatoVivo = ruta.endsWith("/ofertas.json") || ruta.endsWith("/historial-resumen.json");
   // Recursos estáticos: caché primero (rápido).
   if (!esDatoVivo && /\.(png|svg|css|js|woff2?|json)$/.test(ruta)) {
     e.respondWith(

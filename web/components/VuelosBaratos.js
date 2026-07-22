@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import PrecioDual from "./PrecioDual";
+import { PAISES_ORIGEN } from "@/lib/paisesOrigen";
 
 const AEROLINEAS = {
   AV: "Avianca", LA: "LATAM", DM: "Arajet", JA: "JetSMART", Y4: "Volaris",
@@ -16,8 +17,10 @@ const AEROLINEAS = {
 };
 
 const ORIGENES = {
-  BOG: "Bogotá", MDE: "Medellín", MEX: "CDMX", UIO: "Quito", LIM: "Lima",
-  SCL: "Santiago", EZE: "Buenos Aires", GRU: "São Paulo", CCS: "Caracas",
+  BOG: "Bogotá", MDE: "Medellín", CLO: "Cali", CTG: "Cartagena",
+  MEX: "CDMX", CUN: "Cancún", GDL: "Guadalajara", MTY: "Monterrey",
+  UIO: "Quito", GYE: "Guayaquil", LIM: "Lima", SCL: "Santiago",
+  EZE: "Buenos Aires", GRU: "São Paulo", CCS: "Caracas",
   MAD: "Madrid", MIA: "Miami",
 };
 
@@ -47,7 +50,6 @@ function escalasTexto(n) {
   if (n === 1) return "1 escala";
   return `${n} escalas`;
 }
-
 function tiempoDesde(iso) {
   if (!iso) return null;
   try {
@@ -62,6 +64,25 @@ function tiempoDesde(iso) {
   } catch { return null; }
 }
 
+function hubsDelPais(origenIata) {
+  for (const pais of Object.values(PAISES_ORIGEN)) {
+    const iatas = (pais.hubs || []).map((h) => h.iata);
+    if (iatas.includes(origenIata)) return iatas;
+  }
+  return [origenIata];
+}
+
+function mejorPorMes(vuelos) {
+  const mapa = {};
+  for (const v of vuelos) {
+    const actual = mapa[v.ym];
+    if (!actual || v.precio < actual.precio) {
+      mapa[v.ym] = v;
+    }
+  }
+  return Object.values(mapa).sort((a, b) => a.ym.localeCompare(b.ym));
+}
+
 export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
   const [datos, setDatos] = useState(null);
   const [anioSel, setAnioSel] = useState("");
@@ -74,9 +95,9 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
         const d = json?.destinos?.[iata];
         if (d?.vuelos?.length) {
           setDatos(d);
-          const vf = origen ? d.vuelos.filter((v) => v.origen === origen) : d.vuelos;
-          const anios = [...new Set(vf.map((v) => v.anio))].sort();
-          setAnioSel(anios[anios.length - 1] || "");
+          const anioActual = String(new Date().getFullYear());
+          const anios = [...new Set(d.vuelos.map((v) => v.anio))].sort();
+          setAnioSel(anios.includes(anioActual) ? anioActual : anios[anios.length - 1] || "");
         }
       })
       .catch(() => {});
@@ -84,12 +105,25 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
 
   if (!datos) return null;
 
-  const { promedio } = datos;
-  const vuelos = origen ? datos.vuelos.filter((v) => v.origen === origen) : datos.vuelos;
-  if (!vuelos.length) return null;
-  const anios = [...new Set(vuelos.map((v) => v.anio))].sort();
-  const filtrados = vuelos.filter((v) => v.anio === anioSel);
-  const minPrecio = filtrados.length ? Math.min(...filtrados.map((v) => v.precio)) : 0;
+  const hubsPais = origen ? hubsDelPais(origen) : [];
+  const vuelosPais = hubsPais.length
+    ? datos.vuelos.filter((v) => hubsPais.includes(v.origen))
+    : datos.vuelos;
+  if (!vuelosPais.length) return null;
+
+  const porAnio = vuelosPais.filter((v) => v.anio === anioSel);
+  const mejores = mejorPorMes(porAnio);
+  const anios = [...new Set(vuelosPais.map((v) => v.anio))].sort();
+  const minPrecio = mejores.length ? Math.min(...mejores.map((v) => v.precio)) : 0;
+
+  const promedio = datos.promedio;
+  const paisNombre = (() => {
+    for (const [, pais] of Object.entries(PAISES_ORIGEN)) {
+      const iatas = (pais.hubs || []).map((h) => h.iata);
+      if (origen && iatas.includes(origen)) return pais.nombre;
+    }
+    return null;
+  })();
 
   return (
     <section className="mt-10">
@@ -99,7 +133,7 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
             Vuelos más baratos encontrados
           </h2>
           <p className="mt-0.5 text-[12.5px] text-slate-500 dark:text-slate-400">
-            Precio más bajo detectado por mes{origen ? ` desde ${nombreOrigen(origen) || origen}` : ""} hacia {ciudad}. Datos del radar de Anduve.
+            Mejor precio por mes{paisNombre ? ` desde ${paisNombre}` : ""} hacia {ciudad}. Datos del radar de Anduve.
           </p>
         </div>
         {anios.length > 1 && (
@@ -123,7 +157,7 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {filtrados.map((v) => {
+        {mejores.map((v) => {
           const mesIdx = Number(v.ym.slice(5, 7)) - 1;
           const mesNombre = MESES_COMPLETO[mesIdx] || v.label;
           const desc = promedio ? Math.round(((promedio - v.precio) / promedio) * 100) : 0;
@@ -132,6 +166,7 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
           const escIda = escalasTexto(v.escalas_ida);
           const escVuelta = escalasTexto(v.escalas_vuelta);
           const frescura = tiempoDesde(v.visto);
+          const desdeOtraCiudad = origen && v.origen !== origen;
 
           return (
             <div
@@ -198,9 +233,12 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
                       <path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
                     </svg>
                     <span>
-                      <b>{v.origen}</b>
-                      <span className="mx-1 text-slate-400">→</span>
-                      {nombreOrigen(v.origen)}
+                      Desde <b>{nombreOrigen(v.origen) || v.origen}</b> ({v.origen})
+                      {desdeOtraCiudad && (
+                        <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                          Más barato que {nombreOrigen(origen)}
+                        </span>
+                      )}
                     </span>
                   </div>
 
@@ -277,7 +315,7 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
             </>
           )}
           <span className="text-slate-300 dark:text-slate-600">·</span>
-          <span>{filtrados.length} meses con datos en {anioSel}</span>
+          <span>{mejores.length} meses con datos en {anioSel}</span>
         </div>
       )}
 
