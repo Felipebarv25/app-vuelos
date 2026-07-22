@@ -255,7 +255,7 @@ def generar_resumen():
     umbral_fresco = datetime.now(timezone.utc) - timedelta(days=DIAS_FRESCOS_RESUMEN)
     hoy = date.today().isoformat()
 
-    # {destino: {"YYYY-MM": {mejor fila}}}
+    # {destino: {(origen, "YYYY-MM"): {fila}}} — un entry por origen+mes
     destinos = {}
     with open(HISTORIAL, newline="", encoding="utf-8") as f:
         for fila in csv.DictReader(f):
@@ -266,8 +266,9 @@ def generar_resumen():
             if precio <= 0:
                 continue
             dest = fila.get("destino", "")
+            origen = fila.get("origen", "")
             ida = fila.get("fecha_ida", "")
-            if not dest or len(ida) < 7:
+            if not dest or not origen or len(ida) < 7:
                 continue
             if ida < hoy:
                 continue
@@ -277,12 +278,13 @@ def generar_resumen():
             ym = ida[:7]
             if dest not in destinos:
                 destinos[dest] = {}
-            actual = destinos[dest].get(ym)
+            clave = (origen, ym)
+            actual = destinos[dest].get(clave)
             actual_ts = _parse_ts_safe(actual["visto"]) if actual else None
             if not actual or ts > actual_ts:
-                destinos[dest][ym] = {
+                destinos[dest][clave] = {
                     "precio": precio,
-                    "origen": fila.get("origen", ""),
+                    "origen": origen,
                     "ida": ida,
                     "vuelta": fila.get("fecha_vuelta", ""),
                     "aerolinea": (fila.get("aerolinea") or "").strip(),
@@ -292,9 +294,9 @@ def generar_resumen():
                 }
 
     doc = {}
-    for dest, meses in destinos.items():
+    for dest, entradas in destinos.items():
         vuelos = []
-        for ym, v in sorted(meses.items()):
+        for (origen, ym), v in sorted(entradas.items(), key=lambda x: x[0]):
             mi = int(ym[5:7]) - 1
             anio = ym[:4]
             vuelos.append({

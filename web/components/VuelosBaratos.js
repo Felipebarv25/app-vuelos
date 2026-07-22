@@ -62,7 +62,7 @@ function tiempoDesde(iso) {
   } catch { return null; }
 }
 
-export default function VuelosBaratos({ iata, umbral, ciudad }) {
+export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
   const [datos, setDatos] = useState(null);
   const [anioSel, setAnioSel] = useState("");
 
@@ -74,7 +74,8 @@ export default function VuelosBaratos({ iata, umbral, ciudad }) {
         const d = json?.destinos?.[iata];
         if (d?.vuelos?.length) {
           setDatos(d);
-          const anios = [...new Set(d.vuelos.map((v) => v.anio))].sort();
+          const vf = origen ? d.vuelos.filter((v) => v.origen === origen) : d.vuelos;
+          const anios = [...new Set(vf.map((v) => v.anio))].sort();
           setAnioSel(anios[anios.length - 1] || "");
         }
       })
@@ -83,7 +84,9 @@ export default function VuelosBaratos({ iata, umbral, ciudad }) {
 
   if (!datos) return null;
 
-  const { vuelos, promedio } = datos;
+  const { promedio } = datos;
+  const vuelos = origen ? datos.vuelos.filter((v) => v.origen === origen) : datos.vuelos;
+  if (!vuelos.length) return null;
   const anios = [...new Set(vuelos.map((v) => v.anio))].sort();
   const filtrados = vuelos.filter((v) => v.anio === anioSel);
   const minPrecio = filtrados.length ? Math.min(...filtrados.map((v) => v.precio)) : 0;
@@ -96,7 +99,7 @@ export default function VuelosBaratos({ iata, umbral, ciudad }) {
             Vuelos más baratos encontrados
           </h2>
           <p className="mt-0.5 text-[12.5px] text-slate-500 dark:text-slate-400">
-            Precio más bajo detectado por mes hacia {ciudad}. Datos del radar de Anduve.
+            Precio más bajo detectado por mes{origen ? ` desde ${nombreOrigen(origen) || origen}` : ""} hacia {ciudad}. Datos del radar de Anduve.
           </p>
         </div>
         {anios.length > 1 && (

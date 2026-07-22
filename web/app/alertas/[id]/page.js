@@ -215,6 +215,7 @@ export default async function AlertaDetalle({ params }) {
           iata={alerta.iata}
           umbral={alerta.umbral}
           ciudad={alerta.ciudad}
+          origen={alerta.origen}
         />
       </main>
 
