@@ -216,13 +216,44 @@ def main():
 MESES_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
 
 
+DIAS_FRESCOS_RESUMEN = 7
+
+
+def _parse_ts_safe(s):
+    """Timestamp ISO -> datetime UTC, tolerante."""
+    if not s:
+        return None
+    try:
+        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except ValueError:
+        try:
+            dt = datetime.fromisoformat(s[:19])
+        except Exception:
+            return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+def _esc_resumen(v):
+    try:
+        s = (v or "").strip()
+        return int(s) if s != "" else None
+    except (TypeError, ValueError):
+        return None
+
+
 def generar_resumen():
     """Genera historial-resumen.json: el vuelo más barato detectado por mes
     y destino, con todos los datos del vuelo. VuelosBaratos.js lo consume
-    client-side en Vercel (el CSV no está disponible ahí)."""
+    client-side en Vercel (el CSV no está disponible ahí).
+
+    Solo incluye precios vistos en los últimos DIAS_FRESCOS_RESUMEN días
+    para que los precios mostrados sean cercanos a la realidad actual."""
     if not os.path.exists(HISTORIAL):
         print("Resumen: sin historial.")
         return
+
+    umbral_fresco = datetime.now(timezone.utc) - timedelta(days=DIAS_FRESCOS_RESUMEN)
+    hoy = date.today().isoformat()
 
     # {destino: {"YYYY-MM": {mejor fila}}}
     destinos = {}
@@ -238,25 +269,24 @@ def generar_resumen():
             ida = fila.get("fecha_ida", "")
             if not dest or len(ida) < 7:
                 continue
+            if ida < hoy:
+                continue
+            ts = _parse_ts_safe(fila.get("timestamp", ""))
+            if not ts or ts < umbral_fresco:
+                continue
             ym = ida[:7]
             if dest not in destinos:
                 destinos[dest] = {}
             actual = destinos[dest].get(ym)
             if not actual or precio < actual["precio"]:
-                def _esc(v):
-                    try:
-                        s = (v or "").strip()
-                        return int(s) if s != "" else None
-                    except (TypeError, ValueError):
-                        return None
                 destinos[dest][ym] = {
                     "precio": precio,
                     "origen": fila.get("origen", ""),
                     "ida": ida,
                     "vuelta": fila.get("fecha_vuelta", ""),
                     "aerolinea": (fila.get("aerolinea") or "").strip(),
-                    "escalas_ida": _esc(fila.get("escalas_ida")),
-                    "escalas_vuelta": _esc(fila.get("escalas_vuelta")),
+                    "escalas_ida": _esc_resumen(fila.get("escalas_ida")),
+                    "escalas_vuelta": _esc_resumen(fila.get("escalas_vuelta")),
                     "visto": fila.get("timestamp", ""),
                 }
 

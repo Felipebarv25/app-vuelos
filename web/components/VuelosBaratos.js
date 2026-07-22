@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import PrecioDual from "./PrecioDual";
 
 const AEROLINEAS = {
   AV: "Avianca", LA: "LATAM", DM: "Arajet", JA: "JetSMART", Y4: "Volaris",
@@ -45,6 +46,20 @@ function escalasTexto(n) {
   if (n === 0) return "Directo";
   if (n === 1) return "1 escala";
   return `${n} escalas`;
+}
+
+function tiempoDesde(iso) {
+  if (!iso) return null;
+  try {
+    const ms = Date.now() - new Date(iso).getTime();
+    if (ms < 0 || isNaN(ms)) return null;
+    const min = Math.floor(ms / 60000);
+    if (min < 60) return `hace ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `hace ${h}h`;
+    const d = Math.floor(h / 24);
+    return `hace ${d}d`;
+  } catch { return null; }
 }
 
 export default function VuelosBaratos({ iata, umbral, ciudad }) {
@@ -113,6 +128,7 @@ export default function VuelosBaratos({ iata, umbral, ciudad }) {
           const bajoUmbral = umbral && v.precio <= umbral;
           const escIda = escalasTexto(v.escalas_ida);
           const escVuelta = escalasTexto(v.escalas_vuelta);
+          const frescura = tiempoDesde(v.visto);
 
           return (
             <div
@@ -160,6 +176,10 @@ export default function VuelosBaratos({ iata, umbral, ciudad }) {
                   <span className="ml-1.5 text-[11px] font-medium text-slate-400">ida y vuelta</span>
                 </div>
 
+                <div className="mt-0.5">
+                  <PrecioDual usd={v.precio} soloLocal className="text-[12.5px] font-semibold text-marca-700 dark:text-marca-300" />
+                </div>
+
                 <div className="mt-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <div className="flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 text-[10px] font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
@@ -200,6 +220,15 @@ export default function VuelosBaratos({ iata, umbral, ciudad }) {
                     </svg>
                     <span>{fmtFecha(v.ida)}{v.vuelta ? ` — ${fmtFecha(v.vuelta)}` : ""}</span>
                   </div>
+
+                  {frescura && (
+                    <div className="flex items-center gap-2 text-[11.5px] text-slate-400 dark:text-slate-500">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
+                      </svg>
+                      <span>Visto {frescura}</span>
+                    </div>
+                  )}
                 </div>
 
                 {v.origen && v.ida && (
@@ -233,12 +262,14 @@ export default function VuelosBaratos({ iata, umbral, ciudad }) {
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[12.5px] text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400">
           <span>
             Promedio histórico: <b className="text-slate-800 dark:text-slate-200">{fmt(promedio)}</b>
+            <PrecioDual usd={promedio} soloLocal className="ml-1.5 text-slate-400" />
           </span>
           {umbral && (
             <>
               <span className="text-slate-300 dark:text-slate-600">·</span>
               <span>
                 Tu umbral: <b className="text-marca-700 dark:text-marca-400">{fmt(umbral)}</b>
+                <PrecioDual usd={umbral} soloLocal className="ml-1.5 text-slate-400" />
               </span>
             </>
           )}
@@ -248,7 +279,7 @@ export default function VuelosBaratos({ iata, umbral, ciudad }) {
       )}
 
       <p className="mt-2 text-[11px] text-slate-400">
-        Precios en USD, ida y vuelta. Datos del radar propio de Anduve · Disponibilidad sujeta a la aerolínea.
+        Precios en USD ida y vuelta, detectados por el radar de Anduve (fuente: Travelpayouts). Precios referenciales — la disponibilidad y precio final dependen de la aerolínea al momento de reservar.
       </p>
     </section>
   );
