@@ -278,7 +278,8 @@ def generar_resumen():
             if dest not in destinos:
                 destinos[dest] = {}
             actual = destinos[dest].get(ym)
-            if not actual or precio < actual["precio"]:
+            actual_ts = _parse_ts_safe(actual["visto"]) if actual else None
+            if not actual or ts > actual_ts:
                 destinos[dest][ym] = {
                     "precio": precio,
                     "origen": fila.get("origen", ""),
