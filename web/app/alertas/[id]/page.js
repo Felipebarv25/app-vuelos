@@ -97,15 +97,20 @@ export default async function AlertaDetalle({ params }) {
 
         {/* Estado: sin datos */}
         {!tieneDatos && (
-          <div className="mt-8 rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-800">
-            <div className="text-[15px] font-bold text-slate-900 dark:text-slate-100">
-              Aún no tenemos suficiente historial para esta ruta
+          <div className="mt-8 flex items-start gap-4 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-amber-100/60 px-5 py-5 dark:border-amber-800/40 dark:from-amber-950/30 dark:to-amber-900/20">
+            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-200/70 text-[22px] dark:bg-amber-800/40">
+              📡
             </div>
-            <p className="mt-1.5 text-[13.5px] text-slate-600 dark:text-slate-400">
-              El detector escanea precios cada hora. En unos días tendremos suficientes muestras para
-              mostrarte el mejor mes y el promedio. Tu alerta sigue activa — te llegará un email cuando
-              baje de {fmt(alerta.umbral)}.
-            </p>
+            <div>
+              <div className="text-[15px] font-bold text-slate-900 dark:text-slate-100">
+                Radar activo — recopilando datos
+              </div>
+              <p className="mt-1 text-[13.5px] leading-relaxed text-slate-600 dark:text-slate-400">
+                Nuestro detector escanea precios cada hora. En unos días tendremos suficientes muestras
+                para mostrarte el mejor mes y el promedio.{" "}
+                <b className="text-slate-800 dark:text-slate-200">Te llegará un email cuando baje de {fmt(alerta.umbral)}.</b>
+              </p>
+            </div>
           </div>
         )}
 

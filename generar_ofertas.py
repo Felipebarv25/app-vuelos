@@ -216,7 +216,7 @@ def main():
 MESES_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
 
 
-DIAS_FRESCOS_RESUMEN = 7
+DIAS_FRESCOS_RESUMEN = 3
 
 
 def _parse_ts_safe(s):
