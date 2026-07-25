@@ -189,6 +189,7 @@ import { cacheado, fetchRapido } from "./cache";
 import { zonasCerca, zonaComoLugar } from "./zonasNocturnas";
 import { distanciaMetros } from "./rutas";
 import { PRECALC } from "./precalcIndex";
+import { hitosParaCiudad } from "@/data/hitos-garantizados";
 
 // ¿La ciudad (lat/lon) tiene lugares precalculados? Devuelve el slug del JSON
 // estático si hay una ciudad precalculada a menos de ~25 km. Así las ciudades
@@ -234,7 +235,7 @@ export async function geocodificar(consulta) {
 // v25: ciudades TOP servidas desde precálculo estático (WDQS) → instantáneo y con
 // los íconos garantizados (Eiffel, Sagrada Familia, Coliseo…). El motor en vivo
 // queda como respaldo liviano para ciudades no precalculadas. Invalida cachés.
-const API_VER = "33"; // 33: zonas de rumba curadas en bares (2026-07-11)
+const API_VER = "34"; // 34: hitos garantizados + filtros imperdibles (2026-07-25)
 
 // Radio por categoría: atractivos turísticos pueden estar lejos de la ciudad
 // (excursiones de un día); comida/cafés/bares se buscan cerca.
@@ -346,6 +347,8 @@ async function traerLugaresRed(cat, categoria, lat, lon, radio, limite) {
 function procesarElementos(datos, categoria, lat, lon, limite, catNombre, precalc = false) {
   const vistos = new Set();
   const lugares = [];
+  const esImperdibles = categoria === "imperdibles";
+
   for (const el of datos.elements || []) {
     const t = el.tags || {};
     const nombre = t.name;
@@ -362,52 +365,49 @@ function procesarElementos(datos, categoria, lat, lon, limite, catNombre, precal
 
     const tipoRaw =
       t.tourism || t.historic || t.amenity || t.shop || "";
-    const cocina = t.cuisine ? t.cuisine.split(";")[0].replace(/_/g, " ") : null;
 
-    // PUNTUACIÓN DE CALIDAD: para priorizar lugares famosos/bien establecidos
-    // sobre los "corrientes". OSM no tiene rating, así que usamos señales.
-    // Wikipedia/Wikidata pesan MUCHO: son la mejor señal de "lugar icónico".
+    // Task 2: restaurantes/cafés/bares NO son imperdibles turísticos.
+    if (esImperdibles && (tipoRaw === "restaurant" || tipoRaw === "cafe" ||
+        tipoRaw === "coffee_shop" || tipoRaw === "bar" || tipoRaw === "pub" ||
+        tipoRaw === "nightclub")) continue;
+
+    const cocina = t.cuisine ? t.cuisine.split(";")[0].replace(/_/g, " ") : null;
+    const notable = !!(t.wikidata || t.wikipedia);
+
+    // Task 6: en "imperdibles", solo POIs con presencia en Wikipedia/Wikidata.
+    if (esImperdibles && !notable) continue;
+
     let score = 0;
-    if (t.wikipedia) score += 30;     // artículo en Wikipedia = FAMOSO de verdad
-    if (t.wikidata) score += 10;      // wikidata = relevante (pero menos que wiki)
-    if (t.heritage || t["heritage:operator"]) score += 12; // patrimonio mundial
+    if (t.wikipedia) score += 30;
+    if (t.wikidata) score += 10;
+    if (t.heritage || t["heritage:operator"]) score += 12;
     if (t.tourism === "museum") score += 10;
     if (t.tourism === "attraction") score += 8;
     if (t.historic === "castle" || t.historic === "palace" || t.historic === "fort") score += 8;
     if (t.tourism === "viewpoint") score += 4;
-    if (t.image || t.wikimedia_commons) score += 5; // tiene foto = documentado
+    if (t.image || t.wikimedia_commons) score += 5;
     if (t.website || t["contact:website"]) score += 2;
     if (t.opening_hours) score += 1;
     if (t.stars) score += 3;
-    // Penalizar fuerte estatuas/monumentos menores (aunque tengan wikidata).
     if (/^\s*(monumento|estatua|busto|placa|fuente|memorial)\s*$/i.test(nombre)) score -= 30;
     if (/^\s*(monumento a|estatua de|busto de|monument |monumento di|statue of|memorial)\b/i.test(nombre)) score -= 20;
-    if (t.historic === "memorial" || t.tourism === "artwork") score -= 15;
+    // Task 4: memoriales y arte público SIN Wikipedia = ruido fuerte.
+    if (t.historic === "memorial" || t.tourism === "artwork") score -= (t.wikipedia ? 5 : 25);
     if (/^\s*(pizza|burger|pollo|comida|tienda|bar el|cafe el)\b/i.test(nombre)) score -= 4;
-    // POPULARIDAD real que añade el servidor (Amadeus POI + sitelinks Wikidata).
     if (el.pop) score += el.pop;
 
-    // Variantes de nombre en otros idiomas (OSM trae name:es/en/pt/fr cuando
-    // existe). Mantener el original como `nombre` y exponer el dict para que la
-    // UI elija según el idioma activo. `wd` = QID para traducir bajo demanda.
     const nombres = {};
     if (t["name:es"]) nombres.es = t["name:es"];
     if (t["name:en"]) nombres.en = t["name:en"];
     if (t["name:pt"]) nombres.pt = t["name:pt"];
     if (t["name:fr"]) nombres.fr = t["name:fr"];
-    // En precalc el `id` viene como "Qxxx" (de Wikidata); en vivo, `tags.wikidata`.
     const wd =
       (t.wikidata && /^Q\d+$/.test(t.wikidata) && t.wikidata) ||
       (typeof el.id === "string" && /^Q\d+$/.test(el.id) && el.id) ||
       null;
 
-    // Datos opcionales de OSM (QW5 + QW1): web, teléfono, nivel de precio
-    // ($/$$/$$$/$$$$), tipo de cocina y horario de apertura. Capturados aquí
-    // una sola vez para que tanto Itinerario como DetalleLugar los muestren
-    // sin re-fetchear. Los campos faltantes quedan undefined.
     const web = t.website || t["contact:website"] || null;
     const tel = t.phone || t["contact:phone"] || null;
-    // OSM usa `price_level` (1-4 = $ a $$$$) o `payment:*` sin nivel.
     const precioRaw = t.price_level || t["price_level:from"] || null;
     let precio = null;
     if (precioRaw) {
@@ -423,7 +423,7 @@ function procesarElementos(datos, categoria, lat, lon, limite, catNombre, precal
       wd,
       categoria: ETIQUETAS[tipoRaw] || catNombre,
       coord,
-      notable: !!(t.wikidata || t.wikipedia),
+      notable,
       wiki: !!t.wikipedia,
       score,
       cocina,
@@ -433,6 +433,40 @@ function procesarElementos(datos, categoria, lat, lon, limite, catNombre, precal
       horario,
       minutos: sugerirMinutos(categoria, tipoRaw),
     });
+  }
+
+  // Task 1: inyectar hitos garantizados que falten en la lista.
+  if (esImperdibles) {
+    const hitos = hitosParaCiudad(lat, lon);
+    if (hitos) {
+      const qids = new Set(lugares.filter((l) => l.wd).map((l) => l.wd));
+      const noms = new Set(lugares.map((l) => l.nombre.toLowerCase()));
+      for (const h of hitos) {
+        const yaQ = h.q && qids.has(h.q);
+        const yaN = noms.has(h.n.toLowerCase());
+        if (yaQ || yaN) {
+          const idx = lugares.findIndex((l) =>
+            (h.q && l.wd === h.q) || l.nombre.toLowerCase() === h.n.toLowerCase()
+          );
+          if (idx >= 0) lugares[idx].garantizado = true;
+        } else {
+          lugares.push({
+            id: `hito/${h.q || h.n}`,
+            nombre: h.n,
+            nombres: {},
+            wd: h.q,
+            categoria: "Imperdible",
+            coord: h.c,
+            notable: true,
+            wiki: true,
+            score: 100,
+            garantizado: true,
+            minutos: 60,
+          });
+          vistos.add(h.n);
+        }
+      }
+    }
   }
 
   // Ordenar por calidad (score), los mejores primero.

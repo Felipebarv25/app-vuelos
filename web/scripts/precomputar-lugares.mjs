@@ -287,7 +287,7 @@ function tagPorNombre(n) {
     return { amenity: "place_of_worship" };
   if (/\b(castillo|castell|castle|ch[âa]teau|fortaleza|fortress|fort|alc[áa]zar|citadel|ciudadela)/.test(s)) return { historic: "castle" };
   if (/\b(palacio|palau|palace|palais|palazzo)/.test(s)) return { historic: "palace" };
-  if (/\b(parque|park|parc|jard[íi]n|jardim|garden|jardin|bosque)/.test(s)) return { leisure: "park" };
+  if (/\b(parque(?!t)|park(?!ing)|parc(?!el)|jard[íi]n|jardim|garden|jardin|bosque)\b/.test(s)) return { leisure: "park" };
   if (/\b(estadio|stadium|stade|st[àa]dio|arena)/.test(s)) return { leisure: "stadium" };
   if (/\b(catacumbas|ruinas|ruins|arqueol|teatro romano|anfiteatro)/.test(s)) return { historic: "archaeological_site" };
   return { tourism: "attraction" };

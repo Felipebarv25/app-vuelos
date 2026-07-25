@@ -169,7 +169,8 @@ function puntuar(t = {}) {
   if (t.website || t["contact:website"]) s += 2;
   if (/^\s*(monumento|estatua|busto|placa|fuente|memorial)\s*$/i.test(nombre)) s -= 30;
   if (/^\s*(monumento a|estatua de|busto de|monument |monumento di|statue of|memorial)\b/i.test(nombre)) s -= 20;
-  if (t.historic === "memorial" || t.tourism === "artwork") s -= 15;
+  // Task 4: memoriales y arte público SIN Wikipedia = ruido fuerte.
+  if (t.historic === "memorial" || t.tourism === "artwork") s -= (t.wikipedia ? 5 : 25);
   return s;
 }
 
@@ -411,7 +412,7 @@ function tagWD(n) {
   if (/\b(bas[íi]lica|catedral|cathedral|iglesia|church|[ée]glise|temple|templo|capilla|chapelle|mezquita|mosque|sinagoga|sagrada|duomo|abad)/.test(s)) return { amenity: "place_of_worship" };
   if (/\b(castillo|castle|ch[âa]teau|fortaleza|fort|alc[áa]zar|citadel|ciudadela)/.test(s)) return { historic: "castle" };
   if (/\b(palacio|palau|palace|palais|palazzo)/.test(s)) return { historic: "palace" };
-  if (/\b(parque|park|parc|jard[íi]n|jardim|garden|bosque)/.test(s)) return { leisure: "park" };
+  if (/\b(parque(?!t)|park(?!ing)|parc(?!el)|jard[íi]n|jardim|garden|bosque)\b/.test(s)) return { leisure: "park" };
   if (/\b(estadio|stadium|stade|st[àa]dio|arena)/.test(s)) return { leisure: "stadium" };
   return { tourism: "attraction" };
 }

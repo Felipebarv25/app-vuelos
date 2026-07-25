@@ -9,6 +9,7 @@ import { getDestinoPorSlug } from "@/lib/destinos";
 import { DESTINOS_PRESUPUESTO } from "@/lib/presupuesto";
 import { construirItinerario, agregarLugarADia, optimizarRutaDia, moverParadaADia, reordenarParada, fmtMin } from "@/lib/itinerario";
 import { leerGustos, guardarGustos, categoriasDeGustos, intercalarLugares, HORAS_POR_RITMO } from "@/lib/gustos";
+import { hitosParaCiudad, contarHitosEnLista } from "@/data/hitos-garantizados";
 import { isoDesdeNombre, infoPais } from "@/lib/requisitos";
 import { sugerirCiudades } from "@/lib/autocompletar";
 import { useGeo } from "@/lib/useGeo";
@@ -1973,6 +1974,26 @@ export default function Home() {
                 </Chip>
               ))}
             </div>
+
+            {/* Task 5: indicador de hitos garantizados incluidos */}
+            {categoria === "imperdibles" && !cargandoLugares && lugaresBase.length > 0 && (() => {
+              const hitos = ciudad ? hitosParaCiudad(ciudad.lat, ciudad.lon) : null;
+              if (!hitos) return null;
+              const info = contarHitosEnLista(hitos, lugaresBase);
+              if (!info) return null;
+              const pct = Math.round((info.incluidos / info.total) * 100);
+              return (
+                <div className="mb-2.5 flex items-center gap-2 rounded-xl border border-amber-200/60 bg-amber-50/60 px-3 py-2 dark:border-amber-800/40 dark:bg-amber-900/20">
+                  <span className="text-amber-600 dark:text-amber-400">⭐</span>
+                  <span className="text-[12.5px] font-semibold text-amber-900 dark:text-amber-200">
+                    {info.incluidos} de {info.total} imperdibles de la ciudad
+                  </span>
+                  <div className="ml-auto h-1.5 w-16 overflow-hidden rounded-full bg-amber-200/60 dark:bg-amber-800/40">
+                    <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })()}
 
             {cargandoLugares && (
               <div className="mt-1 space-y-2.5" aria-busy="true" aria-label={t("cargandoLugares")}>
