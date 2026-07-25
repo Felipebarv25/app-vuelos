@@ -73,11 +73,10 @@ export async function POST(req) {
     if (!a || !a.activa) continue;
     if (precio > a.umbral) continue;
 
-    // Filtro de ORIGEN: si la alerta pide salir de un hub especifico, solo
-    // dispara con vuelos desde ese hub (feedback 2026-07-11: usuario en
-    // Medellin recibia alertas saliendo de Bogota). Alertas viejas sin
-    // `origen` mantienen el comportamiento anterior (cualquier origen).
-    if (a.origen && origenVuelo && a.origen !== origenVuelo) continue;
+    // Filtro de ORIGEN: la alerta puede tener uno o varios hubs separados por
+    // coma ("BOG,MDE"). Solo dispara si el vuelo sale de alguno de ellos.
+    // Alertas viejas sin `origen` o con "" aceptan cualquier origen.
+    if (a.origen && origenVuelo && !a.origen.split(",").includes(origenVuelo)) continue;
 
     // Filtro de ESCALAS: escalasMax 0 = solo directo (default de alertas
     // nuevas), 1 = hasta 1 escala, 99 = cualquiera. Alertas viejas sin el

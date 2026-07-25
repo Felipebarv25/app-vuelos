@@ -106,9 +106,15 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
 
   if (!datos) return null;
 
-  const hubsPais = origen ? hubsDelPais(origen) : [];
-  const vuelosPais = hubsPais.length
-    ? datos.vuelos.filter((v) => hubsPais.includes(v.origen))
+  const origenesSeleccionados = origen ? origen.split(",").filter(Boolean) : [];
+  const hubsPais = origenesSeleccionados.length
+    ? hubsDelPais(origenesSeleccionados[0])
+    : [];
+  const filtroOrigenes = origenesSeleccionados.length
+    ? origenesSeleccionados
+    : hubsPais;
+  const vuelosPais = filtroOrigenes.length
+    ? datos.vuelos.filter((v) => filtroOrigenes.includes(v.origen))
     : datos.vuelos;
   if (!vuelosPais.length) return null;
 
@@ -124,10 +130,12 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
   const minPrecio = mejores.length ? Math.min(...mejores.map((v) => v.precio)) : 0;
 
   const promedio = datos.promedio;
+  const primerOrigen = origenesSeleccionados[0] || "";
   const paisNombre = (() => {
+    if (!primerOrigen) return null;
     for (const [, pais] of Object.entries(PAISES_ORIGEN)) {
       const iatas = (pais.hubs || []).map((h) => h.iata);
-      if (origen && iatas.includes(origen)) return pais.nombre;
+      if (iatas.includes(primerOrigen)) return pais.nombre;
     }
     return null;
   })();
@@ -220,7 +228,7 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
           const escIda = escalasTexto(v.escalas_ida);
           const escVuelta = escalasTexto(v.escalas_vuelta);
           const frescura = tiempoDesde(v.visto);
-          const desdeOtraCiudad = origen && v.origen !== origen;
+          const desdeOtraCiudad = origenesSeleccionados.length === 1 && v.origen !== origenesSeleccionados[0];
 
           return (
             <div
@@ -290,7 +298,7 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
                       Desde <b>{nombreOrigen(v.origen) || v.origen}</b> ({v.origen})
                       {desdeOtraCiudad && (
                         <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                          Más barato que {nombreOrigen(origen)}
+                          Más barato que {nombreOrigen(origenesSeleccionados[0])}
                         </span>
                       )}
                     </span>

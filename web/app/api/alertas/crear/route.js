@@ -47,10 +47,11 @@ export async function POST(req) {
   const iata = String(body?.iata || "").trim().toUpperCase().slice(0, 3);
   const umbral = Number(body?.umbral);
   const lang = ["es", "en", "pt", "fr"].includes(body?.lang) ? body.lang : "es";
-  // Origen preferido (IATA de hub, "" = cualquiera) — para que el usuario de
-  // Medellin no reciba gangas saliendo de Bogota.
-  const origenRaw = String(body?.origen || "").trim().toUpperCase().slice(0, 3);
-  const origen = /^[A-Z]{3}$/.test(origenRaw) ? origenRaw : "";
+  // Origen preferido: uno o varios hubs separados por coma ("BOG,MDE"), o "" = cualquiera.
+  const origenRaw = String(body?.origen || "").trim().toUpperCase();
+  const origen = origenRaw
+    ? origenRaw.split(",").filter((c) => /^[A-Z]{3}$/.test(c)).join(",")
+    : "";
   // Filtro de escalas: 0 (solo directo, default) | 1 | 99 (cualquiera).
   const escalasNum = Number(body?.escalasMax);
   const escalasMax = [0, 1, 99].includes(escalasNum) ? escalasNum : 0;

@@ -35,7 +35,11 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
   // Prioridad del default: eleccion previa (localStorage anduve_hub_origen)
   // > ciudad detectada por IP (/api/geo, header x-vercel-ip-city) > 1er hub.
   const [paisOrigen, setPaisOrigen] = useState(PAIS_DEFAULT);
-  const [hubOrigen, setHubOrigen] = useState(esEdicion ? (alertaExistente.origen || "") : "");
+  const [hubOrigen, setHubOrigen] = useState(() => {
+    if (!esEdicion) return [];
+    const raw = alertaExistente.origen || "";
+    return raw ? raw.split(",").filter(Boolean) : [];
+  });
   const [escalasMax, setEscalasMax] = useState(esEdicion ? (alertaExistente.escalasMax ?? 0) : 0);
   useEffect(() => {
     if (esEdicion) return;
@@ -49,11 +53,12 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
     if (!paisValido(iso)) iso = PAIS_DEFAULT;
     setPaisOrigen(iso);
     const hubs = PAISES_ORIGEN[iso]?.hubs || [];
-    // 1) eleccion previa del usuario
+    // 1) eleccion previa del usuario (ahora puede ser "BOG,MDE" o "BOG")
     try {
       const previo = localStorage.getItem("anduve_hub_origen");
-      if (previo === "" || hubs.some((h) => h.iata === previo)) {
-        setHubOrigen(previo ?? (hubs[0]?.iata || ""));
+      if (previo !== null) {
+        const arr = previo ? previo.split(",").filter(Boolean) : [];
+        setHubOrigen(arr);
         return;
       }
     } catch {}
@@ -64,9 +69,9 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
         if (!vivo) return;
         const c = _norm(g?.ciudad);
         const match = c ? hubs.find((h) => _norm(h.ciudad) === c) : null;
-        setHubOrigen(match ? match.iata : (hubs[0]?.iata || ""));
+        setHubOrigen(match ? [match.iata] : [hubs[0]?.iata].filter(Boolean));
       })
-      .catch(() => { if (vivo) setHubOrigen(hubs[0]?.iata || ""); });
+      .catch(() => { if (vivo) setHubOrigen([hubs[0]?.iata].filter(Boolean)); });
     return () => { vivo = false; };
   }, [esEdicion]);
   // Flecha "atrás" del navegador cierra este modal en vez de salir del sitio.
@@ -148,7 +153,7 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
         if (tk) headers.Authorization = `Bearer ${tk}`;
       } catch {}
 
-      try { localStorage.setItem("anduve_hub_origen", hubOrigen); } catch {}
+      try { localStorage.setItem("anduve_hub_origen", hubOrigen.join(",")); } catch {}
       let moneda = "";
       try {
         moneda = sessionStorage.getItem("anduve_moneda_geo")
@@ -164,7 +169,7 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
           body: JSON.stringify({
             id: alertaExistente.id,
             umbral: Number(umbral),
-            origen: hubOrigen,
+            origen: hubOrigen.join(","),
             escalasMax,
             activa: true,
           }),
@@ -176,7 +181,7 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
           headers,
           body: JSON.stringify({
             ciudad, pais, iata, umbral: Number(umbral), lang,
-            origen: hubOrigen, escalasMax, moneda,
+            origen: hubOrigen.join(","), escalasMax, moneda,
           }),
         });
         data = await r.json().catch(() => ({}));
@@ -327,26 +332,41 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
                   {(PAISES_ORIGEN[paisOrigen]?.hubs?.length || 0) > 0 && (
                     <div className="mt-4">
                       <div className="text-[13px] font-bold text-slate-600">{t("alertaOrigenLabel")}</div>
+                      <div className="mt-1 text-[11px] text-slate-400">Puedes elegir varias ciudades.</div>
                       <div className="mt-1.5 flex flex-wrap gap-1.5">
-                        {PAISES_ORIGEN[paisOrigen].hubs.map((h) => (
-                          <button
-                            key={h.iata}
-                            type="button"
-                            onClick={() => setHubOrigen(h.iata)}
-                            className={`rounded-lg border px-2.5 py-1.5 text-[12.5px] font-semibold transition ${
-                              hubOrigen === h.iata
-                                ? "border-amber-500 bg-amber-500 text-white"
-                                : "border-slate-200 bg-white text-slate-600 hover:border-amber-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                            }`}
-                          >
-                            {h.ciudad}
-                          </button>
-                        ))}
+                        {PAISES_ORIGEN[paisOrigen].hubs.map((h) => {
+                          const activo = hubOrigen.includes(h.iata);
+                          return (
+                            <button
+                              key={h.iata}
+                              type="button"
+                              onClick={() => {
+                                setHubOrigen((prev) =>
+                                  prev.includes(h.iata)
+                                    ? prev.filter((x) => x !== h.iata)
+                                    : [...prev, h.iata]
+                                );
+                              }}
+                              className={`flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[12.5px] font-semibold transition ${
+                                activo
+                                  ? "border-amber-500 bg-amber-500 text-white"
+                                  : "border-slate-200 bg-white text-slate-600 hover:border-amber-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                              }`}
+                            >
+                              {activo && (
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M20 6L9 17l-5-5" />
+                                </svg>
+                              )}
+                              {h.ciudad}
+                            </button>
+                          );
+                        })}
                         <button
                           type="button"
-                          onClick={() => setHubOrigen("")}
+                          onClick={() => setHubOrigen([])}
                           className={`rounded-lg border px-2.5 py-1.5 text-[12.5px] font-semibold transition ${
-                            hubOrigen === ""
+                            hubOrigen.length === 0
                               ? "border-amber-500 bg-amber-500 text-white"
                               : "border-slate-200 bg-white text-slate-600 hover:border-amber-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300"
                           }`}
