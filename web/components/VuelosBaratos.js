@@ -97,6 +97,8 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
   const [datos, setDatos] = useState(null);
   const [anioSel, setAnioSel] = useState("");
   const [soloDirectos, setSoloDirectos] = useState(false);
+  // null = todavía sin tocar el selector → se usan todos los hubs del país.
+  const [origenesSel, setOrigenesSel] = useState(null);
 
   useEffect(() => {
     if (!iata) return;
@@ -116,17 +118,32 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
 
   if (!datos) return null;
 
-  const origenesSeleccionados = origen ? origen.split(",").filter(Boolean) : [];
-  const hubsPais = origenesSeleccionados.length
-    ? hubsDelPais(origenesSeleccionados[0])
-    : [];
-  const filtroOrigenes = origenesSeleccionados.length
-    ? origenesSeleccionados
-    : hubsPais;
-  const vuelosPais = filtroOrigenes.length
-    ? datos.vuelos.filter((v) => filtroOrigenes.includes(v.origen))
+  // Orígenes que el usuario guardó en la alerta. Sirven de referencia para el
+  // badge comparativo, pero NO limitan lo que se muestra: el banner ofrece todos
+  // los hubs del país para que se pueda comparar salir de una ciudad u otra.
+  const origenesAlerta = origen ? origen.split(",").filter(Boolean) : [];
+
+  // Solo se ofrecen hubs que de verdad tengan datos en el JSON: un chip vacío es
+  // peor que no tener el chip. Sin país identificable, se ofrecen todos.
+  const conDatos = new Set(datos.vuelos.map((v) => v.origen));
+  const hubsPais = origenesAlerta.length ? hubsDelPais(origenesAlerta[0]) : [];
+  const hubsDisponibles = hubsPais.length
+    ? hubsPais.filter((h) => conDatos.has(h))
+    : [...conDatos].sort();
+
+  const seleccion = origenesSel ?? hubsDisponibles;
+  const vuelosPais = seleccion.length
+    ? datos.vuelos.filter((v) => seleccion.includes(v.origen))
     : datos.vuelos;
   if (!vuelosPais.length) return null;
+
+  function alternarOrigen(iataOrigen) {
+    const nuevo = seleccion.includes(iataOrigen)
+      ? seleccion.filter((o) => o !== iataOrigen)
+      : [...seleccion, iataOrigen];
+    if (!nuevo.length) return; // nunca dejar el banner sin orígenes
+    setOrigenesSel(nuevo);
+  }
 
   const hayDirectos = vuelosPais.some((v) => proyectar(v, true));
 
@@ -155,7 +172,17 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
   const promedio = poblacion.length
     ? Math.round(poblacion.reduce((s, v) => s + v.precio, 0) / poblacion.length)
     : 0;
-  const primerOrigen = origenesSeleccionados[0] || "";
+  // Precio del origen de la alerta en cada mes, para poder decir con datos
+  // cuánto se ahorra saliendo de otra ciudad. Si ese origen no está en la
+  // selección o no tiene vuelo ese mes, no hay comparación que hacer.
+  const precioAlertaPorMes = {};
+  for (const v of porAnio.map((f) => proyectar(f, soloDirectos)).filter(Boolean)) {
+    if (!origenesAlerta.includes(v.origen)) continue;
+    const actual = precioAlertaPorMes[v.ym];
+    if (actual === undefined || v.precio < actual) precioAlertaPorMes[v.ym] = v.precio;
+  }
+
+  const primerOrigen = origenesAlerta[0] || "";
   const paisNombre = (() => {
     if (!primerOrigen) return null;
     for (const [, pais] of Object.entries(PAISES_ORIGEN)) {
@@ -232,6 +259,43 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
         </div>
       </div>
 
+      {/* Selector de aeropuertos de salida del país. Multi-selección: se puede
+          comparar salir de una ciudad u otra. Solo aparece si hay más de un hub
+          con datos — con uno solo no hay nada que elegir. */}
+      {hubsDisponibles.length > 1 && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="text-[11.5px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            Saliendo desde
+          </span>
+          {hubsDisponibles.map((h) => {
+            const activo = seleccion.includes(h);
+            const esDeLaAlerta = origenesAlerta.includes(h);
+            return (
+              <button
+                key={h}
+                type="button"
+                onClick={() => alternarOrigen(h)}
+                aria-pressed={activo}
+                title={esDeLaAlerta ? "Origen de tu alerta" : undefined}
+                className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[12px] font-semibold transition ${
+                  activo
+                    ? "border-marca-600 bg-marca-600 text-white hover:bg-marca-700"
+                    : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                }`}
+              >
+                {activo && (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                )}
+                {nombreOrigen(h) || h}
+                {esDeLaAlerta && <span aria-hidden="true" className={activo ? "text-marca-200" : "text-slate-400"}>★</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {soloDirectos && mejores.length === 0 && (
         <div className="mt-4 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 dark:border-slate-700 dark:bg-slate-800/60">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-slate-400">
@@ -253,7 +317,16 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
           const escIda = escalasTexto(v.escalas_ida);
           const escVuelta = escalasTexto(v.escalas_vuelta);
           const frescura = tiempoDesde(v.visto);
-          const desdeOtraCiudad = origenesSeleccionados.length === 1 && v.origen !== origenesSeleccionados[0];
+          // Solo se afirma "más barato" cuando existe el dato del origen de la
+          // alerta para ese mes y es efectivamente mayor.
+          const refAlerta = precioAlertaPorMes[v.ym];
+          const ahorroVsAlerta =
+            origenesAlerta.length &&
+            !origenesAlerta.includes(v.origen) &&
+            refAlerta !== undefined &&
+            refAlerta > v.precio
+              ? refAlerta - v.precio
+              : 0;
 
           return (
             <div
@@ -315,15 +388,17 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2 text-[12.5px] text-slate-600 dark:text-slate-400">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="flex items-start gap-2 text-[12px] sm:text-[12.5px] text-slate-600 dark:text-slate-400">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-[3px] shrink-0">
                       <path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
                     </svg>
-                    <span>
-                      Desde <b>{nombreOrigen(v.origen) || v.origen}</b> ({v.origen})
-                      {desdeOtraCiudad && (
-                        <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                          Más barato que {nombreOrigen(origenesSeleccionados[0])}
+                    <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                      <span className="whitespace-nowrap">
+                        Desde <b>{nombreOrigen(v.origen) || v.origen}</b> ({v.origen})
+                      </span>
+                      {ahorroVsAlerta > 0 && (
+                        <span className="whitespace-nowrap rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                          {fmt(ahorroVsAlerta)} menos que {nombreOrigen(primerOrigen) || primerOrigen}
                         </span>
                       )}
                     </span>

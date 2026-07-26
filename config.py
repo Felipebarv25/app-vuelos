@@ -13,7 +13,12 @@ Las credenciales (token, correo) NUNCA van aquí: van en el archivo .env
 #   2) Reducir frecuencia del cron en .github/workflows/detector.yml (de 3h a 6h)
 #   3) Quitar hubs que no aporten tráfico (mira el panel de visitas por país)
 ORIGENES = [
-    "BOG", "MDE",   # Colombia (mercado principal)
+    # Colombia (mercado principal): los 4 hubs que declara PAISES_ORIGEN en la
+    # web. Antes solo se escaneaban BOG y MDE, asi que el selector de origenes
+    # del banner "Vuelos mas baratos" mostraba chips vacios para Cali y
+    # Cartagena. CLO y CTG tienen pocas rutas de largo radio directas, pero si
+    # aparecen como opcion tienen que traer datos.
+    "BOG", "MDE", "CLO", "CTG",
     "MEX",          # México
     "UIO",          # Ecuador
     "LIM",          # Perú
@@ -54,8 +59,9 @@ DESTINOS = {
 
 # Cuántos meses hacia adelante explorar (busca el vuelo más barato de cada mes).
 # Bajado de 8 → 6 al pasar de 2 a 11 origenes (multi-pais Fase 2) para mantener
-# el costo de API: 11 origenes × 14 destinos × 6 meses = 924 llamadas por corrida.
-# El cron corre cada hora (24 corridas/dia) → ~22,200 llamadas/dia de "dates".
+# el costo de API: 13 origenes × 14 destinos × 6 meses = 1,092 llamadas por
+# corrida. El cron corre cada hora (24 corridas/dia) → ~26,200 llamadas/dia de
+# "dates", mas ~2,200/dia del escaneo de directos (2 pasadas, ver abajo).
 MESES_A_EXPLORAR = 6
 
 # ¿Solo vuelos directos? (False = permite escalas; recomendado para mejor precio)
@@ -68,10 +74,10 @@ SOLO_DIRECTOS = False
 # se hace una consulta extra con direct=true por ruta+mes y se guarda tambien el
 # directo mas barato.
 #
-# Costo: el cron corre cada hora (24 corridas/dia = ~25,900 llamadas). Cada hora
-# listada aqui suma 11 origenes × 14 destinos × 6 meses = 924 llamadas. Con 2
-# horas son ~1,850/dia extra (+7%). Como DIAS_FRESCOS_RESUMEN es 3, dos pasadas
-# diarias sobran: los directos son pocos y su precio se mueve lento.
+# Costo: cada hora listada aqui suma 13 origenes × 14 destinos × 6 meses = 1,092
+# llamadas. Con 2 horas son ~2,200/dia extra (+8%). Como DIAS_FRESCOS_RESUMEN es
+# 3, dos pasadas diarias sobran: los directos son pocos y su precio se mueve
+# lento.
 ESCANEO_DIRECTOS = True
 
 # Horas UTC en las que corre el escaneo de directos (Colombia = UTC-5, o sea
