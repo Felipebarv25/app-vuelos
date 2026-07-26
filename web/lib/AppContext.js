@@ -29,6 +29,13 @@ export function AppProvider({ children }) {
   const [pro, setPro] = useState(false);
   const [plan, setPlan] = useState(null);
   const [creditos, setCreditos] = useState({ pdf: 0, alerta: 0 });
+  // Alertas de precio del usuario. Viven aca y no en cada componente porque hay
+  // dos lectores (el chip del home y el menu de usuario) y cinco escritores
+  // (crear, borrar y tres sitios que editan). Antes cada lector hacia su propio
+  // fetch y ningun escritor los avisaba: al crear o borrar una alerta el chip
+  // del home seguia mostrando el numero viejo hasta recargar la pagina.
+  // null = todavia sin cargar.
+  const [alertas, setAlertas] = useState(null);
   // Modal de paywall: { abierto, motivo }. El componente padre lo renderiza
   // viendo este estado; cualquier feature gateada llama abrirPaywall("pdf").
   const [paywall, setPaywall] = useState({ abierto: false, motivo: null });
@@ -81,11 +88,13 @@ export function AppProvider({ children }) {
     return () => { vivo = false; };
   }, []);
 
-  // Cargar/refrescar el estado Pro cuando cambia el usuario y al volver al
-  // foco (el usuario puede haber comprado en otra pestana).
+  // Cargar/refrescar el estado Pro y las alertas cuando cambia el usuario y al
+  // volver al foco (el usuario puede haber comprado o creado alertas en otra
+  // pestana).
   useEffect(() => {
     refrescarPro();
-    const onFocus = () => refrescarPro();
+    refrescarAlertas();
+    const onFocus = () => { refrescarPro(); refrescarAlertas(); };
     if (typeof window !== "undefined") {
       window.addEventListener("focus", onFocus);
       return () => window.removeEventListener("focus", onFocus);
@@ -130,6 +139,38 @@ export function AppProvider({ children }) {
       setPlan(d?.plan || null);
       if (d?.creditos) setCreditos(d.creditos);
     } catch {}
+  }
+
+  // Vuelve a leer las alertas del usuario. Cualquier componente que cree, borre
+  // o edite una alerta debe llamar a esto al terminar, para que el contador del
+  // chip del home y el del menu de usuario queden al dia sin recargar.
+  async function refrescarAlertas() {
+    try {
+      const headers = {};
+      let tk;
+      try {
+        tk = localStorage.getItem("anduve_auth_token")
+          || sessionStorage.getItem("anduve_auth_token");
+        if (tk) headers.Authorization = `Bearer ${tk}`;
+      } catch {}
+      // Sin sesion de Google ni token no hay a quien pedirle alertas: evitamos
+      // un 401 en cada carga del landing para visitantes anonimos.
+      if (!tk && !session?.user?.email) {
+        setAlertas([]);
+        return;
+      }
+      const r = await fetch("/api/alertas", { headers });
+      if (!r.ok) {
+        // 401 (sin sesion) o 503 (sin KV): lista vacia, no null, para que los
+        // consumidores dejen de mostrar el estado "cargando".
+        setAlertas([]);
+        return;
+      }
+      const d = await r.json();
+      setAlertas(d?.ok ? (d.alertas || []) : []);
+    } catch {
+      setAlertas([]);
+    }
   }
 
   // Disparador del paywall. `motivo` controla el texto contextual del modal
@@ -389,6 +430,8 @@ export function AppProvider({ children }) {
         cerrarPaywall,
         requierePro,
         refrescarPro,
+        alertas,
+        refrescarAlertas,
       }}
     >
       {children}

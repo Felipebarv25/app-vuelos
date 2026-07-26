@@ -11,35 +11,25 @@
 // El fetch corre en el efecto (post-mount), no bloquea el paint inicial.
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useApp } from "@/lib/AppContext";
 import { Icono } from "./Icono";
 
 export default function AlertasChip() {
-  const { t, usuario } = useApp();
-  const [alertas, setAlertas] = useState(null); // null = aun cargando
-
-  useEffect(() => {
-    if (!usuario?.email) return;
-    let vivo = true;
-    const headers = {};
-    try {
-      const tk = localStorage.getItem("anduve_auth_token")
-              || sessionStorage.getItem("anduve_auth_token");
-      if (tk) headers.Authorization = `Bearer ${tk}`;
-    } catch {}
-    fetch("/api/alertas", { headers })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (vivo && d?.ok) setAlertas(d.alertas || []); })
-      .catch(() => {});
-    return () => { vivo = false; };
-  }, [usuario?.email]);
+  // Las alertas vienen del contexto, no de un fetch propio: antes este chip
+  // pedia la lista una sola vez al montar y ningun sitio lo avisaba, asi que al
+  // crear o borrar una alerta seguia mostrando el numero viejo hasta recargar.
+  const { t, usuario, alertas } = useApp();
 
   if (!usuario || alertas == null) return null;
 
-  const activas = alertas.filter((a) => a.activa !== false).length;
+  // Se cuentan TODAS las alertas, no solo las `activa !== false`. `activa: false`
+  // solo significa que esa alerta ya envio su email (anti-spam), no que el
+  // usuario la apagara. Con el filtro, el titulo decia "3 alertas" mientras el
+  // subtitulo de abajo enumeraba "Buenos Aires · Madrid · Barcelona +2" — o sea
+  // 5: el mismo banner se contradecia.
+  const total = alertas.length;
 
-  if (activas === 0) {
+  if (total === 0) {
     return (
       <Link
         href="/ofertas"
@@ -70,7 +60,7 @@ export default function AlertasChip() {
       </span>
       <div className="min-w-0 flex-1">
         <div className="text-[13.5px] font-bold text-emerald-900 dark:text-emerald-200">
-          {activas} {activas === 1 ? t("alertasChipConTitUno") : t("alertasChipConTitVarias")}
+          {total} {total === 1 ? t("alertasChipConTitUno") : t("alertasChipConTitVarias")}
         </div>
         <div className="truncate text-[12px] text-emerald-800/80 dark:text-emerald-300/70">
           {alertas.slice(0, 3).map((a) => a.ciudad).join(" · ")}

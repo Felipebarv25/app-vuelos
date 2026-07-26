@@ -28,7 +28,7 @@ function _norm(s) {
 
 export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, label = null, alertaExistente = null, abrirDirecto = false, onActualizada = null, onCerrar = null }) {
   const esEdicion = !!alertaExistente;
-  const { t, lang, usuario, abrirPaywall } = useApp();
+  const { t, lang, usuario, abrirPaywall, refrescarAlertas } = useApp();
   const [abierto, setAbierto] = useState(abrirDirecto);
   // ORIGEN de la alerta (feedback 2026-07-11: usuario de Medellin recibia
   // alertas saliendo de Bogota). Hubs del pais del visitante + "cualquiera".
@@ -194,6 +194,9 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
       if (data?.ok) {
         setEstado("ok");
         if (esEdicion && onActualizada) onActualizada(data.alerta);
+        // Que el contador del chip del home y del menu reflejen la alerta
+        // nueva/editada sin esperar a que se recargue la pagina.
+        refrescarAlertas();
       }
       else if (data?.motivo === "sin-sesion") setEstado("auth");
       else setEstado("error");

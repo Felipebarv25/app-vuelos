@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useApp } from "@/lib/AppContext";
 import AlertaPrecio from "./AlertaPrecio";
 
 function authHeaders() {
@@ -14,6 +15,7 @@ function authHeaders() {
 }
 
 export default function AlertaEditor({ alerta: inicial }) {
+  const { refrescarAlertas } = useApp();
   const [alerta, setAlerta] = useState(inicial);
   const [editando, setEditando] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -38,6 +40,8 @@ export default function AlertaEditor({ alerta: inicial }) {
       if (d.ok) {
         setAlerta(d.alerta);
         mostrarToast(d.alerta.activa ? "Alerta reactivada" : "Alerta pausada");
+        // Que el badge "Avisada" del menu de usuario se actualice al instante.
+        refrescarAlertas();
       } else {
         mostrarToast("Error al cambiar estado", false);
       }

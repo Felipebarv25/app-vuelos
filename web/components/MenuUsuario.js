@@ -15,30 +15,21 @@ import Feedback from "./Feedback";
 import Toast from "./Toast";
 
 export default function MenuUsuario({ oscuro = false }) {
-  const { t, usuario, pro, plan, salir, abrirPaywall } = useApp();
+  // Las alertas vienen del contexto (fuente unica compartida con AlertasChip).
+  // Al abrir el menu se refrescan, porque puede haberse creado una alerta en
+  // otra pantalla desde la ultima carga.
+  const { t, usuario, pro, plan, salir, abrirPaywall,
+          alertas: alertasCtx, refrescarAlertas } = useApp();
+  const alertas = alertasCtx || [];
   const [abierto, setAbierto] = useState(false);
-  const [alertas, setAlertas] = useState([]);
   const [mostrarFeedback, setMostrarFeedback] = useState(false);
   const [graciasFeedback, setGraciasFeedback] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
   const [editValor, setEditValor] = useState("");
   const ref = useRef(null);
 
-  // Cargar contador de alertas cuando se abre el menu (no en cada render).
   useEffect(() => {
-    if (!abierto || !usuario?.email) return;
-    let vivo = true;
-    const headers = {};
-    try {
-      const tk = localStorage.getItem("anduve_auth_token")
-              || sessionStorage.getItem("anduve_auth_token");
-      if (tk) headers.Authorization = `Bearer ${tk}`;
-    } catch {}
-    fetch("/api/alertas", { headers })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => vivo && d?.ok && setAlertas(d.alertas || []))
-      .catch(() => {});
-    return () => { vivo = false; };
+    if (abierto && usuario?.email) refrescarAlertas();
   }, [abierto, usuario?.email]);
 
   // Click afuera = cerrar.
@@ -70,9 +61,11 @@ export default function MenuUsuario({ oscuro = false }) {
     return h;
   }
 
+  // Tras cualquier escritura se refresca el contexto, para que el contador de
+  // este menu Y el del chip del home queden al dia sin recargar la pagina.
   async function borrarAlerta(id) {
     await fetch(`/api/alertas?id=${id}`, { method: "DELETE", headers: authHdrs() });
-    setAlertas((arr) => arr.filter((a) => a.id !== id));
+    await refrescarAlertas();
   }
 
   async function guardarUmbral(id) {
@@ -80,14 +73,13 @@ export default function MenuUsuario({ oscuro = false }) {
     if (!Number.isFinite(nuevo) || nuevo <= 0) { setEditandoId(null); return; }
     const viejo = alertas.find((a) => a.id === id);
     if (viejo && nuevo === viejo.umbral) { setEditandoId(null); return; }
-    const res = await fetch("/api/alertas", {
+    await fetch("/api/alertas", {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...authHdrs() },
       body: JSON.stringify({ id, umbral: nuevo }),
     });
-    const d = await res.json().catch(() => null);
-    if (d?.ok) setAlertas((arr) => arr.map((a) => (a.id === id ? d.alerta : a)));
     setEditandoId(null);
+    await refrescarAlertas();
   }
 
   return (
