@@ -67,8 +67,10 @@ export default function AlertasChip() {
           {alertas.length > 3 ? ` +${alertas.length - 3}` : ""}
         </div>
       </div>
+      {/* Va a /alertas, no a /ofertas: el titulo habla de TUS alertas y /ofertas
+          es un explorador generico que no las conoce. */}
       <Link
-        href="/ofertas"
+        href="/alertas"
         className="shrink-0 rounded-full bg-white/70 px-3 py-1.5 text-[12px] font-bold text-emerald-800 ring-1 ring-emerald-200 transition hover:bg-white hover:ring-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-200 dark:ring-emerald-800"
       >
         {t("alertasChipConCta")} →
