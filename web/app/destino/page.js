@@ -86,7 +86,11 @@ export default function IndiceDestinos() {
         <span className="font-semibold text-marca-700 dark:text-marca-300">Destinos</span>
       </nav>
 
-      <header className="mx-auto max-w-6xl px-6 pb-2 pt-6">
+      {/* pt-14 y no pt-6: esta pagina no monta NavTop, asi que el boton Volver
+          (fixed top-[90px], ocupa 90-126px) no cae sobre el primer bloque sino
+          sobre este. La miga de arriba queda en 68-88px, a salvo por encima; con
+          pt-6 el eyebrow "Catálogo" caia en 112px y el boton lo tapaba. */}
+      <header className="mx-auto max-w-6xl px-6 pb-2 pt-14">
         <div className="text-[12px] font-semibold uppercase tracking-[0.22em] text-marca-500 dark:text-marca-400">
           Catálogo
         </div>

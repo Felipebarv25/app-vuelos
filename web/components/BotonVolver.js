@@ -18,6 +18,15 @@
 // y `main` con py-8 arranca su contenido en 101px — justo debajo del boton. El
 // spacer de abajo reserva ese hueco. Se desactiva con espaciar={false} donde el
 // siguiente bloque es una imagen a sangre completa y el boton debe flotar encima.
+//
+// INVARIANTE, importante al montar este boton en una pagina nueva: el
+// `top-[90px]` esta calculado suponiendo un NavTop pegajoso de ~69px encima
+// (69 + 21 de margen). El spacer de 44px basta con esa premisa. En una pagina
+// SIN NavTop el boton no cae sobre el primer bloque sino mas abajo, y el spacer
+// no alcanza: hay que reservar el hueco a mano con padding-top en la pagina
+// hasta pasar los 126px. Asi se hace hoy en /destino (pt-14 en su <header>) y en
+// /comparar (pt-24). Si añades una pagina sin NavTop, comprueba con las cajas
+// reales que nada quede detras del boton.
 
 import { useRouter } from "next/navigation";
 import { Logo } from "./Logo";

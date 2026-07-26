@@ -25,7 +25,10 @@ export default function PaginaComparar() {
   return (
     <main className="bg-slate-50 pb-12">
       <BotonVolver href="/destino" etiqueta="Volver a destinos" />
-      <header className="mx-auto max-w-6xl px-6 pt-8">
+      {/* pt-24 y no pt-8: esta pagina no monta NavTop, asi que hay que reservar
+          a mano el hueco del boton Volver (fixed, ocupa 90-126px). Ver la nota
+          en BotonVolver.js. */}
+      <header className="mx-auto max-w-6xl px-6 pt-24">
         <div className="text-[12px] font-semibold uppercase tracking-[0.22em] text-marca-500">
           Herramienta
         </div>
