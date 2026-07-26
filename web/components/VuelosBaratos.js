@@ -140,8 +140,21 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
   );
   const mesesDelAnio = new Set(porAnio.map((v) => v.ym)).size;
   const minPrecio = mejores.length ? Math.min(...mejores.map((v) => v.precio)) : 0;
+  // Con una sola tarjeta no hay nada con qué comparar: sobra el "Más barato".
+  const hayComparacion = mejores.length > 1;
 
-  const promedio = datos.promedio;
+  // El promedio se recalcula con la MISMA población que alimenta las tarjetas
+  // (orígenes elegidos + modo con/sin escalas). El `datos.promedio` que trae el
+  // JSON promedia todos los orígenes del mundo, así que para alguien que sale
+  // de Medellín incluía vuelos MIA→MAD de US$ 427 y hacía ver todo carísimo.
+  // Se toman todos los meses disponibles, no solo el año seleccionado, para que
+  // la referencia no salte al cambiar de año.
+  const poblacion = vuelosPais
+    .map((v) => proyectar(v, soloDirectos))
+    .filter(Boolean);
+  const promedio = poblacion.length
+    ? Math.round(poblacion.reduce((s, v) => s + v.precio, 0) / poblacion.length)
+    : 0;
   const primerOrigen = origenesSeleccionados[0] || "";
   const paisNombre = (() => {
     if (!primerOrigen) return null;
@@ -262,7 +275,7 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
                   {mesNombre}
                 </span>
                 <div className="flex items-center gap-1.5">
-                  {esMejor && (
+                  {esMejor && hayComparacion && (
                     <span className="rounded-full bg-emerald-700 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
                       Más barato
                     </span>
@@ -316,15 +329,18 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
                     </span>
                   </div>
 
+                  {/* "Ida: 1 escala" y "Vuelta: 2 escalas" son unidades que no
+                      deben partirse: cada una va en un span whitespace-nowrap y
+                      el salto ocurre entre ellas, no dentro. */}
                   {(escIda || escVuelta) && (
-                    <div className="flex items-center gap-2 text-[12.5px]">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+                    <div className="flex items-start gap-2 text-[12px] sm:text-[12.5px]">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-[3px] shrink-0 text-slate-400">
                         <circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" />
                       </svg>
-                      <span className="text-slate-600 dark:text-slate-400">
-                        {escIda && <span>Ida: <b className={v.escalas_ida === 0 ? "text-emerald-600 dark:text-emerald-400" : ""}>{escIda}</b></span>}
-                        {escIda && escVuelta && <span className="mx-1.5 text-slate-300">·</span>}
-                        {escVuelta && <span>Vuelta: <b className={v.escalas_vuelta === 0 ? "text-emerald-600 dark:text-emerald-400" : ""}>{escVuelta}</b></span>}
+                      <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-slate-600 dark:text-slate-400">
+                        {escIda && <span className="whitespace-nowrap">Ida: <b className={v.escalas_ida === 0 ? "text-emerald-600 dark:text-emerald-400" : ""}>{escIda}</b></span>}
+                        {escIda && escVuelta && <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">·</span>}
+                        {escVuelta && <span className="whitespace-nowrap">Vuelta: <b className={v.escalas_vuelta === 0 ? "text-emerald-600 dark:text-emerald-400" : ""}>{escVuelta}</b></span>}
                       </span>
                     </div>
                   )}
@@ -384,8 +400,12 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
       {promedio > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[12.5px] text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400">
           <span>
-            Promedio histórico: <b className="text-slate-800 dark:text-slate-200">{fmt(promedio)}</b>
+            {soloDirectos ? "Promedio sin escalas" : "Promedio de la ruta"}:{" "}
+            <b className="text-slate-800 dark:text-slate-200">{fmt(promedio)}</b>
             <PrecioDual usd={promedio} soloLocal className="ml-1.5 text-slate-400" />
+            <span className="ml-1.5 text-slate-400 dark:text-slate-500">
+              {soloDirectos ? "(solo vuelos directos)" : "(con y sin escalas)"}
+            </span>
           </span>
           {umbral && (
             <>
@@ -399,7 +419,7 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
           <span className="text-slate-300 dark:text-slate-600">·</span>
           <span>
             {soloDirectos
-              ? `Sin escalas detectados en ${mejores.length} de ${mesesDelAnio} meses de ${anioSel}`
+              ? `Sin escalas detectadas en ${mejores.length} de ${mesesDelAnio} meses de ${anioSel}`
               : `${mejores.length} meses con datos en ${anioSel}`}
           </span>
         </div>
