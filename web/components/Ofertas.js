@@ -180,6 +180,22 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
   function fmtUsd(v) {
     return "US$ " + Math.round(v).toLocaleString("en-US");
   }
+  // Escalas de un tramo. null/undefined = desconocido (filas viejas del
+  // historial): se devuelve null para no afirmar que era directo.
+  function textoEscalas(n) {
+    if (n === null || n === undefined || Number.isNaN(Number(n))) return null;
+    const k = Number(n);
+    if (k === 0) return t("escalaDirecto");
+    if (k === 1) return t("escalaUna");
+    return t("escalaVarias").replace("{n}", k);
+  }
+  // Minutos de vuelo -> "25h50". Solo lo traen las filas escritas desde el
+  // 2026-07-26, antes se descartaba el dato que ya mandaba la API.
+  function fmtDuracion(min) {
+    const m = Number(min);
+    if (!Number.isFinite(m) || m <= 0) return null;
+    return `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}`;
+  }
   // "visto hace X" (frescura del precio) a partir del timestamp del último escaneo.
   function fmtHace(iso) {
     if (!iso) return "";
@@ -369,6 +385,45 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
                 );
               })()}
             </div>
+
+            {/* Escalas y duracion, para que estas tarjetas digan lo mismo que las
+                del banner de alertas. Cada "Ida: 1 escala" va en un span
+                whitespace-nowrap y el contenedor es flex-wrap, asi el salto de
+                linea cae entre unidades y nunca parte la frase. */}
+            {(() => {
+              const escIda = textoEscalas(r.escalas_ida);
+              const escVuelta = textoEscalas(r.escalas_vuelta);
+              if (!escIda && !escVuelta) return null;
+              const durIda = fmtDuracion(r.duracion_ida);
+              const durVuelta = fmtDuracion(r.duracion_vuelta);
+              const verde = "text-emerald-600 dark:text-emerald-400";
+              return (
+                <div className="mt-1.5 flex items-start gap-1.5 text-[12px] text-slate-500 dark:text-slate-400">
+                  {/* Mismo SVG de tres puntos que usa la tarjeta de alertas
+                      (no hay icono "dots" en Icono.js). */}
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-[3px] shrink-0 text-slate-400">
+                    <circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" />
+                  </svg>
+                  <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                    {escIda && (
+                      <span className="whitespace-nowrap">
+                        {t("escalaIda")}: <b className={r.escalas_ida === 0 ? verde : ""}>{escIda}</b>
+                        {durIda && <span className="text-slate-400"> · {durIda}</span>}
+                      </span>
+                    )}
+                    {escIda && escVuelta && (
+                      <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">·</span>
+                    )}
+                    {escVuelta && (
+                      <span className="whitespace-nowrap">
+                        {t("escalaVuelta")}: <b className={r.escalas_vuelta === 0 ? verde : ""}>{escVuelta}</b>
+                        {durVuelta && <span className="text-slate-400"> · {durVuelta}</span>}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              );
+            })()}
 
             <div className="mt-3 flex gap-2">
               <button

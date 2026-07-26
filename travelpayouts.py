@@ -62,6 +62,12 @@ def _normalizar(fila, moneda):
         "link": _link_aviasales(fila.get("link", "")),
         "escalas_ida": _int_o_none(fila.get("transfers")),
         "escalas_vuelta": _int_o_none(fila.get("return_transfers")),
+        # Duracion en minutos de cada tramo. La API ya las manda y hasta ahora
+        # las tirabamos: sin ellas no se puede comparar "mas barato" contra "mas
+        # rapido". En BOG->TYO (2026-10) la opcion de US$ 1,457 es 3h11 mas corta
+        # que la de US$ 1,377, y el usuario no tenia forma de saberlo.
+        "duracion_ida": _int_o_none(fila.get("duration_to")),
+        "duracion_vuelta": _int_o_none(fila.get("duration_back")),
     }
 
 

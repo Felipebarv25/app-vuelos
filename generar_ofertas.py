@@ -187,6 +187,11 @@ def main():
             "aerolinea": mejor.get("aerolinea", "—"),
             "escalas_ida": _esc(mejor.get("escalas_ida")),
             "escalas_vuelta": _esc(mejor.get("escalas_vuelta")),
+            # Minutos de vuelo por tramo. Solo las filas escritas desde el
+            # 2026-07-26 los traen; las anteriores quedan en None y la tarjeta
+            # simplemente no muestra la duracion.
+            "duracion_ida": _esc(mejor.get("duracion_ida")),
+            "duracion_vuelta": _esc(mejor.get("duracion_vuelta")),
             "umbral": umbral,
             "mediana": round(mediana),
             "descuento": max(0, descuento),

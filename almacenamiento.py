@@ -14,7 +14,11 @@ ARCHIVO_ALERTAS = os.path.join(CARPETA_DATOS, "alertas_enviadas.csv")
 
 CAMPOS_HISTORIAL = ["timestamp", "origen", "destino", "fecha_ida",
                     "fecha_vuelta", "precio", "moneda", "aerolinea",
-                    "escalas_ida", "escalas_vuelta"]
+                    "escalas_ida", "escalas_vuelta",
+                    # Añadidas el 2026-07-26. Las filas anteriores no las traen y
+                    # DictReader las lee como None — igual que paso con
+                    # escalas_ida/vuelta en su momento.
+                    "duracion_ida", "duracion_vuelta"]
 
 
 def _asegurar_archivo(ruta, campos):
@@ -55,6 +59,8 @@ def guardar_precio(origen, destino, fecha_ida, fecha_vuelta, oferta):
             oferta["precio"], oferta["moneda"], oferta["aerolinea"],
             oferta.get("escalas_ida", ""),
             oferta.get("escalas_vuelta", ""),
+            oferta.get("duracion_ida") or "",
+            oferta.get("duracion_vuelta") or "",
         ])
 
 
