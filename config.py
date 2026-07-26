@@ -57,6 +57,60 @@ DESTINOS = {
     "LIM": ("Lima (Perú)", 300),
 }
 
+# País de cada origen, para saber qué destinos nacionales le corresponden.
+# Debe mantenerse en sincronía con ORIGENES.
+PAIS_DE_ORIGEN = {
+    "BOG": "CO", "MDE": "CO", "CLO": "CO", "CTG": "CO",
+    "MEX": "MX",
+    "UIO": "EC",
+    "LIM": "PE",
+    "SCL": "CL",
+    "EZE": "AR",
+    "GRU": "BR",
+    "CCS": "VE",
+    "MAD": "ES",
+    "MIA": "US",
+}
+
+# Destinos NACIONALES por país: {codigo_pais: {IATA: (nombre, umbral)}}.
+#
+# Van aparte de DESTINOS a proposito. DESTINOS se escanea desde los 13 origenes,
+# asi que meter 7 destinos nacionales colombianos ahi costaria
+# 7 x 13 x 6 meses = 546 llamadas por corrida, y la mayoria no le sirve a nadie
+# (un MAD->Bucaramanga no le interesa a un viajero en Madrid). Escaneados solo
+# desde origenes del mismo pais son 4 x 7 x 6 = 168 llamadas por corrida.
+#
+# Empezamos por Colombia (mercado principal). Al añadir otro pais basta con
+# poner su entrada aqui y en META de generar_ofertas.py.
+#
+# Nota de cobertura: la API tiene datos irregulares en pares secundarios. Medido
+# el 2026-07-26: MDE->CTG (US$ 69 directo) y BOG->SMR (US$ 84 directo) si traen
+# datos, pero MDE->ADZ y MDE->BAQ vienen vacios. Los pares sin datos simplemente
+# no generan tarjeta.
+DESTINOS_NACIONALES = {
+    "CO": {
+        "CTG": ("Cartagena", 120),
+        "CLO": ("Cali", 100),
+        "SMR": ("Santa Marta", 120),
+        "ADZ": ("San Andrés", 170),
+        "BAQ": ("Barranquilla", 110),
+        "PEI": ("Pereira", 100),
+        "BGA": ("Bucaramanga", 100),
+    },
+}
+
+
+def destinos_para_origen(origen):
+    """Destinos a escanear desde este origen: los internacionales de DESTINOS
+    mas los nacionales de su pais. Nunca se devuelve el propio origen (BOG->BOG
+    no existe, y CTG/CLO son a la vez origen y destino nacional)."""
+    salida = dict(DESTINOS)
+    pais = PAIS_DE_ORIGEN.get(origen)
+    if pais:
+        salida.update(DESTINOS_NACIONALES.get(pais, {}))
+    salida.pop(origen, None)
+    return salida
+
 # Cuántos meses hacia adelante explorar (busca el vuelo más barato de cada mes).
 # Bajado de 8 → 6 al pasar de 2 a 11 origenes (multi-pais Fase 2) para mantener
 # el costo de API: 13 origenes × 14 destinos × 6 meses = 1,092 llamadas por

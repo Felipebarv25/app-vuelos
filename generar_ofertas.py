@@ -32,6 +32,8 @@ SALIDA_RESUMEN = os.path.join(RAIZ, "web", "public", "historial-resumen.json")
 ORIGENES = {
     "BOG": "Bogotá",
     "MDE": "Medellín",
+    "CLO": "Cali",
+    "CTG": "Cartagena",
     "MEX": "Ciudad de México",
     "UIO": "Quito",
     "LIM": "Lima",
@@ -60,6 +62,16 @@ META = {
     "SAO": ("São Paulo", "Brasil", "🇧🇷"),
     "BUE": ("Buenos Aires", "Argentina", "🇦🇷"),
     "LIM": ("Lima", "Perú", "🇵🇪"),
+    # Nacionales de Colombia (ver DESTINOS_NACIONALES en config.py). Al añadir
+    # otro país hay que sumar aquí sus ciudades o las rutas se descartan por
+    # falta de metadatos.
+    "CTG": ("Cartagena", "Colombia", "🇨🇴"),
+    "CLO": ("Cali", "Colombia", "🇨🇴"),
+    "SMR": ("Santa Marta", "Colombia", "🇨🇴"),
+    "ADZ": ("San Andrés", "Colombia", "🇨🇴"),
+    "BAQ": ("Barranquilla", "Colombia", "🇨🇴"),
+    "PEI": ("Pereira", "Colombia", "🇨🇴"),
+    "BGA": ("Bucaramanga", "Colombia", "🇨🇴"),
 }
 
 DESCUENTO_GANGA = 0.15  # 15% bajo la mediana = oferta destacada
@@ -157,7 +169,10 @@ def main():
         precio = mejor["precio"]
 
         descuento = round((1 - precio / mediana) * 100) if mediana else 0
-        umbral = config.DESTINOS.get(destino, ("", 0))[1]
+        # El umbral puede venir de DESTINOS (internacionales) o de
+        # DESTINOS_NACIONALES (Cartagena, San Andrés...). Sin esto los nacionales
+        # tendrian umbral 0 y nunca se marcarian como ganga por umbral.
+        umbral = config.destinos_para_origen(origen).get(destino, ("", 0))[1]
         # "Ganga" = descuento REAL y notable: 15%+ bajo lo habitual, o bien
         # claramente por debajo de tu umbral objetivo (no apenas rozándolo).
         es_ganga = (mediana and precio <= mediana * (1 - DESCUENTO_GANGA)) or (umbral and precio <= umbral * 0.85)

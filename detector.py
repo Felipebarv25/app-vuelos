@@ -196,12 +196,14 @@ def marcar_escaneo_directos():
 def main():
     meses = generar_meses()
     historial = cargar_precios_por_ruta_mes()
-    n_rutas = len(config.ORIGENES) * len(config.DESTINOS)
+    # El numero de destinos varia por origen: los nacionales solo aplican a los
+    # origenes de su pais.
+    n_rutas = sum(len(config.destinos_para_origen(o)) for o in config.ORIGENES)
     total_dates = n_rutas * len(meses)
     escanear_directos = toca_escanear_directos()
-    print(f"Explorando {len(config.ORIGENES)} orígenes x "
-          f"{len(config.DESTINOS)} destinos x {len(meses)} meses "
-          f"= {total_dates} consultas (dates) + {n_rutas} (latest)...")
+    print(f"Explorando {len(config.ORIGENES)} orígenes x {len(meses)} meses "
+          f"= {n_rutas} rutas, {total_dates} consultas (dates) "
+          f"+ {n_rutas} (latest)...")
     if escanear_directos:
         print("Escaneo de vuelos SIN ESCALAS activo en esta corrida "
               f"(hasta {total_dates} consultas extra con direct=true).")
@@ -210,7 +212,10 @@ def main():
     directos = 0
 
     for origen in config.ORIGENES:
-        for destino, (nombre, umbral) in config.DESTINOS.items():
+        # Internacionales + los nacionales del pais de este origen. Ver la nota
+        # de DESTINOS_NACIONALES en config.py: escanear los nacionales desde los
+        # 13 origenes triplicaria el costo para datos que nadie usaria.
+        for destino, (nombre, umbral) in config.destinos_para_origen(origen).items():
             # prices_latest: 1 llamada por ruta, reutilizada para todos los meses
             try:
                 cache_latest = buscar_precios_latest(
