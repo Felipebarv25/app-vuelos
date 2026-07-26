@@ -149,16 +149,27 @@ export default function MenuUsuario({ oscuro = false }) {
 
           {/* Mis alertas */}
           <div className="px-4 py-3">
+            {/* El contador cuenta TODAS las alertas del usuario. Antes filtraba
+                por `activa !== false`, pero `activa: false` no significa que el
+                usuario la apagara: marcarDisparada() la pone en false al enviar
+                el email (anti-spam). Con 5 alertas de las que 2 ya avisaron, el
+                encabezado decia "(3)" mientras la lista mostraba 5. Las que ya
+                avisaron se marcan abajo con su propio badge. */}
             <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {t("menuMisAlertas")} ({alertas.filter((a) => a.activa !== false).length})
+              {t("menuMisAlertas")} ({alertas.length})
             </div>
             {alertas.length === 0 ? (
               <div className="mt-1 text-[12.5px] text-slate-400 dark:text-slate-500">
                 {t("menuSinAlertas")}
               </div>
             ) : (
-              <ul className="mt-1.5 space-y-1.5">
-                {alertas.slice(0, 5).map((a) => (
+              /* Antes se cortaba en slice(0, 5) sin avisar: con mas de 5
+                 alertas las demas quedaban invisibles y no habia forma de
+                 llegar a ellas (no existe una pagina indice de alertas). Ahora
+                 se listan todas, con scroll para que el menu no crezca sin
+                 limite. */
+              <ul className="mt-1.5 max-h-[240px] space-y-1.5 overflow-y-auto pr-0.5">
+                {alertas.map((a) => (
                   <li
                     key={a.id}
                     className="flex items-center justify-between rounded-lg bg-slate-50 px-2 py-1.5 text-[12.5px] dark:bg-slate-700/60"
@@ -170,6 +181,17 @@ export default function MenuUsuario({ oscuro = false }) {
                     >
                       {a.ciudad}
                     </Link>
+                    {/* Una alerta ya disparada no vuelve a enviar email hasta
+                        reactivarla. Sin esta marca se veia igual que una activa
+                        y no habia forma de saber por que dejo de avisar. */}
+                    {a.activa === false && (
+                      <span
+                        title={t("menuAlertaAvisadaAyuda")}
+                        className="ml-1 shrink-0 rounded bg-slate-200 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-500 dark:bg-slate-600 dark:text-slate-300"
+                      >
+                        {t("menuAlertaAvisada")}
+                      </span>
+                    )}
                     <span className="mx-1 text-slate-400">·</span>
                     {editandoId === a.id ? (
                       <span className="inline-flex items-center gap-1">
