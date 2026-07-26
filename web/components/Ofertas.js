@@ -155,6 +155,29 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
     });
   }, [data, filtro, buscar]);
 
+  // Mejor precio y menor duracion POR DESTINO entre las tarjetas visibles.
+  //
+  // La comparacion se hace dentro del mismo destino a proposito: un vuelo de
+  // 1h10 a Cartagena no compite con uno de 25h50 a Tokio, y un badge global de
+  // "mas rapido" seria puro ruido. Solo se marca cuando hay al menos dos
+  // tarjetas del mismo destino, porque con una sola no hay comparacion posible.
+  //
+  // Las duraciones solo existen en las filas escritas desde el 2026-07-26 (antes
+  // se descartaba el dato que ya mandaba la API), asi que el badge de "mas
+  // rapido" va apareciendo a medida que el cron reescribe el historial.
+  const referencias = useMemo(() => {
+    const porDestino = {};
+    for (const r of rutas) {
+      const d = r.destino;
+      const dur = (Number(r.duracion_ida) || 0) + (Number(r.duracion_vuelta) || 0);
+      const acc = (porDestino[d] ||= { n: 0, minPrecio: Infinity, minDur: Infinity });
+      acc.n += 1;
+      if (r.precio < acc.minPrecio) acc.minPrecio = r.precio;
+      if (dur > 0 && dur < acc.minDur) acc.minDur = dur;
+    }
+    return porDestino;
+  }, [rutas]);
+
   // Frescura GLOBAL: el escaneo mas reciente entre todas las rutas. Sirve para
   // el sello "actualizado hace X" del header (prueba social honesta de que
   // los precios son de hoy, no estimados).
@@ -338,6 +361,31 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
                   −{r.descuento}%
                 </div>
               )}
+              {/* "Mas barato" / "Mas rapido" comparando SOLO contra las otras
+                  tarjetas del mismo destino, y solo si hay mas de una: con una
+                  sola tarjeta el badge no dice nada. */}
+              {(() => {
+                const ref = referencias[r.destino];
+                if (!ref || ref.n < 2) return null;
+                const dur = (Number(r.duracion_ida) || 0) + (Number(r.duracion_vuelta) || 0);
+                const esBarato = r.precio === ref.minPrecio;
+                const esRapido = dur > 0 && dur === ref.minDur;
+                if (!esBarato && !esRapido) return null;
+                return (
+                  <div className="mb-0.5 flex flex-wrap gap-1">
+                    {esBarato && (
+                      <span className="whitespace-nowrap rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                        {t("ofertasBadgeBarato")}
+                      </span>
+                    )}
+                    {esRapido && (
+                      <span className="whitespace-nowrap rounded-full bg-sky-100 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
+                        {t("ofertasBadgeRapido")}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
             <div className="text-[12px] text-slate-400">{t("ofertasIdaVuelta")}</div>
             {/* Mostramos la moneda secundaria (la NO elegida) en pequeno como
