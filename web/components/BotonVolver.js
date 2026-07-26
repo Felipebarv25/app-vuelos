@@ -10,11 +10,19 @@
 //
 //   <BotonVolver />            (en cualquier pagina)
 //   <BotonVolver href="/destino" />  (destino fijo en vez de back)
+//   <BotonVolver espaciar={false} /> (paginas con hero a sangre completa)
+//
+// Al ser `fixed` no ocupa sitio en el flujo, asi que tapaba el primer bloque de
+// contenido: en /ofertas se comia el eyebrow "Vuelos" (solo se veia la "V"
+// asomando por el borde). Cuentas: NavTop mide ~69px, el boton va de 90 a 126px,
+// y `main` con py-8 arranca su contenido en 101px — justo debajo del boton. El
+// spacer de abajo reserva ese hueco. Se desactiva con espaciar={false} donde el
+// siguiente bloque es una imagen a sangre completa y el boton debe flotar encima.
 
 import { useRouter } from "next/navigation";
 import { Logo } from "./Logo";
 
-export default function BotonVolver({ href = null, etiqueta = "Volver" }) {
+export default function BotonVolver({ href = null, etiqueta = "Volver", espaciar = true }) {
   const router = useRouter();
 
   function volver() {
@@ -25,6 +33,7 @@ export default function BotonVolver({ href = null, etiqueta = "Volver" }) {
   }
 
   return (
+    <>
     <div className="fixed left-0 top-[90px] z-[60] px-4 sm:px-6">
       <button
         type="button"
@@ -42,5 +51,7 @@ export default function BotonVolver({ href = null, etiqueta = "Volver" }) {
         <span className="text-[13px] font-bold text-marca-900 dark:text-slate-100">{etiqueta}</span>
       </button>
     </div>
+    {espaciar && <div aria-hidden="true" className="h-11" />}
+    </>
   );
 }

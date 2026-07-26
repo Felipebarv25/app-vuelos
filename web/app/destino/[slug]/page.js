@@ -193,7 +193,9 @@ export default async function PaginaDestino({ params }) {
         </span>
       </nav>
 
-      <BotonVolver href="/destino" etiqueta="Volver a destinos" />
+      {/* Sin spacer: lo que sigue es el hero a sangre completa y el boton debe
+          flotar encima. Un hueco aqui dejaria una banda blanca sobre la foto. */}
+      <BotonVolver href="/destino" etiqueta="Volver a destinos" espaciar={false} />
 
       {/* Hero: foto real de Wikipedia con overlay; fallback al gradiente si no
           se pudo conseguir foto. */}
