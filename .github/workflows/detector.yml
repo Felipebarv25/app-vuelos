@@ -7,6 +7,11 @@ on:
     # unos minutos de retraso en horas pico — es normal.
     - cron: "0 * * * *"
   workflow_dispatch:        # permite ejecutarlo a mano desde la pestaña Actions
+    inputs:
+      forzar_directos:
+        description: "Escanear tambien vuelos SIN ESCALAS (normalmente solo 07:00 y 19:00 UTC)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write           # para guardar el historial de precios actualizado
@@ -38,6 +43,9 @@ jobs:
           # Secret compartido para POSTear al endpoint Vercel /api/alertas/disparar
           # Debe coincidir con ALERTS_SHARED_SECRET en Vercel env vars.
           ALERTS_SHARED_SECRET: ${{ secrets.ALERTS_SHARED_SECRET }}
+          # El escaneo de directos corre solo en las horas de
+          # config.HORAS_ESCANEO_DIRECTOS; este input lo fuerza en corridas a mano.
+          FORZAR_ESCANEO_DIRECTOS: ${{ inputs.forzar_directos && '1' || '0' }}
         run: python detector.py
 
       - name: Generar ofertas para la web

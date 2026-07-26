@@ -72,6 +72,16 @@ function hubsDelPais(origenIata) {
   return [origenIata];
 }
 
+// En modo "Solo directos" el vuelo que se muestra NO es el de la raíz (que casi
+// siempre es una conexión, por ser el más barato) sino el sub-objeto `directo`
+// que el radar escanea aparte. Devuelve null si ese mes no tiene sin-escalas.
+function proyectar(v, soloDirectos) {
+  if (!soloDirectos) return v;
+  if (v.escalas_ida === 0 && v.escalas_vuelta === 0) return v;
+  if (!v.directo) return null;
+  return { ...v, ...v.directo, escalas_ida: 0, escalas_vuelta: 0 };
+}
+
 function mejorPorMes(vuelos) {
   const mapa = {};
   for (const v of vuelos) {
@@ -118,15 +128,17 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
     : datos.vuelos;
   if (!vuelosPais.length) return null;
 
-  const vuelosFiltrados = soloDirectos
-    ? vuelosPais.filter((v) => v.escalas_ida === 0 && v.escalas_vuelta === 0)
-    : vuelosPais;
+  const hayDirectos = vuelosPais.some((v) => proyectar(v, true));
 
-  const hayDirectos = vuelosPais.some((v) => v.escalas_ida === 0 && v.escalas_vuelta === 0);
+  // Los años del selector NO dependen del modo: así, si un año no tiene ningún
+  // directo, el chip sigue ahí y se puede mostrar el mensaje explicativo.
+  const anios = [...new Set(vuelosPais.map((v) => v.anio))].sort();
 
-  const porAnio = vuelosFiltrados.filter((v) => v.anio === anioSel);
-  const mejores = mejorPorMes(porAnio);
-  const anios = [...new Set(vuelosFiltrados.map((v) => v.anio))].sort();
+  const porAnio = vuelosPais.filter((v) => v.anio === anioSel);
+  const mejores = mejorPorMes(
+    porAnio.map((v) => proyectar(v, soloDirectos)).filter(Boolean)
+  );
+  const mesesDelAnio = new Set(porAnio.map((v) => v.ym)).size;
   const minPrecio = mejores.length ? Math.min(...mejores.map((v) => v.precio)) : 0;
 
   const promedio = datos.promedio;
@@ -361,6 +373,14 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
         })}
       </div>
 
+      {soloDirectos && mejores.length > 0 && mejores.length < mesesDelAnio && (
+        <p className="mt-3 text-[12px] leading-relaxed text-slate-500 dark:text-slate-400">
+          Solo se muestran los meses con vuelo sin escalas detectado. Los directos
+          suelen costar más que las conexiones, así que no hay opción sin escalas
+          disponible todos los meses.
+        </p>
+      )}
+
       {promedio > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[12.5px] text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400">
           <span>
@@ -377,7 +397,11 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
             </>
           )}
           <span className="text-slate-300 dark:text-slate-600">·</span>
-          <span>{mejores.length} meses con datos en {anioSel}</span>
+          <span>
+            {soloDirectos
+              ? `Sin escalas detectados en ${mejores.length} de ${mesesDelAnio} meses de ${anioSel}`
+              : `${mejores.length} meses con datos en ${anioSel}`}
+          </span>
         </div>
       )}
 

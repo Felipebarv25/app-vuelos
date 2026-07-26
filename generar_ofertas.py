@@ -241,10 +241,32 @@ def _esc_resumen(v):
         return None
 
 
+def _gana(nuevo, nuevo_ts, actual):
+    """¿El candidato nuevo reemplaza al actual? Manda el precio más bajo; si
+    empatan, la observación más reciente."""
+    if actual is None:
+        return True
+    if nuevo["precio"] != actual["precio"]:
+        return nuevo["precio"] < actual["precio"]
+    actual_ts = _parse_ts_safe(actual["visto"])
+    return actual_ts is None or nuevo_ts > actual_ts
+
+
 def generar_resumen():
     """Genera historial-resumen.json: el vuelo más barato detectado por mes
     y destino, con todos los datos del vuelo. VuelosBaratos.js lo consume
     client-side en Vercel (el CSV no está disponible ahí).
+
+    Cada entrada lleva DOS candidatos:
+      - el más barato en general (normalmente una conexión), en la raíz
+      - el más barato SIN ESCALAS, en el sub-objeto "directo" (o None)
+    Se guardan por separado porque el vuelo más barato de un mes casi nunca es
+    directo: si solo guardáramos uno, el filtro "Solo directos" de la web se
+    quedaría sin datos en la mayoría de los meses.
+
+    El criterio es PRECIO (no recencia): el detector ahora registra también
+    directos más caros, y si eligiéramos por recencia uno de esos podría
+    desplazar a la conexión barata y empeorar la tarjeta "Con escalas".
 
     Solo incluye precios vistos en los últimos DIAS_FRESCOS_RESUMEN días
     para que los precios mostrados sean cercanos a la realidad actual."""
@@ -255,7 +277,7 @@ def generar_resumen():
     umbral_fresco = datetime.now(timezone.utc) - timedelta(days=DIAS_FRESCOS_RESUMEN)
     hoy = date.today().isoformat()
 
-    # {destino: {(origen, "YYYY-MM"): {fila}}} — un entry por origen+mes
+    # {destino: {(origen, "YYYY-MM"): {"gen": fila, "dir": fila|None}}}
     destinos = {}
     with open(HISTORIAL, newline="", encoding="utf-8") as f:
         for fila in csv.DictReader(f):
@@ -275,36 +297,61 @@ def generar_resumen():
             ts = _parse_ts_safe(fila.get("timestamp", ""))
             if not ts or ts < umbral_fresco:
                 continue
+
+            esc_ida = _esc_resumen(fila.get("escalas_ida"))
+            esc_vuelta = _esc_resumen(fila.get("escalas_vuelta"))
+            cand = {
+                "precio": precio,
+                "origen": origen,
+                "ida": ida,
+                "vuelta": fila.get("fecha_vuelta", ""),
+                "aerolinea": (fila.get("aerolinea") or "").strip(),
+                "escalas_ida": esc_ida,
+                "escalas_vuelta": esc_vuelta,
+                "visto": fila.get("timestamp", ""),
+            }
+
             ym = ida[:7]
-            if dest not in destinos:
-                destinos[dest] = {}
             clave = (origen, ym)
-            actual = destinos[dest].get(clave)
-            actual_ts = _parse_ts_safe(actual["visto"]) if actual else None
-            if not actual or ts > actual_ts:
-                destinos[dest][clave] = {
-                    "precio": precio,
-                    "origen": origen,
-                    "ida": ida,
-                    "vuelta": fila.get("fecha_vuelta", ""),
-                    "aerolinea": (fila.get("aerolinea") or "").strip(),
-                    "escalas_ida": _esc_resumen(fila.get("escalas_ida")),
-                    "escalas_vuelta": _esc_resumen(fila.get("escalas_vuelta")),
-                    "visto": fila.get("timestamp", ""),
-                }
+            bucket = destinos.setdefault(dest, {}).setdefault(
+                clave, {"gen": None, "dir": None})
+
+            if _gana(cand, ts, bucket["gen"]):
+                bucket["gen"] = cand
+            if esc_ida == 0 and esc_vuelta == 0 and _gana(cand, ts, bucket["dir"]):
+                bucket["dir"] = cand
 
     doc = {}
     for dest, entradas in destinos.items():
         vuelos = []
-        for (origen, ym), v in sorted(entradas.items(), key=lambda x: x[0]):
+        for (origen, ym), bucket in sorted(entradas.items(), key=lambda x: x[0]):
+            gen = bucket["gen"]
+            if not gen:
+                continue
             mi = int(ym[5:7]) - 1
             anio = ym[:4]
-            vuelos.append({
+            v = {
                 "ym": ym,
                 "anio": anio,
                 "label": f"{MESES_ES[mi]} {anio[2:]}",
-                **v,
-            })
+                **gen,
+            }
+            # Sin escalas más barato del mes. La web lo usa para el filtro "Solo
+            # directos" y trata la clave ausente igual que null, así que la
+            # omitimos cuando no hay directo (la mayoría de los meses) para no
+            # inflar el JSON que se descarga en el navegador.
+            # No copiamos escalas_ida/vuelta: por definición son 0/0.
+            if directo := bucket["dir"]:
+                v["directo"] = {
+                    "precio": directo["precio"],
+                    "ida": directo["ida"],
+                    "vuelta": directo["vuelta"],
+                    "aerolinea": directo["aerolinea"],
+                    "visto": directo["visto"],
+                }
+            vuelos.append(v)
+        # El promedio se calcula sobre los precios "con escalas" (los baratos),
+        # para no inflarlo con los directos que son sistemáticamente más caros.
         precios = [v["precio"] for v in vuelos]
         promedio = round(sum(precios) / len(precios)) if precios else 0
         doc[dest] = {"vuelos": vuelos, "promedio": promedio}

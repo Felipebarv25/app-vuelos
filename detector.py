@@ -7,7 +7,7 @@ Uso:  python detector.py
 import os
 import statistics
 import time
-from datetime import date
+from datetime import date, datetime, timezone
 
 import requests
 from dotenv import load_dotenv
@@ -150,15 +150,36 @@ def evaluar_oferta(precio, umbral, historico):
     return False, ""
 
 
+def toca_escanear_directos():
+    """¿Esta corrida debe hacer el escaneo extra de vuelos sin escalas?
+
+    El cron corre cada hora, pero los directos solo se buscan en las horas UTC
+    de config.HORAS_ESCANEO_DIRECTOS para no multiplicar el gasto de API."""
+    if not getattr(config, "ESCANEO_DIRECTOS", False):
+        return False
+    horas = getattr(config, "HORAS_ESCANEO_DIRECTOS", ())
+    if not horas:
+        return False
+    # Ejecución manual (workflow_dispatch) o local: permite forzarlo.
+    if os.environ.get("FORZAR_ESCANEO_DIRECTOS") == "1":
+        return True
+    return datetime.now(timezone.utc).hour in horas
+
+
 def main():
     meses = generar_meses()
     historial = cargar_precios_por_ruta_mes()
     n_rutas = len(config.ORIGENES) * len(config.DESTINOS)
     total_dates = n_rutas * len(meses)
+    escanear_directos = toca_escanear_directos()
     print(f"Explorando {len(config.ORIGENES)} orígenes x "
           f"{len(config.DESTINOS)} destinos x {len(meses)} meses "
           f"= {total_dates} consultas (dates) + {n_rutas} (latest)...")
+    if escanear_directos:
+        print("Escaneo de vuelos SIN ESCALAS activo en esta corrida "
+              f"(hasta {total_dates} consultas extra con direct=true).")
     ofertas = 0
+    directos = 0
 
     for origen in config.ORIGENES:
         for destino, (nombre, umbral) in config.DESTINOS.items():
@@ -191,6 +212,29 @@ def main():
                 # Historia previa de ESTA ruta y mes (antes de guardar la actual)
                 historico = historial.get((origen, destino, mes_salida), [])
                 guardar_precio(origen, destino, fecha_ida, fecha_vuelta, oferta)
+
+                # El vuelo más barato del mes casi nunca es directo (suele ser
+                # una conexión), así que sin esta consulta extra el historial
+                # jamás registra los sin-escalas y el filtro "Solo directos" de
+                # la web se queda vacío. Si la oferta principal ya era directa,
+                # no gastamos la llamada.
+                ya_es_directo = (oferta.get("escalas_ida") == 0
+                                 and oferta.get("escalas_vuelta") == 0)
+                if escanear_directos and not ya_es_directo:
+                    try:
+                        directo = buscar_oferta_mas_barata(
+                            origen, destino, mes, config.MONEDA,
+                            solo_directos=True)
+                    except Exception as e:
+                        print(f"  ! Error directos {origen}->{destino} {mes}: {e}")
+                        directo = None
+                    # Se guarda en el historial pero NO notifica: un directo más
+                    # caro que la conexión no es una ganga.
+                    if directo:
+                        guardar_precio(origen, destino, directo["fecha_ida"],
+                                       directo["fecha_vuelta"], directo)
+                        directos += 1
+                    time.sleep(config.ESPERA_ENTRE_LLAMADAS)
 
                 # Notificar a la app web para que dispare las alertas de los
                 # usuarios cuyo umbral se cumpla (best-effort, no bloquea).
@@ -243,6 +287,8 @@ def main():
                 time.sleep(config.ESPERA_ENTRE_LLAMADAS)
 
     print(f"Listo. Ofertas notificadas en esta corrida: {ofertas}")
+    if escanear_directos:
+        print(f"Vuelos sin escalas registrados: {directos}")
 
 
 if __name__ == "__main__":

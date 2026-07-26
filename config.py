@@ -54,11 +54,29 @@ DESTINOS = {
 
 # Cuántos meses hacia adelante explorar (busca el vuelo más barato de cada mes).
 # Bajado de 8 → 6 al pasar de 2 a 11 origenes (multi-pais Fase 2) para mantener
-# el costo de API: 11 origenes × 14 destinos × 6 meses × 8 runs/dia = 7,392/dia.
+# el costo de API: 11 origenes × 14 destinos × 6 meses = 924 llamadas por corrida.
+# El cron corre cada hora (24 corridas/dia) → ~22,200 llamadas/dia de "dates".
 MESES_A_EXPLORAR = 6
 
 # ¿Solo vuelos directos? (False = permite escalas; recomendado para mejor precio)
 SOLO_DIRECTOS = False
+
+# --- Escaneo aparte de vuelos SIN ESCALAS ---
+# El vuelo mas barato de un mes casi nunca es directo (suele ser una conexion),
+# asi que la consulta normal jamas registra los directos y el filtro "Solo
+# directos" de la web se queda sin datos. Para arreglarlo, en las horas de abajo
+# se hace una consulta extra con direct=true por ruta+mes y se guarda tambien el
+# directo mas barato.
+#
+# Costo: el cron corre cada hora (24 corridas/dia = ~25,900 llamadas). Cada hora
+# listada aqui suma 11 origenes × 14 destinos × 6 meses = 924 llamadas. Con 2
+# horas son ~1,850/dia extra (+7%). Como DIAS_FRESCOS_RESUMEN es 3, dos pasadas
+# diarias sobran: los directos son pocos y su precio se mueve lento.
+ESCANEO_DIRECTOS = True
+
+# Horas UTC en las que corre el escaneo de directos (Colombia = UTC-5, o sea
+# 07:00 UTC = 2 a.m. y 19:00 UTC = 2 p.m.). Vaciar la tupla equivale a apagarlo.
+HORAS_ESCANEO_DIRECTOS = (7, 19)
 
 # --- Detección INTELIGENTE de gangas ("solo precios fuera de lo normal") ---
 # Estos ajustes evitan "avisar por avisar": solo alertan cuando el precio es
