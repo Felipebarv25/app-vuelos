@@ -60,8 +60,9 @@ DESTINOS = {
 # Cuántos meses hacia adelante explorar (busca el vuelo más barato de cada mes).
 # Bajado de 8 → 6 al pasar de 2 a 11 origenes (multi-pais Fase 2) para mantener
 # el costo de API: 13 origenes × 14 destinos × 6 meses = 1,092 llamadas por
-# corrida. El cron corre cada hora (24 corridas/dia) → ~26,200 llamadas/dia de
-# "dates", mas ~2,200/dia del escaneo de directos (2 pasadas, ver abajo).
+# corrida. El workflow pide una corrida por hora, pero GitHub descarta buena
+# parte: la cadencia real medida el 2026-07-26 fue ~9 corridas/dia, o sea
+# ~9,800 llamadas/dia de "dates" mas ~2,200/dia del escaneo de directos.
 MESES_A_EXPLORAR = 6
 
 # ¿Solo vuelos directos? (False = permite escalas; recomendado para mejor precio)
@@ -74,15 +75,23 @@ SOLO_DIRECTOS = False
 # se hace una consulta extra con direct=true por ruta+mes y se guarda tambien el
 # directo mas barato.
 #
-# Costo: cada hora listada aqui suma 13 origenes × 14 destinos × 6 meses = 1,092
-# llamadas. Con 2 horas son ~2,200/dia extra (+8%). Como DIAS_FRESCOS_RESUMEN es
-# 3, dos pasadas diarias sobran: los directos son pocos y su precio se mueve
-# lento.
+# Costo: cada pasada suma 13 origenes × 14 destinos × 6 meses = 1,092 llamadas.
+# Con ~2 pasadas al dia son ~2,200/dia extra. Como DIAS_FRESCOS_RESUMEN es 3,
+# dos pasadas diarias sobran: los directos son pocos y su precio se mueve lento.
 ESCANEO_DIRECTOS = True
 
-# Horas UTC en las que corre el escaneo de directos (Colombia = UTC-5, o sea
-# 07:00 UTC = 2 a.m. y 19:00 UTC = 2 p.m.). Vaciar la tupla equivale a apagarlo.
-HORAS_ESCANEO_DIRECTOS = (7, 19)
+# Horas minimas entre pasadas de directos.
+#
+# OJO: antes esto eran horas UTC fijas (7 y 19) y NO funcionaba. El workflow dice
+# `cron: "0 * * * *"` pero GitHub descarta corridas programadas en repos
+# publicos: la cadencia real observada el 2026-07-26 fue 00, 03, 06, 09, 11, 13,
+# 15, 16, 17 UTC — ~9 corridas, y ninguna en la hora 7. La condicion
+# `hour in (7, 19)` nunca se cumplia y el escaneo jamas corrio.
+#
+# Con tiempo transcurrido en vez de horas fijas da igual cuando caiga la corrida,
+# y si se salta una, la siguiente lo recupera. 11 horas ≈ 2 pasadas/dia dejando
+# margen para que una corrida saltada no empuje la siguiente al dia siguiente.
+HORAS_ENTRE_ESCANEOS_DIRECTOS = 11
 
 # --- Detección INTELIGENTE de gangas ("solo precios fuera de lo normal") ---
 # Estos ajustes evitan "avisar por avisar": solo alertan cuando el precio es

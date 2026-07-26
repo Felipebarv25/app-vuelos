@@ -7,7 +7,7 @@ Uso:  python detector.py
 import os
 import statistics
 import time
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import requests
 from dotenv import load_dotenv
@@ -150,20 +150,47 @@ def evaluar_oferta(precio, umbral, historico):
     return False, ""
 
 
+MARCA_DIRECTOS = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              "datos", "ultimo_escaneo_directos.txt")
+
+
 def toca_escanear_directos():
     """¿Esta corrida debe hacer el escaneo extra de vuelos sin escalas?
 
-    El cron corre cada hora, pero los directos solo se buscan en las horas UTC
-    de config.HORAS_ESCANEO_DIRECTOS para no multiplicar el gasto de API."""
+    Se decide por tiempo transcurrido desde la última pasada, NO por hora del
+    día: el cron pide una corrida por hora pero GitHub descarta buena parte, así
+    que una condición del tipo `hour == 7` puede no cumplirse nunca. Con el
+    marcador da igual a qué hora caiga la corrida, y si se salta una, la
+    siguiente la recupera."""
     if not getattr(config, "ESCANEO_DIRECTOS", False):
-        return False
-    horas = getattr(config, "HORAS_ESCANEO_DIRECTOS", ())
-    if not horas:
         return False
     # Ejecución manual (workflow_dispatch) o local: permite forzarlo.
     if os.environ.get("FORZAR_ESCANEO_DIRECTOS") == "1":
         return True
-    return datetime.now(timezone.utc).hour in horas
+
+    horas = getattr(config, "HORAS_ENTRE_ESCANEOS_DIRECTOS", 0)
+    if not horas:
+        return False
+    try:
+        with open(MARCA_DIRECTOS, encoding="utf-8") as f:
+            ultimo = datetime.fromisoformat(f.read().strip())
+    except (OSError, ValueError):
+        return True  # sin marcador (primera vez o corrupto): escanear
+    if ultimo.tzinfo is None:
+        ultimo = ultimo.replace(tzinfo=timezone.utc)
+    return datetime.now(timezone.utc) - ultimo >= timedelta(hours=horas)
+
+
+def marcar_escaneo_directos():
+    """Deja constancia de esta pasada. Se llama ANTES de escanear: si el scan
+    falla a mitad, no queremos que la corrida siguiente lo reintente entero y
+    se dispare el gasto de API."""
+    try:
+        os.makedirs(os.path.dirname(MARCA_DIRECTOS), exist_ok=True)
+        with open(MARCA_DIRECTOS, "w", encoding="utf-8") as f:
+            f.write(datetime.now(timezone.utc).isoformat(timespec="seconds"))
+    except OSError as e:
+        print(f"  ! No se pudo escribir {MARCA_DIRECTOS}: {e}")
 
 
 def main():
@@ -178,6 +205,7 @@ def main():
     if escanear_directos:
         print("Escaneo de vuelos SIN ESCALAS activo en esta corrida "
               f"(hasta {total_dates} consultas extra con direct=true).")
+        marcar_escaneo_directos()
     ofertas = 0
     directos = 0
 
