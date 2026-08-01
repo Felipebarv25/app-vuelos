@@ -1,7 +1,7 @@
 {
   "_meta": {
-    "version": 3,
-    "actualizado": "2026-07-01",
+    "version": 4,
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO International Travel and Health",
       "CDC Travel Health Notices",
@@ -18,7 +18,7 @@
       "notas": "Otros consejos prácticos."
     },
     "ultima_corrida": {
-      "fecha": "2026-07-01T10:38:40.772Z",
+      "fecha": "2026-08-01T09:00:39.038Z",
       "paises_actualizados": 46,
       "errores": 0
     }
@@ -46,7 +46,7 @@
       "bomberos": "100"
     },
     "notas": "Sistema público de salud accesible pero con esperas. Seguro de viaje recomendado, especialmente si visitas Patagonia o trekking.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Argentina"
@@ -55,12 +55,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_care_in_Argentina",
         "extracto": "Argentina's health care system is composed of a universal health care system and a private system. The government maintains a system of public medical facilities that are universally accessible to everyone in the country, but formal sector workers are also obligated to participate in one of about 300 labor union-run health insurance schemes, which offer differing levels of coverage. Private medical facilities and health insurance also exist in the country. The Ministry of Health (MSAL), oversees all three subsectors of the health care system and is responsible for setting of regulation, evalua",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/argentina",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -85,7 +85,7 @@
       "no_urgente": "131 444"
     },
     "notas": "Sistema de salud privado caro para extranjeros — seguro de viaje OBLIGATORIO. Para visa de trabajo/estudio se exige seguro.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Australia"
@@ -94,12 +94,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Australia",
         "extracto": "Australia is a high income country, and this is reflected in the good status of health of the population overall. In 2011, Australia ranked 2nd on the United Nations Development Programme's Human Development Index, indicating the level of development of a country. Despite the overall good status of health, large disparities exist between the health of different demographics within Australia. The poor and those living in remote areas as well as indigenous people are, in general, less healthy than others in the population, and programs have been implemented to decrease this gap. These include in",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/australia",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -124,7 +124,7 @@
       "policia": "133"
     },
     "notas": "Sistema de salud de primer nivel. Tarjeta Sanitaria Europea para residentes UE.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Austria"
@@ -133,12 +133,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Austria",
         "extracto": "Legislation on public health issues in Austria is fragmented and in some cases outdated and patchy according to the European Observatory on Health Systems and Policies.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/austria",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -158,7 +158,7 @@
       "policia": "101"
     },
     "notas": "Sistema de salud excelente. Tarjeta Sanitaria Europea para residentes UE.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Belgium"
@@ -167,12 +167,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Belgium",
         "extracto": "A new measure of expected human capital calculated for 195 countries from 1990 to 2016 and defined for each birth cohort as the expected years lived from age 20 to 64 years and adjusted for educational attainment, learning or education quality, and functional health status was published by the Lancet in September 2018. Belgium had the tenth highest level of expected human capital with 25 health, education, and learning-adjusted expected years lived between age 20 and 64 years.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/belgium",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -203,7 +203,7 @@
       "bomberos": "119"
     },
     "notas": "Sistema sanitario limitado fuera de las capitales. Seguro de viaje con repatriación CRÍTICO. Lleva hoja de coca/Sorochi pills para altura.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Bolivia"
@@ -212,12 +212,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Bolivia",
         "extracto": "Considering the main health indicators, Bolivia has made improvements over the last decades. Since 1950, life expectancy at birth has considerably improved from 40.7 years to 68.6 years in 2023, falling a little behind the world trend. Child mortality rate has greatly decreased since 1950, from 39.2% to 2.95% in 2019, being slightly lower than the world's rate (3.71%). Maternal health although has improved considerably, maternal mortality ratio continues to be higher than the world's ratio in 2021.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/bolivia",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -247,7 +247,7 @@
       "bomberos": "193"
     },
     "notas": "Sistema público (SUS) atiende emergencias gratis a extranjeros, pero saturado. Seguro privado recomendado.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Brazil"
@@ -256,12 +256,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Brazil",
         "extracto": "The fundaments of the Brazilian Unified Health System (SUS) were established in the Brazilian Constitution of 1988, under the principles of universality, integrality and equity. It has a decentralized operational and management system, and social participation is present in all administrative levels. The Brazilian health system is a complex composition of public sector (SUS), private health institutions and private insurances. Since the creation of SUS, Brazil has significantly improved in many health indicators, but a lot needs to be done in order to achieve Universal Health Coverage (UHC).",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/brazil",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -284,7 +284,7 @@
       "no_urgente_salud": "811"
     },
     "notas": "Sistema público universal NO cubre extranjeros. Atención médica privada cara — seguro de viaje OBLIGATORIO.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Canada"
@@ -292,13 +292,13 @@
     "enriquecido_desde_fuentes": {
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Healthcare_in_Canada",
-        "extracto": "Healthcare in Canada is delivered through the provincial and territorial systems of publicly funded health care, informally called Medicare. It is guided by the provisions of the Canada Health Act of 1984, and is universal. The 2002 Royal Commission, known as the Romanow Report, revealed that Canadians consider universal access to publicly funded health services as a \"fundamental value that ensures national health care insurance for everyone wherever they live in the country\".",
-        "consultado": "2026-07-01"
+        "extracto": "Healthcare in Canada is delivered through the provincial and territorial systems of publicly funded single-payer healthcare, informally called Medicare. It is guided by the provisions of the Canada Health Act, adopted during 1984, and is universal. The 2002 Royal Commission, known as the Romanow Report, revealed that Canadians consider universal access to publicly funded health services as a \"fundamental value that ensures national health care insurance for everyone wherever they live in the country\".",
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/canada",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -322,7 +322,7 @@
       "bomberos": "132"
     },
     "notas": "Sistema de salud privado de buena calidad pero caro. Seguro de viaje recomendado.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Chile"
@@ -331,12 +331,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Healthcare_in_Chile",
         "extracto": "The healthcare system in Chile operates as a mixed system, combining both public and private provision of health services. The public system, known as Fondo Nacional de Salud (FONASA), is funded through taxes and provides free or subsidized care to those who cannot afford private health insurance. The private system consists of various insurance providers, called Instituciones de Salud Previsional (ISAPREs), and private healthcare facilities, which offer more extensive services to those who can afford to pay.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/chile",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -364,7 +364,7 @@
       "bomberos": "119"
     },
     "notas": "Acceso a Google/WhatsApp/etc bloqueado — descarga VPN antes de llegar. Sistema sanitario público variable, hospitales internacionales caros.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: China"
@@ -373,12 +373,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_China",
         "extracto": "Health in the People's Republic of China is a complex and multifaceted issue that encompasses a wide range of factors, including public health policy, healthcare infrastructure, environmental factors, lifestyle choices, and socioeconomic conditions. Although the People's Republic of China has made significant progress in improving public health and life expectancy, many challenges remain, including air pollution, prevalent smoking, food safety concerns, a growing burden of non-communicable diseases such as diabetes and cardiovascular disease, and an aging population. In order to improve the si",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/china",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -400,7 +400,7 @@
       "ambulancia_bomberos": "119"
     },
     "notas": "Sistema sanitario excelente y barato comparado con occidente. Apps útiles: KakaoMap, Papago (traductor), KakaoTaxi.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: South Korea"
@@ -409,12 +409,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Healthcare_in_South_Korea",
         "extracto": "Healthcare in South Korea is universal, although a significant portion of healthcare is privately funded. South Korea's healthcare system is based on the National Health Insurance Service, a public health insurance program run by the Ministry of Health and Welfare to which South Koreans of sufficient income must pay contributions in order to insure themselves and their dependants, and the Medical Aid Program, a social welfare program run by the central government and local governments to insure those unable to pay National Health Insurance contributions. In 2015, South Korea ranked first in th",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/south-korea",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -438,7 +438,7 @@
       "general": "911"
     },
     "notas": "Sistema sanitario muy bueno (Caja Costarricense de Seguro Social atiende emergencias). Seguro recomendado para zip-lines/aventura.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Costa Rica"
@@ -447,12 +447,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Healthcare_in_Costa_Rica",
         "extracto": "Costa Rica provides universal health care to its citizens and permanent residents. Both the private and public health care systems in Costa Rica are continually being upgraded. Statistics from the World Health Organization (WHO) frequently place Costa Rica in the top country rankings in the world for long life expectancy. WHO's 2000 survey ranked Costa Rica as having the 36th best health care system, placing it one spot above the United States at the time. In addition, the UN has ranked Costa Rica's public health system within the top 20 worldwide and the number 1 in Latin America.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/costa-rica",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -478,7 +478,7 @@
       "bomberos": "105"
     },
     "notas": "Internet limitado (parques wifi con tarjeta ETECSA). Lleva efectivo en euros o dólares canadienses — las tarjetas de EE.UU. no funcionan.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Cuba"
@@ -487,12 +487,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Cuba",
         "extracto": "Health in Cuba refers to the overall health of the population of Cuba. Like the rest of the Cuban economy, Cuban medical care suffered following the end of Soviet subsidies in 1991. The Cuban government claims that the stepping up of the US embargo against Cuba has also impacted quality of care and the amount of resources available to the public. However, the Embargo or Trade Sanctions Reform and Export Enhancement Act of 2000 allows the sell of food, medications, and related equipment to Cuba. The mismanagement of healthcare infrastructure, decline in quality of care, and food shortages on th",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/cuba",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -511,7 +511,7 @@
       "no_urgente": "1813 (Copenhague)"
     },
     "notas": "Sistema de salud excelente. Tarjeta Sanitaria Europea para residentes UE; otros pagan.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Denmark"
@@ -520,12 +520,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Denmark",
         "extracto": "As of 2012, Denmark had a life expectancy of 79.5 years at birth, up from 75 years in 1990. This ranks it 37th among 193 nations, behind the other Nordic countries. The National Institute of Public Health of the University of Southern Denmark has calculated 19 major risk factors among Danes that contribute to a lowering of the life expectancy; this includes smoking, alcohol, drug abuse and physical inactivity. The large number of Danes becoming overweight is an increasing problem and results in an annual additional consumption in the health care system of DKK 1,625 million. In a 2012 study, De",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/denmark",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -551,7 +551,7 @@
       "general": "911"
     },
     "notas": "Sistema público de salud accesible. Seguro recomendado especialmente para trekking o Galápagos.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Ecuador"
@@ -560,12 +560,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Ecuador",
         "extracto": " \nEcuador has a comprehensive publicly funded health system and national health insurance. Free medical care is available to all residents regardless of income, and without buying any type of medical insurance. An extensive and proactive program for public health includes actions such as teams of nurses going door-to-door offering influenza vaccines to residents. Isolated rural areas are also served by this system, as physicians, dentists, and nurses are obliged to perform one year of \"rural service\" in these communities. This service is mandatory for professional licensing in Ecuador.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/ecuador",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -594,7 +594,7 @@
       "turistico": "126"
     },
     "notas": "Sistema sanitario público limitado, hospitales privados en El Cairo y Sharm aceptables. Seguro de viaje recomendado.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Egypt"
@@ -603,12 +603,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Egypt",
         "extracto": "Health in Egypt encompasses the overall well-being of the country's population. As of 2024, the average life expectancy in Egypt is 75 years, with 73.8 years for males and 76.2 years for females. Healthcare access has significantly expanded in both urban and rural areas, supported by immunization programs that now cover 98% of the population. Life expectancy has increased from 45 years in the 1960s, reflecting advancements in medical services, disease prevention, and public health initiatives. The infant mortality rate has also declined substantially, falling from 101–132 deaths per 1,000 live",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/egypt",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -631,7 +631,7 @@
       "bomberos": "997"
     },
     "notas": "Sistema sanitario excelente y caro. Seguro de viaje OBLIGATORIO para visa.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: UAE"
@@ -640,12 +640,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_the_United_Arab_Emirates",
         "extracto": "Cardiovascular disease is the principal cause of death in the UAE, constituting 28 percent of total deaths; other major causes are accidents and injuries, malignancies, and congenital anomalies.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/united-arab-emirates",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -667,7 +667,7 @@
       "guardia_civil": "062"
     },
     "notas": "Sistema de salud público excelente. Tarjeta Sanitaria Europea para residentes UE; otros con seguro privado.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Spain"
@@ -676,12 +676,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Spain",
         "extracto": "In 2012, life expectancy at birth in Spain reached 82.5 years, one of the highest among OECD countries and more than two years higher than the OECD average. Only Japan, Iceland and Switzerland had a higher life expectancy than Spain in 2012. The top three causes of death since 1970 have been cardiovascular diseases, cancer and respiratory diseases.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/spain",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -703,7 +703,7 @@
       "general": "911"
     },
     "notas": "Atención médica EXTREMADAMENTE cara sin seguro (una visita a urgencias puede costar US$3,000+). Seguro de viaje internacional OBLIGATORIO con cobertura mínima US$100,000.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: USA"
@@ -712,12 +712,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_the_United_States",
         "extracto": "Health in the United States refers to the overall health of the population of the United States. The World Health Organization defines health as \"a state of complete physical, mental and social well-being\". Average life expectancy at birth was 77.5 in 2022. Heart diseases are responsible for the greatest number of deaths in the United States.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/united-states-america",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -740,7 +740,7 @@
       "bomberos": "18"
     },
     "notas": "Sistema sanitario excelente. Tarjeta Sanitaria Europea para residentes UE; otros pagan y reembolsan vía seguro.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: France"
@@ -749,12 +749,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_France",
         "extracto": "Life expectancy in France at birth was 81 years in 2008. A new measure of expected human capital calculated for 195 countries from 1990 to 2016 and defined for each birth cohort as the expected years lived from age 20 to 64 years and adjusted for educational attainment, learning or education quality, and functional health status was published by the Lancet in September 2018. France had the ninth highest level of expected human capital with 25 health, education, and learning-adjusted expected years lived between age 20 and 64 years.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/france",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -777,7 +777,7 @@
       "policia": "100"
     },
     "notas": "Tarjeta Sanitaria Europea para residentes UE. Hospitales aceptables en Atenas/Tesalónica.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Greece"
@@ -786,12 +786,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Greece",
         "extracto": "Greece had the highest rate of male smokers in Europe in 2015: 53%.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/greece",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -818,7 +818,7 @@
       "ambulancia_bomberos": "122 / 123"
     },
     "notas": "Sistema sanitario limitado, hospitales privados en Ciudad de Guatemala aceptables. Seguro de viaje recomendado.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Guatemala"
@@ -827,12 +827,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Guatemala",
         "extracto": "Health in Guatemala is focused on many different systems of prevention and care. Guatemala's Constitution states that every citizen has the universal right to health care. However, this right has been hard to guarantee due to limited government resources and other problems regarding access. The health care system in place today developed out of the Civil War in Guatemala. The Civil War prevented social reforms from occurring, especially in the sector of health care.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/guatemala",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -855,7 +855,7 @@
       "policia": "107"
     },
     "notas": "Sistema sanitario público gratis para emergencias. Tarjeta Sanitaria Europea para residentes UE.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Hungary"
@@ -864,12 +864,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Hungary",
         "extracto": "Although death rates have decreased in Hungary since 1985, life expectancy remains low by European standards, particularly among Romani people. Almost half the deaths are caused by cardiovascular disease. A tax on some high-sugar foods, introduced in 2011, has encountered opposition from the confectionery trade. Drinking remains a major health problem, while smoking prevalence has greatly decreased. Health, in general, is poorer in the southern and eastern parts of the country.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/hungary",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -902,7 +902,7 @@
       "bomberos": "101"
     },
     "notas": "Sistema público saturado, hospitales privados aceptables en grandes ciudades. Seguro de viaje OBLIGATORIO.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: India"
@@ -911,12 +911,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_India",
         "extracto": "India's population in 2024 as per World Bank is 1.45 billion. Being the world's most populous country and one of its fastest-growing economies, India experiences both challenges and opportunities in context of public health. India is a hub for pharmaceutical and biotechnology industries; world-class scientists, clinical trials and hospitals yet country faces daunting public health challenges like child undernutrition, neonatal and maternal mortality, rising non‑communicable diseases, and road traffic accident cases.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/india",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -948,7 +948,7 @@
       "bomberos": "113"
     },
     "notas": "Sistema sanitario variable, hospitales internacionales en Bali/Yakarta aceptables. Seguro de viaje recomendado, especialmente para moto/scooter.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Indonesia"
@@ -957,12 +957,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Indonesia",
         "extracto": "Health in Indonesia is affected by a number of factors. Indonesia has over 26,000 health care facilities; 2,000 hospitals, 9,000 community health centres and private clinics, 1,100 dentist clinics and 1,000 opticians. The country lacks doctors with only 0.4 doctors per 1,000 population. In 2018, Indonesia's healthcare spending was US$38.3 billion, 4.18% of their GDP, and is expected to rise to US$51 billion in 2020.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/indonesia",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -980,7 +980,7 @@
       "general": "112 / 999"
     },
     "notas": "Sistema público (HSE) con esperas. Tarjeta Sanitaria Europea para residentes UE.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Ireland"
@@ -988,13 +988,13 @@
     "enriquecido_desde_fuentes": {
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_the_Republic_of_Ireland",
-        "extracto": "Smoking, alcohol consumption and obesity in Ireland occur at rates higher than the OECD average.",
-        "consultado": "2026-07-01"
+        "extracto": "Smoking, alcohol consumption and obesity in Ireland occur at rates higher than the OECD average. Life expectancy in the Republic of Ireland was 81.1 years for males at birth and 84.6 for females in 2025, considerably better than in Northern Ireland where the figures were 78.8 and 82.6 years.",
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/ireland",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1019,7 +1019,7 @@
       "bomberos": "115"
     },
     "notas": "Sistema sanitario público SSN excelente. Tarjeta Sanitaria Europea para residentes UE.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Italy"
@@ -1028,12 +1028,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Italy",
         "extracto": "Italy is known for its generally very good health system, and the life expectancy is 80 for males and 85 for females, placing the country 5th in the world for life expectancy, and low infant mortality. In comparison to other Western countries, Italy has a relatively low rate of adult obesity, as there are several health benefits of the Mediterranean diet. The proportion of daily smokers was 22% in 2012, down from 24.4% in 2000 but still slightly above the OECD average. Smoking in public places including bars, restaurants, night clubs and offices has been restricted to specially ventilated room",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/italy",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1056,7 +1056,7 @@
       "ambulancia_bomberos": "119"
     },
     "notas": "Sistema sanitario excelente PERO caro para extranjeros sin seguro. Algunas medicinas comunes (codeína, sudafedrina) son ilegales — verifica antes.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Japan"
@@ -1065,12 +1065,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Japan",
         "extracto": "The level of health in Japan is due to a number of factors including cultural habits, isolation, and a universal health care system. John Creighton Campbell, a professor at the University of Michigan and Tokyo University, told the New York Times in 2009 that Japanese people are the healthiest group on the planet. Japanese visit a doctor nearly 14 times a year, more than four times as often as Americans. Life expectancy in 2013 was 83.3 years - among the highest on the planet.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/japan",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1096,7 +1096,7 @@
       "bomberos": "15"
     },
     "notas": "Sistema público limitado, hospitales privados en Casablanca/Rabat. Seguro de viaje recomendado.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Morocco"
@@ -1105,12 +1105,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Morocco",
         "extracto": "Morocco became an independent country in 1956. At that time there were only 400 private practitioners and 300 public health physicians in the entire country. By 1992, the government had thoroughly improved the healthcare service and quality. Healthcare was made available to over 70% of the population. Programs and courses to teach health and hygiene have been introduced to inform parents and children on how to correctly care for their own and their families' health.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/morocco",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1134,7 +1134,7 @@
       "general": "911"
     },
     "notas": "Sistema público IMSS no cubre extranjeros; hospitales privados aceptables. Seguro de viaje recomendado.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Mexico"
@@ -1143,12 +1143,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Healthcare_in_Mexico",
         "extracto": "Healthcare in Mexico is a multifaceted system comprising public institutions overseen by government departments, private hospitals and clinics, and private physicians. It is distinguished by a unique amalgamation of coverage predominantly contingent upon individuals' employment statuses. Rooted in the Mexican constitution's principles, every Mexican citizen is entitled to cost-free access to healthcare and medication. This constitutional mandate was translated into reality through the auspices of the Instituto de Salud para el Bienestar, abbreviated as INSABI; however, INSABI was discontinued ",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/mexico",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1166,7 +1166,7 @@
       "general": "112"
     },
     "notas": "Sistema sanitario excelente. Tarjeta Sanitaria Europea para residentes UE.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Netherlands"
@@ -1175,12 +1175,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_the_Netherlands",
         "extracto": "\nHealth in the Netherlands refers to the leading causes of death, risk factors, mental health status, and health disparities of the population, as well as, the impacts of climate change on health. A majority of deaths in the Netherlands were caused by cancer, with the incidence rate being greater than the EU average. Notable risk factors include smoking, obesity, alcohol consumption, and pollution. Overall, the mental health of adults has remained stable in the past few years, while adolescents and young adults have experienced a decline in their mental health.There has been a noticeable diffe",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/netherlands",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1203,7 +1203,7 @@
       "no_urgente_salud": "Healthline 0800 611 116"
     },
     "notas": "Sistema de salud excelente pero caro para extranjeros. Seguro de viaje OBLIGATORIO.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: New Zealand"
@@ -1212,12 +1212,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_New_Zealand",
         "extracto": "New Zealand is a high income country, and this is reflected in the overall good health status of the population. However like other wealthy countries, New Zealand suffers from high rates of obesity and heart disease.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/new-zealand",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1243,7 +1243,7 @@
       "general": "911"
     },
     "notas": "Sistema sanitario aceptable, hospitales privados en Ciudad de Panamá buenos. Seguro recomendado.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Panama"
@@ -1252,12 +1252,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Panama",
         "extracto": "Even though Panama has one of the fastest growing economies in the western hemisphere, an estimated 500,000 people are in extreme poverty. Panama has major socioeconomic and health inequalities between the country's urban and rural populations. The indigenous population lives in more disadvantaged conditions and experiences greater vulnerability in health. In general, the population living in more marginalized areas has less service coverage and less access to health care.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/panama",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1286,7 +1286,7 @@
       "bomberos": "132"
     },
     "notas": "Sistema sanitario limitado, hospitales privados en Asunción. Seguro de viaje recomendado.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Paraguay"
@@ -1295,12 +1295,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Paraguay",
         "extracto": "In terms of major health indicators, health in Paraguay ranks near the median among South American countries. In 2003 Paraguay had a child mortality rate of 59 deaths per 2000 children, ranking it behind Argentina, Colombia, and Uruguay but ahead of Brazil and Bolivia. The health of Paraguayans living outside urban areas is generally worse than those residing in cities. Many preventable diseases, such as Chagas disease, run rampant in rural regions. Parasitic and respiratory diseases, which could be controlled with proper medical treatment, drag down Paraguay's overall health. In general, maln",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/paraguay",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1329,7 +1329,7 @@
       "bomberos": "116"
     },
     "notas": "Sistema público limitado, hospitales privados en Lima aceptables. Lleva hojas de coca/Sorochi pills para altura. Seguro de viaje recomendado.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Peru"
@@ -1338,12 +1338,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Peru",
         "extracto": "Health in Peru has changed drastically from pre-colonial times to the modern era. When European conquistadors invaded Peru, they brought with them diseases against which the Inca population had no acquired immunity. Much of the population died, and this marked an important turning point in the nature of Peruvian healthcare. Since Peru gained independence, the country's major healthcare concern has shifted to the disparity in care between the poor and non-poor, as well as between rural and urban populations. Another unique factor is the presence of indigenous health beliefs, which continue to b",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/peru",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1366,7 +1366,7 @@
       "bomberos": "998"
     },
     "notas": "Sistema sanitario público con esperas. Tarjeta Sanitaria Europea para residentes UE.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Poland"
@@ -1375,12 +1375,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Poland",
         "extracto": "",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/poland",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1400,7 +1400,7 @@
       "general": "112"
     },
     "notas": "Sistema sanitario público (SNS) excelente. Tarjeta Sanitaria Europea para residentes UE.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Portugal"
@@ -1409,12 +1409,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Portugal",
         "extracto": "According to the World Bank income level classification, Portugal is considered a high income country. In 2022, Portugal registered a total of 10,270,873 inhabitants with an expected decrease of 9.8% to 9,261,313 by 2050. The World Health Organization (WHO) estimates that 12.3% of the population is between 0-14 years, 68.2% is estimated to be 15-64 years and 19.5% is expected to be 65+ years old.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/portugal",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1435,7 +1435,7 @@
       "no_urgente_salud_NHS": "111"
     },
     "notas": "NHS atiende emergencias gratis a turistas, pero NO tratamientos continuados. Seguro de viaje recomendado.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: UK"
@@ -1444,12 +1444,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_the_United_Kingdom",
         "extracto": "Health in the United Kingdom refers to the overall health of the population of the United Kingdom. This includes overall trends such as life expectancy and mortality rates, mental health of the population and the suicide rate, smoking rates, alcohol consumption, prevalence of diseases within the population and obesity in the United Kingdom. Three of these – smoking rates, alcohol consumption and obesity – were above the OECD average in 2015.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/united-kingdom",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1473,7 +1473,7 @@
       "ambulancia_bomberos": "995"
     },
     "notas": "Sistema sanitario de primer nivel y caro. Algunas medicinas comunes (codeína, valium) requieren receta o son ilegales — verifica antes. Multas altas por chicle, basura, jaywalking.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Singapore"
@@ -1482,12 +1482,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Singapore",
         "extracto": "Singapore is one of the wealthiest countries in the world, with a gross domestic product (GDP) per capita of more than $57,000. Life expectancy at birth is 82.3 and infant mortality is 2.7 per 1000 live births. The population is ageing and by 2030, 20% will be over 65. However it is estimated that about 85% of those over 65 are healthy and reasonably active. Singapore has a universal health care system.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/singapore",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1516,7 +1516,7 @@
       "general_movil": "112"
     },
     "notas": "Sistema sanitario público saturado, hospitales privados de primer nivel pero caros. Seguro de viaje OBLIGATORIO.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: South Africa"
@@ -1525,12 +1525,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_South_Africa",
         "extracto": "Health in South Africa touches on various aspects of health including the infectious diseases, Nutrition, Mental Health and Maternal care.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/south-africa",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1551,7 +1551,7 @@
       "no_urgente_salud": "1177"
     },
     "notas": "Sistema sanitario excelente. Tarjeta Sanitaria Europea para residentes UE.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Sweden"
@@ -1560,12 +1560,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Sweden",
         "extracto": "Health in Sweden has generally improved over time, with life expectancy increasing, and is at a high level in international comparison. Life expectancy in 2021 was 84.8 years for women and 81.2 years for men and it increased 2.3 years on average from 2006 to 2019. However, the health situation varies between groups in Swedish society and equitable health has proven to be a challenge, with level of education, employment status and country of birth being factors that strongly influence health in the Swedish population. The two leading causes of death in Sweden are cardiovascular disease and canc",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/sweden",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1590,7 +1590,7 @@
       "bomberos": "118"
     },
     "notas": "Sistema sanitario excelente y caro. Seguro de viaje recomendado (no en UE).",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Switzerland"
@@ -1599,12 +1599,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Switzerland",
         "extracto": "Health in Switzerland relates to a variety of issues. Namely, water and sanitation, diet and fitness, various addictions, mental fitness, communicable diseases, hygiene and the environment.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/switzerland",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1635,7 +1635,7 @@
       "turistico": "1155"
     },
     "notas": "Hospitales internacionales en Bangkok/Phuket de primer nivel y precios razonables. Seguro de viaje recomendado, especialmente para moto/scooter (alta accidentalidad).",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Thailand"
@@ -1644,12 +1644,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Thailand",
         "extracto": "Thailand has \"a long and successful history of health development,\" according to the World Health Organization. Life expectancy is averaged at eighty years. Non-communicable diseases form the major burden of morbidity and mortality, while infectious diseases including malaria and tuberculosis, as well as traffic accidents, are also important public health issues.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/thailand",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1672,7 +1672,7 @@
       "bomberos": "150"
     },
     "notas": "Sistema sanitario público con copago. Tarjeta Sanitaria Europea para residentes UE.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Czech Republic"
@@ -1681,12 +1681,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_the_Czech_Republic",
         "extracto": "The Czech Republic had the second highest rate of obesity in Europe in 2015. 28.7% of the adult population had a body mass index of 30 or more.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/czech-republic",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1713,7 +1713,7 @@
       "bomberos": "110"
     },
     "notas": "Sistema sanitario aceptable, hospitales privados en Estambul/Ankara buenos. Seguro de viaje recomendado.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Turkey"
@@ -1722,12 +1722,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Turkey",
         "extracto": "The healthcare system in Turkey has seen substantial improvements since the implementation of the Health Transformation Program (HTP) in 2003, which sought to expand access to healthcare services and increase efficiency and equity in service delivery under the motto \"Health for All.\" The program established the General Health Insurance Scheme, primarily financed through contributions from employers, employees, and the government via the Social Security Institution, resulting in near-universal health coverage. While overall health indicators such as life expectancy and child mortality have impr",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/turkey",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1749,7 +1749,7 @@
       "bomberos": "104"
     },
     "notas": "Sistema sanitario público y privado de calidad. Seguro recomendado.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Uruguay"
@@ -1758,12 +1758,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Uruguay",
         "extracto": "In 2016, the life expectancy in Uruguay was 73 for men and 81 for women.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/uruguay",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   },
@@ -1784,7 +1784,7 @@
       "policia": "110"
     },
     "notas": "Sistema sanitario excelente. Tarjeta Sanitaria Europea para residentes UE.",
-    "actualizado": "2026-07-01",
+    "actualizado": "2026-08-01",
     "fuentes": [
       "WHO ITH",
       "CDC Travel Health: Germany"
@@ -1793,12 +1793,12 @@
       "wikipedia": {
         "url": "https://en.wikipedia.org/wiki/Health_in_Germany",
         "extracto": "\nAs of 2025, the Human Rights Measurement Initiative finds that Germany is achieving 90% of what should be possible for the right to health, based on their level of income.",
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       },
       "cdc": {
         "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/germany",
         "alertas": [],
-        "consultado": "2026-07-01"
+        "consultado": "2026-08-01"
       }
     }
   }
