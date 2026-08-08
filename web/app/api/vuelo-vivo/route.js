@@ -85,6 +85,12 @@ async function consultar(origen, destino, mes, token, marker) {
       link,
       escalas_ida: escIda,
       escalas_vuelta: escVuelta,
+      // Minutos de vuelo por tramo. La API los manda y aqui se descartaban,
+      // igual que hacia el detector: sin ellos no se puede comparar "mas
+      // barato" contra "mas rapido". Si faltan, quedan null y la tarjeta
+      // simplemente no muestra la duracion.
+      duracion_ida: Number.isFinite(Number(fila.duration_to)) ? Number(fila.duration_to) : null,
+      duracion_vuelta: Number.isFinite(Number(fila.duration_back)) ? Number(fila.duration_back) : null,
     };
   } catch {
     return null;

@@ -4,6 +4,7 @@ import { Icono } from "./Icono";
 import { obtenerTasas } from "@/lib/fx";
 import { isoDesdeNombre } from "@/lib/requisitos";
 import AlertaPrecio from "./AlertaPrecio";
+import SelectorAeropuerto, { banderaDePais } from "./SelectorAeropuerto";
 
 // Bandera PNG via flagcdn: los emoji de bandera (🇺🇸) NO renderizan en Windows
 // (segoe UI emoji no incluye flags) y se ven como "us" — lo que confunde al
@@ -57,6 +58,13 @@ function linkMisFechas(r, rango) {
 }
 
 const LOTE = 12; // tarjetas por lote inicial y por "Ver más"
+// Hubs colombianos del radar. CLO y CTG se sumaron despues, y el filtro
+// "Colombia" seguia mirando solo BOG/MDE.
+const HUBS_CO = ["BOG", "MDE", "CLO", "CTG"];
+// Compara nombres de ciudad ignorando acentos ("Bogota" == "Bogotá").
+function sinAcentos(s) {
+  return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
 
 // Codigo IATA de aerolinea -> nombre legible. El detector guarda el codigo
 // crudo ("DM", "Y4"...) que para el usuario no significa nada (lectura 360
@@ -88,7 +96,15 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
   const [filtro, setFiltro] = useState("colombia"); // colombia | BOG | MDE | todos
   // Busqueda por ciudad destino (feedback 2026-07-11: "si busco una ciudad
   // en especial quiero poderla filtrar").
-  const [buscar, setBuscar] = useState("");
+  //
+  // Antes era un campo de texto libre que solo filtraba las ~125 rutas ya
+  // detectadas: si escribias una ciudad fuera de esa lista, no salia nada aunque
+  // el vuelo exista. Ahora es el mismo combobox de aeropuertos que usa el
+  // planificador (catalogo IATA completo) y, cuando el destino elegido no esta
+  // precalculado, se consulta /api/vuelo-vivo para ese aeropuerto.
+  const [destinoSel, setDestinoSel] = useState(null);
+  const [vivo, setVivo] = useState(null);          // resultado en vivo o {encontrado:false}
+  const [cargandoVivo, setCargandoVivo] = useState(false);
   const [visibles, setVisibles] = useState(LOTE); // cuántas tarjetas mostrar
   const [copPorUsd, setCopPorUsd] = useState(4000); // tasa COP en vivo (respaldo 4000)
   // Popularidad real por destino (cuantas busquedas ha tenido). Behavioral
@@ -136,15 +152,18 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
     const list = data?.rutas || [];
     let filtradas =
       filtro === "todos" ? list
-      : filtro === "colombia" ? list.filter((r) => r.origen === "BOG" || r.origen === "MDE")
+      // Los 4 hubs colombianos: CLO y CTG se sumaron al radar y este filtro
+      // seguia mirando solo BOG y MDE, asi que sus ofertas quedaban invisibles.
+      : filtro === "colombia" ? list.filter((r) => HUBS_CO.includes(r.origen))
       : list.filter((r) => r.origen === filtro);
-    // Filtro por texto: ciudad o pais destino, sin acentos.
-    const q = buscar.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-    if (q) {
-      filtradas = filtradas.filter((r) => {
-        const txt = `${r.ciudad} ${r.pais}`.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-        return txt.includes(q);
-      });
+    // Destino elegido en el combobox. Se casa primero por IATA y si no, por
+    // nombre de ciudad sin acentos: el JSON usa codigos de CIUDAD (TYO, BUE) y
+    // el catalogo devuelve codigos de AEROPUERTO (NRT, EZE), que no coinciden.
+    if (destinoSel) {
+      const c = sinAcentos(destinoSel.ciudad);
+      filtradas = filtradas.filter(
+        (r) => r.destino === destinoSel.iata || sinAcentos(r.ciudad) === c
+      );
     }
     // Orden: mayor descuento primero; si empatan, más reciente primero.
     return [...filtradas].sort((a, b) => {
@@ -153,7 +172,24 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
       const tb = b.visto ? tsUTC(b.visto) : 0;
       return tb - ta;
     });
-  }, [data, filtro, buscar]);
+  }, [data, filtro, destinoSel]);
+
+  // Busqueda en vivo: solo si el destino elegido NO tiene rutas precalculadas.
+  // Si ya las tiene, no se gasta una llamada a Travelpayouts.
+  useEffect(() => {
+    setVivo(null);
+    if (!destinoSel || rutas.length > 0) return;
+    let activo = true;
+    setCargandoVivo(true);
+    // El endpoint acepta hasta 3 origenes; si el filtro es "todos" usa su default.
+    const orig = filtro === "todos" ? "" : filtro === "colombia" ? "BOG,MDE,CLO" : filtro;
+    fetch(`/api/vuelo-vivo?iata=${destinoSel.iata}${orig ? `&origenes=${orig}` : ""}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (activo) setVivo(d?.encontrado ? d : { encontrado: false }); })
+      .catch(() => { if (activo) setVivo({ encontrado: false }); })
+      .finally(() => { if (activo) setCargandoVivo(false); });
+    return () => { activo = false; };
+  }, [destinoSel, rutas.length, filtro]);
 
   // Mejor precio y menor duracion POR DESTINO entre las tarjetas visibles.
   //
@@ -300,26 +336,137 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
         </div>
       </div>
 
-      {/* Buscador por ciudad destino */}
-      <div className="mt-4 flex max-w-md items-center gap-2 rounded-2xl border-2 border-slate-200 bg-white px-4 py-2.5 focus-within:border-marca-400 dark:border-slate-600 dark:bg-slate-800">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0 text-slate-400">
-          <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-        </svg>
-        <input
-          value={buscar}
-          onChange={(e) => { setBuscar(e.target.value); setVisibles(LOTE); }}
+      {/* Buscador por destino: combobox sobre el catalogo IATA completo, el mismo
+          que usa el planificador. Permite pedir CUALQUIER ciudad del mundo, no
+          solo las ~125 rutas ya detectadas. */}
+      <div className="mt-4 max-w-md">
+        <SelectorAeropuerto
+          value={destinoSel?.iata || ""}
+          onChange={(a) => { setDestinoSel(a); setVisibles(LOTE); }}
           placeholder={t("ofertasBuscarCiudad")}
-          className="w-full border-0 bg-transparent text-[14px] text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100"
-          aria-label={t("ofertasBuscarCiudad")}
+          ariaLabel={t("ofertasBuscarCiudad")}
+          lang={lang}
         />
-        {buscar && (
-          <button type="button" onClick={() => setBuscar("")} className="text-slate-400 hover:text-slate-600" aria-label="Limpiar">✕</button>
+        {destinoSel && (
+          <button
+            type="button"
+            onClick={() => { setDestinoSel(null); setVivo(null); setVisibles(LOTE); }}
+            className="mt-1.5 text-[12px] font-semibold text-slate-500 underline underline-offset-2 hover:text-slate-700 dark:text-slate-400"
+          >
+            {t("ofertasBuscarLimpiar")}
+          </button>
         )}
       </div>
 
-      {buscar.trim() && rutas.length === 0 && (
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-[13.5px] text-slate-500 dark:border-slate-700 dark:bg-slate-800">
-          {t("ofertasBuscarSinResultados").replace("{q}", buscar.trim())}
+      {/* Destino elegido sin rutas precalculadas: se consulta en vivo. */}
+      {destinoSel && rutas.length === 0 && (
+        <div className="mt-4 max-w-2xl rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[15px] font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+              {banderaDePais(destinoSel.pais)} {destinoSel.ciudad}
+            </span>
+            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+              {destinoSel.iata}
+            </span>
+            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
+              {t("ofertasEnVivo")}
+            </span>
+          </div>
+
+          {cargandoVivo && (
+            <p className="mt-2 text-[13px] text-slate-500 dark:text-slate-400">
+              <span className="spin" /> <span className="ml-1.5">{t("ofertasEnVivoBuscando")}</span>
+            </p>
+          )}
+
+          {!cargandoVivo && vivo?.encontrado && (
+            <>
+              <div className="mt-2 flex flex-wrap items-end gap-2">
+                <div className="text-[26px] font-extrabold leading-none text-marca-900 dark:text-marca-300">
+                  {monedaVista === "COP" ? fmtCop(vivo.precio) : fmtUsd(vivo.precio)}
+                </div>
+                <div className="text-[12px] text-slate-400">{t("ofertasIdaVuelta")}</div>
+              </div>
+              <div className="mt-0.5 text-[12px] font-medium text-slate-500">
+                {monedaVista === "COP" ? fmtUsd(vivo.precio) : fmtCop(vivo.precio)}
+                <span className="ml-1.5 rounded bg-slate-100 px-1 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                  {t("ofertasAproxBadge")}
+                </span>
+              </div>
+
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[12.5px] text-slate-500 dark:text-slate-400">
+                <span className="whitespace-nowrap">
+                  {(origenes[vivo.origen] || vivo.origen)} <span className="text-slate-300">→</span> {destinoSel.ciudad}
+                </span>
+                <span className="text-slate-300">·</span>
+                <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold dark:bg-slate-700">
+                  {nombreAerolinea(vivo.aerolinea)}
+                </span>
+                {vivo.fecha_ida && (
+                  <>
+                    <span className="text-slate-300">·</span>
+                    <span className="whitespace-nowrap">{fmtFecha(vivo.fecha_ida)}{vivo.fecha_vuelta ? ` – ${fmtFecha(vivo.fecha_vuelta)}` : ""}</span>
+                  </>
+                )}
+              </div>
+
+              {(() => {
+                const eI = textoEscalas(vivo.escalas_ida);
+                const eV = textoEscalas(vivo.escalas_vuelta);
+                if (!eI && !eV) return null;
+                const dI = fmtDuracion(vivo.duracion_ida);
+                const dV = fmtDuracion(vivo.duracion_vuelta);
+                const verde = "text-emerald-600 dark:text-emerald-400";
+                return (
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] text-slate-500 dark:text-slate-400">
+                    {eI && (
+                      <span className="whitespace-nowrap">
+                        {t("escalaIda")}: <b className={vivo.escalas_ida === 0 ? verde : ""}>{eI}</b>
+                        {dI && <span className="text-slate-400"> · {dI}</span>}
+                      </span>
+                    )}
+                    {eI && eV && <span aria-hidden="true" className="text-slate-300">·</span>}
+                    {eV && (
+                      <span className="whitespace-nowrap">
+                        {t("escalaVuelta")}: <b className={vivo.escalas_vuelta === 0 ? verde : ""}>{eV}</b>
+                        {dV && <span className="text-slate-400"> · {dV}</span>}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Sin historial no se puede calcular descuento ni mediana: se dice. */}
+              <p className="mt-2 text-[11.5px] leading-relaxed text-slate-400">
+                {t("ofertasEnVivoNota")}
+              </p>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  onClick={() => onPlanear?.(`${destinoSel.ciudad}, ${destinoSel.pais}`)}
+                  className="rounded-xl bg-gradient-to-r from-marca-500 to-marca-600 px-4 py-2 text-[13px] font-bold text-white shadow-marca transition hover:brightness-105"
+                >
+                  <span className="inline-flex items-center gap-1.5"><Icono nombre="map" size={15} /> {t("ofertasPlanear")}</span>
+                </button>
+                {vivo.link && (
+                  <a
+                    href={vivo.link}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    className="rounded-xl border border-slate-200 px-4 py-2 text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+                  >
+                    {t("ofertasVerVuelos")}
+                  </a>
+                )}
+              </div>
+            </>
+          )}
+
+          {!cargandoVivo && vivo && !vivo.encontrado && (
+            <p className="mt-2 text-[13px] text-slate-500 dark:text-slate-400">
+              {t("ofertasEnVivoVacio")}
+            </p>
+          )}
         </div>
       )}
 
