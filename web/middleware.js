@@ -85,6 +85,18 @@ export async function middleware(req) {
   // 2) Rate limiting solo en /api/*
   if (!pathname.startsWith("/api/")) return NextResponse.next();
 
+  // 2b) El DETECTOR queda exento del rate limit. En una corrida postea a
+  // /api/alertas/disparar una vez por ruta×mes (204×6 ≈ 1.224 llamadas) desde
+  // la MISMA IP de GitHub Actions, y el cupo default es 90/min: pasado el
+  // minuto empezaba a comerse 429 y —como el detector ignoraba la respuesta—
+  // esas alertas se perdian sin dejar rastro. Se identifica por el secret
+  // compartido, no por IP ni User-Agent (ambos falsificables); sin secret
+  // configurado esta rama no existe.
+  const secretAlertas = process.env.ALERTS_SHARED_SECRET;
+  if (secretAlertas && req.headers.get("x-alert-secret") === secretAlertas) {
+    return NextResponse.next();
+  }
+
   // Detectar config específico del endpoint o usar default.
   let cfg = RATE_LIMITS.default;
   for (const ruta of Object.keys(RATE_LIMITS)) {

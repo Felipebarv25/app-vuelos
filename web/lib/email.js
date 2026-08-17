@@ -16,6 +16,10 @@ import { nombreDeIATA } from "./paisesOrigen";
 
 const FROM_DEFAULT = "Anduve <onboarding@resend.dev>";
 
+// URL publica de la app, para los links del correo. NEXTAUTH_URL ya existe en
+// Vercel; el literal es el respaldo para que el link nunca salga roto.
+const BASE_APP = (process.env.NEXTAUTH_URL || "https://anduve-app.vercel.app").replace(/\/+$/, "");
+
 // --- Conversion a moneda local para el email de alertas ---------------------
 // El usuario pidio ver el precio en su moneda ademas de USD (2026-07-11).
 // Server-side no podemos llamar /api/fx (mismo deploy), asi que consultamos
@@ -132,6 +136,8 @@ const PLANTILLAS_ALERTA = {
       (origen ? ` desde ${origen}` : "") +
       ` — por debajo del umbral de US$ ${umbral} que configuraste.`,
     cta: "Ver el vuelo",
+    pausa: "Esta alerta queda en pausa para no llenarte el correo. Reactivala cuando quieras en Mis alertas.",
+    pausaCta: "Reactivar la alerta",
     aviso: "Los precios pueden cambiar en minutos. Si lo quieres, reserva ya.",
     extra: "Es buena practica verificar el precio final en Google Vuelos antes de comprar.",
     firma: "Equipo Anduve",
@@ -144,6 +150,8 @@ const PLANTILLAS_ALERTA = {
       (origen ? ` from ${origen}` : "") +
       ` — below your US$ ${umbral} target.`,
     cta: "View the flight",
+    pausa: "This alert is now paused so we do not flood your inbox. Turn it back on any time in My alerts.",
+    pausaCta: "Reactivate the alert",
     aviso: "Prices change fast. Book now if it works for you.",
     extra: "Good practice: verify the final price on Google Flights before buying.",
     firma: "Anduve Team",
@@ -156,6 +164,8 @@ const PLANTILLAS_ALERTA = {
       (origen ? ` desde ${origen}` : "") +
       ` — abaixo do seu alvo de US$ ${umbral}.`,
     cta: "Ver o voo",
+    pausa: "Este alerta fica pausado para nao encher sua caixa de entrada. Reative quando quiser em Meus alertas.",
+    pausaCta: "Reativar o alerta",
     aviso: "Os preços mudam rápido. Reserve agora se servir.",
     extra: "Boa prática: confirme o preço final no Google Voos.",
     firma: "Equipe Anduve",
@@ -168,6 +178,8 @@ const PLANTILLAS_ALERTA = {
       (origen ? ` depuis ${origen}` : "") +
       ` — sous votre cible de US$ ${umbral}.`,
     cta: "Voir le vol",
+    pausa: "Cette alerte est mise en pause pour ne pas saturer votre boite mail. Reactivez-la quand vous voulez dans Mes alertes.",
+    pausaCta: "Reactiver l alerte",
     aviso: "Les prix changent vite. Réservez maintenant si c'est bon pour vous.",
     extra: "Bonne pratique : vérifiez le prix final sur Google Flights.",
     firma: "L'équipe Anduve",
@@ -228,6 +240,7 @@ export async function enviarAlertaPrecio({
           <p style="margin:24px 0 6px 0;font-size:13px;line-height:1.5;color:#64748b;">${T.aviso}</p>
           <p style="margin:0 0 20px 0;font-size:12px;line-height:1.5;color:#94a3b8;">${T.extra}</p>
           <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
+          <p style="margin:0 0 20px 0;font-size:12px;line-height:1.5;color:#94a3b8;">${T.pausa} <a href="${BASE_APP}/alertas" target="_blank" style="color:#0c5f58;font-weight:700;text-decoration:underline;">${T.pausaCta}</a></p>
           <div style="font-size:12px;color:#94a3b8;text-align:center;">${T.firma}</div>
         </td></tr>
       </table>
@@ -236,7 +249,7 @@ export async function enviarAlertaPrecio({
 </body>
 </html>`.trim();
 
-  const text = `${T.saludo}\n\n${T.intro(ciudad, precio, umbral, origenNombre).replace(/<[^>]+>/g, "")}\n\nUS$ ${precio}${precioLocal ? ` (${precioLocal})` : ""} - ${origenNombre ? origenNombre + " -> " : ""}${ciudad}${aerolinea ? " (" + aerolinea + ")" : ""}${lineaEscalas ? " - " + lineaEscalas : ""}\n${fecha_ida}${fecha_vuelta ? " - " + fecha_vuelta : ""}\n\n${link ? T.cta + ": " + link + "\n\n" : ""}${T.aviso}\n\n- ${T.firma}`;
+  const text = `${T.saludo}\n\n${T.intro(ciudad, precio, umbral, origenNombre).replace(/<[^>]+>/g, "")}\n\nUS$ ${precio}${precioLocal ? ` (${precioLocal})` : ""} - ${origenNombre ? origenNombre + " -> " : ""}${ciudad}${aerolinea ? " (" + aerolinea + ")" : ""}${lineaEscalas ? " - " + lineaEscalas : ""}\n${fecha_ida}${fecha_vuelta ? " - " + fecha_vuelta : ""}\n\n${link ? T.cta + ": " + link + "\n\n" : ""}${T.aviso}\n\n${T.pausa} ${BASE_APP}/alertas\n\n- ${T.firma}`;
 
   return enviar({ to, subject: T.subject(ciudad, precio), html, text });
 }

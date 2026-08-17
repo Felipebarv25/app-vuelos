@@ -14,6 +14,26 @@ import { kv, kvActivo, pipeline } from "./kv";
 
 const TTL_ALERTA = 60 * 60 * 24 * 180; // 6 meses por defecto
 
+// Normaliza la lista de hubs de origen a "BOG,MDE".
+//
+// BUG que esto arregla (2026-08-17): antes era `.toUpperCase().slice(0, 3)`, que
+// recortaba "BOG,MDE" a "BOG" y tiraba el resto. El disparador SI hace
+// `a.origen.split(",")` esperando varios, y /api/alertas/crear tambien valida y
+// une varios — pero la truncada de aqui pasaba despues, asi que toda alerta
+// multi-hub quedaba silenciosamente reducida al primer hub del arreglo. Un
+// usuario que marcaba Bogota + Medellin solo recibia gangas de uno de los dos.
+// Tope de 5 hubs para no dejar crecer la clave sin limite.
+function normalizarOrigenes(origen) {
+  return String(origen || "")
+    .toUpperCase()
+    .split(",")
+    .map((c) => c.trim())
+    .filter((c) => /^[A-Z]{3}$/.test(c))
+    .filter((c, i, arr) => arr.indexOf(c) === i)
+    .slice(0, 5)
+    .join(",");
+}
+
 export function generarIdAlerta() {
   const bytes = new Uint8Array(8);
   if (typeof crypto !== "undefined" && crypto.getRandomValues) crypto.getRandomValues(bytes);
@@ -35,10 +55,10 @@ export async function crearAlerta({ email, ciudad, pais, iata, umbral, lang = "e
     ultimaDispara: null,
     activa: true,
     lang,
-    // origen: IATA del hub desde el que el usuario quiere salir ("" = desde
-    // cualquiera). Antes las alertas no tenian origen y el usuario de
-    // Medellin recibia gangas saliendo de Bogota (feedback 2026-07-11).
-    origen: String(origen || "").toUpperCase().slice(0, 3),
+    // origen: uno o VARIOS hubs IATA separados por coma ("BOG,MDE"). "" =
+    // cualquiera. Antes las alertas no tenian origen y el usuario de Medellin
+    // recibia gangas saliendo de Bogota (feedback 2026-07-11).
+    origen: normalizarOrigenes(origen),
     // escalasMax: 0 = solo vuelos directos (default), 1 = hasta 1 escala,
     // 99 = cualquier cantidad. El usuario acepta explicitamente las escalas.
     escalasMax: Number.isFinite(Number(escalasMax)) ? Number(escalasMax) : 0,
@@ -132,8 +152,7 @@ export async function actualizarAlerta(id, campos) {
     if (!Number.isFinite(u) || u <= 0) return null;
     a.umbral = Math.round(u);
   }
-  if (campos.origen !== undefined)
-    a.origen = String(campos.origen || "").toUpperCase().slice(0, 3);
+  if (campos.origen !== undefined) a.origen = normalizarOrigenes(campos.origen);
   if (campos.escalasMax !== undefined)
     a.escalasMax = Number.isFinite(Number(campos.escalasMax)) ? Number(campos.escalasMax) : 0;
   if (campos.activa !== undefined) a.activa = !!campos.activa;

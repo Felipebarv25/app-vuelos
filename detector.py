@@ -30,6 +30,26 @@ ALERTS_URL = os.environ.get(
 )
 ALERTS_SECRET = os.environ.get("ALERTS_SHARED_SECRET", "")
 
+# Contadores del motor de alertas para el resumen final de la corrida.
+#
+# Antes esta funcion tiraba la respuesta HTTP a la basura: `requests.post(...)`
+# sin mirar el status. Eso hacia que un 401 (secret mal configurado en Vercel),
+# un 429 (rate limit del middleware) o un 403 (User-Agent bloqueado) fueran
+# COMPLETAMENTE invisibles — el workflow salia verde y no llegaba ni un correo.
+# El 2026-08-17 el usuario reporto justo eso y no habia forma de saber donde se
+# rompia. Ahora cada respuesta se clasifica y se imprime un resumen al final.
+ALERTAS_STATS = {
+    "enviadas": 0,      # POST aceptado por la API
+    "correos": 0,       # alertas que realmente dispararon email
+    "no_ganga": 0,      # precio no llego al 20% bajo el promedio
+    "sin_alertas": 0,   # nadie tiene alerta para ese destino
+    "http_401": 0,      # secret ausente o distinto en Vercel
+    "http_403": 0,      # bloqueado por el middleware (User-Agent)
+    "http_429": 0,      # rate limit
+    "http_otro": 0,
+    "red": 0,           # timeout / DNS / conexion
+}
+
 
 def notificar_alertas_web(origen, destino, precio, fecha_ida, fecha_vuelta,
                           link, aerolinea, promedio_ruta=None,
@@ -45,7 +65,7 @@ def notificar_alertas_web(origen, destino, precio, fecha_ida, fecha_vuelta,
     if not ALERTS_SECRET:
         return
     try:
-        requests.post(
+        r = requests.post(
             ALERTS_URL,
             headers={
                 "X-Alert-Secret": ALERTS_SECRET,
@@ -72,7 +92,77 @@ def notificar_alertas_web(origen, destino, precio, fecha_ida, fecha_vuelta,
     except Exception as e:
         # No detenemos al detector por esto: las alertas son secundarias al
         # objetivo primario (escanear precios y guardar historial).
+        ALERTAS_STATS["red"] += 1
         print(f"  ! No se pudo notificar alertas web: {e}")
+        return
+
+    # Clasificar la respuesta. Los errores de configuracion (401/403) se
+    # imprimen SIEMPRE la primera vez porque son fatales para el motor de
+    # correos: sin esto la corrida sale verde y el usuario nunca sabe por que
+    # no le llega nada.
+    if r.status_code == 401:
+        if ALERTAS_STATS["http_401"] == 0:
+            print("  !! ALERTAS 401: el secret no coincide con Vercel. "
+                  "Revisa ALERTS_SHARED_SECRET en GitHub Secrets Y en Vercel "
+                  "(deben ser identicos). NO se enviara ningun correo.")
+        ALERTAS_STATS["http_401"] += 1
+        return
+    if r.status_code == 403:
+        if ALERTAS_STATS["http_403"] == 0:
+            print("  !! ALERTAS 403: el middleware bloqueo la llamada por "
+                  "User-Agent. NO se enviara ningun correo.")
+        ALERTAS_STATS["http_403"] += 1
+        return
+    if r.status_code == 429:
+        ALERTAS_STATS["http_429"] += 1
+        return
+    if r.status_code != 200:
+        if ALERTAS_STATS["http_otro"] == 0:
+            print(f"  !! ALERTAS HTTP {r.status_code}: {r.text[:200]}")
+        ALERTAS_STATS["http_otro"] += 1
+        return
+
+    ALERTAS_STATS["enviadas"] += 1
+    try:
+        d = r.json()
+    except Exception:
+        return
+    if d.get("motivo") == "no-es-ganga":
+        ALERTAS_STATS["no_ganga"] += 1
+        return
+    disparadas = int(d.get("disparadas") or 0)
+    if disparadas:
+        ALERTAS_STATS["correos"] += disparadas
+        print(f"  >> ALERTA POR CORREO: {origen}->{destino} US${precio} "
+              f"({disparadas} destinatario/s)")
+    else:
+        ALERTAS_STATS["sin_alertas"] += 1
+
+
+def resumen_alertas():
+    """Imprime el estado del motor de correos al final de la corrida. Es la
+    unica forma de auditar la cadena detector -> Vercel -> Resend desde los
+    logs de GitHub Actions."""
+    if not ALERTS_SECRET:
+        print()
+        print("!! MOTOR DE CORREOS APAGADO: falta ALERTS_SHARED_SECRET.")
+        print("   El detector NO notifico ninguna alerta en esta corrida.")
+        print("   Configuralo en GitHub -> Settings -> Secrets -> Actions,")
+        print("   con el MISMO valor que la env var de Vercel.")
+        return
+    s = ALERTAS_STATS
+    print()
+    print("--- Motor de alertas por correo ---")
+    print(f"  Correos disparados:        {s['correos']}")
+    print(f"  POST aceptados:            {s['enviadas']}")
+    print(f"    - no era ganga (<80% avg): {s['no_ganga']}")
+    print(f"    - nadie tenia alerta:      {s['sin_alertas']}")
+    fallos = s["http_401"] + s["http_403"] + s["http_429"] + s["http_otro"] + s["red"]
+    if fallos:
+        print(f"  Fallos: {fallos}  (401={s['http_401']} 403={s['http_403']} "
+              f"429={s['http_429']} otro={s['http_otro']} red={s['red']})")
+    else:
+        print("  Fallos: 0")
 
 
 def promedio_ruta_completa(historial, origen, destino):
@@ -253,6 +343,7 @@ def main():
                 # no gastamos la llamada.
                 ya_es_directo = (oferta.get("escalas_ida") == 0
                                  and oferta.get("escalas_vuelta") == 0)
+                directo = None
                 if escanear_directos and not ya_es_directo:
                     try:
                         directo = buscar_oferta_mas_barata(
@@ -261,8 +352,6 @@ def main():
                     except Exception as e:
                         print(f"  ! Error directos {origen}->{destino} {mes}: {e}")
                         directo = None
-                    # Se guarda en el historial pero NO notifica: un directo más
-                    # caro que la conexión no es una ganga.
                     if directo:
                         guardar_precio(origen, destino, directo["fecha_ida"],
                                        directo["fecha_vuelta"], directo)
@@ -291,6 +380,36 @@ def main():
                         escalas_ida=oferta.get("escalas_ida"),
                         escalas_vuelta=oferta.get("escalas_vuelta"),
                     )
+                    # Y ahora el vuelo DIRECTO, si lo encontramos.
+                    #
+                    # Antes esto no se notificaba nunca ("un directo mas caro
+                    # que la conexion no es una ganga"), pero eso dejaba sin
+                    # correo justo a las alertas mas comunes: el default de una
+                    # alerta nueva es escalasMax = 0 (solo directos), y el vuelo
+                    # mas barato del mes casi nunca es directo — sobre el
+                    # historial real solo el 20% lo es. Resultado: esas alertas
+                    # eran practicamente imposibles de disparar.
+                    #
+                    # Va DESPUES del principal a proposito: el principal siempre
+                    # es igual o mas barato, y la primera alerta que dispara
+                    # apaga la alerta (marcarDisparada), asi que quien acepta
+                    # escalas recibe la opcion barata y quien exige directo
+                    # recibe esta. Los filtros de la API (umbral del usuario +
+                    # 20% bajo el promedio) siguen aplicando, asi que esto no
+                    # abre la puerta a spam.
+                    if directo:
+                        notificar_alertas_web(
+                            origen=origen,
+                            destino=destino,
+                            precio=int(directo["precio"]),
+                            fecha_ida=directo["fecha_ida"],
+                            fecha_vuelta=directo["fecha_vuelta"],
+                            link=directo.get("link", ""),
+                            aerolinea=directo.get("aerolinea", ""),
+                            promedio_ruta=round(promedio) if promedio else None,
+                            escalas_ida=directo.get("escalas_ida"),
+                            escalas_vuelta=directo.get("escalas_vuelta"),
+                        )
                 except Exception as e:
                     print(f"  ! Error notificando alertas {origen}->{destino}: {e}")
 
@@ -322,6 +441,7 @@ def main():
     print(f"Listo. Ofertas notificadas en esta corrida: {ofertas}")
     if escanear_directos:
         print(f"Vuelos sin escalas registrados: {directos}")
+    resumen_alertas()
 
 
 if __name__ == "__main__":
