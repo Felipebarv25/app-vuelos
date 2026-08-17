@@ -142,11 +142,10 @@ export default function MenuUsuario({ oscuro = false }) {
           {/* Mis alertas */}
           <div className="px-4 py-3">
             {/* El contador cuenta TODAS las alertas del usuario. Antes filtraba
-                por `activa !== false`, pero `activa: false` no significa que el
-                usuario la apagara: marcarDisparada() la pone en false al enviar
-                el email (anti-spam). Con 5 alertas de las que 2 ya avisaron, el
-                encabezado decia "(3)" mientras la lista mostraba 5. Las que ya
-                avisaron se marcan abajo con su propio badge. */}
+                por `activa !== false` y decia "(3)" mientras la lista mostraba
+                5, porque marcarDisparada() apagaba la alerta al enviar el
+                email. Eso ya no pasa: la alerta queda armada tras avisar, y
+                activa:false solo marca las que el usuario pauso. */}
             <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {t("menuMisAlertas")} ({alertas.length})
             </div>
@@ -173,15 +172,15 @@ export default function MenuUsuario({ oscuro = false }) {
                     >
                       {a.ciudad}
                     </Link>
-                    {/* Una alerta ya disparada no vuelve a enviar email hasta
-                        reactivarla. Sin esta marca se veia igual que una activa
-                        y no habia forma de saber por que dejo de avisar. */}
+                    {/* activa:false ahora solo pasa si el USUARIO la pauso:
+                        enviar el correo ya no apaga la alerta (se re-arma y
+                        vuelve a avisar cuando el precio hace un nuevo minimo). */}
                     {a.activa === false && (
                       <span
-                        title={t("menuAlertaAvisadaAyuda")}
-                        className="ml-1 shrink-0 rounded bg-slate-200 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-500 dark:bg-slate-600 dark:text-slate-300"
+                        title={t("menuAlertaPausadaAyuda")}
+                        className="ml-1 shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
                       >
-                        {t("menuAlertaAvisada")}
+                        {t("menuAlertaPausada")}
                       </span>
                     )}
                     <span className="mx-1 text-slate-400">·</span>

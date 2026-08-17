@@ -43,6 +43,8 @@ ALERTAS_STATS = {
     "correos": 0,       # alertas que realmente dispararon email
     "no_ganga": 0,      # precio no llego al 20% bajo el promedio
     "sin_alertas": 0,   # nadie tiene alerta para ese destino
+    "sin_mejora": 0,    # ya avisamos un precio igual o mejor (no es nuevo minimo)
+    "espera": 0,        # aviso hace menos de 2h para esa alerta
     "http_401": 0,      # secret ausente o distinto en Vercel
     "http_403": 0,      # bloqueado por el middleware (User-Agent)
     "http_429": 0,      # rate limit
@@ -135,7 +137,15 @@ def notificar_alertas_web(origen, destino, precio, fecha_ida, fecha_vuelta,
         ALERTAS_STATS["correos"] += disparadas
         print(f"  >> ALERTA POR CORREO: {origen}->{destino} US${precio} "
               f"({disparadas} destinatario/s)")
-    else:
+        return
+
+    # Por que no aviso. `omitidas` viene del endpoint con el desglose por
+    # alerta; sin esto un cero no distingue "nadie tiene alerta a Madrid" de
+    # "ya le avisamos ese precio".
+    omitidas = d.get("omitidas") or {}
+    ALERTAS_STATS["sin_mejora"] += int(omitidas.get("sin-mejora") or 0)
+    ALERTAS_STATS["espera"] += int(omitidas.get("espera") or 0)
+    if not omitidas:
         ALERTAS_STATS["sin_alertas"] += 1
 
 
@@ -157,6 +167,8 @@ def resumen_alertas():
     print(f"  POST aceptados:            {s['enviadas']}")
     print(f"    - no era ganga (<80% avg): {s['no_ganga']}")
     print(f"    - nadie tenia alerta:      {s['sin_alertas']}")
+    print(f"    - no era nuevo minimo:     {s['sin_mejora']}")
+    print(f"    - aviso hace <2h:          {s['espera']}")
     fallos = s["http_401"] + s["http_403"] + s["http_429"] + s["http_otro"] + s["red"]
     if fallos:
         print(f"  Fallos: {fallos}  (401={s['http_401']} 403={s['http_403']} "

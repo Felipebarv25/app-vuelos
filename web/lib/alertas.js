@@ -14,6 +14,63 @@ import { kv, kvActivo, pipeline } from "./kv";
 
 const TTL_ALERTA = 60 * 60 * 24 * 180; // 6 meses por defecto
 
+// --- Re-armado por nuevo minimo (2026-08-17) ---------------------------------
+// Antes, enviar un email apagaba la alerta para siempre (activa:false) y solo
+// el usuario podia reactivarla a mano. Resultado: UN correo por alerta en toda
+// su vida, y el usuario esperando un segundo aviso que nunca iba a llegar.
+//
+// Ahora la alerta queda SIEMPRE armada y vuelve a avisar cuando el precio hace
+// un NUEVO MINIMO frente al ultimo que ya te avisamos. Eso responde a "avisame
+// cada vez que identifique precios mas bajos" sin volverse un correo diario:
+// para escribir de nuevo el precio tiene que romper su propio record, no basta
+// con que siga bajo el umbral.
+//
+// `activa:false` recupera su significado literal: el usuario la pauso.
+
+// El nuevo precio debe ser al menos 5% mejor que el ya avisado. Sin este
+// margen, US$519 tras un aviso de US$520 disparaba otro correo.
+const MEJORA_MINIMA = 0.95;
+
+// Piso duro entre correos de una misma alerta. Una corrida del detector dura
+// ~20-40 min y toca la misma ciudad desde varios origenes y meses; sin esto una
+// sola corrida podia mandar varios correos en cascada.
+const ESPERA_ENTRE_AVISOS_MS = 2 * 60 * 60 * 1000; // 2 horas
+
+// El record caduca al mes. Si no, un minimo historico muy bueno silencia la
+// alerta para siempre: bajo a US$400 una vez, y a los seis meses US$430 —
+// buenisimo frente al mercado de hoy — ya no avisaria nunca.
+const RECORD_CADUCA_MS = 30 * 24 * 60 * 60 * 1000;
+
+/**
+ * Decide si una alerta debe volver a mandar correo por este precio.
+ * NO valida el umbral del usuario ni el filtro anti-spam de ganga: eso lo hace
+ * /api/alertas/disparar antes de llamar aqui.
+ *
+ * @returns {{avisar: boolean, motivo: string}} motivo sirve para el log del
+ *   detector: primer-aviso | nuevo-minimo | record-caducado | sin-mejora | espera
+ */
+export function debeAvisar(alerta, precio, ahora = Date.now()) {
+  const previo = Number(alerta?.ultimoPrecioAvisado);
+  const cuando = Number(alerta?.ultimaDispara);
+
+  // Nunca ha avisado (o es una alerta vieja sin el campo): avisa.
+  if (!Number.isFinite(previo) || previo <= 0 || !Number.isFinite(cuando)) {
+    return { avisar: true, motivo: "primer-aviso" };
+  }
+
+  const transcurrido = ahora - cuando;
+  if (transcurrido < ESPERA_ENTRE_AVISOS_MS) {
+    return { avisar: false, motivo: "espera" };
+  }
+  if (transcurrido > RECORD_CADUCA_MS) {
+    return { avisar: true, motivo: "record-caducado" };
+  }
+  if (precio <= previo * MEJORA_MINIMA) {
+    return { avisar: true, motivo: "nuevo-minimo" };
+  }
+  return { avisar: false, motivo: "sin-mejora" };
+}
+
 // Normaliza la lista de hubs de origen a "BOG,MDE".
 //
 // BUG que esto arregla (2026-08-17): antes era `.toUpperCase().slice(0, 3)`, que
@@ -53,7 +110,13 @@ export async function crearAlerta({ email, ciudad, pais, iata, umbral, lang = "e
     umbral: Number(umbral),
     creada: Date.now(),
     ultimaDispara: null,
+    // Precio del ultimo correo enviado. Es el "record" que hay que romper para
+    // que la alerta vuelva a escribir (ver debeAvisar).
+    ultimoPrecioAvisado: null,
+    vecesAvisada: 0,
+    // activa:false = el USUARIO la pauso. Ya no lo pone marcarDisparada().
     activa: true,
+    pausadaPorUsuario: false,
     lang,
     // origen: uno o VARIOS hubs IATA separados por coma ("BOG,MDE"). "" =
     // cualquiera. Antes las alertas no tenian origen y el usuario de Medellin
@@ -123,22 +186,31 @@ export async function idsAlertasPorIATA(iata) {
   return (await kv(["SMEMBERS", `alertas:iata:${String(iata).toUpperCase()}`])) || [];
 }
 
-// Marca una alerta como disparada y guarda la fecha. Tambien la desactiva
-// hasta que el usuario la reactive (evita spam — si baja a US$650, mandamos
-// 1 email; si sigue bajando a US$640 no spameamos otro).
-export async function marcarDisparada(id) {
+// Registra que se envio un correo y guarda el precio avisado como nuevo record.
+// La alerta QUEDA ARMADA: antes esto ponia activa:false y la mataba hasta que el
+// usuario la reactivara a mano, asi que cada alerta mandaba un unico correo en
+// toda su vida. El control anti-spam ahora vive en debeAvisar(): hay que romper
+// el record por al menos 5% para volver a escribir.
+export async function marcarDisparada(id, precio) {
   const a = await leerAlerta(id);
   if (!a) return false;
   a.ultimaDispara = Date.now();
-  a.activa = false;
+  const p = Number(precio);
+  if (Number.isFinite(p) && p > 0) a.ultimoPrecioAvisado = Math.round(p);
+  a.vecesAvisada = (Number(a.vecesAvisada) || 0) + 1;
+  a.activa = true;
   await kv(["SET", `alerta:${id}`, JSON.stringify(a), "EX", String(TTL_ALERTA)]);
   return true;
 }
 
+// Vuelve a armar una alerta y olvida el record, para que el proximo precio que
+// cumpla el umbral avise sin tener que romper un minimo viejo.
 export async function reactivarAlerta(id) {
   const a = await leerAlerta(id);
   if (!a) return false;
   a.activa = true;
+  a.pausadaPorUsuario = false;
+  a.ultimoPrecioAvisado = null;
   await kv(["SET", `alerta:${id}`, JSON.stringify(a), "EX", String(TTL_ALERTA)]);
   return true;
 }
@@ -155,7 +227,17 @@ export async function actualizarAlerta(id, campos) {
   if (campos.origen !== undefined) a.origen = normalizarOrigenes(campos.origen);
   if (campos.escalasMax !== undefined)
     a.escalasMax = Number.isFinite(Number(campos.escalasMax)) ? Number(campos.escalasMax) : 0;
-  if (campos.activa !== undefined) a.activa = !!campos.activa;
+  if (campos.activa !== undefined) {
+    a.activa = !!campos.activa;
+    // Marca explicita de intencion del usuario. Sirve para distinguir "yo la
+    // pause" de "la apago el codigo viejo al enviar el correo", que es lo que
+    // permite re-armar las alertas heredadas sin resucitar las que el usuario
+    // silencio a proposito.
+    a.pausadaPorUsuario = !campos.activa;
+    // Al reactivar, olvidamos el record: si no, seguiria callada esperando
+    // romper un minimo viejo.
+    if (campos.activa) a.ultimoPrecioAvisado = null;
+  }
   await kv(["SET", `alerta:${id}`, JSON.stringify(a), "EX", String(TTL_ALERTA)]);
   return a;
 }

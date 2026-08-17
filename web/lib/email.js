@@ -136,8 +136,9 @@ const PLANTILLAS_ALERTA = {
       (origen ? ` desde ${origen}` : "") +
       ` — por debajo del umbral de US$ ${umbral} que configuraste.`,
     cta: "Ver el vuelo",
-    pausa: "Esta alerta queda en pausa para no llenarte el correo. Reactivala cuando quieras en Mis alertas.",
-    pausaCta: "Reactivar la alerta",
+    seguimos: "Tu alerta sigue activa. Solo te volvemos a escribir si el precio baja aun mas, no todos los dias.",
+    seguimosCta: "Ver mis alertas",
+    bajo: (antes) => `Bajo de US$ ${antes}`,
     aviso: "Los precios pueden cambiar en minutos. Si lo quieres, reserva ya.",
     extra: "Es buena practica verificar el precio final en Google Vuelos antes de comprar.",
     firma: "Equipo Anduve",
@@ -150,8 +151,9 @@ const PLANTILLAS_ALERTA = {
       (origen ? ` from ${origen}` : "") +
       ` — below your US$ ${umbral} target.`,
     cta: "View the flight",
-    pausa: "This alert is now paused so we do not flood your inbox. Turn it back on any time in My alerts.",
-    pausaCta: "Reactivate the alert",
+    seguimos: "Your alert stays on. We only write again if the price drops further — not every day.",
+    seguimosCta: "View my alerts",
+    bajo: (antes) => `Down from US$ ${antes}`,
     aviso: "Prices change fast. Book now if it works for you.",
     extra: "Good practice: verify the final price on Google Flights before buying.",
     firma: "Anduve Team",
@@ -164,8 +166,9 @@ const PLANTILLAS_ALERTA = {
       (origen ? ` desde ${origen}` : "") +
       ` — abaixo do seu alvo de US$ ${umbral}.`,
     cta: "Ver o voo",
-    pausa: "Este alerta fica pausado para nao encher sua caixa de entrada. Reative quando quiser em Meus alertas.",
-    pausaCta: "Reativar o alerta",
+    seguimos: "Seu alerta continua ativo. So escrevemos de novo se o preco cair ainda mais, nao todos os dias.",
+    seguimosCta: "Ver meus alertas",
+    bajo: (antes) => `Caiu de US$ ${antes}`,
     aviso: "Os preços mudam rápido. Reserve agora se servir.",
     extra: "Boa prática: confirme o preço final no Google Voos.",
     firma: "Equipe Anduve",
@@ -178,8 +181,9 @@ const PLANTILLAS_ALERTA = {
       (origen ? ` depuis ${origen}` : "") +
       ` — sous votre cible de US$ ${umbral}.`,
     cta: "Voir le vol",
-    pausa: "Cette alerte est mise en pause pour ne pas saturer votre boite mail. Reactivez-la quand vous voulez dans Mes alertes.",
-    pausaCta: "Reactiver l alerte",
+    seguimos: "Votre alerte reste active. Nous ecrivons a nouveau seulement si le prix baisse encore, pas chaque jour.",
+    seguimosCta: "Voir mes alertes",
+    bajo: (antes) => `En baisse depuis US$ ${antes}`,
     aviso: "Les prix changent vite. Réservez maintenant si c'est bon pour vous.",
     extra: "Bonne pratique : vérifiez le prix final sur Google Flights.",
     firma: "L'équipe Anduve",
@@ -200,6 +204,11 @@ export async function enviarAlertaPrecio({
   lang = "es",
   escalas = null,
   moneda = "",
+  // Precio del correo anterior de esta misma alerta, si hubo uno. La alerta ya
+  // no se apaga al avisar: vuelve a escribir cuando el precio rompe su propio
+  // record, y mostrar de cuanto venia es justo lo que hace util el segundo
+  // correo ("bajo de US$520" dice mas que "US$494" a secas).
+  precioAnterior = null,
 }) {
   const T = PLANTILLAS_ALERTA[lang] || PLANTILLAS_ALERTA.es;
   const ahorro = Math.max(0, umbral - precio);
@@ -210,6 +219,9 @@ export async function enviarAlertaPrecio({
   const tasa = await tasaLocal(moneda);
   const precioLocal = tasa ? fmtMonedaLocal(precio, moneda, tasa) : "";
   const lineaEscalas = textoEscalas(escalas, lang);
+  // Solo tiene sentido si realmente bajo respecto al aviso anterior.
+  const anterior = Number(precioAnterior);
+  const lineaBajo = Number.isFinite(anterior) && anterior > precio ? T.bajo(anterior) : "";
   const html = `
 <!doctype html>
 <html lang="${lang}">
@@ -233,6 +245,7 @@ export async function enviarAlertaPrecio({
             ${lineaEscalas ? `<div style="display:inline-block;margin-top:8px;padding:3px 10px;background:rgba(255,255,255,.18);border-radius:999px;font-size:12px;font-weight:700;">${lineaEscalas}</div>` : ""}
             ${fecha_ida ? `<div style="font-size:13px;opacity:.85;margin-top:8px;">${fecha_ida}${fecha_vuelta ? " → " + fecha_vuelta : ""}</div>` : ""}
             ${ahorro > 0 ? `<div style="display:inline-block;margin-top:12px;padding:4px 10px;background:rgba(16,185,129,.25);border-radius:999px;font-size:12px;font-weight:700;">Ahorras US$ ${ahorro}</div>` : ""}
+            ${lineaBajo ? `<div style="display:inline-block;margin-top:12px;margin-left:6px;padding:4px 10px;background:rgba(255,255,255,.18);border-radius:999px;font-size:12px;font-weight:700;">↓ ${lineaBajo}</div>` : ""}
           </div>
 
           ${link ? `<a href="${link}" target="_blank" style="display:inline-block;padding:14px 28px;background:#f4734d;color:#ffffff;text-decoration:none;border-radius:14px;font-size:15px;font-weight:700;">${T.cta} →</a>` : ""}
@@ -240,7 +253,7 @@ export async function enviarAlertaPrecio({
           <p style="margin:24px 0 6px 0;font-size:13px;line-height:1.5;color:#64748b;">${T.aviso}</p>
           <p style="margin:0 0 20px 0;font-size:12px;line-height:1.5;color:#94a3b8;">${T.extra}</p>
           <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
-          <p style="margin:0 0 20px 0;font-size:12px;line-height:1.5;color:#94a3b8;">${T.pausa} <a href="${BASE_APP}/alertas" target="_blank" style="color:#0c5f58;font-weight:700;text-decoration:underline;">${T.pausaCta}</a></p>
+          <p style="margin:0 0 20px 0;font-size:12px;line-height:1.5;color:#94a3b8;">${T.seguimos} <a href="${BASE_APP}/alertas" target="_blank" style="color:#0c5f58;font-weight:700;text-decoration:underline;">${T.seguimosCta}</a></p>
           <div style="font-size:12px;color:#94a3b8;text-align:center;">${T.firma}</div>
         </td></tr>
       </table>
@@ -249,7 +262,7 @@ export async function enviarAlertaPrecio({
 </body>
 </html>`.trim();
 
-  const text = `${T.saludo}\n\n${T.intro(ciudad, precio, umbral, origenNombre).replace(/<[^>]+>/g, "")}\n\nUS$ ${precio}${precioLocal ? ` (${precioLocal})` : ""} - ${origenNombre ? origenNombre + " -> " : ""}${ciudad}${aerolinea ? " (" + aerolinea + ")" : ""}${lineaEscalas ? " - " + lineaEscalas : ""}\n${fecha_ida}${fecha_vuelta ? " - " + fecha_vuelta : ""}\n\n${link ? T.cta + ": " + link + "\n\n" : ""}${T.aviso}\n\n${T.pausa} ${BASE_APP}/alertas\n\n- ${T.firma}`;
+  const text = `${T.saludo}\n\n${T.intro(ciudad, precio, umbral, origenNombre).replace(/<[^>]+>/g, "")}\n\nUS$ ${precio}${precioLocal ? ` (${precioLocal})` : ""} - ${origenNombre ? origenNombre + " -> " : ""}${ciudad}${aerolinea ? " (" + aerolinea + ")" : ""}${lineaEscalas ? " - " + lineaEscalas : ""}\n${fecha_ida}${fecha_vuelta ? " - " + fecha_vuelta : ""}\n\n${lineaBajo ? lineaBajo + "\n" : ""}${link ? T.cta + ": " + link + "\n\n" : ""}${T.aviso}\n\n${T.seguimos} ${BASE_APP}/alertas\n\n- ${T.firma}`;
 
   return enviar({ to, subject: T.subject(ciudad, precio), html, text });
 }

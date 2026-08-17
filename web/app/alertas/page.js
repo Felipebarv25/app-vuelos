@@ -165,10 +165,10 @@ export default function PaginaAlertas() {
                           )}
                           {a.activa === false ? (
                             <span
-                              title={t("menuAlertaAvisadaAyuda")}
-                              className="rounded bg-slate-200 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-500 dark:bg-slate-600 dark:text-slate-300"
+                              title={t("menuAlertaPausadaAyuda")}
+                              className="rounded bg-amber-100 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
                             >
-                              {t("menuAlertaAvisada")}
+                              {t("menuAlertaPausada")}
                             </span>
                           ) : (
                             <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">

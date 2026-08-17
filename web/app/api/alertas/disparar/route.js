@@ -6,6 +6,12 @@
 // Auth: ALERTS_SHARED_SECRET en header X-Alert-Secret. Sin esto, cualquier
 // bot podria spamear "Madrid US$10!" y mandar emails falsos a los usuarios.
 //
+// La alerta NO se apaga al avisar (eso hacia que mandara un unico correo en
+// toda su vida). Queda armada y vuelve a escribir cuando el precio hace un
+// nuevo minimo — la logica de re-armado esta en debeAvisar(), en lib/alertas.js.
+// Cadena de filtros, en orden: ganga vs promedio de ruta -> umbral del usuario
+// -> origen -> escalas -> nuevo minimo.
+//
 // Body: { iata, origen, precio, fecha_ida, fecha_vuelta, link, aerolinea }
 
 export const runtime = "nodejs";
@@ -15,6 +21,8 @@ import {
   idsAlertasPorIATA,
   leerAlerta,
   marcarDisparada,
+  actualizarAlerta,
+  debeAvisar,
 } from "@/lib/alertas";
 import { enviarAlertaPrecio } from "@/lib/email";
 
@@ -67,16 +75,35 @@ export async function POST(req) {
 
   let disparadas = 0;
   let errores = 0;
+  // Desglose de por que NO se aviso, para que el resumen del detector diga algo
+  // util en vez de un cero pelado.
+  const omitidas = {};
+  const omitir = (m) => { omitidas[m] = (omitidas[m] || 0) + 1; };
 
   for (const id of ids) {
-    const a = await leerAlerta(id);
-    if (!a || !a.activa) continue;
-    if (precio > a.umbral) continue;
+    let a = await leerAlerta(id);
+    if (!a) continue;
+
+    // MIGRACION de las alertas que el codigo viejo apago al enviar su unico
+    // correo (marcarDisparada ponia activa:false). Se reconocen porque estan
+    // inactivas, ya dispararon alguna vez y NO llevan la marca de pausa del
+    // usuario. Se re-arman olvidando el record, asi el proximo precio que
+    // cumpla vuelve a avisar. Las que el usuario pauso a mano siguen calladas.
+    if (a.activa === false && !a.pausadaPorUsuario && a.ultimaDispara) {
+      const rearmada = await actualizarAlerta(id, { activa: true });
+      if (rearmada) a = rearmada;
+    }
+
+    if (!a.activa) { omitir("pausada"); continue; }
+    if (precio > a.umbral) { omitir("sobre-umbral"); continue; }
 
     // Filtro de ORIGEN: la alerta puede tener uno o varios hubs separados por
     // coma ("BOG,MDE"). Solo dispara si el vuelo sale de alguno de ellos.
     // Alertas viejas sin `origen` o con "" aceptan cualquier origen.
-    if (a.origen && origenVuelo && !a.origen.split(",").includes(origenVuelo)) continue;
+    if (a.origen && origenVuelo && !a.origen.split(",").includes(origenVuelo)) {
+      omitir("otro-origen");
+      continue;
+    }
 
     // Filtro de ESCALAS: escalasMax 0 = solo directo (default de alertas
     // nuevas), 1 = hasta 1 escala, 99 = cualquiera. Alertas viejas sin el
@@ -85,8 +112,18 @@ export async function POST(req) {
     // cualquier vuelo — nunca prometemos "directo" sin dato.
     const maxAceptado = Number.isFinite(Number(a.escalasMax)) ? Number(a.escalasMax) : 99;
     if (maxAceptado < 99) {
-      if (peorEscalas == null || peorEscalas > maxAceptado) continue;
+      if (peorEscalas == null || peorEscalas > maxAceptado) {
+        omitir(peorEscalas == null ? "escalas-desconocidas" : "demasiadas-escalas");
+        continue;
+      }
     }
+
+    // Re-armado por nuevo minimo: la alerta sigue viva despues de avisar, pero
+    // solo vuelve a escribir si el precio rompe el ultimo que ya te avisamos.
+    const { avisar, motivo } = debeAvisar(a, precio);
+    if (!avisar) { omitir(motivo); continue; }
+
+    const precioAnterior = Number(a.ultimoPrecioAvisado) || null;
 
     try {
       const env = await enviarAlertaPrecio({
@@ -103,9 +140,10 @@ export async function POST(req) {
         lang: a.lang || "es",
         escalas: peorEscalas,
         moneda: a.moneda || "",
+        precioAnterior,
       });
       if (env?.ok) {
-        await marcarDisparada(id);
+        await marcarDisparada(id, precio);
         disparadas++;
       } else {
         errores++;
@@ -115,5 +153,5 @@ export async function POST(req) {
     }
   }
 
-  return Response.json({ ok: true, disparadas, errores });
+  return Response.json({ ok: true, disparadas, errores, omitidas });
 }

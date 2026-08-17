@@ -15,7 +15,7 @@ function authHeaders() {
 }
 
 export default function AlertaEditor({ alerta: inicial }) {
-  const { refrescarAlertas } = useApp();
+  const { refrescarAlertas, t } = useApp();
   const [alerta, setAlerta] = useState(inicial);
   const [editando, setEditando] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -40,7 +40,7 @@ export default function AlertaEditor({ alerta: inicial }) {
       if (d.ok) {
         setAlerta(d.alerta);
         mostrarToast(d.alerta.activa ? "Alerta reactivada" : "Alerta pausada");
-        // Que el badge "Avisada" del menu de usuario se actualice al instante.
+        // Que el badge "Pausada" del menu de usuario se actualice al instante.
         refrescarAlertas();
       } else {
         mostrarToast("Error al cambiar estado", false);
@@ -78,6 +78,15 @@ export default function AlertaEditor({ alerta: inicial }) {
             Editar
           </button>
         </div>
+
+        {alerta.ultimoPrecioAvisado ? (
+          <span
+            title={t("alertaUltimoAvisoAyuda")}
+            className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2.5 py-1 text-[11.5px] font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+          >
+            {t("alertaUltimoAviso")}: {fmt(alerta.ultimoPrecioAvisado)}
+          </span>
+        ) : null}
 
         {alerta.activa ? (
           <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2.5 py-1 text-[11.5px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
