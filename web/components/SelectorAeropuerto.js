@@ -77,6 +77,16 @@ function exonimos(t) {
   return out;
 }
 
+// Helper: nombre legible de un país ISO 2-letras vía Intl.DisplayNames.
+function nombrePais(cc, lang = "es") {
+  try {
+    const dn = new Intl.DisplayNames([lang], { type: "region" });
+    return dn.of(cc) || cc;
+  } catch {
+    return cc;
+  }
+}
+
 // Filtra y rankea aeropuertos. Pool = todo el catálogo si no hay filtro de
 // país, o solo los del país filtrado si lo hay. Si no hay query y SÍ hay
 // filtro, devuelve los primeros 20 del país ordenados alfabéticamente.
