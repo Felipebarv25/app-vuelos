@@ -98,7 +98,16 @@ function buscarAeropuertos(catalogo, q, paisFiltro = "", limite = 20) {
     : catalogo;
 
   if (!t && paisFiltro) {
-    return [...pool].sort((a, b) => a.ciudad.localeCompare(b.ciudad, "es")).slice(0, limite);
+    // Hubs primero, y alfabético dentro de cada grupo. Es el primer contacto del
+    // planificador de presupuesto: el usuario elige su país y todavía no ha
+    // escrito nada. Con orden puramente alfabético, elegir Colombia mostraba
+    // Acandí, Aguachica, Amalfi, Andes y Apiay — cinco pistas diminutas, sin
+    // Bogotá ni Medellín a la vista. Argentina y España empezaban igual.
+    const nivel = (a) =>
+      HUBS_PRIORITARIOS.has(a.iata) ? 0 : HUBS_SECUNDARIOS.has(a.iata) ? 1 : 2;
+    return [...pool]
+      .sort((a, b) => nivel(a) - nivel(b) || a.ciudad.localeCompare(b.ciudad, "es"))
+      .slice(0, limite);
   }
   if (!t) return [];
 
