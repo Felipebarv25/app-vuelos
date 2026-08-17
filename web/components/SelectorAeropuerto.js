@@ -12,6 +12,12 @@
 // Carga el JSON bajo demanda la primera vez que el componente se monta.
 // Singleton compartido entre instancias.
 import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  HUBS_PRIORITARIOS,
+  HUBS_SECUNDARIOS,
+  HUB_DESEMPATE,
+  ALIAS_CIUDAD,
+} from "@/data/hubs-prioritarios";
 
 // Bandera emoji desde código ISO de 2 letras (regional indicators).
 export function banderaDePais(cc) {
@@ -48,65 +54,27 @@ function norm(s) {
   return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
-// Exónimos: el catálogo IATA está SOLO en inglés, así que el nombre español de
-// una ciudad no la encuentra. Verificado contra los 6.987 aeropuertos el
-// 2026-08-17, y hay dos formas de fallar:
+// Nombres en español -> nombre de la ciudad en el catálogo IATA, que está en
+// inglés o en el idioma local. Sin esto el nombre español no encuentra la ciudad
+// ("Tokio", "Nueva York", "Estambul" daban cero) o, peor, encuentra la
+// equivocada: "Medellín" daba EOH (Olaya Herrera, el aeropuerto pequeño) en vez
+// de MDE, y "Panamá" daba Panama City, Florida en vez de Tocumen.
 //
-//   - Devuelve NADA: "Tokio", "Nueva York", "Londres", "Estambul", "Seúl"…
-//     El placeholder decía "Busca una ciudad (París, Lima, Nueva York…)" y
-//     justo "Nueva York" daba cero resultados.
-//   - Peor: devuelve la ciudad EQUIVOCADA, que parece que funcionó.
-//     "Roma" traía Cape Romanzof y Kostroma pero nunca Rome/FCO. "Lisboa"
-//     traía Huambo. "Riad" traía Greensboro. "Sídney" traía Sidney, Montana.
-//     "Hamburgo" traía Novo Hamburgo, Brasil. "Colonia" traía Colonia, Uruguay.
+// El mapa se genera desde los datos que la app ya mantiene (lib/iataCiudades.js)
+// y se valida contra el país de cada aeropuerto. Ver data/hubs-prioritarios.js.
 //
-// Clave = nombre español normalizado, valor = término del catálogo. Solo entran
-// los que se comprobó que resuelven; los que tampoco existen en inglés (La
-// Haya, Jerusalén, San Petersburgo) se quedan fuera porque el alias no ayuda.
-const EXONIMOS_ES = {
-  tokio: "tokyo", "nueva york": "new york", londres: "london",
-  pekin: "beijing", roma: "rome", lisboa: "lisbon", ginebra: "geneva",
-  moscu: "moscow", copenhague: "copenhagen", "la habana": "havana",
-  estambul: "istanbul", atenas: "athens", viena: "vienna", praga: "prague",
-  varsovia: "warsaw", venecia: "venice", napoles: "naples",
-  marsella: "marseille", burdeos: "bordeaux", "nueva delhi": "new delhi",
-  bombay: "mumbai", seul: "seoul", singapur: "singapore",
-  "ciudad del cabo": "cape town", basilea: "basel", bruselas: "brussels",
-  amberes: "antwerp", gotemburgo: "gothenburg", estocolmo: "stockholm",
-  reikiavik: "reykjavik", edimburgo: "edinburgh", belgrado: "belgrade",
-  bucarest: "bucharest", "abu dabi": "abu dhabi",
-  "nueva orleans": "new orleans", "ciudad de mexico": "mexico city",
-  argel: "algiers", tunez: "tunis", jartum: "khartoum",
-  "adis abeba": "addis ababa", damasco: "damascus", teheran: "tehran",
-  cracovia: "krakow", riad: "riyadh", sidney: "sydney", hamburgo: "hamburg",
-  colonia: "cologne", turin: "torino", "el cairo": "cairo",
-  florencia: "florence", filadelfia: "philadelphia", bagdad: "baghdad",
-  yakarta: "jakarta",
-};
-
-// Términos del catálogo que corresponden a lo que el usuario va escribiendo.
-// Acepta prefijos para que funcione mientras teclea: con "toki" ya devuelve
+// Acepta prefijos para que funcione mientras se teclea: con "toki" ya devuelve
 // "tokyo", sin tener que completar "tokio".
 function exonimos(t) {
   if (!t || t.length < 3) return [];
-  const exacto = EXONIMOS_ES[t];
-  if (exacto) return [exacto];
+  const exacto = ALIAS_CIUDAD[t];
+  if (exacto) return exacto;
   const out = [];
-  for (const es in EXONIMOS_ES) {
-    if (es.startsWith(t)) out.push(EXONIMOS_ES[es]);
-    if (out.length >= 3) break;
+  for (const es in ALIAS_CIUDAD) {
+    if (es.startsWith(t)) out.push(...ALIAS_CIUDAD[es]);
+    if (out.length >= 4) break;
   }
   return out;
-}
-
-// Helper: nombre legible de un país ISO 2-letras vía Intl.DisplayNames.
-function nombrePais(cc, lang = "es") {
-  try {
-    const dn = new Intl.DisplayNames([lang], { type: "region" });
-    return dn.of(cc) || cc;
-  } catch {
-    return cc;
-  }
 }
 
 // Filtra y rankea aeropuertos. Pool = todo el catálogo si no hay filtro de
@@ -166,6 +134,24 @@ function buscarAeropuertos(catalogo, q, paisFiltro = "", limite = 20) {
     for (const term of terminos) {
       const s = puntuar(c, n, iata, term);
       if (s > score) score = s;
+    }
+    // Empujón a los aeropuertos que la app ya trata como destino u origen real.
+    // +20 al principal y +10 al segundo aeropuerto de la misma ciudad, para que
+    // Gatwick no le gane a Heathrow ni Ciampino a Fiumicino. Desempata DENTRO
+    // del mismo nivel de coincidencia sin dejar que una coincidencia débil salte
+    // una fuerte (un hub que solo coincide por nombre, 40+20, sigue debajo de
+    // una ciudad exacta, 100). Sin esto "Londres" ponía
+    // London/YXU (Ontario) antes de Heathrow, "París" ponía Paris/PHT (Texas)
+    // antes de CDG, "Madrid" ponía ECV antes de MAD y "Bali" ponía un
+    // aeropuerto de Camerún en primer lugar.
+    if (score > 0) {
+      if (HUBS_PRIORITARIOS.has(a.iata)) score += 20;
+      else if (HUBS_SECUNDARIOS.has(a.iata)) score += 10;
+      // Ciudades con dos aeropuertos de primer nivel (Londres, París, São
+      // Paulo, Shanghái, Tokio, Estambul): +5 marca cuál es EL principal, si no
+      // el empate lo rompía el orden del catálogo y ganaba Gatwick sobre
+      // Heathrow.
+      if (HUB_DESEMPATE.has(a.iata)) score += 5;
     }
     if (score > 0) scored.push({ a, score });
     if (scored.length > limite * 6) break;
