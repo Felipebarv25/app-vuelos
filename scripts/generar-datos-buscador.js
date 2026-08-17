@@ -44,26 +44,26 @@ function codigosDe(archivo) {
   return out;
 }
 const METRO = {
-  LON: { pais: "GB", aps: ["LHR", "LGW", "LTN", "STN", "LCY"] },
-  PAR: { pais: "FR", aps: ["CDG", "ORY", "BVA"] },
-  ROM: { pais: "IT", aps: ["FCO", "CIA"] },
-  MIL: { pais: "IT", aps: ["MXP", "LIN", "BGY"] },
-  TYO: { pais: "JP", aps: ["NRT", "HND"] },
-  NYC: { pais: "US", aps: ["JFK", "LGA", "EWR"] },
-  BJS: { pais: "CN", aps: ["PEK", "PKX"] },
-  SAO: { pais: "BR", aps: ["GRU", "CGH", "VCP"] },
-  BUE: { pais: "AR", aps: ["EZE", "AEP"] },
-  SEL: { pais: "KR", aps: ["ICN", "GMP"] },
-  SHA: { pais: "CN", aps: ["PVG", "SHA"] },
-  RIO: { pais: "BR", aps: ["GIG", "SDU"] },
-  MOW: { pais: "RU", aps: ["SVO", "DME", "VKO"] },
-  WAS: { pais: "US", aps: ["IAD", "DCA", "BWI"] },
-  CHI: { pais: "US", aps: ["ORD", "MDW"] },
-  YTO: { pais: "CA", aps: ["YYZ", "YTZ"] },
-  YMQ: { pais: "CA", aps: ["YUL"] },
-  STO: { pais: "SE", aps: ["ARN", "BMA"] },
-  OSA: { pais: "JP", aps: ["KIX", "ITM"] },
-  UKY: { pais: "JP", aps: ["KIX", "ITM"] }, // Kyoto no tiene aeropuerto propio
+  LON: { pais: "GB", es: "Londres", aps: ["LHR", "LGW", "LTN", "STN", "LCY"] },
+  PAR: { pais: "FR", es: "París", aps: ["CDG", "ORY", "BVA"] },
+  ROM: { pais: "IT", es: "Roma", aps: ["FCO", "CIA"] },
+  MIL: { pais: "IT", es: "Milán", aps: ["MXP", "LIN", "BGY"] },
+  TYO: { pais: "JP", es: "Tokio", aps: ["NRT", "HND"] },
+  NYC: { pais: "US", es: "Nueva York", aps: ["JFK", "LGA", "EWR"] },
+  BJS: { pais: "CN", es: "Pekín", aps: ["PEK", "PKX"] },
+  SAO: { pais: "BR", es: "São Paulo", aps: ["GRU", "CGH", "VCP"] },
+  BUE: { pais: "AR", es: "Buenos Aires", aps: ["EZE", "AEP"] },
+  SEL: { pais: "KR", es: "Seúl", aps: ["ICN", "GMP"] },
+  SHA: { pais: "CN", es: "Shanghái", aps: ["PVG", "SHA"] },
+  RIO: { pais: "BR", es: "Río de Janeiro", aps: ["GIG", "SDU"] },
+  MOW: { pais: "RU", es: "Moscú", aps: ["SVO", "DME", "VKO"] },
+  WAS: { pais: "US", es: "Washington", aps: ["IAD", "DCA", "BWI"] },
+  CHI: { pais: "US", es: "Chicago", aps: ["ORD", "MDW"] },
+  YTO: { pais: "CA", es: "Toronto", aps: ["YYZ", "YTZ"] },
+  YMQ: { pais: "CA", es: "Montreal", aps: ["YUL"] },
+  STO: { pais: "SE", es: "Estocolmo", aps: ["ARN", "BMA"] },
+  OSA: { pais: "JP", es: "Osaka", aps: ["KIX", "ITM"] },
+  UKY: { pais: "JP", es: "Kioto", aps: ["KIX", "ITM"] }, // Kyoto no tiene aeropuerto propio
 };
 
 // Codigos IATA de config.py (ORIGENES, DESTINOS, DESTINOS_NACIONALES). Se lee
@@ -168,7 +168,7 @@ for (const d of curados) {
 const MANUAL = [
   ["tokio", "tokyo", "JP"], ["nueva york", "new york", "US"], ["londres", "london", "GB"],
   ["pekin", "beijing", "CN"], ["roma", "rome", "IT"], ["lisboa", "lisbon", "PT"],
-  ["ginebra", "geneva", "CH"], ["moscu", "moscow", "RU", "SVO"], ["copenhague", "copenhagen", "DK"],
+  ["ginebra", "geneva", "CH"], ["moscu", "moscow", "RU", "SVO", "Moscú"], ["copenhague", "copenhagen", "DK"],
   ["la habana", "havana", "CU"], ["estambul", "istanbul", "TR"], ["atenas", "athens", "GR"],
   ["viena", "vienna", "AT"], ["praga", "prague", "CZ"], ["varsovia", "warsaw", "PL"],
   ["venecia", "venezia", "IT"], ["napoles", "napoli", "IT"], ["florencia", "firenze", "IT"],
@@ -177,19 +177,19 @@ const MANUAL = [
   ["nueva delhi", "new delhi", "IN"], ["bombay", "mumbai", "IN"], ["seul", "seoul", "KR"],
   ["singapur", "singapore", "SG"], ["ciudad del cabo", "cape town", "ZA"],
   ["basilea", "bale", "CH"], ["bruselas", "brussels", "BE"], ["amberes", "antwerp", "BE"],
-  ["gotemburgo", "gothenburg", "SE", "GOT"], ["estocolmo", "stockholm", "SE"],
-  ["reikiavik", "reykjavik", "IS", "KEF"], ["edimburgo", "edinburgh", "GB"],
-  ["belgrado", "belgrad", "RS"], ["bucarest", "bucharest", "RO", "OTP"],
-  ["abu dabi", "abu dhabi", "AE"], ["nueva orleans", "new orleans", "US", "MSY"],
+  ["gotemburgo", "gothenburg", "SE", "GOT", "Gotemburgo"], ["estocolmo", "stockholm", "SE"],
+  ["reikiavik", "reykjavik", "IS", "KEF", "Reikiavik"], ["edimburgo", "edinburgh", "GB"],
+  ["belgrado", "belgrad", "RS"], ["bucarest", "bucharest", "RO", "OTP", "Bucarest"],
+  ["abu dabi", "abu dhabi", "AE"], ["nueva orleans", "new orleans", "US", "MSY", "Nueva Orleans"],
   ["ciudad de mexico", "mexico city", "MX"], ["argel", "algiers", "DZ"],
   ["tunez", "tunis", "TN"], ["jartum", "khartoum", "SD"], ["adis abeba", "addis ababa", "ET"],
-  ["damasco", "damascus", "SY"], ["teheran", "tehran", "IR", "IKA"], ["cracovia", "krakow", "PL"],
-  ["riad", "riyadh", "SA", "RUH"], ["sidney", "sydney", "AU"], ["hamburgo", "hamburg", "DE", "HAM"],
+  ["damasco", "damascus", "SY"], ["teheran", "tehran", "IR", "IKA", "Teherán"], ["cracovia", "krakow", "PL"],
+  ["riad", "riyadh", "SA", "RUH", "Riad"], ["sidney", "sydney", "AU"], ["hamburgo", "hamburg", "DE", "HAM", "Hamburgo"],
   ["colonia", "cologne", "DE"], ["el cairo", "cairo", "EG"], ["bagdad", "baghdad", "IQ"],
   ["yakarta", "jakarta", "ID"], ["medellin", "rionegro", "CO"],
   ["buenos aires", "ezeiza", "AR"], ["panama", "tocumen", "PA"],
   ["ciudad de panama", "tocumen", "PA"], ["ciudad de guatemala", "guatemala city", "GT"],
-  ["playa del carmen", "cancun", "MX"], ["filadelfia", "philadelphia", "US", "PHL"],
+  ["playa del carmen", "cancun", "MX"], ["filadelfia", "philadelphia", "US", "PHL", "Filadelfia"],
   ["montreal", "montreal", "CA"], ["frankfurt", "frankfurt", "DE"],
 ];
 // Ciudades con mas de un aeropuerto de primer nivel, donde hay que decir cual
@@ -260,6 +260,89 @@ if (sinDesempate.length) {
   sinDesempate.forEach((x) => console.error("  " + x));
   process.exit(1);
 }
+// ---------- 4) etiquetas comerciales ----------
+// El catalogo IATA nombra las ciudades como el dato oficial, no como las llama
+// la gente: MDE es "Rionegro", EZE es "Ezeiza", PTY es "Tocumen", FRA es
+// "Frankfurt-am-Main". Un colombiano que abre el planificador y navega la lista
+// de su pais no reconoce "Rionegro" como Medellin.
+//
+// Y no es solo cosmetico: Ofertas.js casa el destino elegido contra
+// ofertas.json POR NOMBRE DE CIUDAD, y ese JSON usa nombres comerciales en
+// español ("Londres", "Tokio", "Buenos Aires", "Nueva York", "Pekin",
+// "São Paulo", "Milan", "Ciudad de Mexico", "Paris"). Con la etiqueta del
+// catalogo esos 9 destinos NUNCA casaban: la app gastaba una llamada en vivo a
+// Travelpayouts y decia "sin historial" para rutas que si tenia precalculadas.
+//
+// Fuentes, por prioridad: paisesOrigen.js (nombres comerciales por IATA),
+// iataCiudades.js (claves "Ciudad|Pais"), y las tablas METRO/MANUAL de arriba.
+// Correcciones donde la derivacion automatica dice algo FALSO.
+const ETIQUETA_MANUAL = {
+  // El catalogo curado usa CUN como aeropuerto de Playa del Carmen, pero el
+  // aeropuerto es el de Cancun: la etiqueta tiene que decir donde aterrizas.
+  CUN: "Cancún",
+  // Kioto no tiene aeropuerto propio; lo sirven los dos de Osaka. La tabla
+  // METRO mapea UKY -> KIX/ITM para poder buscarlo, pero etiquetarlos "Kioto"
+  // seria mentir sobre donde aterriza el avion.
+  KIX: "Osaka",
+  ITM: "Osaka",
+};
+
+const etiquetas = {};
+function etiquetar(iata, nombre, fuente) {
+  if (!iata || !nombre) return;
+  const ap = porIata.get(iata);
+  if (!ap) return;
+  // Fuera el sufijo entre parentesis: paisesOrigen.js trae "Londres (Heathrow)"
+  // y "Nueva York (JFK)" para desambiguar en SU lista, pero aqui sobra por dos
+  // razones. Una, el nombre del aeropuerto ya se muestra al lado en el
+  // desplegable, asi que Heathrow y Gatwick se distinguen solos. Dos, esta
+  // etiqueta es la que Ofertas.js compara contra ofertas.json, y "Roma
+  // (Fiumicino)" no casaria nunca con "Roma".
+  const limpio = String(nombre).replace(/\s*\([^)]*\)\s*$/, "").trim();
+  if (!limpio) return;
+  if (norm(ap.c) === norm(limpio)) return;      // ya coincide, no hace falta
+  if (etiquetas[iata] && etiquetas[iata] !== limpio) {
+    avisos.push(`etiqueta ${iata}: "${etiquetas[iata]}" vs "${limpio}" (${fuente}), se queda la primera`);
+    return;
+  }
+  etiquetas[iata] = limpio;
+}
+
+// a) paisesOrigen.js: { iata: "MDE", ciudad: "Medellín" }
+const srcOrig = fs.readFileSync(path.join(WEB, "lib/paisesOrigen.js"), "utf8");
+for (const m of srcOrig.matchAll(/iata:\s*"([A-Z]{3})"\s*,\s*ciudad:\s*"([^"]+)"/g)) {
+  etiquetar(m[1], m[2], "paisesOrigen");
+}
+// b) iataCiudades.js: "Medellín|Colombia": "MDE"
+for (const d of curados) etiquetar(d.iata, d.ciudad, "iataCiudades");
+// c) codigos de metro: el nombre en español va en la tabla METRO
+for (const code in METRO) {
+  const m = METRO[code];
+  if (!m.es) continue;
+  for (const c of m.aps) etiquetar(c, m.es, "METRO");
+}
+// d) alias manuales que declararon aeropuerto principal
+for (const [es, , , principal, etiqueta] of MANUAL) {
+  if (principal && etiqueta) etiquetar(principal, etiqueta, "MANUAL");
+}
+
+// Las correcciones a mano mandan sobre lo derivado.
+for (const iata in ETIQUETA_MANUAL) {
+  if (!porIata.has(iata)) { avisos.push(`etiqueta manual ${iata}: no existe`); continue; }
+  etiquetas[iata] = ETIQUETA_MANUAL[iata];
+}
+// Fuera las que acabaron diciendo lo mismo que el catalogo: no aportan nada y
+// solo engordan el fichero.
+for (const iata in etiquetas) {
+  if (norm(porIata.get(iata).c) === norm(etiquetas[iata])) delete etiquetas[iata];
+}
+
+const clavesEtiqueta = Object.keys(etiquetas).sort();
+console.log(`\netiquetas comerciales: ${clavesEtiqueta.length}`);
+for (const k of clavesEtiqueta) {
+  console.log(`  ${k}: "${porIata.get(k).c}" -> "${etiquetas[k]}"`);
+}
+
 const listaHubs = [...principales].sort();
 const listaSec = [...secundarios].sort();
 const clavesAlias = Object.keys(alias).sort();
@@ -268,6 +351,7 @@ console.log(`\nhubs: ${listaHubs.length} | alias: ${clavesAlias.length}`);
 const fmtSet = (arr) => "[\n  " + arr.map((x) => JSON.stringify(x)).join(",\n  ") + ",\n]";
 const fmtObj = (ks) => "{\n" + ks.map((k) => `  ${JSON.stringify(k)}: ${JSON.stringify(alias[k])},`).join("\n") + "\n}";
 const fmtDes = fmtSet(DESEMPATE);
+const fmtEti = "{\n" + clavesEtiqueta.map((k) => `  ${JSON.stringify(k)}: ${JSON.stringify(etiquetas[k])},`).join("\n") + "\n}";
 
 const salida = `// GENERADO — no editar a mano.
 //
@@ -305,6 +389,12 @@ export const ALIAS_CIUDAD = ${fmtObj(clavesAlias)};
 // principal. Sin esto el empate lo rompia el orden del catalogo y "Londres"
 // devolvia Gatwick antes que Heathrow.
 export const HUB_DESEMPATE = new Set(${fmtDes});
+
+// Nombre comercial de ${clavesEtiqueta.length} aeropuertos cuyo nombre de ciudad en el catalogo IATA
+// no es el que usa la gente: MDE es "Rionegro", EZE es "Ezeiza", PTY es
+// "Tocumen", LHR es "London". Se usa para MOSTRAR y tambien para buscar, asi
+// que lo que se ve en la lista siempre se puede escribir.
+export const ETIQUETA_CIUDAD = ${fmtEti};
 `;
 fs.writeFileSync(path.join(WEB, "data/hubs-prioritarios.js"), salida);
 console.log("escrito web/data/hubs-prioritarios.js");

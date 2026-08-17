@@ -17,6 +17,7 @@ import {
   HUBS_SECUNDARIOS,
   HUB_DESEMPATE,
   ALIAS_CIUDAD,
+  ETIQUETA_CIUDAD,
 } from "@/data/hubs-prioritarios";
 
 // Bandera emoji desde código ISO de 2 letras (regional indicators).
@@ -38,10 +39,17 @@ async function cargarCatalogo() {
     .then((arr) =>
       arr.map((a) => ({
         iata: a.i,
-        ciudad: a.c,
+        // `ciudad` es lo que se MUESTRA y lo que se propaga al elegir: el nombre
+        // comercial cuando el catálogo IATA usa otro ("Rionegro" por Medellín,
+        // "Ezeiza" por Buenos Aires, "Tocumen" por Ciudad de Panamá).
+        ciudad: ETIQUETA_CIUDAD[a.i] || a.c,
+        // El nombre del catálogo se conserva porque la búsqueda sigue casando
+        // contra él: quien escriba "Rionegro" o "Ezeiza" debe seguir llegando.
+        ciudadCatalogo: a.c,
         pais: a.p,
         nombre: a.n,
         ciudadLower: (a.c || "").toLowerCase(),
+        etiquetaLower: (ETIQUETA_CIUDAD[a.i] || "").toLowerCase(),
         nombreLower: (a.n || "").toLowerCase(),
       }))
     )
@@ -116,7 +124,7 @@ function buscarAeropuertos(catalogo, q, paisFiltro = "", limite = 20) {
     const ex = pool.find((a) => a.iata.toLowerCase() === t);
     if (ex) {
       const resto = pool
-        .filter((a) => a !== ex && (norm(a.ciudadLower).startsWith(t) || norm(a.nombreLower).includes(t)))
+        .filter((a) => a !== ex && (norm(a.ciudadLower).startsWith(t) || norm(a.etiquetaLower).startsWith(t) || norm(a.nombreLower).includes(t)))
         .slice(0, limite - 1);
       return [ex, ...resto];
     }
@@ -125,7 +133,7 @@ function buscarAeropuertos(catalogo, q, paisFiltro = "", limite = 20) {
     const ex = pool.find((a) => a.iata === hintIata);
     if (ex) {
       const resto = pool
-        .filter((a) => a !== ex && (norm(a.ciudadLower).includes(t) || norm(a.nombreLower).includes(t)))
+        .filter((a) => a !== ex && (norm(a.ciudadLower).includes(t) || norm(a.etiquetaLower).includes(t) || norm(a.nombreLower).includes(t)))
         .slice(0, limite - 1);
       return [ex, ...resto];
     }
@@ -148,11 +156,19 @@ function buscarAeropuertos(catalogo, q, paisFiltro = "", limite = 20) {
   for (const a of pool) {
     const c = norm(a.ciudadLower);
     const n = norm(a.nombreLower);
+    // La etiqueta comercial también se busca. Es lo que garantiza que todo lo
+    // que se ve en la lista se pueda escribir: si se muestra "Medellín", tiene
+    // que encontrarse escribiendo "Medellín", no solo "Rionegro".
+    const e = a.etiquetaLower ? norm(a.etiquetaLower) : "";
     const iata = a.iata.toLowerCase();
     let score = 0;
     for (const term of terminos) {
       const s = puntuar(c, n, iata, term);
       if (s > score) score = s;
+      if (e) {
+        const se = puntuar(e, n, iata, term);
+        if (se > score) score = se;
+      }
     }
     // Empujón a los aeropuertos que la app ya trata como destino u origen real.
     // +20 al principal y +10 al segundo aeropuerto de la misma ciudad, para que
