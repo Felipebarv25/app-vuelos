@@ -48,6 +48,57 @@ function norm(s) {
   return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
+// Exónimos: el catálogo IATA está SOLO en inglés, así que el nombre español de
+// una ciudad no la encuentra. Verificado contra los 6.987 aeropuertos el
+// 2026-08-17, y hay dos formas de fallar:
+//
+//   - Devuelve NADA: "Tokio", "Nueva York", "Londres", "Estambul", "Seúl"…
+//     El placeholder decía "Busca una ciudad (París, Lima, Nueva York…)" y
+//     justo "Nueva York" daba cero resultados.
+//   - Peor: devuelve la ciudad EQUIVOCADA, que parece que funcionó.
+//     "Roma" traía Cape Romanzof y Kostroma pero nunca Rome/FCO. "Lisboa"
+//     traía Huambo. "Riad" traía Greensboro. "Sídney" traía Sidney, Montana.
+//     "Hamburgo" traía Novo Hamburgo, Brasil. "Colonia" traía Colonia, Uruguay.
+//
+// Clave = nombre español normalizado, valor = término del catálogo. Solo entran
+// los que se comprobó que resuelven; los que tampoco existen en inglés (La
+// Haya, Jerusalén, San Petersburgo) se quedan fuera porque el alias no ayuda.
+const EXONIMOS_ES = {
+  tokio: "tokyo", "nueva york": "new york", londres: "london",
+  pekin: "beijing", roma: "rome", lisboa: "lisbon", ginebra: "geneva",
+  moscu: "moscow", copenhague: "copenhagen", "la habana": "havana",
+  estambul: "istanbul", atenas: "athens", viena: "vienna", praga: "prague",
+  varsovia: "warsaw", venecia: "venice", napoles: "naples",
+  marsella: "marseille", burdeos: "bordeaux", "nueva delhi": "new delhi",
+  bombay: "mumbai", seul: "seoul", singapur: "singapore",
+  "ciudad del cabo": "cape town", basilea: "basel", bruselas: "brussels",
+  amberes: "antwerp", gotemburgo: "gothenburg", estocolmo: "stockholm",
+  reikiavik: "reykjavik", edimburgo: "edinburgh", belgrado: "belgrade",
+  bucarest: "bucharest", "abu dabi": "abu dhabi",
+  "nueva orleans": "new orleans", "ciudad de mexico": "mexico city",
+  argel: "algiers", tunez: "tunis", jartum: "khartoum",
+  "adis abeba": "addis ababa", damasco: "damascus", teheran: "tehran",
+  cracovia: "krakow", riad: "riyadh", sidney: "sydney", hamburgo: "hamburg",
+  colonia: "cologne", turin: "torino", "el cairo": "cairo",
+  florencia: "florence", filadelfia: "philadelphia", bagdad: "baghdad",
+  yakarta: "jakarta",
+};
+
+// Términos del catálogo que corresponden a lo que el usuario va escribiendo.
+// Acepta prefijos para que funcione mientras teclea: con "toki" ya devuelve
+// "tokyo", sin tener que completar "tokio".
+function exonimos(t) {
+  if (!t || t.length < 3) return [];
+  const exacto = EXONIMOS_ES[t];
+  if (exacto) return [exacto];
+  const out = [];
+  for (const es in EXONIMOS_ES) {
+    if (es.startsWith(t)) out.push(EXONIMOS_ES[es]);
+    if (out.length >= 3) break;
+  }
+  return out;
+}
+
 // Helper: nombre legible de un país ISO 2-letras vía Intl.DisplayNames.
 function nombrePais(cc, lang = "es") {
   try {
@@ -92,16 +143,30 @@ function buscarAeropuertos(catalogo, q, paisFiltro = "", limite = 20) {
       return [ex, ...resto];
     }
   }
+  // Se puntúa contra lo que el usuario escribió Y contra el nombre en inglés
+  // del catálogo si es un exónimo. Se toma el mejor de los dos, así "Roma"
+  // pone Rome/FCO arriba en vez de Cape Romanzof.
+  const alias = exonimos(t);
+  const terminos = alias.length ? [t, ...alias] : [t];
+  const puntuar = (c, n, iata, term) => {
+    if (c === term) return 100;
+    if (c.startsWith(term)) return 80;
+    if (c.includes(term)) return 60;
+    if (iata.startsWith(term)) return 50;
+    if (n.includes(term)) return 40;
+    return 0;
+  };
+
   const scored = [];
   for (const a of pool) {
     const c = norm(a.ciudadLower);
     const n = norm(a.nombreLower);
+    const iata = a.iata.toLowerCase();
     let score = 0;
-    if (c === t) score = 100;
-    else if (c.startsWith(t)) score = 80;
-    else if (c.includes(t)) score = 60;
-    else if (n.includes(t)) score = 40;
-    else if (a.iata.toLowerCase().startsWith(t)) score = 50;
+    for (const term of terminos) {
+      const s = puntuar(c, n, iata, term);
+      if (s > score) score = s;
+    }
     if (score > 0) scored.push({ a, score });
     if (scored.length > limite * 6) break;
   }
@@ -326,12 +391,12 @@ export default function SelectorAeropuerto({
             try { e.target.select(); } catch {}
           }}
           onKeyDown={onKeyPais}
-          className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+          className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] sm:text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
         />
         {abiertoPais && paisesFiltrados.length > 0 && (
           <ul
             role="listbox"
-            className="absolute left-0 right-0 top-full z-[6700] mt-1 max-h-[300px] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800"
+            className="absolute left-0 right-0 top-full z-[6700] mt-1 max-h-[min(300px,45dvh)] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800"
           >
             {paisesFiltrados.map((p, i) => (
               <li
@@ -380,12 +445,12 @@ export default function SelectorAeropuerto({
             try { e.target.select(); } catch {}
           }}
           onKeyDown={onKeyAeropuerto}
-          className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+          className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] sm:text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
         />
         {abierto && resultados.length > 0 && (
           <ul
             role="listbox"
-            className="absolute left-0 right-0 top-full z-[6500] mt-1 max-h-[300px] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800"
+            className="absolute left-0 right-0 top-full z-[6500] mt-1 max-h-[min(300px,45dvh)] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800"
           >
             {resultados.map((a, i) => (
               <li
