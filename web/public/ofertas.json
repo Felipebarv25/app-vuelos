@@ -1,5 +1,5 @@
 {
-  "generado": "2026-08-19T03:06:05+00:00",
+  "generado": "2026-08-19T03:52:04+00:00",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -754,7 +754,7 @@
       "duracion_ida": 592,
       "duracion_vuelta": 586,
       "umbral": 400,
-      "mediana": 632,
+      "mediana": 631,
       "descuento": 20,
       "esGanga": true,
       "visto": "2026-08-19T01:13:00+00:00",
@@ -802,7 +802,7 @@
       "duracion_ida": 630,
       "duracion_vuelta": 625,
       "umbral": 450,
-      "mediana": 737,
+      "mediana": 735,
       "descuento": 24,
       "esGanga": true,
       "visto": "2026-08-19T01:12:19+00:00",
