@@ -1,5 +1,5 @@
 {
-  "generado": "2026-08-22T08:33:20+00:00",
+  "generado": "2026-08-22T09:30:40+00:00",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -1450,8 +1450,8 @@
       "duracion_ida": 235,
       "duracion_vuelta": 220,
       "umbral": 400,
-      "mediana": 398,
-      "descuento": 4,
+      "mediana": 396,
+      "descuento": 3,
       "esGanga": false,
       "visto": "2026-08-22T06:37:26+00:00",
       "link": "https://www.aviasales.com/search/BOG1609MIA24091",
@@ -3346,7 +3346,7 @@
       "duracion_ida": 1022,
       "duracion_vuelta": 640,
       "umbral": 750,
-      "mediana": 1019,
+      "mediana": 1071,
       "descuento": 0,
       "esGanga": false,
       "visto": "2026-08-22T06:38:14+00:00",
