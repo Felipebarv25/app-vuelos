@@ -1,5 +1,5 @@
 {
-  "generado": "2026-08-24T09:00:33+00:00",
+  "generado": "2026-08-24T09:52:48+00:00",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -1234,8 +1234,8 @@
       "duracion_ida": 1370,
       "duracion_vuelta": 1245,
       "umbral": 1700,
-      "mediana": 1380,
-      "descuento": 14,
+      "mediana": 1367,
+      "descuento": 13,
       "esGanga": true,
       "visto": "2026-08-24T06:58:27+00:00",
       "link": "https://www.aviasales.com/search/MEX2109BJS05101",
@@ -2218,7 +2218,7 @@
       "duracion_ida": 525,
       "duracion_vuelta": 500,
       "umbral": 400,
-      "mediana": 681,
+      "mediana": 687,
       "descuento": 0,
       "esGanga": false,
       "visto": "2026-08-24T06:59:51+00:00",
