@@ -1,5 +1,5 @@
 {
-  "generado": "2026-08-25T03:08:19+00:00",
+  "generado": "2026-08-25T03:56:27+00:00",
   "moneda": "USD",
   "origenes": {
     "BOG": "Bogotá",
@@ -1162,8 +1162,8 @@
       "duracion_ida": 995,
       "duracion_vuelta": 1080,
       "umbral": 750,
-      "mediana": 1096,
-      "descuento": 17,
+      "mediana": 1088,
+      "descuento": 16,
       "esGanga": true,
       "visto": "2026-08-25T01:13:42+00:00",
       "link": "https://www.aviasales.com/search/LIM1202MAD27021",
