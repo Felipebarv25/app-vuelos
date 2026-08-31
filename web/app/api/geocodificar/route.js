@@ -32,9 +32,15 @@ export async function GET(req) {
   // las mismas coordenadas peruanas. Ahora se busca solo la ciudad y se filtra
   // por countrycode, que Photon sí devuelve.
   const iso = (searchParams.get("iso") || "").trim().toUpperCase().slice(0, 2);
+  // lista=1 devuelve varios candidatos en vez de uno. Lo usa el planificador de
+  // rutas para dejar agregar ciudades SIN AEROPUERTO: el selector normal busca
+  // sobre el catalogo IATA, y York, Brujas o Siena no estan ahi aunque sean
+  // paradas perfectamente normales de una ruta en tren.
+  const lista = searchParams.get("lista") === "1";
   if (!ciudad) {
     return Response.json({ error: "falta ciudad" }, { status: 400 });
   }
+  if (lista) return await buscarVarias(ciudad, iso);
 
   const k = clave(ciudad, iso);
   if (kvActivo()) {
@@ -99,5 +105,47 @@ export async function GET(req) {
         ? "public, s-maxage=86400, stale-while-revalidate=604800"
         : "no-store",
     },
+  });
+}
+
+// Varios candidatos para que el usuario elija. Sin caché: son búsquedas
+// mientras teclea y el resultado depende de la cadena exacta.
+async function buscarVarias(texto, iso) {
+  const salida = [];
+  try {
+    const ctrl = new AbortController();
+    const id = setTimeout(() => ctrl.abort(), 7000);
+    const url =
+      `https://photon.komoot.io/api/?q=${encodeURIComponent(texto)}` +
+      `&limit=20&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village`;
+    const r = await fetch(url, { signal: ctrl.signal, headers: { "User-Agent": UA } });
+    clearTimeout(id);
+    if (r.ok) {
+      const d = await r.json();
+      const vistos = new Set();
+      for (const f of d.features || []) {
+        const p = f.properties || {};
+        const c = f.geometry?.coordinates;
+        if (!Array.isArray(c) || c.length !== 2) continue;
+        const cc = (p.countrycode || "").toUpperCase();
+        if (iso && cc !== iso) continue;
+        const llave = `${(p.name || "").toLowerCase()}|${cc}|${p.state || ""}`;
+        if (vistos.has(llave)) continue;
+        vistos.add(llave);
+        salida.push({
+          ciudad: p.name || texto,
+          iso: cc,
+          pais: p.country || "",
+          region: p.state || "",
+          lat: Math.round(c[1] * 10000) / 10000,
+          lon: Math.round(c[0] * 10000) / 10000,
+        });
+        if (salida.length >= 6) break;
+      }
+    }
+  } catch {}
+  return new Response(JSON.stringify({ resultados: salida }), {
+    status: 200,
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 }

@@ -55,6 +55,13 @@ export default function PlanRuta({ t = (k) => k, lang = "es", usuario = null, ru
   // vacío: si no, se queda con "Madrid (MAD)" escrito y encadenar la
   // siguiente parada obliga a borrar a mano.
   const [nSelector, setNSelector] = useState(0);
+  // Buscador secundario para ciudades SIN AEROPUERTO. El selector principal
+  // busca sobre el catálogo IATA, así que York, Brujas o Siena no aparecen
+  // aunque sean paradas normales de una ruta en tren. Sin esto, "York" caía
+  // en York, Estados Unidos, que sí tiene aeropuerto.
+  const [textoLibre, setTextoLibre] = useState("");
+  const [candidatos, setCandidatos] = useState(null);
+  const [buscandoLibre, setBuscandoLibre] = useState(false);
 
   useEffect(() => { obtenerOfertas().then(setOfertas); }, []);
 
@@ -99,6 +106,39 @@ export default function PlanRuta({ t = (k) => k, lang = "es", usuario = null, ru
     setNSelector((n) => n + 1);
     track("ruta_parada_agregada", { ciudad: a.ciudad, iata: a.iata });
   }, []);
+
+  async function buscarLibre() {
+    const q = textoLibre.trim();
+    if (q.length < 2) return;
+    setBuscandoLibre(true);
+    setCandidatos(null);
+    try {
+      const r = await fetch(`/api/geocodificar?lista=1&ciudad=${encodeURIComponent(q)}`);
+      const d = r.ok ? await r.json() : null;
+      setCandidatos(d?.resultados || []);
+    } catch {
+      setCandidatos([]);
+    }
+    setBuscandoLibre(false);
+  }
+
+  function agregarLibre(c) {
+    setParadas((prev) => [
+      ...prev,
+      {
+        ciudad: c.ciudad,
+        pais: c.iso,
+        paisNombre: c.pais || c.iso,
+        iata: "",           // sin aeropuerto: los tramos serán terrestres
+        noches: 2,
+        lat: c.lat,
+        lon: c.lon,
+      },
+    ]);
+    setTextoLibre("");
+    setCandidatos(null);
+    track("ruta_parada_sin_aeropuerto", { ciudad: c.ciudad });
+  }
 
   const quitar = (i) => setParadas((p) => p.filter((_, k) => k !== i));
   const mover = (i, delta) =>
@@ -234,6 +274,54 @@ export default function PlanRuta({ t = (k) => k, lang = "es", usuario = null, ru
             lang={lang}
           />
         </div>
+
+        {/* Ciudades sin aeropuerto */}
+        <details className="mt-3 max-w-md">
+          <summary className="cursor-pointer text-[12.5px] font-semibold text-slate-500 underline underline-offset-2 hover:text-slate-700 dark:text-slate-400">
+            {t("rutaSinAeropuerto")}
+          </summary>
+          <div className="mt-2 flex gap-2">
+            <input
+              type="text"
+              value={textoLibre}
+              onChange={(e) => setTextoLibre(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); buscarLibre(); } }}
+              placeholder={t("rutaSinAeropuertoPlaceholder")}
+              className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] font-semibold text-marca-900 outline-none focus:border-marca-400 sm:text-[14px] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+            />
+            <button
+              type="button"
+              onClick={buscarLibre}
+              disabled={buscandoLibre || textoLibre.trim().length < 2}
+              className="shrink-0 rounded-xl border-[1.5px] border-slate-200 px-3 text-[13px] font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              {buscandoLibre ? "…" : t("rutaBuscar")}
+            </button>
+          </div>
+          {candidatos && candidatos.length === 0 && (
+            <div className="mt-2 text-[12.5px] text-slate-500 dark:text-slate-400">
+              {t("rutaSinAeropuertoVacio")}
+            </div>
+          )}
+          {candidatos && candidatos.length > 0 && (
+            <ul className="mt-2 grid gap-1">
+              {candidatos.map((c, i) => (
+                <li key={`${c.ciudad}-${c.iso}-${i}`}>
+                  <button
+                    type="button"
+                    onClick={() => agregarLibre(c)}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-left text-[13.5px] transition hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700"
+                  >
+                    <span className="font-semibold text-slate-800 dark:text-slate-100">{c.ciudad}</span>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      {c.region ? ` · ${c.region}` : ""}{c.pais ? ` · ${c.pais}` : ""}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </details>
       </div>
 
       {paradas.length > 0 && (
