@@ -24,6 +24,16 @@ export const AFILIADOS = {
   // Mientras este vacio, eSIM/seguro enlazan DIRECTO a Airalo/EKTA (funciona,
   // sin comision) en vez de a un redirect roto.
   tpTrs: "",
+  // --- Transporte terrestre (agregados con el planificador de rutas) ---
+  // Todos OPCIONALES: si estan vacios el enlace lleva igual al buscador, solo
+  // que sin comision. Mismo criterio que Airalo y EKTA.
+  rome2rio: "",     // Rome2Rio afiliado. Multimodal y mundial: tren, bus, ferry,
+                    // carro y vuelo entre CUALQUIER par de ciudades. Es el unico
+                    // que cubre rutas fuera de Europa sin configurar nada.
+  omioPartner: "",  // Omio (https://www.omio.com/partners) - fuerte en tren y bus
+                    // en Europa, comision ~5%.
+  discoverCars: "", // Discover Cars (https://www.discovercars.com/affiliate-program)
+                    // alquiler de carro y moto, comision ~70% del margen.
 };
 
 // ¿Hay al menos un programa configurado? (para decidir si mostrar la nota de afiliados)
@@ -160,4 +170,56 @@ export function linkCivitatis({ ciudad = "", q = "" } = {}) {
 // Civitatis contextual a un lugar específico (busca actividades en esa ciudad).
 export function linkCivitatisCerca({ ciudad = "", nombre = "" } = {}) {
   return linkCivitatis({ ciudad, q: ciudad });
+}
+
+// --- Transporte terrestre entre dos ciudades --------------------------------
+// El detector cubre vuelos, y lib/tramos.js tiene precios curados de tren y bus
+// para 62 tramos. Para TODO lo demas —y para comprar de verdad— hace falta
+// mandar al usuario a alguien con inventario en vivo.
+//
+// Rome2Rio es la base porque acepta nombres de ciudad en la URL y funciona en
+// cualquier parte del mundo, que es lo que hace transversal al planificador:
+// funciona igual para Londres->Birmingham que para Chiang Mai->Bangkok.
+
+function _slugCiudad(s) {
+  return encodeURIComponent(String(s || "").trim().replace(/\s+/g, "-"));
+}
+
+/** Todas las formas de ir de A a B (tren, bus, ferry, carro, vuelo). */
+export function linkTransporte({ desde = "", hasta = "" } = {}) {
+  if (!desde || !hasta) return "https://www.rome2rio.com/";
+  const url = `https://www.rome2rio.com/map/${_slugCiudad(desde)}/${_slugCiudad(hasta)}`;
+  return AFILIADOS.rome2rio
+    ? `${url}?aid=${encodeURIComponent(AFILIADOS.rome2rio)}`
+    : url;
+}
+
+/** Tren entre dos ciudades. Omio si hay afiliado; si no, Rome2Rio. */
+export function linkTren({ desde = "", hasta = "", fecha = "" } = {}) {
+  if (AFILIADOS.omioPartner && desde && hasta) {
+    const p = new URLSearchParams({
+      departurePosition: desde,
+      arrivalPosition: hasta,
+      partner: AFILIADOS.omioPartner,
+    });
+    if (fecha) p.set("departureDate", fecha);
+    return `https://www.omio.com/search?${p.toString()}`;
+  }
+  return linkTransporte({ desde, hasta });
+}
+
+/** Bus entre dos ciudades. Mismo criterio que el tren. */
+export function linkBus({ desde = "", hasta = "", fecha = "" } = {}) {
+  return linkTren({ desde, hasta, fecha });
+}
+
+/** Alquiler de carro o moto en una ciudad. */
+export function linkCarro({ ciudad = "", pais = "", fecha = "" } = {}) {
+  const lugar = [ciudad, pais].filter(Boolean).join(", ");
+  if (AFILIADOS.discoverCars) {
+    const p = new URLSearchParams({ pickup: lugar, a_aid: AFILIADOS.discoverCars });
+    if (fecha) p.set("date_from", fecha);
+    return `https://www.discovercars.com/search?${p.toString()}`;
+  }
+  return `https://www.discovercars.com/${lugar ? `?pickup=${encodeURIComponent(lugar)}` : ""}`;
 }

@@ -22,6 +22,7 @@ export default function NavTop({ active = null }) {
         <nav className="hidden items-center gap-1 md:flex">
           <NavLink href="/destino" active={active === "destinos"}>Destinos</NavLink>
           <NavLink href="/ofertas" active={active === "ofertas"}>Ofertas</NavLink>
+          <NavLink href="/ruta" active={active === "ruta"}>Mi ruta</NavLink>
           <NavLink href="/mis-viajes" active={active === "misviajes"}>Mis viajes</NavLink>
         </nav>
 

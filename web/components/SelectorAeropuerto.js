@@ -377,7 +377,15 @@ export default function SelectorAeropuerto({
       setTextoPais(etiquetaPais(a.pais, lang));
     }
     setAbierto(false);
-    onChange?.({ iata: a.iata, ciudad: a.ciudad, pais: a.pais, nombre: a.nombre });
+    onChange?.({
+      iata: a.iata,
+      ciudad: a.ciudad,
+      pais: a.pais,
+      // Nombre legible del pais ademas del codigo ISO: quien consume esto
+      // suele necesitar "Reino Unido", no "GB".
+      paisNombre: nombrePais(a.pais, lang),
+      nombre: a.nombre,
+    });
   }
 
   function onKeyAeropuerto(e) {
