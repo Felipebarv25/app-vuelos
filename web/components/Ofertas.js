@@ -6,6 +6,7 @@ import { isoDesdeNombre } from "@/lib/requisitos";
 import AlertaPrecio from "./AlertaPrecio";
 import SelectorAeropuerto, { banderaDePais } from "./SelectorAeropuerto";
 import { PAISES_ORIGEN } from "@/lib/paisesOrigen";
+import { obtenerOfertas } from "@/lib/ofertasDatos";
 import { obtenerGeo } from "@/lib/geo";
 
 // Bandera PNG via flagcdn: los emoji de bandera (🇺🇸) NO renderizan en Windows
@@ -168,10 +169,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
 
   useEffect(() => {
     let vivo = true;
-    fetch("/ofertas.json")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => vivo && setData(d))
-      .catch(() => vivo && setData({ rutas: [] }));
+    obtenerOfertas().then((d) => { if (vivo) setData(d); });
     return () => { vivo = false; };
   }, []);
 
@@ -224,6 +222,24 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
         (r) => r.destino === destinoSel.iata || sinAcentos(r.ciudad) === c
       );
     }
+    // Rango de fechas. El selector de la página /ofertas decía "Filtra por
+    // rango de fechas" y el comentario del código decía "filtra las ofertas",
+    // pero `rango` solo se usaba para construir el enlace "Buscar en mis
+    // fechas": la lista nunca se filtraba. Pedir mayo de 2027 devolvía tarjetas
+    // de febrero, como si el filtro no existiera.
+    //
+    // Criterio, siguiendo las etiquetas del formulario ("Fecha ida" / "Fecha
+    // vuelta"): sale en o después de `inicio`, y si tiene regreso, vuelve en o
+    // antes de `fin`. Las fechas son ISO "YYYY-MM-DD", así que se comparan como
+    // texto sin construir Date (y sin líos de zona horaria).
+    if (rango?.inicio && rango?.fin) {
+      filtradas = filtradas.filter((r) => {
+        if (!r.fecha_ida) return false;
+        if (r.fecha_ida < rango.inicio) return false;
+        if (r.fecha_vuelta) return r.fecha_vuelta <= rango.fin;
+        return r.fecha_ida <= rango.fin;
+      });
+    }
     // Orden: mayor descuento primero; si empatan, más reciente primero.
     return [...filtradas].sort((a, b) => {
       if (b.descuento !== a.descuento) return b.descuento - a.descuento;
@@ -231,7 +247,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
       const tb = b.visto ? tsUTC(b.visto) : 0;
       return tb - ta;
     });
-  }, [data, filtro, destinoSel, hubsDelFiltro]);
+  }, [data, filtro, destinoSel, hubsDelFiltro, rango]);
 
   // Busqueda en vivo: solo si el destino elegido NO tiene rutas precalculadas.
   // Si ya las tiene, no se gasta una llamada a Travelpayouts.
@@ -446,6 +462,20 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
           </button>
         )}
       </div>
+
+      {/* Rango de fechas sin ninguna oferta: se dice POR QUE. Antes el filtro
+          no filtraba nada; ahora que sí lo hace, pedir un mes fuera del
+          horizonte del detector dejaría la lista vacía sin explicación. */}
+      {rango?.inicio && rango?.fin && rutas.length === 0 && !destinoSel && (
+        <div className="mt-4 max-w-2xl rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+          <div className="text-[14px] font-bold text-amber-900 dark:text-amber-200">
+            {t("ofertasSinFechas")}
+          </div>
+          <p className="mt-1 text-[13px] leading-relaxed text-amber-800 dark:text-amber-300">
+            {t("ofertasSinFechasAyuda")}
+          </p>
+        </div>
+      )}
 
       {/* Destino elegido sin rutas precalculadas: se consulta en vivo. */}
       {destinoSel && rutas.length === 0 && (

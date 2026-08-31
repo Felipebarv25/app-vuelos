@@ -584,6 +584,9 @@ const T = {
     ofertasFechaIda: "Fecha ida",
     ofertasFechaVuelta: "Fecha vuelta",
     ofertasQuitarFiltro: "Quitar filtro",
+    ofertasVentana: "Tenemos precios detectados de {desde} a {hasta}.",
+    ofertasSinFechas: "No hay ofertas detectadas en esas fechas",
+    ofertasSinFechasAyuda: "Nuestro detector explora los próximos 6 meses. Prueba con fechas dentro de esa ventana, o quita el filtro para ver todo lo que hay.",
     // Requisitos de entrada
     reqTitulo: "Requisitos de entrada a",
     reqTuPasaporte: "Tu pasaporte:",
@@ -1254,6 +1257,9 @@ const T = {
     ofertasFechaIda: "Departure",
     ofertasFechaVuelta: "Return",
     ofertasQuitarFiltro: "Clear filter",
+    ofertasVentana: "We have detected prices from {desde} to {hasta}.",
+    ofertasSinFechas: "No deals detected for those dates",
+    ofertasSinFechasAyuda: "Our detector scans the next 6 months. Try dates inside that window, or clear the filter to see everything we have.",
     // Entry requirements
     reqTitulo: "Entry requirements for",
     reqTuPasaporte: "Your passport:",
@@ -1916,6 +1922,9 @@ const T = {
     ofertasFechaIda: "Data de ida",
     ofertasFechaVuelta: "Data de volta",
     ofertasQuitarFiltro: "Limpar filtro",
+    ofertasVentana: "Temos preços detectados de {desde} a {hasta}.",
+    ofertasSinFechas: "Não há ofertas detectadas nessas datas",
+    ofertasSinFechasAyuda: "Nosso detector explora os próximos 6 meses. Tente datas dentro dessa janela, ou remova o filtro para ver tudo.",
     // Requisitos de entrada
     reqTitulo: "Requisitos de entrada para",
     reqTuPasaporte: "Seu passaporte:",
@@ -2579,6 +2588,9 @@ const T = {
     ofertasFechaIda: "Date d'aller",
     ofertasFechaVuelta: "Date de retour",
     ofertasQuitarFiltro: "Effacer le filtre",
+    ofertasVentana: "Nous avons des prix détectés de {desde} à {hasta}.",
+    ofertasSinFechas: "Aucune offre détectée à ces dates",
+    ofertasSinFechasAyuda: "Notre détecteur explore les 6 prochains mois. Essayez des dates dans cette fenêtre, ou retirez le filtre pour tout voir.",
     // Formalités d'entrée
     reqTitulo: "Formalités d'entrée pour",
     reqTuPasaporte: "Votre passeport :",

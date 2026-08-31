@@ -6,8 +6,9 @@
 // de planificacion.
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "@/lib/AppContext";
+import { obtenerOfertas, ventanaDeFechas } from "@/lib/ofertasDatos";
 import NavTop from "@/components/NavTop";
 import BotonVolver from "@/components/BotonVolver";
 import Ofertas from "@/components/Ofertas";
@@ -19,11 +20,33 @@ import { Icono } from "@/components/Icono";
 // para no penalizar el LCP de la ruta.
 const Asesor = dynamic(() => import("@/components/Asesor"));
 
+// "2026-09-14" -> "septiembre 2026"
+function fmtMes(iso, lang) {
+  if (!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d)) return "";
+  return d.toLocaleDateString(lang, { month: "long", year: "numeric" });
+}
+
 export default function PaginaOfertas() {
   const { t, lang, usuario } = useApp();
   const router = useRouter();
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
+
+  // Hasta dónde llegan los datos. El detector solo explora los próximos 6
+  // meses, así que dejar el selector abierto hasta el infinito invitaba a pedir
+  // fechas que jamás van a tener ofertas: el usuario elegía mayo de 2027 y el
+  // panel le respondía con vuelos de febrero.
+  const [ventana, setVentana] = useState(null);
+  useEffect(() => {
+    let vivo = true;
+    obtenerOfertas().then((d) => { if (vivo) setVentana(ventanaDeFechas(d)); });
+    return () => { vivo = false; };
+  }, []);
+  const hoy = new Date().toISOString().slice(0, 10);
+  const minFecha = ventana && ventana.min > hoy ? ventana.min : hoy;
+  const maxFecha = ventana?.max || undefined;
 
   function planear(q) {
     // Anonimo: /?q= re-renderiza el landing y se pierde la intencion (lectura
@@ -65,6 +88,13 @@ export default function PaginaOfertas() {
                 {t("ofertasCuandoEyebrow")}
               </div>
               <div className="mt-0.5 text-[13.5px] font-bold text-slate-900 dark:text-slate-100">{t("ofertasCuandoLabel")}</div>
+              {ventana && (
+                <div className="mt-0.5 text-[11.5px] text-slate-500 dark:text-slate-400">
+                  {t("ofertasVentana")
+                    .replace("{desde}", fmtMes(ventana.min, lang))
+                    .replace("{hasta}", fmtMes(ventana.max, lang))}
+                </div>
+              )}
             </div>
             <label className="flex flex-col gap-1 text-[12.5px] font-semibold text-slate-600 dark:text-slate-400">
               <span className="inline-flex items-center gap-1.5">
@@ -73,7 +103,8 @@ export default function PaginaOfertas() {
               <input
                 type="date"
                 value={fechaInicio}
-                min={new Date().toISOString().slice(0, 10)}
+                min={minFecha}
+                max={maxFecha}
                 onChange={(e) => setFechaInicio(e.target.value)}
                 className="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-[13.5px] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
               />
@@ -85,7 +116,8 @@ export default function PaginaOfertas() {
               <input
                 type="date"
                 value={fechaFin}
-                min={fechaInicio || new Date().toISOString().slice(0, 10)}
+                min={fechaInicio || minFecha}
+                max={maxFecha}
                 onChange={(e) => setFechaFin(e.target.value)}
                 className="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-[13.5px] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
               />

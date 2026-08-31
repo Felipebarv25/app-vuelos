@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Icono } from "./Icono";
 import { obtenerTasas } from "@/lib/fx";
 import { PAISES_ORIGEN } from "@/lib/paisesOrigen";
+import { obtenerOfertas } from "@/lib/ofertasDatos";
 import { obtenerGeo } from "@/lib/geo";
 
 // Mini-preview de las 3 mejores ofertas que salen del pais del usuario.
@@ -48,10 +49,7 @@ export default function MiniOfertas({ onPlanear, t = (k) => k, lang = "es" }) {
 
   useEffect(() => {
     let vivo = true;
-    fetch("/ofertas.json")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => vivo && setData(d))
-      .catch(() => vivo && setData({ rutas: [] }));
+    obtenerOfertas().then((d) => { if (vivo) setData(d); });
     return () => { vivo = false; };
   }, []);
 
