@@ -79,8 +79,10 @@ export default function PlanRuta({ t = (k) => k, lang = "es", usuario = null, ru
 
     if (!cur) {
       try {
+        // Se manda el ISO, no el nombre: el geocodificador filtra por
+        // countrycode. Con el nombre en español confundía países enteros.
         const r = await fetch(
-          `/api/geocodificar?ciudad=${encodeURIComponent(a.ciudad)}&pais=${encodeURIComponent(a.paisNombre || a.pais || "")}`
+          `/api/geocodificar?ciudad=${encodeURIComponent(a.ciudad)}&iso=${encodeURIComponent(a.pais || "")}`
         );
         const d = r.ok ? await r.json() : null;
         if (d?.encontrado) {
