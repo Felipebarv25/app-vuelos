@@ -5,6 +5,7 @@ import { obtenerTasas } from "@/lib/fx";
 import { isoDesdeNombre } from "@/lib/requisitos";
 import AlertaPrecio from "./AlertaPrecio";
 import SelectorAeropuerto, { banderaDePais } from "./SelectorAeropuerto";
+import { PAISES_ORIGEN } from "@/lib/paisesOrigen";
 
 // Bandera PNG via flagcdn: los emoji de bandera (🇺🇸) NO renderizan en Windows
 // (segoe UI emoji no incluye flags) y se ven como "us" — lo que confunde al
@@ -60,7 +61,15 @@ function linkMisFechas(r, rango) {
 const LOTE = 12; // tarjetas por lote inicial y por "Ver más"
 // Hubs colombianos del radar. CLO y CTG se sumaron despues, y el filtro
 // "Colombia" seguia mirando solo BOG/MDE.
-const HUBS_CO = ["BOG", "MDE", "CLO", "CTG"];
+// IATA -> pais, derivado de lib/paisesOrigen.js. Antes esto era
+// HUBS_CO = ["BOG","MDE","CLO","CTG"] y el filtro solo ofrecia Colombia,
+// aunque ofertas.json trae 13 origenes de 10 paises: un usuario en Mexico,
+// Madrid o Buenos Aires no tenia forma de ver los vuelos que salen de SU
+// ciudad, y el filtro por defecto ("colombia") le escondia el 81% de las rutas.
+const PAIS_DE_HUB = {};
+for (const [cc, info] of Object.entries(PAISES_ORIGEN || {})) {
+  for (const h of info.hubs || []) PAIS_DE_HUB[h.iata] = cc;
+}
 // Compara nombres de ciudad ignorando acentos ("Bogota" == "Bogotá").
 function sinAcentos(s) {
   return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -93,7 +102,10 @@ function nombreAerolinea(cod) {
 // pero conserva el chip de frescura y el toggle USD/COP.
 export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = null, sinCabecera = false }) {
   const [data, setData] = useState(null);
-  const [filtro, setFiltro] = useState("colombia"); // colombia | BOG | MDE | todos
+  // "todos" | codigo de pais ISO ("CO", "MX"…) | IATA de un hub ("BOG").
+  // Arranca en "todos" y se ajusta al pais del usuario cuando se detecta.
+  const [filtro, setFiltro] = useState("todos");
+  const [paisUsuario, setPaisUsuario] = useState("");
   // Busqueda por ciudad destino (feedback 2026-07-11: "si busco una ciudad
   // en especial quiero poderla filtrar").
   //
@@ -139,6 +151,21 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
     return () => { vivo = false; };
   }, []);
 
+  // Pais del usuario: primero lo que eligio a mano en el planificador, y si no
+  // hay nada, la geolocalizacion por IP. Determina que chip sale marcado al
+  // abrir, para que cada quien vea primero los vuelos que salen de su pais.
+  useEffect(() => {
+    let vivo = true;
+    let guardado = "";
+    try { guardado = localStorage.getItem("anduve_pais_origen") || ""; } catch {}
+    if (guardado) { setPaisUsuario(guardado); return; }
+    fetch("/api/geo")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((g) => { if (vivo && g?.pais) setPaisUsuario(g.pais); })
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, []);
+
   useEffect(() => {
     let vivo = true;
     fetch("/ofertas.json")
@@ -148,14 +175,46 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
     return () => { vivo = false; };
   }, []);
 
+  // Origenes que REALMENTE tienen rutas hoy, agrupados por pais. Los chips se
+  // construyen de aqui en vez de estar escritos a mano, asi que cuando el
+  // detector suma un origen nuevo aparece solo.
+  const paisesConRutas = useMemo(() => {
+    const list = data?.rutas || [];
+    const porPais = new Map();
+    for (const r of list) {
+      const cc = PAIS_DE_HUB[r.origen];
+      if (!cc) continue;
+      if (!porPais.has(cc)) porPais.set(cc, { cc, hubs: new Set(), n: 0 });
+      const e = porPais.get(cc);
+      e.hubs.add(r.origen);
+      e.n++;
+    }
+    return [...porPais.values()]
+      .map((e) => ({ ...e, hubs: [...e.hubs] }))
+      // El pais del usuario primero; el resto por cantidad de rutas.
+      .sort((a, b) => (a.cc === paisUsuario ? -1 : b.cc === paisUsuario ? 1 : b.n - a.n));
+  }, [data, paisUsuario]);
+
+  // Al conocer el pais del usuario, si tiene rutas se marca su chip.
+  useEffect(() => {
+    if (!paisUsuario || !paisesConRutas.length) return;
+    if (paisesConRutas.some((p) => p.cc === paisUsuario)) setFiltro(paisUsuario);
+  }, [paisUsuario, paisesConRutas]);
+
+  // Hubs que corresponden al filtro activo.
+  const hubsDelFiltro = useMemo(() => {
+    if (filtro === "todos") return [];
+    if (filtro.length === 2) {
+      const p = paisesConRutas.find((x) => x.cc === filtro);
+      return p ? p.hubs : [];
+    }
+    return [filtro];
+  }, [filtro, paisesConRutas]);
+
   const rutas = useMemo(() => {
     const list = data?.rutas || [];
     let filtradas =
-      filtro === "todos" ? list
-      // Los 4 hubs colombianos: CLO y CTG se sumaron al radar y este filtro
-      // seguia mirando solo BOG y MDE, asi que sus ofertas quedaban invisibles.
-      : filtro === "colombia" ? list.filter((r) => HUBS_CO.includes(r.origen))
-      : list.filter((r) => r.origen === filtro);
+      filtro === "todos" ? list : list.filter((r) => hubsDelFiltro.includes(r.origen));
     // Destino elegido en el combobox. Se casa primero por IATA y si no, por
     // nombre de ciudad sin acentos: el JSON usa codigos de CIUDAD (TYO, BUE) y
     // el catalogo devuelve codigos de AEROPUERTO (NRT, EZE), que no coinciden.
@@ -172,7 +231,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
       const tb = b.visto ? tsUTC(b.visto) : 0;
       return tb - ta;
     });
-  }, [data, filtro, destinoSel]);
+  }, [data, filtro, destinoSel, hubsDelFiltro]);
 
   // Busqueda en vivo: solo si el destino elegido NO tiene rutas precalculadas.
   // Si ya las tiene, no se gasta una llamada a Travelpayouts.
@@ -181,15 +240,20 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
     if (!destinoSel || rutas.length > 0) return;
     let activo = true;
     setCargandoVivo(true);
-    // El endpoint acepta hasta 3 origenes; si el filtro es "todos" usa su default.
-    const orig = filtro === "todos" ? "" : filtro === "colombia" ? "BOG,MDE,CLO" : filtro;
+    // El endpoint acepta hasta 3 origenes. Se mandan los hubs del filtro activo;
+    // con "todos" se manda el hub del pais del usuario si se conoce, para no
+    // caer en el default del servidor (BOG,MDE), que le devolvia precios desde
+    // Colombia a un usuario de cualquier otro pais.
+    const delPais = paisesConRutas.find((x) => x.cc === paisUsuario);
+    const lista = hubsDelFiltro.length ? hubsDelFiltro : delPais ? delPais.hubs : [];
+    const orig = lista.slice(0, 3).join(",");
     fetch(`/api/vuelo-vivo?iata=${destinoSel.iata}${orig ? `&origenes=${orig}` : ""}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (activo) setVivo(d?.encontrado ? d : { encontrado: false }); })
       .catch(() => { if (activo) setVivo({ encontrado: false }); })
       .finally(() => { if (activo) setCargandoVivo(false); });
     return () => { activo = false; };
-  }, [destinoSel, rutas.length, filtro]);
+  }, [destinoSel, rutas.length, filtro, hubsDelFiltro, paisesConRutas, paisUsuario]);
 
   // Mejor precio y menor duracion POR DESTINO entre las tarjetas visibles.
   //
@@ -314,14 +378,17 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
           ))}
         </div>
 
-        {/* Filtro de origen: Colombia (BOG+MDE) es el default para que el
-            título sea coherente; "Todos" expande a ofertas internacionales. */}
+        {/* Filtro de origen. Se arma con los paises que TIENEN rutas hoy, con el
+            del usuario de primero. Antes estaba escrito a mano con Colombia,
+            Bogotá y Medellín, asi que quien viviera en cualquier otro de los 10
+            paises detectados no podia ver los vuelos que salen de su ciudad. */}
         <div className="flex gap-1 overflow-x-auto rounded-full bg-slate-100 p-1 dark:bg-slate-700">
           {[
-            ["colombia", "Colombia"],
-            ["BOG", origenes.BOG || "Bogotá"],
-            ["MDE", origenes.MDE || "Medellín"],
             ["todos", t("ofertasTodos")],
+            ...paisesConRutas.map((p) => [
+              p.cc,
+              `${PAISES_ORIGEN[p.cc]?.bandera || ""} ${PAISES_ORIGEN[p.cc]?.nombre || p.cc}`.trim(),
+            ]),
           ].map(([k, label]) => (
             <button
               key={k}
@@ -334,6 +401,27 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
             </button>
           ))}
         </div>
+
+        {/* Segunda fila: los hubs del país elegido, cuando tiene más de uno. */}
+        {hubsDelFiltro.length > 1 && (
+          <div className="flex gap-1 overflow-x-auto rounded-full bg-slate-50 p-1 dark:bg-slate-800">
+            {[[filtro, t("ofertasTodos")], ...hubsDelFiltro.map((h) => [h, origenes[h] || h])].map(
+              ([k, label], i) => (
+                <button
+                  key={`${k}-${i}`}
+                  onClick={() => { setFiltro(k); setVisibles(LOTE); }}
+                  className={`shrink-0 rounded-full px-3 py-1 text-[12px] font-semibold transition ${
+                    filtro === k
+                      ? "bg-white text-marca-700 shadow-sm dark:bg-slate-600 dark:text-marca-300"
+                      : "text-slate-500 dark:text-slate-400"
+                  }`}
+                >
+                  {label}
+                </button>
+              )
+            )}
+          </div>
+        )}
       </div>
 
       {/* Buscador por destino: combobox sobre el catalogo IATA completo, el mismo
@@ -341,6 +429,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
           solo las ~125 rutas ya detectadas. */}
       <div className="mt-4 max-w-md">
         <SelectorAeropuerto
+          filtroPais={false}
           value={destinoSel?.iata || ""}
           onChange={(a) => { setDestinoSel(a); setVisibles(LOTE); }}
           placeholder={t("ofertasBuscarCiudad")}

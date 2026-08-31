@@ -18,23 +18,34 @@ function mediana(nums) {
   return m % 2 ? ord[(m - 1) / 2] : Math.round((ord[m / 2 - 1] + ord[m / 2]) / 2);
 }
 
-let CACHE = null;
+// Origen por defecto cuando quien llama no sabe desde dónde vuela el lector:
+// las páginas SEO de /destino/<slug> son estáticas y no conocen al visitante.
+// Son los hubs de Colombia, el mercado principal de la app. La página DEBE
+// decir desde dónde son esos precios; mezclar mercados no es opción porque el
+// calendario muestra precios absolutos y un MAD→Barcelona de US$50 junto a un
+// BOG→Barcelona de US$600 daría una cifra que no le sirve a nadie.
+export const ORIGENES_POR_DEFECTO = ["BOG", "MDE", "CLO", "CTG"];
 
-// Lee el CSV una vez y devuelve {IATA: {"YYYY-MM": [precios]}}.
-// Solo guarda los últimos 90 días (consultas frescas) y solo origen BOG/MDE.
-async function cargarBruto() {
-  if (CACHE) return CACHE;
+// Caché por conjunto de orígenes: antes era una sola y el filtro estaba fijo
+// dentro del parseo, así que /alertas/[id] no podía pedir otros orígenes.
+const CACHE = new Map();
+
+// Lee el CSV y devuelve {IATA: {"YYYY-MM": [precios]}} para los orígenes
+// pedidos. Solo los últimos 90 días.
+async function cargarBruto(origenes) {
+  const clave = [...origenes].sort().join(",");
+  if (CACHE.has(clave)) return CACHE.get(clave);
   let txt;
   try {
     txt = await fs.readFile(CSV_PATH, "utf8");
   } catch {
-    CACHE = {};
-    return CACHE;
+    CACHE.set(clave, {});
+    return {};
   }
   const lineas = txt.split(/\r?\n/);
   if (lineas.length < 2) {
-    CACHE = {};
-    return CACHE;
+    CACHE.set(clave, {});
+    return {};
   }
   // Cabecera: timestamp,origen,destino,fecha_ida,fecha_vuelta,precio,moneda,aerolinea
   const datos = {};
@@ -49,21 +60,22 @@ async function cargarBruto() {
     const ida = fila[3];
     const precio = Number(fila[5]);
     if (!destino || !ida || !precio || precio <= 0) continue;
-    if (origen !== "BOG" && origen !== "MDE") continue;
+    if (!origenes.includes(origen)) continue;
     const ym = ida.slice(0, 7); // "YYYY-MM"
     if (!/^\d{4}-\d{2}$/.test(ym)) continue;
     if (!datos[destino]) datos[destino] = {};
     if (!datos[destino][ym]) datos[destino][ym] = [];
     datos[destino][ym].push(precio);
   }
-  CACHE = datos;
-  return CACHE;
+  CACHE.set(clave, datos);
+  return datos;
 }
 
 // Devuelve para un IATA destino: { meses: [{ym, label, precio, mejor:bool}], mejor:{ym,precio,label}, peor:{...} }
 // O null si no hay datos.
-export async function preciosPorMes(iata) {
-  const bruto = await cargarBruto();
+export async function preciosPorMes(iata, origenes = ORIGENES_POR_DEFECTO) {
+  const lista = Array.isArray(origenes) && origenes.length ? origenes : ORIGENES_POR_DEFECTO;
+  const bruto = await cargarBruto(lista);
   const porMes = bruto[iata];
   if (!porMes) return null;
 

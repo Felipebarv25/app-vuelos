@@ -3,13 +3,15 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Icono } from "./Icono";
 import { obtenerTasas } from "@/lib/fx";
+import { PAISES_ORIGEN } from "@/lib/paisesOrigen";
 
-// Mini-preview de las 3 mejores ofertas desde Colombia (BOG + MDE).
+// Mini-preview de las 3 mejores ofertas que salen del pais del usuario.
 // Misma lógica de ordenamiento que Ofertas.js: mayor descuento primero,
 // desempatando por más reciente. Comparte la preferencia USD/COP del usuario
 // vía localStorage (clave "anduve_moneda_vista").
 export default function MiniOfertas({ onPlanear, t = (k) => k, lang = "es" }) {
   const [data, setData] = useState(null);
+  const [paisUsuario, setPaisUsuario] = useState("");
   const [copPorUsd, setCopPorUsd] = useState(4000);
   const [monedaVista, setMonedaVista] = useState("USD");
 
@@ -24,6 +26,19 @@ export default function MiniOfertas({ onPlanear, t = (k) => k, lang = "es" }) {
     setMonedaVista(m);
     try { localStorage.setItem("anduve_moneda_vista", m); } catch {}
   }
+
+  // Pais del usuario: su eleccion guardada primero, si no la geolocalizacion.
+  useEffect(() => {
+    let vivo = true;
+    let guardado = "";
+    try { guardado = localStorage.getItem("anduve_pais_origen") || ""; } catch {}
+    if (guardado) { setPaisUsuario(guardado); return; }
+    fetch("/api/geo")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((g) => { if (vivo && g?.pais) setPaisUsuario(g.pais); })
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, []);
 
   useEffect(() => {
     let vivo = true;
@@ -41,9 +56,15 @@ export default function MiniOfertas({ onPlanear, t = (k) => k, lang = "es" }) {
   }, []);
 
   const top3 = useMemo(() => {
-    const list = (data?.rutas || []).filter(
-      (r) => r.origen === "BOG" || r.origen === "MDE"
-    );
+    // Antes esto era `r.origen === "BOG" || r.origen === "MDE"`, que tiraba el
+    // 81% de las rutas y le mostraba vuelos desde Colombia a un usuario de
+    // cualquier otro pais. Ahora se filtra por los hubs del pais del usuario, y
+    // si su pais no tiene rutas detectadas se muestran todas en vez de dejar el
+    // banner vacio (el `return null` de abajo lo hacia desaparecer entero).
+    const todas = data?.rutas || [];
+    const hubs = (PAISES_ORIGEN[paisUsuario]?.hubs || []).map((h) => h.iata);
+    const propias = hubs.length ? todas.filter((r) => hubs.includes(r.origen)) : [];
+    const list = propias.length ? propias : todas;
     return [...list]
       .sort((a, b) => {
         if (b.descuento !== a.descuento) return b.descuento - a.descuento;
@@ -52,7 +73,7 @@ export default function MiniOfertas({ onPlanear, t = (k) => k, lang = "es" }) {
         return tb - ta;
       })
       .slice(0, 3);
-  }, [data]);
+  }, [data, paisUsuario]);
 
   if (!data || !top3.length) return null;
 

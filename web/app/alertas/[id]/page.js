@@ -44,7 +44,15 @@ export default async function AlertaDetalle({ params }) {
     );
   }
 
-  const datos = await preciosPorMes(alerta.iata);
+  // Los precios se calculan desde los origenes de ESTA alerta, no desde un
+  // conjunto fijo. Antes historialPrecios ignoraba todo lo que no fuera BOG o
+  // MDE, asi que una alerta creada desde Madrid o Ciudad de Mexico comparaba
+  // su umbral contra precios de vuelos colombianos.
+  const origenesAlerta = String(alerta.origen || "")
+    .split(",")
+    .map((x) => x.trim().toUpperCase())
+    .filter((x) => /^[A-Z]{3}$/.test(x));
+  const datos = await preciosPorMes(alerta.iata, origenesAlerta.length ? origenesAlerta : undefined);
   const tieneDatos = datos && datos.meses && datos.meses.length >= 2;
 
   // Calculos para resumen — promedio y comparacion vs umbral.

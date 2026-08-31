@@ -671,7 +671,8 @@ function CalendarioPrecios({ historial, ciudad }) {
         ¿Cuándo es más barato volar a {ciudad}?
       </h2>
       <p className="mt-1 text-slate-500">
-        Precio mediano de vuelo i/v por mes según nuestro detector (últimos 90 días).
+        Precio mediano de vuelo i/v por mes según nuestro detector (últimos 90 días),
+        <b> saliendo desde Colombia</b> (Bogotá, Medellín, Cali o Cartagena).
       </p>
 
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">

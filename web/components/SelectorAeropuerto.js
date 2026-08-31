@@ -226,6 +226,16 @@ export default function SelectorAeropuerto({
   ariaLabel,
   className = "",
   lang = "es",
+  // filtroPais=false: modo BUSQUEDA LIBRE, sin el campo de pais y sin quedarse
+  // anclado al pais de lo ultimo que elegiste.
+  //
+  // El componente nacio para el planificador, donde eliges tu ORIGEN y tiene
+  // sentido que pais y aeropuerto queden consistentes. Pero /ofertas lo usa
+  // para buscar DESTINOS, y ahi el anclaje rompia la funcion entera: elegias
+  // Madrid, el selector se quedaba en "España", y al buscar "Cancún" respondia
+  // "Ningún aeropuerto coincide en España". O sea, solo se podia buscar una
+  // ciudad por sesion y la segunda busqueda siempre fallaba.
+  filtroPais = true,
 }) {
   const [catalogo, setCatalogo] = useState([]);
 
@@ -258,7 +268,7 @@ export default function SelectorAeropuerto({
     const a = catalogo.find((x) => x.iata === value);
     if (a) {
       setTexto(`${a.ciudad} (${a.iata})`);
-      setPaisFiltro(a.pais);
+      if (filtroPais) setPaisFiltro(a.pais);
     }
   }, [value, catalogo]);
 
@@ -362,8 +372,10 @@ export default function SelectorAeropuerto({
   // --- handlers aeropuerto ---
   function elegirAeropuerto(a) {
     setTexto(`${a.ciudad} (${a.iata})`);
-    setPaisFiltro(a.pais);
-    setTextoPais(etiquetaPais(a.pais, lang));
+    if (filtroPais) {
+      setPaisFiltro(a.pais);
+      setTextoPais(etiquetaPais(a.pais, lang));
+    }
     setAbierto(false);
     onChange?.({ iata: a.iata, ciudad: a.ciudad, pais: a.pais, nombre: a.nombre });
   }
@@ -390,9 +402,13 @@ export default function SelectorAeropuerto({
   }
 
   return (
-    <div className={`grid grid-cols-1 gap-2 sm:grid-cols-[1fr_2fr] ${className}`}>
+    <div
+      className={`grid grid-cols-1 gap-2 ${filtroPais ? "sm:grid-cols-[1fr_2fr]" : ""} ${className}`}
+    >
       {/* ====== Combobox de país ====== */}
-      <div ref={cajaPaisRef} className="relative">
+      {/* En modo búsqueda libre no se muestra: no hay un "país de salida" que
+          elegir, y dejarlo visible además anclaba la búsqueda a ese país. */}
+      <div ref={cajaPaisRef} className={`relative ${filtroPais ? "" : "hidden"}`}>
         <input
           ref={paisInputRef}
           type="text"
