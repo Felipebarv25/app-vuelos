@@ -75,6 +75,21 @@ export function costoDiario(ciudad, pais, region = null) {
   return { usd: DIA_GLOBAL, fuente: "global" };
 }
 
+/**
+ * Nombre del país en español, que es como se indexan el catálogo curado y la
+ * tabla de tramos ("Reino Unido", no "GB").
+ *
+ * Hace falta porque las paradas del planificador vienen del catálogo de
+ * aeropuertos, que trae el país en ISO. Sin esto, "Londres|GB" no casaba con
+ * "Londres|Reino Unido" y el efecto era doble y silencioso: NINGÚN tramo curado
+ * se aplicaba (Madrid-Barcelona perdía el AVE y caía a estimación), y el costo
+ * diario de TODAS las ciudades caía al global — Londres se cobraba a US$85 en
+ * vez de a US$170.
+ */
+function nombreDePais(p) {
+  return p?.paisNombre || p?.pais || "";
+}
+
 /** Coordenadas desde el catálogo curado. null si toca geocodificar. */
 export function coordsCuradas(ciudad, pais) {
   const d = PorCiudad.get(`${norm(ciudad)}|${norm(pais)}`);
@@ -127,7 +142,12 @@ export function evaluarTramo({ desde, hasta, vueloReal = null }) {
   }
 
   // 2) tabla curada de trenes/buses  3) estimación geométrica
-  const r = costoTramoReal(desde, hasta, km);
+  // La tabla se indexa por nombre de país, no por ISO.
+  const r = costoTramoReal(
+    { ...desde, pais: nombreDePais(desde) },
+    { ...hasta, pais: nombreDePais(hasta) },
+    km
+  );
   return {
     medio: r.medio,
     precio: Math.round(r.precio),
@@ -208,7 +228,7 @@ export function resumenRuta({ paradas = [], tramos = [], viajeros = 1 }) {
   let estadia = 0;
   for (const p of paradas.slice(1)) {
     const noches = Math.max(0, Number(p.noches) || 0);
-    const cd = costoDiario(p.ciudad, p.pais, p.region);
+    const cd = costoDiario(p.ciudad, nombreDePais(p), p.region);
     const sub = noches * cd.usd;
     estadia += sub;
     porCiudad.push({

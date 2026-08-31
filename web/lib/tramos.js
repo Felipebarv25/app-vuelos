@@ -20,7 +20,10 @@ function llaveBi(a, b) {
 }
 
 // medio: tren | bus | vuelo | ferry
-// duracion_h: tiempo total puerta a puerta aproximado
+// duracion_h: tiempo del TRAYECTO (estacion a estacion, o el vuelo), NO puerta
+//   a puerta: el AVE Madrid-Barcelona son 2,5 h de tren y Lima-Cusco 1,4 h de
+//   vuelo. Quien necesite puerta a puerta le suma el traslado aparte, como
+//   hace puertaAPuerta() en lib/rutaViva.js.
 // precio_usd: rango realista por persona con 2 sem de anticipación (mediana)
 // operador: nombre de marca cuando ayuda (AVE, TGV, Eurostar...)
 const TRAMOS = {
@@ -90,6 +93,34 @@ const TRAMOS = {
 
   // ----------------- UK -----------------
   "Londres|Reino Unido→Edimburgo|Reino Unido": { medio: "tren", operador: "LNER", precio_usd: 90, duracion_h: 4.4 },
+
+  // ----------------- Reino Unido (curado 2026-08-31) -----------------
+  // Tarifas Advance de 2+ semanas, clase estandar, por persona y por trayecto,
+  // convertidas de libras a USD. La franja alta de estas rutas es mucho mas
+  // cara comprando el mismo dia: el Advance es justamente lo que hace que el
+  // tren le gane al avion dentro de la isla.
+  // duracion_h es tiempo de TREN, estacion a estacion; el planificador le suma
+  // aparte el traslado a la estacion para el puerta a puerta.
+  "Londres|Reino Unido→Birmingham|Reino Unido": { medio: "tren", operador: "Avanti West Coast", precio_usd: 28, duracion_h: 1.4 },
+  "Birmingham|Reino Unido→Manchester|Reino Unido": { medio: "tren", operador: "Avanti West Coast", precio_usd: 24, duracion_h: 1.6 },
+  "Manchester|Reino Unido→Liverpool|Reino Unido": { medio: "tren", operador: "Northern", precio_usd: 15, duracion_h: 0.8 },
+  "Liverpool|Reino Unido→Edimburgo|Reino Unido": { medio: "tren", operador: "TransPennine", precio_usd: 45, duracion_h: 3.6 },
+  "Edimburgo|Reino Unido→York|Reino Unido": { medio: "tren", operador: "LNER", precio_usd: 38, duracion_h: 2.5 },
+  "York|Reino Unido→Londres|Reino Unido": { medio: "tren", operador: "LNER", precio_usd: 45, duracion_h: 2.0 },
+
+  // Otros tramos britanicos frecuentes, para que la tabla no sirva solo a una
+  // ruta concreta.
+  "Londres|Reino Unido→Manchester|Reino Unido": { medio: "tren", operador: "Avanti West Coast", precio_usd: 38, duracion_h: 2.2 },
+  "Londres|Reino Unido→Liverpool|Reino Unido": { medio: "tren", operador: "Avanti West Coast", precio_usd: 38, duracion_h: 2.3 },
+  "Londres|Reino Unido→Oxford|Reino Unido": { medio: "tren", operador: "GWR", precio_usd: 22, duracion_h: 1.0 },
+  "Londres|Reino Unido→Cambridge|Reino Unido": { medio: "tren", operador: "Great Northern", precio_usd: 22, duracion_h: 1.1 },
+  "Londres|Reino Unido→Glasgow|Reino Unido": { medio: "tren", operador: "Avanti West Coast", precio_usd: 60, duracion_h: 4.6 },
+  "Edimburgo|Reino Unido→Glasgow|Reino Unido": { medio: "tren", operador: "ScotRail", precio_usd: 14, duracion_h: 0.8 },
+  "Manchester|Reino Unido→Edimburgo|Reino Unido": { medio: "tren", operador: "TransPennine", precio_usd: 42, duracion_h: 3.3 },
+  "Manchester|Reino Unido→York|Reino Unido": { medio: "tren", operador: "TransPennine", precio_usd: 22, duracion_h: 1.4 },
+  "Birmingham|Reino Unido→Liverpool|Reino Unido": { medio: "tren", operador: "Northern", precio_usd: 24, duracion_h: 1.7 },
+  "Birmingham|Reino Unido→York|Reino Unido": { medio: "tren", operador: "CrossCountry", precio_usd: 32, duracion_h: 2.4 },
+  "Liverpool|Reino Unido→York|Reino Unido": { medio: "tren", operador: "TransPennine", precio_usd: 28, duracion_h: 2.3 },
 
   // ----------------- Mediterráneo / Grecia / Turquía -----------------
   "Atenas|Grecia→Estambul|Turquía": { medio: "vuelo", operador: "low-cost", precio_usd: 90, duracion_h: 1.7 },
