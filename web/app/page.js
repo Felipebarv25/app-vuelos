@@ -34,6 +34,7 @@ import { registrarEvento, obtenerRecomendaciones } from "@/lib/perfil";
 import { useBrowserBackClose } from "@/lib/useBrowserBack";
 import MenuUsuario from "@/components/MenuUsuario";
 import FooterAnduve from "@/components/FooterAnduve";
+import { obtenerGeo } from "@/lib/geo";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
 // Tab bar mobile cargado lazy (solo importa en mobile, pero igual no es
@@ -544,8 +545,7 @@ export default function Home() {
         return;
       }
     } catch {}
-    fetch("/api/geo")
-      .then((r) => (r.ok ? r.json() : null))
+    obtenerGeo()
       .then((g) => {
         if (!vivo) return;
         const iso = g?.pais || "CO";

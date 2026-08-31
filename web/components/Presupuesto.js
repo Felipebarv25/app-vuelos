@@ -21,6 +21,7 @@ import { linkVuelos, linkGoogleFlights, linkHoteles } from "@/lib/afiliados";
 import { obtenerTasas, aUsdDe } from "@/lib/fx";
 import { PAISES_ORIGEN, PAISES_ORDEN, PAIS_DEFAULT, paisValido, nombreDeIATA } from "@/lib/paisesOrigen";
 import SelectorAeropuerto, { banderaDePais } from "./SelectorAeropuerto";
+import { obtenerGeo } from "@/lib/geo";
 
 // Módulo "¿Adónde puedo ir con mi presupuesto?".
 // Dos modos:
@@ -127,8 +128,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
 
     // 2) Detectar por IP. Si la geo del usuario coincide con un pais soportado,
     // lo elegimos por defecto. Si no, queda Colombia.
-    fetch("/api/geo")
-      .then((r) => (r.ok ? r.json() : null))
+    obtenerGeo()
       .then((g) => {
         if (!vivo) return;
         const pais = g?.pais && paisValido(g.pais) ? g.pais : PAIS_DEFAULT;

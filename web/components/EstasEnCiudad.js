@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { track } from "@/lib/track";
 import { musicaPara, linkSpotify } from "@/lib/musica";
 import { Icono } from "./Icono";
+import { obtenerGeo } from "@/lib/geo";
 
 // ISO -> nombre del pais para armar el query "Medellín, Colombia" que el
 // geocodificador resuelve sin ambiguedad.
@@ -29,8 +30,7 @@ export default function EstasEnCiudad({ t = (k) => k, onCrear, onEventos = null,
 
   useEffect(() => {
     let vivo = true;
-    fetch("/api/geo")
-      .then((r) => (r.ok ? r.json() : null))
+    obtenerGeo()
       .then((g) => {
         if (!vivo || !g?.ciudad) return;
         setGeo({ ciudad: g.ciudad, pais: PAIS_NOMBRE[g.pais] || "", iso: g.pais || "" });

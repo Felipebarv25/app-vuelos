@@ -20,6 +20,7 @@ import { useBrowserBackClose } from "@/lib/useBrowserBack";
 import { PAISES_ORIGEN, PAIS_DEFAULT, paisValido } from "@/lib/paisesOrigen";
 import { monedaDePais } from "@/lib/monedas";
 import PrecioDual from "./PrecioDual";
+import { obtenerGeo } from "@/lib/geo";
 
 // Normaliza para comparar nombres de ciudad ("Medellín" vs "Medellin").
 function _norm(s) {
@@ -63,8 +64,7 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
       }
     } catch {}
     // 2) ciudad detectada por IP -> hub que coincida por nombre
-    fetch("/api/geo")
-      .then((r) => (r.ok ? r.json() : null))
+    obtenerGeo()
       .then((g) => {
         if (!vivo) return;
         const c = _norm(g?.ciudad);

@@ -6,6 +6,7 @@ import { isoDesdeNombre } from "@/lib/requisitos";
 import AlertaPrecio from "./AlertaPrecio";
 import SelectorAeropuerto, { banderaDePais } from "./SelectorAeropuerto";
 import { PAISES_ORIGEN } from "@/lib/paisesOrigen";
+import { obtenerGeo } from "@/lib/geo";
 
 // Bandera PNG via flagcdn: los emoji de bandera (🇺🇸) NO renderizan en Windows
 // (segoe UI emoji no incluye flags) y se ven como "us" — lo que confunde al
@@ -159,8 +160,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
     let guardado = "";
     try { guardado = localStorage.getItem("anduve_pais_origen") || ""; } catch {}
     if (guardado) { setPaisUsuario(guardado); return; }
-    fetch("/api/geo")
-      .then((r) => (r.ok ? r.json() : null))
+    obtenerGeo()
       .then((g) => { if (vivo && g?.pais) setPaisUsuario(g.pais); })
       .catch(() => {});
     return () => { vivo = false; };

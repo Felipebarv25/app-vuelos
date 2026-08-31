@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Icono } from "./Icono";
 import { obtenerTasas } from "@/lib/fx";
 import { PAISES_ORIGEN } from "@/lib/paisesOrigen";
+import { obtenerGeo } from "@/lib/geo";
 
 // Mini-preview de las 3 mejores ofertas que salen del pais del usuario.
 // Misma lógica de ordenamiento que Ofertas.js: mayor descuento primero,
@@ -33,8 +34,7 @@ export default function MiniOfertas({ onPlanear, t = (k) => k, lang = "es" }) {
     let guardado = "";
     try { guardado = localStorage.getItem("anduve_pais_origen") || ""; } catch {}
     if (guardado) { setPaisUsuario(guardado); return; }
-    fetch("/api/geo")
-      .then((r) => (r.ok ? r.json() : null))
+    obtenerGeo()
       .then((g) => { if (vivo && g?.pais) setPaisUsuario(g.pais); })
       .catch(() => {});
     return () => { vivo = false; };
