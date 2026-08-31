@@ -189,7 +189,7 @@ const T = {
     landingFeat1Sub: "Plan día a día con mapa Leaflet, GPS en vivo, transporte real (OSRM) y fotos de Wikipedia. 200+ ciudades del mundo.",
     landingFeat1Cta: "Ver ejemplo: París",
     landingFeat2Tit: "Vuelos baratos en vivo",
-    landingFeat2Sub: "Detector que escanea Aviasales cada hora desde Bogotá y Medellín. Precios reales, sin estimaciones.",
+    landingFeat2Sub: "Detector que escanea Aviasales cada hora desde los principales hubs de tu país. Precios reales, sin estimaciones.",
     landingFeat2Cta: "Ver ofertas en vivo",
     landingFeat3Tit: "Alertas por email",
     landingFeat3Sub: "Define un precio objetivo. Te avisamos apenas un vuelo baje hasta ahí. No revises tú, te avisamos nosotros.",
