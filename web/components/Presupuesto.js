@@ -21,6 +21,7 @@ import { linkVuelos, linkGoogleFlights, linkHoteles } from "@/lib/afiliados";
 import { obtenerTasas, aUsdDe } from "@/lib/fx";
 import { PAISES_ORIGEN, PAISES_ORDEN, PAIS_DEFAULT, paisValido, nombreDeIATA } from "@/lib/paisesOrigen";
 import SelectorAeropuerto, { banderaDePais } from "./SelectorAeropuerto";
+import SelectorCiudad from "./SelectorCiudad";
 import { obtenerGeo } from "@/lib/geo";
 
 // Módulo "¿Adónde puedo ir con mi presupuesto?".
@@ -329,6 +330,9 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   // (limitante: si eliges Europa no podias arrancar en Sudamerica). Si el
   // usuario elige una ciudad fuera de la region actual, auto-cambiamos la
   // region para mantener la ruta coherente.
+  // Lista plana de todas las ciudades, para el buscador de ciudad de inicio.
+  const ciudadesTodas = useMemo(() => ciudadesDeRegion("todas"), []);
+
   const ciudadesPorRegion = useMemo(() => {
     const todas = ciudadesDeRegion("todas");
     const grupos = {};
@@ -683,38 +687,27 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
             {modo === "ruta" && (
               <div>
                 <Label>{t("presupDesdeCiudad")}</Label>
-                <select
+                {/* Antes: <select> con las 207 ciudades agrupadas por región,
+                    sin forma de escribir para filtrar. Ahora se busca. */}
+                <SelectorCiudad
+                  catalogo={ciudadesTodas}
                   value={inicio}
-                  onChange={(e) => {
-                    const llave = e.target.value;
+                  claveDe={llaveCiudad}
+                  onChange={(c) => {
+                    const llave = c ? llaveCiudad(c) : "";
                     setInicio(llave);
                     setSemilla(0);
-                    if (llave) {
-                      // Encuentra a que region pertenece la ciudad elegida y
-                      // sincroniza la region de destino si es distinta.
-                      for (const r of Object.keys(ciudadesPorRegion)) {
-                        if (ciudadesPorRegion[r].some((c) => llaveCiudad(c) === llave)) {
-                          if (r !== region && REGIONES[r]) setRegion(r);
-                          break;
-                        }
-                      }
+                    // La región de destino sigue a la ciudad de inicio para que
+                    // la ruta quede coherente.
+                    if (c?.region && c.region !== region && REGIONES[c.region]) {
+                      setRegion(c.region);
                     }
                   }}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[15px] outline-none"
-                >
-                  <option value="">{t("recomendado")}</option>
-                  {Object.keys(ciudadesPorRegion)
-                    .filter((r) => REGIONES[r])
-                    .map((r) => (
-                      <optgroup key={r} label={REGIONES[r]}>
-                        {ciudadesPorRegion[r].map((c) => (
-                          <option key={llaveCiudad(c)} value={llaveCiudad(c)}>
-                            {c.bandera} {c.ciudad}, {c.pais}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                </select>
+                  permitirVacio
+                  etiquetaVacio={t("recomendado")}
+                  placeholder={t("presupDesdeCiudad")}
+                  ariaLabel={t("presupDesdeCiudad")}
+                />
               </div>
             )}
           </div>

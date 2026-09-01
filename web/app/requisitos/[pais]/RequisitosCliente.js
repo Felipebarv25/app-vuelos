@@ -1,4 +1,5 @@
 "use client";
+import SelectorPais from "@/components/SelectorPais";
 // Isla cliente de la página /requisitos/<pais>. Maneja:
 //   1) Cargar el dataset de visas (645 KB) bajo demanda.
 //   2) Elegir la nacionalidad del visitante (default: la que tenga en
@@ -8,7 +9,6 @@
 import { useEffect, useState } from "react";
 import {
   cargarVisas,
-  listaPaises,
   nombrePais,
   interpretarVisa,
 } from "@/lib/requisitos";
@@ -59,7 +59,6 @@ export default function RequisitosCliente({ destinoIso, destinoNombre }) {
     return () => { vivo = false; };
   }, []);
 
-  const paises = listaPaises();
   const req = visas?.[nacionalidad]?.[destinoIso];
   const info = interpretarVisa(req);
   const nacNombre = nombrePais(nacionalidad);
@@ -72,17 +71,13 @@ export default function RequisitosCliente({ destinoIso, destinoNombre }) {
 
       <label className="mt-3 flex flex-wrap items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
         Tu pasaporte:
-        <select
+        {/* Mismo caso que en RequisitosViaje: el <select> listaba ~199 países
+            con el código ISO por nombre. Ahora se escribe y filtra. */}
+        <SelectorPais
           value={nacionalidad}
-          onChange={(e) => cambiarNacionalidad(e.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] font-semibold text-marca-700 dark:border-slate-700 dark:bg-slate-900 dark:text-marca-300"
-        >
-          {paises.map((p) => (
-            <option key={p.cc} value={p.cc}>
-              {p.bandera} {p.nombre}
-            </option>
-          ))}
-        </select>
+          onChange={cambiarNacionalidad}
+          className="min-w-[190px]"
+        />
       </label>
 
       {/* Resultado de la visa */}

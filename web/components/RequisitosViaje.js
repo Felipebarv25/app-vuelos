@@ -1,8 +1,8 @@
 "use client";
+import SelectorPais from "./SelectorPais";
 import { useEffect, useState } from "react";
 import {
   cargarVisas,
-  listaPaises,
   nombrePais,
   banderaPais,
   isoDesdeNombre,
@@ -59,7 +59,6 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
   const yf = exigeFiebreAmarilla(destinoIso);
   const paisNombre = nombrePais(destinoIso);
   const nacNombre = nombrePais(nacionalidad);
-  const paises = listaPaises();
 
   // Página interna /requisitos/<iso> con visa + salud + emergencias.
   // Antes redirigíamos a Google search; ahora todo vive on-site (la info
@@ -100,17 +99,16 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
           {/* Selector de nacionalidad (de qué pasaporte dependen los requisitos) */}
           <label className="flex flex-wrap items-center gap-2 text-[12.5px] text-slate-500">
             {t("reqTuPasaporte")}
-            <select
+            {/* Antes: <select> con ~199 países y el CÓDIGO ISO como nombre
+                ("🇦🇩 AD", "🇦🇪 AE"…), sin orden útil ni forma de escribir.
+                Encontrar Colombia exigía saber que es "CO". SelectorPais ya
+                resolvía esto —nombres reales, alias como "EEUU" o "UK" y
+                búsqueda sin acentos— pero no estaba conectado aquí. */}
+            <SelectorPais
               value={nacionalidad}
-              onChange={(e) => onNacionalidad?.(e.target.value)}
-              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] font-semibold text-marca-700"
-            >
-              {paises.map((p) => (
-                <option key={p.cc} value={p.cc}>
-                  {p.bandera} {p.nombre}
-                </option>
-              ))}
-            </select>
+              onChange={(iso) => onNacionalidad?.(iso)}
+              className="min-w-[190px]"
+            />
           </label>
 
           {/* Visa */}

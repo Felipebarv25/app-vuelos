@@ -8,6 +8,7 @@ import Link from "next/link";
 import { DESTINOS_SEO, nombreDestino } from "@/lib/destinos";
 import { datosSeoDe } from "@/lib/seoDestinos";
 import { Icono } from "@/components/Icono";
+import SelectorCiudad from "@/components/SelectorCiudad";
 
 const SLOTS = 3;
 
@@ -67,18 +68,19 @@ export default function ComparadorCliente() {
               <label className="block text-[11px] font-bold uppercase tracking-wide text-slate-400">
                 Destino {i + 1}
               </label>
-              <select
+              {/* Antes era un <select> con los 207 destinos seguidos, y había
+                  TRES en fila: para llegar a "Oporto" tocaba bajar a mano por
+                  toda la lista. Ahora se escribe y filtra. */}
+              <SelectorCiudad
+                className="mt-1.5"
+                catalogo={DESTINOS_ORDEN}
                 value={slug}
-                onChange={(e) => cambiarSlot(i, e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[15px] outline-none focus:border-marca-400"
-              >
-                <option value="">— Sin elegir —</option>
-                {DESTINOS_ORDEN.map((x) => (
-                  <option key={x.slug} value={x.slug}>
-                    {x.bandera} {x.ciudad}, {x.pais}
-                  </option>
-                ))}
-              </select>
+                claveDe={(d) => d.slug}
+                onChange={(d) => cambiarSlot(i, d ? d.slug : "")}
+                permitirVacio
+                placeholder="Escribe una ciudad…"
+                ariaLabel={`Destino ${i + 1}`}
+              />
               {d && (
                 <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-marca-50 p-3 dark:bg-marca-900/30">
                   <span className="text-3xl">{d.bandera}</span>
