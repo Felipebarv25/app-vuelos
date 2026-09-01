@@ -704,7 +704,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                     }
                   }}
                   permitirVacio
-                  etiquetaVacio={t("recomendado")}
+                  etiquetaVacio={t("presupInicioAuto")}
                   placeholder={t("presupDesdeCiudad")}
                   ariaLabel={t("presupDesdeCiudad")}
                 />

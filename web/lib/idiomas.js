@@ -84,6 +84,7 @@ const T = {
     desdeCentro: "del centro de",
     verRuta: "Ver ruta",
     recomendado: "recomendado",
+    presupInicioAuto: "Que la app elija (recomendado)",
     aproxAviso:
       "Tiempos y costos aproximados. La ruta se dibuja en el mapa de la app.",
     // GPS
@@ -826,6 +827,7 @@ const T = {
     desdeCentro: "from the center of",
     verRuta: "See route",
     recomendado: "recommended",
+    presupInicioAuto: "Let the app choose (recommended)",
     aproxAviso:
       "Approximate times and costs. The route is drawn on the app's map.",
     activarGps: "Turn on GPS to see myself on the map and track times live",
@@ -1544,6 +1546,7 @@ const T = {
     desdeCentro: "do centro de",
     verRuta: "Ver rota",
     recomendado: "recomendado",
+    presupInicioAuto: "Deixe o app escolher (recomendado)",
     aproxAviso:
       "Tempos e custos aproximados. A rota é desenhada no mapa do app.",
     activarGps: "Ativar GPS para me ver no mapa e calcular tempos ao vivo",
@@ -2262,6 +2265,7 @@ const T = {
     desdeCentro: "du centre de",
     verRuta: "Voir l'itinéraire",
     recomendado: "recommandé",
+    presupInicioAuto: "Laisser l'app choisir (recommandé)",
     aproxAviso:
       "Temps et coûts approximatifs. L'itinéraire est tracé sur la carte de l'app.",
     activarGps:
