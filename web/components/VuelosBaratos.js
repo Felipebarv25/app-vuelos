@@ -1,4 +1,5 @@
 "use client";
+import { AFILIADOS } from "@/lib/afiliados";
 import { useEffect, useState } from "react";
 import PrecioDual from "./PrecioDual";
 import { PAISES_ORIGEN } from "@/lib/paisesOrigen";
@@ -80,6 +81,20 @@ function proyectar(v, soloDirectos) {
   if (v.escalas_ida === 0 && v.escalas_vuelta === 0) return v;
   if (!v.directo) return null;
   return { ...v, ...v.directo, escalas_ida: 0, escalas_vuelta: 0 };
+}
+
+// Busqueda en Aviasales para un mes concreto de una ruta. Se usa cuando el
+// radar no tiene precio de ese mes: el vuelo probablemente EXISTE, solo que
+// nuestra fuente no lo ha cacheado, asi que se manda al usuario a buscarlo en
+// vez de dejarlo creyendo que no hay vuelos.
+//
+// Se proponen dia 10 -> dia 24 como rango de arranque; Aviasales abre con esas
+// fechas y el usuario las mueve desde ahi. El boton dice el mes, no las fechas,
+// para no dar a entender que ese dia concreto tiene algo.
+function linkBuscarMes(origen, destino, ym, marker) {
+  const mm = ym.slice(5, 7);
+  const codigo = `${origen}10${mm}${destino}24${mm}1`;
+  return `https://www.aviasales.com/search/${codigo}` + (marker ? `?marker=${marker}` : "");
 }
 
 function mejorPorMes(vuelos) {
@@ -358,12 +373,20 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
                   {mesNombre}
                 </div>
                 <p className="mt-2 text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400">
-                  Sin vuelos detectados saliendo de{" "}
+                  Nuestro radar todavía no tiene precio de este mes saliendo de{" "}
                   <b className="text-slate-600 dark:text-slate-300">
                     {seleccion.map((o) => nombreOrigen(o) || o).join(", ")}
-                  </b>{" "}
-                  este mes.
+                  </b>
+                  . Casi seguro sí hay vuelos: búscalos directo.
                 </p>
+                <a
+                  href={linkBuscarMes(seleccion[0], iata, v.ym, AFILIADOS.travelpayouts)}
+                  target="_blank"
+                  rel="sponsored noopener"
+                  className="mt-2.5 inline-flex items-center gap-1.5 rounded-xl bg-marca-600 px-3 py-2 text-[12.5px] font-bold text-white transition hover:brightness-110"
+                >
+                  Buscar vuelos de {mesNombre} ↗
+                </a>
                 <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
                   <div className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
                     Desde otra ciudad
