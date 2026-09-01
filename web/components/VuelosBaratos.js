@@ -152,13 +152,45 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
   const anios = [...new Set(vuelosPais.map((v) => v.anio))].sort();
 
   const porAnio = vuelosPais.filter((v) => v.anio === anioSel);
-  const mejores = mejorPorMes(
+  const conDatosMes = mejorPorMes(
     porAnio.map((v) => proyectar(v, soloDirectos)).filter(Boolean)
   );
-  const mesesDelAnio = new Set(porAnio.map((v) => v.ym)).size;
-  const minPrecio = mejores.length ? Math.min(...mejores.map((v) => v.precio)) : 0;
-  // Con una sola tarjeta no hay nada con qué comparar: sobra el "Más barato".
-  const hayComparacion = mejores.length > 1;
+
+  // Meses del año que tienen vuelo desde CUALQUIER origen, no solo desde los
+  // elegidos. Es la lista completa contra la que se compara.
+  //
+  // Antes las tarjetas salían solo de los orígenes seleccionados, así que un mes
+  // sin inventario desde esa ciudad DESAPARECÍA sin decir nada: filtrando por
+  // Medellín hacia Madrid quedaba solo febrero, y enero y marzo se esfumaban
+  // como si no existieran. El dato era cierto —Travelpayouts no tiene MDE→MAD
+  // esos meses— pero callarlo se lee como un fallo. Ahora el mes aparece igual,
+  // dice que no hay vuelo desde ahí y ofrece el mejor desde otra ciudad.
+  // La alternativa se busca SOLO entre los hubs que el banner ofrece (los del
+  // país del viajero), no entre todos los orígenes del mundo. Sin este límite,
+  // a un colombiano sin vuelo desde Medellín en enero se le proponía salir
+  // desde Caracas — barato, sí, pero inservible. Es el mismo error que ya se
+  // corrigió una vez en el promedio de la ruta.
+  const universo = hubsDisponibles.length
+    ? datos.vuelos.filter((v) => hubsDisponibles.includes(v.origen))
+    : datos.vuelos;
+  const todosDelAnio = universo.filter((v) => v.anio === anioSel);
+  const mejorGlobalPorMes = {};
+  for (const v of todosDelAnio.map((x) => proyectar(x, soloDirectos)).filter(Boolean)) {
+    const a = mejorGlobalPorMes[v.ym];
+    if (!a || v.precio < a.precio) mejorGlobalPorMes[v.ym] = v;
+  }
+
+  const conDatosSet = new Set(conDatosMes.map((v) => v.ym));
+  const huecos = Object.keys(mejorGlobalPorMes)
+    .filter((ym) => !conDatosSet.has(ym))
+    .map((ym) => ({ ym, vacio: true, alternativa: mejorGlobalPorMes[ym] }));
+
+  const mejores = [...conDatosMes, ...huecos].sort((a, b) => a.ym.localeCompare(b.ym));
+  const conPrecio = conDatosMes;
+  const mesesDelAnio = new Set(todosDelAnio.map((v) => v.ym)).size;
+  const minPrecio = conPrecio.length ? Math.min(...conPrecio.map((v) => v.precio)) : 0;
+  // Con una sola tarjeta con precio no hay nada con qué comparar.
+  const hayComparacion = conPrecio.length > 1;
 
   // El promedio se recalcula con la MISMA población que alimenta las tarjetas
   // (orígenes elegidos + modo con/sin escalas). El `datos.promedio` que trae el
@@ -311,6 +343,51 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
         {mejores.map((v) => {
           const mesIdx = Number(v.ym.slice(5, 7)) - 1;
           const mesNombre = MESES_COMPLETO[mesIdx] || v.label;
+
+          // Mes sin inventario desde los orígenes elegidos. Se muestra igual,
+          // con la razón y el mejor precio que sí existe desde otra ciudad.
+          if (v.vacio) {
+            const alt = v.alternativa;
+            const ciudadAlt = nombreOrigen(alt.origen) || alt.origen;
+            return (
+              <div
+                key={v.ym}
+                className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-4 dark:border-slate-600 dark:bg-slate-800/50"
+              >
+                <div className="text-[15px] font-extrabold capitalize text-slate-500 dark:text-slate-400">
+                  {mesNombre}
+                </div>
+                <p className="mt-2 text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400">
+                  Sin vuelos detectados saliendo de{" "}
+                  <b className="text-slate-600 dark:text-slate-300">
+                    {seleccion.map((o) => nombreOrigen(o) || o).join(", ")}
+                  </b>{" "}
+                  este mes.
+                </p>
+                <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+                  <div className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                    Desde otra ciudad
+                  </div>
+                  <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2">
+                    <span className="text-[19px] font-extrabold tabular-nums text-slate-700 dark:text-slate-200">
+                      {fmt(alt.precio)}
+                    </span>
+                    <span className="text-[12.5px] text-slate-500 dark:text-slate-400">
+                      desde <b>{ciudadAlt}</b> ({alt.origen})
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOrigenesSel([alt.origen])}
+                    className="mt-2 text-[12px] font-bold text-marca-700 underline underline-offset-2 hover:text-marca-800 dark:text-marca-400"
+                  >
+                    Ver los meses desde {ciudadAlt}
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
           const desc = promedio ? Math.round(((promedio - v.precio) / promedio) * 100) : 0;
           const esMejor = v.precio === minPrecio;
           const bajoUmbral = umbral && v.precio <= umbral;
@@ -494,8 +571,8 @@ export default function VuelosBaratos({ iata, umbral, ciudad, origen = "" }) {
           <span className="text-slate-300 dark:text-slate-600">·</span>
           <span>
             {soloDirectos
-              ? `Sin escalas detectadas en ${mejores.length} de ${mesesDelAnio} meses de ${anioSel}`
-              : `${mejores.length} meses con datos en ${anioSel}`}
+              ? `Sin escalas detectadas en ${conPrecio.length} de ${mesesDelAnio} meses de ${anioSel}`
+              : `${conPrecio.length} de ${mesesDelAnio} meses con datos en ${anioSel}`}
           </span>
         </div>
       )}
