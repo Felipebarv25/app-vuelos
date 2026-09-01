@@ -13,7 +13,8 @@ import requests
 from dotenv import load_dotenv
 
 import config
-from travelpayouts import buscar_oferta_mas_barata, buscar_precios_latest
+from travelpayouts import (buscar_oferta_mas_barata, buscar_precios_latest,
+                           buscar_calendario)
 from almacenamiento import (cargar_precios_por_ruta_mes, guardar_precio,
                             registrar_alerta, ya_se_alerto)
 from notificaciones import notificar
@@ -254,6 +255,44 @@ def evaluar_oferta(precio, umbral, historico):
 
 MARCA_DIRECTOS = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "datos", "ultimo_escaneo_directos.txt")
+MARCA_CALENDARIO = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                "datos", "ultimo_escaneo_calendario.txt")
+
+
+def _toca_por_marca(archivo, activo, horas, forzar_env=None):
+    """True si toco correr: no hay marca, o pasaron `horas` desde la ultima."""
+    if not activo:
+        return False
+    if forzar_env and os.environ.get(forzar_env) == "1":
+        return True
+    if not horas:
+        return False
+    try:
+        with open(archivo, encoding="utf-8") as f:
+            ultimo = datetime.fromisoformat(f.read().strip())
+    except (OSError, ValueError):
+        return True  # sin marcador (primera vez o corrupto): correr
+    if ultimo.tzinfo is None:
+        ultimo = ultimo.replace(tzinfo=timezone.utc)
+    return datetime.now(timezone.utc) - ultimo >= timedelta(hours=horas)
+
+
+def toca_escanear_calendario():
+    return _toca_por_marca(
+        MARCA_CALENDARIO,
+        getattr(config, "ESCANEO_CALENDARIO", False),
+        getattr(config, "HORAS_ENTRE_ESCANEOS_CALENDARIO", 0),
+        "FORZAR_ESCANEO_CALENDARIO",
+    )
+
+
+def marcar_escaneo_calendario():
+    try:
+        os.makedirs(os.path.dirname(MARCA_CALENDARIO), exist_ok=True)
+        with open(MARCA_CALENDARIO, "w", encoding="utf-8") as f:
+            f.write(datetime.now(timezone.utc).isoformat())
+    except OSError as e:
+        print(f"  ! No se pudo escribir la marca de calendario: {e}")
 
 
 def toca_escanear_directos():
@@ -303,6 +342,7 @@ def main():
     n_rutas = sum(len(config.destinos_para_origen(o)) for o in config.ORIGENES)
     total_dates = n_rutas * len(meses)
     escanear_directos = toca_escanear_directos()
+    escanear_calendario = toca_escanear_calendario()
     print(f"Explorando {len(config.ORIGENES)} orígenes x {len(meses)} meses "
           f"= {n_rutas} rutas, {total_dates} consultas (dates) "
           f"+ {n_rutas} (latest)...")
@@ -310,8 +350,13 @@ def main():
         print("Escaneo de vuelos SIN ESCALAS activo en esta corrida "
               f"(hasta {total_dates} consultas extra con direct=true).")
         marcar_escaneo_directos()
+    if escanear_calendario:
+        print(f"Barrido de CALENDARIO activo ({n_rutas} consultas extra, 1 por "
+              "ruta): recupera meses fuera de la ventana explorada.")
+        marcar_escaneo_calendario()
     ofertas = 0
     directos = 0
+    meses_extra = 0
 
     for origen in config.ORIGENES:
         # Internacionales + los nacionales del pais de este origen. Ver la nota
@@ -450,7 +495,33 @@ def main():
 
                 time.sleep(config.ESPERA_ENTRE_LLAMADAS)
 
+            # --- Barrido de calendario de la ruta -------------------------
+            # UNA llamada que devuelve todo lo cacheado de la ruta. Solo se
+            # guardan los meses que el bucle de arriba NO consulta, que es lo
+            # unico que aporta: los que caen fuera de MESES_A_EXPLORAR. Sin
+            # esto, un vuelo de abril 2027 a US$1.005 desde Medellin era
+            # invisible aunque el proveedor lo tuviera.
+            if escanear_calendario:
+                try:
+                    # Solo lo que va MAS ALLA de la ventana. El calendario tambien
+                    # devuelve el mes en curso y anteriores, que no sirven para
+                    # nada —no se puede reservar un mes que ya empezo— y ademas
+                    # inflarian el historial en cada corrida.
+                    tope = max(meses)
+                    for fila in buscar_calendario(origen, destino, config.MONEDA):
+                        mes_fila = fila["fecha_ida"][:7]
+                        if mes_fila <= tope:
+                            continue
+                        guardar_precio(origen, destino, fila["fecha_ida"],
+                                       fila["fecha_vuelta"], fila)
+                        meses_extra += 1
+                except Exception as e:
+                    print(f"  ! Error calendario {origen}->{destino}: {e}")
+                time.sleep(config.ESPERA_ENTRE_LLAMADAS)
+
     print(f"Listo. Ofertas notificadas en esta corrida: {ofertas}")
+    if escanear_calendario:
+        print(f"Precios de meses fuera de la ventana: {meses_extra}")
     if escanear_directos:
         print(f"Vuelos sin escalas registrados: {directos}")
     resumen_alertas()

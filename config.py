@@ -132,6 +132,13 @@ SOLO_DIRECTOS = False
 # Costo: cada pasada suma 13 origenes × 14 destinos × 6 meses = 1,092 llamadas.
 # Con ~2 pasadas al dia son ~2,200/dia extra. Como DIAS_FRESCOS_RESUMEN es 3,
 # dos pasadas diarias sobran: los directos son pocos y su precio se mueve lento.
+# Barrido de CALENDARIO: una llamada por ruta a v1/prices/calendar, que
+# devuelve todo lo cacheado de esa ruta e incluye meses MAS ALLA de los
+# MESES_A_EXPLORAR. Es barato (1 llamada por ruta, no por mes) pero solo aporta
+# en algunas rutas, asi que corre espaciado, no en cada corrida.
+ESCANEO_CALENDARIO = True
+HORAS_ENTRE_ESCANEOS_CALENDARIO = 12
+
 ESCANEO_DIRECTOS = True
 
 # Horas minimas entre pasadas de directos.

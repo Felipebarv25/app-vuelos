@@ -21,6 +21,9 @@ import requests
 BASE = "https://api.travelpayouts.com/aviasales/v3"
 URL_DATES = f"{BASE}/prices_for_dates"
 URL_LATEST = f"{BASE}/prices_latest"
+# v1: endpoint viejo pero con una propiedad util que el v3 no tiene (ver
+# buscar_calendario).
+URL_CALENDARIO = "https://api.travelpayouts.com/v1/prices/calendar"
 
 
 def _token():
@@ -147,3 +150,66 @@ def buscar_oferta_mas_barata(origen, destino, mes, moneda, solo_directos,
         return None
 
     return min(todas, key=lambda r: r["precio"])
+
+
+def buscar_calendario(origen, destino, moneda):
+    """Todo lo que Travelpayouts tiene cacheado de una ruta, en UNA llamada.
+
+    El endpoint v1/prices/calendar IGNORA el mes que se le pide y devuelve el
+    calendario completo de la ruta. Eso, que suena a defecto, es justo lo util:
+    prices_for_dates hay que consultarlo mes a mes y solo cubre la ventana que
+    exploramos (MESES_A_EXPLORAR), mientras que esto revela meses MAS ALLA de
+    esa ventana sin gastar una llamada por mes.
+
+    Medido el 2026-09-01: aporto abril 2027 en MDE->MAD, MDE->MAD y CLO->MAD, y
+    abril y julio 2027 en BOG->MAD — meses que el detector no habria visto nunca
+    porque caen fuera de los 6 que explora.
+
+    Ojo con dos cosas:
+      - NO reemplaza a prices_for_dates: en varias rutas trae MENOS meses que
+        los que ya tenemos acumulados (LIM->MAD: 3 contra 7).
+      - `transfers` es un solo numero para todo el viaje, no hay separado de
+        vuelta, asi que escalas_vuelta queda en None.
+
+    Devuelve lista de dicts con el formato estandar del modulo.
+    """
+    params = {
+        "origin": origen,
+        "destination": destino,
+        "currency": moneda.lower(),
+        "token": _token(),
+    }
+    try:
+        r = requests.get(URL_CALENDARIO, params=params,
+                         headers={"User-Agent": "Anduve-Detector/1.0"}, timeout=20)
+        if r.status_code != 200:
+            return []
+        datos = r.json().get("data") or {}
+    except Exception:
+        return []
+
+    filas = datos if isinstance(datos, list) else list(datos.values())
+    salida = []
+    for f in filas:
+        try:
+            precio = float(f.get("price"))
+        except (TypeError, ValueError):
+            continue
+        if precio <= 0:
+            continue
+        ida = (f.get("departure_at") or "")[:10]
+        if not ida:
+            continue
+        salida.append({
+            "precio": precio,
+            "moneda": moneda.upper(),
+            "aerolinea": f.get("airline") or "—",
+            "fecha_ida": ida,
+            "fecha_vuelta": (f.get("return_at") or "")[:10],
+            "link": "",
+            "escalas_ida": _int_o_none(f.get("transfers")),
+            "escalas_vuelta": None,
+            "duracion_ida": None,
+            "duracion_vuelta": None,
+        })
+    return salida
