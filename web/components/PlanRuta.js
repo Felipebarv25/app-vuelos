@@ -734,7 +734,7 @@ export default function PlanRuta({
                 Una lista de once paradas no deja ver si el recorrido tiene
                 sentido; el mapa lo ensena de un vistazo, y es lo que hace
                 evidente si conviene reordenar. */}
-            <MapaRuta paradas={paradas} alto={300} />
+            <MapaRuta paradas={paradas} alto={300} textoFallo={t("rutaMapaFallo")} />
 
 
             {/* Itinerario */}

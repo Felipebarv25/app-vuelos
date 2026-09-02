@@ -11,7 +11,7 @@
 // El encuadre lo manda la ruta: el mapa se ajusta a las ciudades del viaje,
 // que es lo que el usuario pidio ("filtrado por la zona en la que me estoy
 // enfocando para cada viaje").
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const ESTILO = {
   version: 8,
@@ -43,7 +43,7 @@ function asegurarCss() {
   document.head.appendChild(link);
 }
 
-export default function MapaRuta({ paradas = [], alto = 320 }) {
+export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) {
   const ref = useRef(null);
   const mapaRef = useRef(null);
   const marcadoresRef = useRef([]);
@@ -54,6 +54,7 @@ export default function MapaRuta({ paradas = [], alto = 320 }) {
   // evento, y lo que se repinta es siempre la ultima version de pintar().
   const listoRef = useRef(false);
   const pintarRef = useRef(null);
+  const [fallo, setFallo] = useState(false);
 
   // Solo las paradas que tienen coordenadas. Una ciudad sin geocodificar no
   // se puede pintar, y saltarsela es mejor que no pintar el mapa entero.
@@ -147,10 +148,31 @@ export default function MapaRuta({ paradas = [], alto = 320 }) {
           listoRef.current = true;
           pintarRef.current?.();
         });
-        return;
+        mapa.on("error", (e) => {
+          // Un fallo de tiles no debe dejar la tarjeta con un rectangulo gris
+          // y sin explicacion: se anota para poder decirlo en pantalla.
+          console.warn("[MapaRuta]", e?.error?.message || e);
+        });
       }
 
-      if (listoRef.current) pintarRef.current();
+      // No basta con esperar a "load". Ese evento pasa UNA vez y no siempre
+      // llega (un error del estilo lo deja colgado), asi que el mapa se
+      // quedaba en gris sin marcadores y sin forma de recuperarse. Se
+      // comprueba tambien el estado real del estilo, reintentando un rato.
+      let intentos = 0;
+      const arrancar = () => {
+        if (cancelado) return;
+        const mapa = mapaRef.current;
+        if (!mapa) return;
+        if (mapa.isStyleLoaded()) {
+          listoRef.current = true;
+          pintarRef.current?.();
+          return;
+        }
+        if (intentos++ < 60) setTimeout(arrancar, 100);
+        else setFallo(true);
+      };
+      arrancar();
     }
 
     preparar();
@@ -173,10 +195,19 @@ export default function MapaRuta({ paradas = [], alto = 320 }) {
   if (puntos.length === 0) return null;
 
   return (
-    <div
-      ref={ref}
-      style={{ height: alto }}
-      className="w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700"
-    />
+    <div className="relative">
+      <div
+        ref={ref}
+        style={{ height: alto }}
+        className="w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700"
+      />
+      {/* Si el mapa no carga, decirlo. Un rectangulo gris sin explicacion
+          parece que la app se rompio; el viaje se planea igual sin el. */}
+      {fallo && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-50 px-6 text-center text-[12.5px] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+          {textoFallo}
+        </div>
+      )}
+    </div>
   );
 }
