@@ -422,28 +422,6 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
           ))}
         </div>
 
-        {/* Filtro de origen: combobox donde se escribe + chips populares.
-            Empezó siendo solo los chips, armados con los paises que TIENEN
-            rutas hoy (antes estaban escritos a mano con Colombia, Bogotá y
-            Medellín, asi que quien viviera en otro de los 10 paises detectados
-            no podia ver los vuelos que salen de su ciudad). Los chips siguen
-            porque sirven de referencia de un vistazo, pero ya no son la única
-            entrada: el combobox cubre los ~60 paises del catálogo y busca
-            también por ciudad y por código IATA. */}
-        <div className="w-full sm:w-auto sm:min-w-[280px]">
-          <div className="mb-1 text-[11.5px] font-semibold uppercase tracking-wider text-slate-400">
-            {t("origenLabel")}
-          </div>
-          <SelectorOrigen
-            value={filtro}
-            onChange={(k) => { setFiltro(k); setVisibles(LOTE); }}
-            paisesConRutas={paisesConRutas}
-            rutasPorHub={rutasPorHub}
-            origenes={origenes}
-            t={t}
-          />
-        </div>
-
         {/* Segunda fila: los hubs del país elegido, cuando tiene más de uno. */}
         {hubsDelFiltro.length > 1 && (
           <div className="flex gap-1 overflow-x-auto rounded-full bg-slate-50 p-1 dark:bg-slate-800">
@@ -464,6 +442,52 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
             )}
           </div>
         )}
+      </div>
+
+      {/* Origen y destino, uno al lado del otro: son la misma pregunta partida
+          en dos y antes vivían separados (el origen como fila de chips arriba,
+          el destino como caja suelta abajo). Los dos son comboboxes con
+          búsqueda escrita; el de origen además conserva sus chips debajo. */}
+      <div className="mt-4 grid max-w-3xl gap-3 sm:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-[11.5px] font-semibold uppercase tracking-wider text-slate-400">
+            {t("origenLabel")}
+          </label>
+          <SelectorOrigen
+            value={filtro}
+            onChange={(k) => { setFiltro(k); setVisibles(LOTE); }}
+            paisesConRutas={paisesConRutas}
+            rutasPorHub={rutasPorHub}
+            origenes={origenes}
+            t={t}
+          />
+        </div>
+
+        {/* Buscador por destino: combobox sobre el catalogo IATA completo, el
+            mismo que usa el planificador. Permite pedir CUALQUIER ciudad del
+            mundo, no solo las ~125 rutas ya detectadas. */}
+        <div>
+          <label className="mb-1 block text-[11.5px] font-semibold uppercase tracking-wider text-slate-400">
+            {t("destinoLabel")}
+          </label>
+          <SelectorAeropuerto
+            filtroPais={false}
+            value={destinoSel?.iata || ""}
+            onChange={(a) => { setDestinoSel(a); setVisibles(LOTE); }}
+            placeholder={t("ofertasBuscarCiudad")}
+            ariaLabel={t("ofertasBuscarCiudad")}
+            lang={lang}
+          />
+          {destinoSel && (
+            <button
+              type="button"
+              onClick={() => { setDestinoSel(null); setVivo(null); setVisibles(LOTE); }}
+              className="mt-1.5 text-[12px] font-semibold text-slate-500 underline underline-offset-2 hover:text-slate-700 dark:text-slate-400"
+            >
+              {t("ofertasBuscarLimpiar")}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Puntos de partida populares: los paises que SÍ tienen ofertas hoy, con
@@ -510,29 +534,6 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
           </p>
         </div>
       )}
-
-      {/* Buscador por destino: combobox sobre el catalogo IATA completo, el mismo
-          que usa el planificador. Permite pedir CUALQUIER ciudad del mundo, no
-          solo las ~125 rutas ya detectadas. */}
-      <div className="mt-4 max-w-md">
-        <SelectorAeropuerto
-          filtroPais={false}
-          value={destinoSel?.iata || ""}
-          onChange={(a) => { setDestinoSel(a); setVisibles(LOTE); }}
-          placeholder={t("ofertasBuscarCiudad")}
-          ariaLabel={t("ofertasBuscarCiudad")}
-          lang={lang}
-        />
-        {destinoSel && (
-          <button
-            type="button"
-            onClick={() => { setDestinoSel(null); setVivo(null); setVisibles(LOTE); }}
-            className="mt-1.5 text-[12px] font-semibold text-slate-500 underline underline-offset-2 hover:text-slate-700 dark:text-slate-400"
-          >
-            {t("ofertasBuscarLimpiar")}
-          </button>
-        )}
-      </div>
 
       {/* Rango de fechas sin ninguna oferta: se dice POR QUE. Antes el filtro
           no filtraba nada; ahora que sí lo hace, pedir un mes fuera del
