@@ -450,7 +450,7 @@ export default function PlanRuta({
         </div>
       </div>
 
-      <div className="grid gap-6 p-5 sm:p-6">
+      <div className="grid gap-6 p-4 sm:p-6">
         {/* Paso 1. Nombre propio y fecha de salida.
             Faltaban las dos. La API ya guardaba `nombre` pero el planificador
             nunca lo mandaba, asi que todas las rutas quedaban con el automatico
@@ -636,7 +636,7 @@ export default function PlanRuta({
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-marca-50 text-[12px] font-bold tabular-nums text-marca-700 dark:bg-marca-900/40 dark:text-marca-300">
                         {i + 1}
                       </span>
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-1 basis-full sm:basis-0">
                         <div className="truncate text-[15px] font-bold text-slate-900 dark:text-slate-100">
                           {p.ciudad}{" "}
                           <span className="text-[12.5px] font-normal text-slate-400">{p.iata}</span>
