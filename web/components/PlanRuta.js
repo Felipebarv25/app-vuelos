@@ -12,9 +12,16 @@
 // viene para no vender una estimación como si fuera un precio de mercado.
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SelectorAeropuerto from "./SelectorAeropuerto";
+import Bandera from "./Bandera";
 import { Icono } from "./Icono";
 import { obtenerOfertas } from "@/lib/ofertasDatos";
-import { coordsCuradas, evaluarTramo, detectarZigzag, resumenRuta } from "@/lib/rutaViva";
+import {
+  coordsCuradas,
+  evaluarTramo,
+  detectarZigzag,
+  resumenRuta,
+  ajustarIdaYVuelta,
+} from "@/lib/rutaViva";
 import { fmtDuracion } from "@/lib/tramos";
 import { linkTransporte, linkCarro, linkHoteles, linkCivitatis } from "@/lib/afiliados";
 import { track } from "@/lib/track";
@@ -40,6 +47,7 @@ function Sello({ fuente, t }) {
     curado: ["bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300", t("rutaFuenteCurado")],
     estimado: ["bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", t("rutaFuenteEstimado")],
     "sin-datos": ["bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300", t("rutaFuenteSinDatos")],
+    incluido: ["bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300", t("rutaFuenteIncluido")],
   };
   const [clase, texto] = mapa[fuente] || mapa["sin-datos"];
   return (
@@ -276,7 +284,7 @@ export default function PlanRuta({
     [ofertas]
   );
 
-  const tramos = useMemo(() => {
+  const tramosCrudos = useMemo(() => {
     const out = [];
     for (let i = 0; i < paradas.length - 1; i++) {
       const desde = paradas[i];
@@ -287,6 +295,13 @@ export default function PlanRuta({
     }
     return out;
   }, [paradas, vivos, vueloDetectado]);
+
+  // El precio de un vuelo detectado es de IDA Y VUELTA. Si el viaje cierra
+  // sobre el mismo par de ciudades, el tramo de regreso ya esta pagado.
+  const { tramos, regresoIncluido, aviso: avisoIdaVuelta } = useMemo(
+    () => ajustarIdaYVuelta(tramosCrudos),
+    [tramosCrudos]
+  );
 
   const resumen = useMemo(
     () => resumenRuta({ paradas, tramos, viajeros }),
@@ -311,6 +326,18 @@ export default function PlanRuta({
       porParada.push({ desde, hasta: acum + 1 });
     });
     return { porParada, noches: acum, total: acum + 1 };
+  }, [paradas]);
+
+  // Paises por los que pasa el viaje, en el orden en que aparecen y sin
+  // repetir. Cada parada trae el ISO de dos letras del catalogo de
+  // aeropuertos, asi que la bandera sale del dato que ya teniamos.
+  const paisesRuta = useMemo(() => {
+    const vistos = [];
+    for (const p of paradas) {
+      const cc = String(p.pais || "").trim().toLowerCase();
+      if (/^[a-z]{2}$/.test(cc) && !vistos.includes(cc)) vistos.push(cc);
+    }
+    return vistos;
   }, [paradas]);
 
   // Etiqueta del mes elegido, en el idioma de la interfaz, en dos formas.
@@ -461,13 +488,23 @@ export default function PlanRuta({
           )}
         </div>
 
-        <h3
-          className={`mt-2 text-[24px] font-extrabold leading-tight tracking-tight sm:text-[28px] ${
-            nombre.trim() ? "" : "text-white/70"
-          }`}
-        >
-          {tituloViaje}
-        </h3>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <h3
+            className={`text-[24px] font-extrabold leading-tight tracking-tight sm:text-[28px] ${
+              nombre.trim() ? "" : "text-white/70"
+            }`}
+          >
+            {tituloViaje}
+          </h3>
+          {/* Por donde pasa el viaje, sin leer la lista entera. */}
+          {paisesRuta.length > 0 && (
+            <span className="flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1.5">
+              {paisesRuta.map((cc) => (
+                <Bandera key={cc} cc={cc} size={20} />
+              ))}
+            </span>
+          )}
+        </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
           <Chip>
@@ -670,6 +707,21 @@ export default function PlanRuta({
                 <div className="mt-2 text-[12.5px] font-semibold text-amber-900 dark:text-amber-200">
                   {zigzag.ordenSugerido.join("  →  ")}
                 </div>
+                {/* Antes esto solo se podia leer: para seguir el consejo habia
+                    que reordenar once paradas a mano con las flechitas. */}
+                {zigzag.indices?.length === paradas.length &&
+                  !zigzag.indices.includes(-1) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setParadas((prev) => zigzag.indices.map((k) => prev[k]));
+                        track("ruta_reordenada", { ahorroPct: zigzag.ahorroPct });
+                      }}
+                      className="mt-3 rounded-full bg-amber-800 px-4 py-1.5 text-[12.5px] font-bold text-white transition hover:bg-amber-900"
+                    >
+                      {t("rutaZigzagAplicar")}
+                    </button>
+                  )}
               </div>
             )}
 
@@ -780,9 +832,22 @@ export default function PlanRuta({
                             {tr.medio ? t("rutaMedio_" + tr.medio) : "—"}
                             {tr.operador && <span className="font-normal text-slate-400">· {tr.operador}</span>}
                           </span>
-                          <span className="font-bold tabular-nums text-slate-900 dark:text-slate-100">
-                            {tr.precio != null ? fmtUsd(tr.precio) : "—"}
-                          </span>
+                          {tr.fuente === "incluido" ? (
+                            <span className="inline-flex items-baseline gap-1.5">
+                              <span className="font-bold text-emerald-700 dark:text-emerald-300">
+                                {t("rutaIncluido")}
+                              </span>
+                              {tr.precioSuelto > 0 && (
+                                <span className="text-[12px] tabular-nums text-slate-400 line-through">
+                                  {fmtUsd(tr.precioSuelto)}
+                                </span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                              {tr.precio != null ? fmtUsd(tr.precio) : "—"}
+                            </span>
+                          )}
                           {tr.puertaAPuerta_h != null && (
                             <span className="text-slate-500 dark:text-slate-400">
                               {fmtDuracion(tr.puertaAPuerta_h)} {t("rutaPuertaAPuerta")}
@@ -799,7 +864,7 @@ export default function PlanRuta({
                              className="rounded-lg bg-marca-50 px-2.5 py-1 text-[12px] font-bold text-marca-700 transition hover:bg-marca-100 dark:bg-marca-900/30 dark:text-marca-300">
                             {t("rutaVerOpciones")}
                           </a>
-                          {tr.fuente !== "detectado" && tr.desde.iata && tr.hasta.iata && (
+                          {tr.fuente !== "detectado" && tr.fuente !== "incluido" && tr.desde.iata && tr.hasta.iata && (
                             <button
                               onClick={() => buscarReal(tr)}
                               disabled={buscando[tr.clave]}
@@ -877,6 +942,26 @@ export default function PlanRuta({
                   <p className="mt-2.5 text-[11.5px] leading-relaxed text-slate-400">
                     {t("rutaCategoriasNota")}
                   </p>
+
+                  {/* Por que el regreso vale cero, o por que el precio de ida trae
+                      una vuelta que no encaja con este viaje. */}
+                  {regresoIncluido && (
+                    <p className="mt-2.5 rounded-lg bg-emerald-50 px-3 py-2 text-[12px] leading-relaxed text-emerald-900 dark:bg-emerald-900/20 dark:text-emerald-200">
+                      {t("rutaRegresoNota")
+                        .replace("{ahorro}", fmtUsd(regresoIncluido.ahorro))
+                        .replace("{ciudad}", regresoIncluido.ciudad)
+                        .replace("{casa}", regresoIncluido.casa)}
+                    </p>
+                  )}
+                  {avisoIdaVuelta && (
+                    <p className="mt-2.5 rounded-lg bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-900 dark:bg-amber-900/20 dark:text-amber-200">
+                      {t(
+                        avisoIdaVuelta === "sin-regreso"
+                          ? "rutaAvisoSinRegreso"
+                          : "rutaAvisoOtraCiudad"
+                      )}
+                    </p>
+                  )}
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-slate-100 pt-4 dark:border-slate-700">

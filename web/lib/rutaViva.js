@@ -121,6 +121,9 @@ export function evaluarTramo({ desde, hasta, vueloReal = null }) {
   const km = distanciaKm(desde, hasta);
 
   // 1) Precio real del detector: el único dato de mercado que tenemos propio.
+  //    OJO: viene de Travelpayouts con one_way=false, o sea que es un precio
+  //    de IDA Y VUELTA. Se marca para que quien sume sepa que ese billete ya
+  //    cubre el regreso; ver ajustarIdaYVuelta().
   if (vueloReal && Number(vueloReal.precio) > 0) {
     const dur = Number(vueloReal.duracion_h) || (km ? 2 + km / 800 : 3);
     return {
@@ -130,6 +133,7 @@ export function evaluarTramo({ desde, hasta, vueloReal = null }) {
       puertaAPuerta_h: puertaAPuerta("vuelo", dur),
       operador: vueloReal.aerolinea || "",
       fuente: "detectado",
+      idaYVuelta: true,
       km,
     };
   }
@@ -159,6 +163,67 @@ export function evaluarTramo({ desde, hasta, vueloReal = null }) {
   };
 }
 
+// --- Ida y vuelta ------------------------------------------------------------
+const mismaCiudad = (a, b) => {
+  if (!a || !b) return false;
+  if (a.iata && b.iata) return a.iata === b.iata;
+  const n = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+  return !!n(a.ciudad) && n(a.ciudad) === n(b.ciudad);
+};
+
+/**
+ * Corrige el doble cobro del vuelo de regreso.
+ *
+ * TODOS los precios reales de la app se piden con one_way=false (detector,
+ * /api/vuelo-vivo y /api/entrada-region): son precios de IDA Y VUELTA. Un
+ * viaje que sale de casa, da una vuelta y vuelve a casa pagaba dos veces el
+ * mismo billete: una en el tramo de ida, que ya lo incluye, y otra en el
+ * tramo de regreso, estimado aparte. En el viaje que lo destapo eso inflaba
+ * el total en 521 dolares sobre 886 de billete.
+ *
+ * Solo se descuenta cuando el ultimo tramo es EXACTAMENTE ese regreso
+ * (mismo par de ciudades, al reves). Si vuelves a casa desde otra ciudad el
+ * billete de ida y vuelta no te sirve para ese vuelo, y si no vuelves, el
+ * precio de ida incluye una vuelta que no vas a usar: en los dos casos no se
+ * toca la cifra y se avisa, que es lo unico honesto que se puede hacer con
+ * los datos que tenemos.
+ *
+ * @returns {{tramos: Array, regresoIncluido: object|null, aviso: string|null}}
+ */
+export function ajustarIdaYVuelta(tramos = []) {
+  const sinCambios = { tramos, regresoIncluido: null, aviso: null };
+  if (!Array.isArray(tramos) || tramos.length < 2) return sinCambios;
+
+  const primero = tramos[0];
+  const ultimo = tramos[tramos.length - 1];
+  if (!primero?.idaYVuelta || !(primero.precio > 0)) return sinCambios;
+
+  const vuelveACasa = mismaCiudad(ultimo.hasta, primero.desde);
+  const mismoPar = vuelveACasa && mismaCiudad(ultimo.desde, primero.hasta);
+
+  if (!vuelveACasa) return { tramos, regresoIncluido: null, aviso: "sin-regreso" };
+  if (!mismoPar) return { tramos, regresoIncluido: null, aviso: "otra-ciudad" };
+
+  const copia = tramos.slice();
+  copia[copia.length - 1] = {
+    ...ultimo,
+    // Se conserva lo que habria costado suelto: sin eso, un cero sin
+    // explicacion parece un fallo de la app.
+    precioSuelto: ultimo.precio,
+    precio: 0,
+    fuente: "incluido",
+  };
+  return {
+    tramos: copia,
+    regresoIncluido: {
+      ahorro: ultimo.precio || 0,
+      ciudad: primero.hasta?.ciudad || "",
+      casa: primero.desde?.ciudad || "",
+    },
+    aviso: null,
+  };
+}
+
 // --- Zigzag -----------------------------------------------------------------
 /**
  * Detecta si el orden elegido da rodeos evitables. NO mueve la primera ni la
@@ -166,7 +231,7 @@ export function evaluarTramo({ desde, hasta, vueloReal = null }) {
  * rompería el viaje. Solo permuta las intermedias, y solo propone el cambio si
  * el ahorro se nota.
  */
-export function detectarZigzag(paradas, umbralPct = 15) {
+export function detectarZigzag(paradas, umbralPct = 12) {
   if (!Array.isArray(paradas) || paradas.length < 4) return { hayZigzag: false };
   if (paradas.some((p) => p.lat == null || p.lon == null)) return { hayZigzag: false };
 
@@ -177,11 +242,13 @@ export function detectarZigzag(paradas, umbralPct = 15) {
   };
   const actual = largo(paradas);
 
-  // Vecino más cercano sobre las intermedias, con extremos fijos.
+  // Paso 1: vecino mas cercano. Rapido y casi siempre razonable, pero deja
+  // cruces: se come las ciudades cercanas primero y al final tiene que cruzar
+  // el mapa entero para recoger la que dejo suelta.
   const inicio = paradas[0];
   const fin = paradas[paradas.length - 1];
   const pendientes = paradas.slice(1, -1);
-  const ruta = [inicio];
+  let ruta = [inicio];
   let cursor = inicio;
   while (pendientes.length) {
     let mejor = 0;
@@ -194,18 +261,55 @@ export function detectarZigzag(paradas, umbralPct = 15) {
     ruta.push(cursor);
   }
   ruta.push(fin);
-  const optimo = largo(ruta);
 
+  // Paso 2: 2-opt. Deshace justamente esos cruces dando la vuelta a un tramo
+  // entero del recorrido, y es lo que separa "un orden decente" de "el orden
+  // que de verdad no da rodeos". Con el tope de 25 paradas del planificador
+  // esto son unos pocos miles de comparaciones: ni se nota.
+  //
+  // Los extremos NO se mueven nunca: casi siempre son de donde sales y a
+  // donde vuelves, y cambiarlos no seria optimizar el viaje sino otro viaje.
+  let mejoro = true;
+  let vueltas = 0;
+  while (mejoro && vueltas < 40) {
+    mejoro = false;
+    vueltas++;
+    for (let a = 1; a < ruta.length - 2; a++) {
+      for (let b = a + 1; b < ruta.length - 1; b++) {
+        const antes =
+          (distanciaKm(ruta[a - 1], ruta[a]) || 0) + (distanciaKm(ruta[b], ruta[b + 1]) || 0);
+        const despues =
+          (distanciaKm(ruta[a - 1], ruta[b]) || 0) + (distanciaKm(ruta[a], ruta[b + 1]) || 0);
+        if (despues < antes - 1) {
+          const medio = ruta.slice(a, b + 1).reverse();
+          ruta = [...ruta.slice(0, a), ...medio, ...ruta.slice(b + 1)];
+          mejoro = true;
+        }
+      }
+    }
+  }
+
+  const optimo = largo(ruta);
   const ahorroKm = actual - optimo;
   const pct = actual > 0 ? Math.round((ahorroKm / actual) * 100) : 0;
   if (pct < umbralPct) return { hayZigzag: false, kmActual: actual, kmOptimo: optimo };
 
+  // Los indices del orden nuevo sobre el array original: sin esto la sugerencia
+  // solo se puede leer, y habia que reordenar a mano con las flechitas.
+  const usados = new Set();
+  const indices = ruta.map((p) => {
+    const k = paradas.findIndex((x, n) => !usados.has(n) && x === p);
+    usados.add(k);
+    return k;
+  });
+
   return {
     hayZigzag: true,
-    kmActual: actual,
-    kmOptimo: optimo,
-    ahorroKm,
+    kmActual: Math.round(actual),
+    kmOptimo: Math.round(optimo),
+    ahorroKm: Math.round(ahorroKm),
     ahorroPct: pct,
+    indices,
     ordenSugerido: ruta.map((p) => p.ciudad),
   };
 }

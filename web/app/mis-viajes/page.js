@@ -12,6 +12,7 @@ import BotonVolver from "@/components/BotonVolver";
 import FooterAnduve from "@/components/FooterAnduve";
 import BottomTabBar from "@/components/BottomTabBar";
 import { Icono } from "@/components/Icono";
+import Bandera from "@/components/Bandera";
 import { Logo } from "@/components/Logo";
 
 const Asesor = dynamic(() => import("@/components/Asesor"));
@@ -126,6 +127,17 @@ function ContadorRegresivo({ estado, t }) {
 // tenias.
 const conMayuscula = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
+// Paises de una ruta, en orden y sin repetir. Cada parada guarda el ISO de dos
+// letras, asi que la bandera no cuesta ningun dato nuevo.
+const paisesDe = (r) => {
+  const vistos = [];
+  for (const p of r?.paradas || []) {
+    const cc = String(p?.pais || "").trim().toLowerCase();
+    if (/^[a-z]{2}$/.test(cc) && !vistos.includes(cc)) vistos.push(cc);
+  }
+  return vistos;
+};
+
 function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBorrar, onDescartar }) {
   // Los viajes se planean por MES, no por dia. Se lee tambien el campo viejo
   // para que las rutas guardadas antes del cambio sigan mostrando su fecha.
@@ -146,6 +158,13 @@ function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBo
             ((r.paradas || []).length >= 2
               ? `${r.paradas[0].ciudad} → ${r.paradas[r.paradas.length - 1].ciudad}`
               : t("rutaNombrePlaceholder"))}
+          {paisesDe(r).length > 0 && (
+            <span className="ml-2 inline-flex items-center gap-1 align-middle">
+              {paisesDe(r).map((cc) => (
+                <Bandera key={cc} cc={cc} size={16} />
+              ))}
+            </span>
+          )}
         </h3>
         <div className="flex shrink-0 items-center gap-1.5">
           {sinGuardar && (
