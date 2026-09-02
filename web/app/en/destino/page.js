@@ -3,6 +3,7 @@
 // just localized labels.
 import Link from "next/link";
 import { DESTINOS_SEO } from "@/lib/destinos";
+import NavTop from "@/components/NavTop";
 
 const SITIO = "https://anduve-app.vercel.app";
 
