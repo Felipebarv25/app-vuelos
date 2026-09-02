@@ -505,58 +505,28 @@ export default function PaginaMisViajes() {
           </div>
         )}
 
-        {/* Estado vacío aspiracional */}
+        {/* Sin viajes guardados: solo el boton.
+
+            Aqui habia un estado vacio "aspiracional": caja de borde punteado a
+            pantalla completa, ilustracion, titulo, parrafo y una rejilla de
+            cuatro destinos sugeridos. Tres problemas juntos. Ocupaba una
+            pantalla entera para decir "no tienes nada", y lo decia JUSTO
+            debajo de los dos planificadores que si sirven para algo. Repetia
+            con otras palabras la llamada a la accion de la cabecera. Y la
+            rejilla pintaba la bandera del pais como emoji, que en Windows sale
+            como dos letras ("BR Sao Paulo").
+
+            El usuario pidio dejar en su lugar el mismo boton de la cabecera.
+            La rejilla de inspiracion no se pierde: sigue apareciendo mas abajo
+            para quien ya tiene uno o dos viajes guardados. */}
         {!cargando && viajes.length === 0 && (
-          <div className="flex flex-col items-center rounded-2xl border-2 border-dashed border-slate-200 bg-white px-6 py-16 text-center dark:border-slate-700 dark:bg-slate-800/60">
-            {/* El walker va suelto: el círculo verde claro que lo envolvía
-                competía con el dibujo en vez de acompañarlo. */}
-            <div className="mb-6">
-              <Logo size={56} animado />
-            </div>
-            <h2 className="text-[20px] font-extrabold text-slate-900 dark:text-slate-100">
-              {t("misViajesVacioTitulo")}
-            </h2>
-            <p className="mt-2 max-w-md text-[14px] leading-relaxed text-slate-500 dark:text-slate-400">
-              {t("misViajesVacioMsg")}
-            </p>
-            {/* Al planificador de arriba, no al modal del home. */}
+          <div className="flex justify-center py-6">
             <a
               href="#planificador"
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-marca-700 px-6 py-3 text-[14px] font-semibold text-white shadow-md transition hover:bg-marca-800 hover:shadow-lg"
+              className="rounded-full bg-marca-700 px-5 py-2.5 text-[13px] font-semibold text-white shadow-md transition hover:bg-marca-800 hover:shadow-lg"
             >
-              <Icono nombre="compass" size={16} />
-              {t("misViajesEmpezar")}
+              {t("misViajesPlanearNuevo")}
             </a>
-
-            {inspiracion.length > 0 && (
-              <div className="mt-10 w-full">
-                <p className="mb-4 text-[12px] font-semibold uppercase tracking-widest text-slate-400">
-                  {t("misViajesInspiTit")}
-                </p>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {inspiracion.map((d, i) => (
-                    <Link
-                      key={d.ciudad}
-                      href={`/?q=${encodeURIComponent(`${d.ciudad}, ${d.pais}`)}`}
-                      className="group relative aspect-[4/3] overflow-hidden rounded-xl"
-                    >
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-br ${GRADS[i % GRADS.length]} transition-transform duration-500 group-hover:scale-110`}
-                      />
-                      <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-white">
-                        <span className="text-2xl">{d.bandera}</span>
-                        <span className="mt-1.5 text-[14px] font-extrabold drop-shadow">
-                          {d.ciudad}
-                        </span>
-                        <span className="text-[12px] font-medium opacity-80">
-                          {d.pais}
-                        </span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
 
