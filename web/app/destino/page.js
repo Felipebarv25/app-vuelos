@@ -7,6 +7,7 @@ import { DESTINOS_SEO } from "@/lib/destinos";
 import IndiceFavoritos from "./IndiceFavoritos";
 import BuscadorDestinos from "@/components/BuscadorDestinos";
 import BotonVolver from "@/components/BotonVolver";
+import NavTop from "@/components/NavTop";
 
 const SITIO = "https://anduve-app.vercel.app";
 
@@ -76,6 +77,11 @@ export default function IndiceDestinos() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
+      {/* Header con el logo: estaba solo en /ofertas, /mis-viajes, /ruta y
+          /alertas, asi que el resto de la app se veia sin marca arriba a la
+          izquierda y sin forma de saltar a otra seccion. */}
+      <NavTop active="destinos" />
+
       <IndiceFavoritos />
 
       <BotonVolver href="/" etiqueta="Volver al inicio" />
@@ -86,11 +92,7 @@ export default function IndiceDestinos() {
         <span className="font-semibold text-marca-700 dark:text-marca-300">Destinos</span>
       </nav>
 
-      {/* pt-14 y no pt-6: esta pagina no monta NavTop, asi que el boton Volver
-          (fixed top-[90px], ocupa 90-126px) no cae sobre el primer bloque sino
-          sobre este. La miga de arriba queda en 68-88px, a salvo por encima; con
-          pt-6 el eyebrow "Catálogo" caia en 112px y el boton lo tapaba. */}
-      <header className="mx-auto max-w-6xl px-6 pb-2 pt-14">
+      <header className="mx-auto max-w-6xl px-6 pb-2 pt-6">
         <div className="text-[12px] font-semibold uppercase tracking-[0.22em] text-marca-500 dark:text-marca-400">
           Catálogo
         </div>

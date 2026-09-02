@@ -9,6 +9,7 @@ import salud from "@/data/salud-paises.json";
 import { PAISES_ISO } from "@/lib/paisesISO";
 import { FIEBRE_AMARILLA } from "@/lib/requisitos";
 import RequisitosCliente from "./RequisitosCliente";
+import NavTop from "@/components/NavTop";
 
 const SITIO = "https://anduve-app.vercel.app";
 
@@ -106,6 +107,10 @@ export default async function PaginaRequisitos({ params }) {
 
   return (
     <main className="bg-slate-50 pb-12 dark:bg-slate-900">
+      {/* Header con el logo: sin esto la pagina se veia sin marca arriba a
+          la izquierda y sin salida a otra seccion. */}
+      <NavTop />
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

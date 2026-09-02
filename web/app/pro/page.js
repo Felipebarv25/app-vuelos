@@ -4,6 +4,7 @@
 // amigos/referidos directamente, (c) tiene espacio para la FAQ legal.
 import Link from "next/link";
 import ProCheckoutBoton from "./ProCheckoutBoton";
+import NavTop from "@/components/NavTop";
 
 const SITIO = "https://anduve-app.vercel.app";
 
@@ -102,6 +103,10 @@ const FAQS = [
 export default function PaginaPro() {
   return (
     <main className="bg-slate-50 pb-16">
+      {/* Header con el logo: sin esto la pagina se veia sin marca arriba a
+          la izquierda y sin salida a otra seccion. */}
+      <NavTop />
+
       <header className="bg-gradient-to-br from-marca-600 via-marca-700 to-marca-900 text-white">
         <div className="mx-auto max-w-5xl px-6 py-12">
           <nav className="text-[12px] text-white/70">

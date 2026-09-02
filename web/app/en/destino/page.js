@@ -37,6 +37,10 @@ export default function DestinosIndexEn() {
 
   return (
     <main className="bg-slate-50 pb-12">
+      {/* Header con el logo: esta landing SEO se veia sin marca arriba a la
+          izquierda y sin salida al resto de la app. */}
+      <NavTop active="destinos" />
+
       <header className="mx-auto max-w-6xl px-6 pt-10">
         <div className="text-[12px] font-semibold uppercase tracking-[0.22em] text-marca-500">
           Catalog

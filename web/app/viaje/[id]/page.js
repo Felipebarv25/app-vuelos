@@ -4,6 +4,7 @@
 // lleva a la app principal con la ciudad cargada.
 import Link from "next/link";
 import { kvGet } from "../../api/compartido/route";
+import NavTop from "@/components/NavTop";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,10 @@ export default async function PaginaViajeCompartido({ params }) {
 
   return (
     <main className="bg-slate-50">
+      {/* Header con el logo: sin esto la pagina se veia sin marca arriba a
+          la izquierda y sin salida a otra seccion. */}
+      <NavTop />
+
       {/* Hero */}
       <header className="bg-gradient-to-br from-marca-600 via-marca-700 to-marca-900 px-6 pb-8 pt-10 text-white">
         <div className="mx-auto max-w-3xl">

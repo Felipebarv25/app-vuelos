@@ -2,6 +2,7 @@
 // SEO, y el cliente (ComparadorCliente) maneja la lógica de selección.
 import ComparadorCliente from "./ComparadorCliente";
 import BotonVolver from "@/components/BotonVolver";
+import NavTop from "@/components/NavTop";
 
 const SITIO = "https://anduve-app.vercel.app";
 
@@ -24,11 +25,12 @@ export const metadata = {
 export default function PaginaComparar() {
   return (
     <main className="bg-slate-50 pb-12">
+      {/* Header con el logo: estaba solo en /ofertas, /mis-viajes, /ruta y
+          /alertas, asi que el resto de la app se veia sin marca arriba a la
+          izquierda y sin forma de saltar a otra seccion. */}
+      <NavTop active="destinos" />
       <BotonVolver href="/destino" etiqueta="Volver a destinos" />
-      {/* pt-24 y no pt-8: esta pagina no monta NavTop, asi que hay que reservar
-          a mano el hueco del boton Volver (fixed, ocupa 90-126px). Ver la nota
-          en BotonVolver.js. */}
-      <header className="mx-auto max-w-6xl px-6 pt-24">
+      <header className="mx-auto max-w-6xl px-6 pt-8">
         <div className="text-[12px] font-semibold uppercase tracking-[0.22em] text-marca-500">
           Herramienta
         </div>

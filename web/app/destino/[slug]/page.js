@@ -19,6 +19,8 @@ import AlertaPrecio from "@/components/AlertaPrecio";
 import MusicaCiudad from "@/components/MusicaCiudad";
 import PrecioDual from "@/components/PrecioDual";
 import BotonVolver from "@/components/BotonVolver";
+import NavTop from "@/components/NavTop";
+import Bandera from "@/components/Bandera";
 
 const SITIO = "https://anduve-app.vercel.app";
 
@@ -179,6 +181,11 @@ export default async function PaginaDestino({ params }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
 
+      {/* Header con el logo: estaba solo en /ofertas, /mis-viajes, /ruta y
+          /alertas, asi que el resto de la app se veia sin marca arriba a la
+          izquierda y sin forma de saltar a otra seccion. */}
+      <NavTop active="destinos" />
+
       {/* Breadcrumbs + switch a otros idiomas (refuerza el signal hreflang para Google) */}
       <nav className="mx-auto max-w-4xl px-6 pt-6 text-[13px] text-slate-500">
         <Link href="/" className="hover:text-marca-600">Inicio</Link>
@@ -187,9 +194,11 @@ export default async function PaginaDestino({ params }) {
         <span className="mx-1.5 text-slate-300">/</span>
         <span className="font-semibold text-marca-700 dark:text-marca-300">{nombre}</span>
         <span className="float-right space-x-2">
-          <Link href={`/en/destino/${slug}`} className="text-[12px] underline hover:text-marca-600">🇬🇧 EN</Link>
-          <Link href={`/pt/destino/${slug}`} className="text-[12px] underline hover:text-marca-600">🇧🇷 PT</Link>
-          <Link href={`/fr/destino/${slug}`} className="text-[12px] underline hover:text-marca-600">🇫🇷 FR</Link>
+          {/* Banderas en PNG: el emoji (🇬🇧) no renderiza en Windows y el
+              switch se leia "GB EN  BR PT  FR FR". */}
+          <Link href={`/en/destino/${slug}`} className="inline-flex items-center gap-1 text-[12px] underline hover:text-marca-600"><Bandera cc="GB" size={14} /> EN</Link>
+          <Link href={`/pt/destino/${slug}`} className="inline-flex items-center gap-1 text-[12px] underline hover:text-marca-600"><Bandera cc="BR" size={14} /> PT</Link>
+          <Link href={`/fr/destino/${slug}`} className="inline-flex items-center gap-1 text-[12px] underline hover:text-marca-600"><Bandera cc="FR" size={14} /> FR</Link>
         </span>
       </nav>
 

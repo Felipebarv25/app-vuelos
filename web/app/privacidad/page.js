@@ -5,6 +5,8 @@
 // abogado y agregar secciones específicas (transferencias internacionales,
 // menores, retención, derechos del titular).
 
+import NavTop from "@/components/NavTop";
+
 export const metadata = {
   title: "Política de privacidad — Anduve",
   description: "Cómo recolectamos, usamos y protegemos tu información en Anduve.",
@@ -13,9 +15,12 @@ export const metadata = {
 
 export default function PaginaPrivacidad() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16 text-slate-700">
-      <a href="/" className="text-[13px] font-bold text-marca-700 hover:underline dark:text-marca-300">← Inicio</a>
-      <h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
+    <>
+      {/* Header con el logo: antes solo habia un "← Inicio" en texto plano,
+          sin marca ni salida a las demas secciones. */}
+      <NavTop />
+      <main className="mx-auto max-w-3xl px-6 py-12 text-slate-700">
+      <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
         Política de privacidad
       </h1>
       <p className="mt-2 text-[13px] text-slate-500">
@@ -165,6 +170,7 @@ export default function PaginaPrivacidad() {
         <a href="/" className="hover:underline">← Volver al inicio</a>
       </div>
     </main>
+    </>
   );
 }
 

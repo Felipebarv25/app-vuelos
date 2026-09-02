@@ -1719,9 +1719,14 @@ export default function Home() {
               cta={t("cardOfertasCta")}
               bg="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=70"
             />
+            {/* Siempre navega a /mis-viajes, como las otras dos tarjetas.
+                Antes, si no habias guardado ningun viaje, esta NO navegaba:
+                abria el modal del planificador encima del home. Dos tarjetas
+                iguales con comportamientos distintos, y el unico caso donde
+                cambiaba era justo el del usuario nuevo. El planificador ahora
+                vive dentro de /mis-viajes. */}
             <EntryCard
-              href={viajesGuardados.length > 0 ? "/mis-viajes" : null}
-              onClick={viajesGuardados.length > 0 ? null : () => setMostrarPresupuesto(true)}
+              href="/mis-viajes"
               icono="bookmark"
               titulo={t("cardViajesTit")}
               subtitulo={viajesGuardados.length > 0 ? `${viajesGuardados.length} guardado${viajesGuardados.length === 1 ? "" : "s"}` : t("cardViajesSubVacio")}

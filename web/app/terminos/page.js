@@ -3,6 +3,8 @@
 // suscripción procesada por Lemon Squeezy (MoR). Para territorios complejos
 // o expansión a más países, conviene revisar con un abogado local.
 
+import NavTop from "@/components/NavTop";
+
 export const metadata = {
   title: "Términos y condiciones — Anduve",
   description: "Reglas de uso del servicio Anduve.",
@@ -11,9 +13,12 @@ export const metadata = {
 
 export default function PaginaTerminos() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16 text-slate-700">
-      <a href="/" className="text-[13px] font-bold text-marca-700 hover:underline dark:text-marca-300">← Inicio</a>
-      <h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
+    <>
+      {/* Header con el logo: antes solo habia un "← Inicio" en texto plano,
+          sin marca ni salida a las demas secciones. */}
+      <NavTop />
+      <main className="mx-auto max-w-3xl px-6 py-12 text-slate-700">
+      <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
         Términos y condiciones
       </h1>
       <p className="mt-2 text-[13px] text-slate-500">
@@ -171,6 +176,7 @@ export default function PaginaTerminos() {
         <a href="/" className="hover:underline">← Volver al inicio</a>
       </div>
     </main>
+    </>
   );
 }
 

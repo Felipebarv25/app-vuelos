@@ -5,8 +5,8 @@ import { LogoMarca } from "./Logo";
 import MenuUsuario from "./MenuUsuario";
 import SelectorIdioma from "./SelectorIdioma";
 
-// Header compartido por las rutas internas post-login (/ofertas, /mis-viajes,
-// y en el futuro otras secciones). Replica el patron visual del top del home
+// Header compartido por TODAS las rutas internas. Replica el patron visual
+// del top del home
 // pero SIN el hero — fondo blanco, sticky, mas compacto.
 // `active` resalta el link de la seccion actual.
 export default function NavTop({ active = null }) {
@@ -20,10 +20,10 @@ export default function NavTop({ active = null }) {
 
         {/* Nav central */}
         <nav className="hidden items-center gap-1 md:flex">
-          <NavLink href="/destino" active={active === "destinos"}>Destinos</NavLink>
-          <NavLink href="/ofertas" active={active === "ofertas"}>Ofertas</NavLink>
-          <NavLink href="/ruta" active={active === "ruta"}>Mi ruta</NavLink>
-          <NavLink href="/mis-viajes" active={active === "misviajes"}>Mis viajes</NavLink>
+          <NavLink href="/destino" active={active === "destinos"}>{t("navDestinos")}</NavLink>
+          <NavLink href="/ofertas" active={active === "ofertas"}>{t("navOfertas")}</NavLink>
+          <NavLink href="/ruta" active={active === "ruta"}>{t("navRuta")}</NavLink>
+          <NavLink href="/mis-viajes" active={active === "misviajes"}>{t("navMisViajes")}</NavLink>
         </nav>
 
         {/* Cluster derecho */}
