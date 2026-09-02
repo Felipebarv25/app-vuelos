@@ -421,27 +421,6 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
             </button>
           ))}
         </div>
-
-        {/* Segunda fila: los hubs del país elegido, cuando tiene más de uno. */}
-        {hubsDelFiltro.length > 1 && (
-          <div className="flex gap-1 overflow-x-auto rounded-full bg-slate-50 p-1 dark:bg-slate-800">
-            {[[filtro, t("ofertasTodos")], ...hubsDelFiltro.map((h) => [h, origenes[h] || h])].map(
-              ([k, label], i) => (
-                <button
-                  key={`${k}-${i}`}
-                  onClick={() => { setFiltro(k); setVisibles(LOTE); }}
-                  className={`shrink-0 rounded-full px-3 py-1 text-[12px] font-semibold transition ${
-                    filtro === k
-                      ? "bg-white text-marca-700 shadow-sm dark:bg-slate-600 dark:text-marca-300"
-                      : "text-slate-500 dark:text-slate-400"
-                  }`}
-                >
-                  {label}
-                </button>
-              )
-            )}
-          </div>
-        )}
       </div>
 
       {/* Origen y destino, uno al lado del otro: son la misma pregunta partida
@@ -518,6 +497,30 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
               {label}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Ciudades del país elegido, cuando tiene más de una. Vivía arriba, en
+          la fila del título, junto al toggle USD/COP: quedaba a media pantalla
+          de distancia del control de origen al que pertenece. Va aquí, pegada
+          a los chips de origen, que es lo que afina. */}
+      {hubsDelFiltro.length > 1 && (
+        <div className="mt-2 flex w-fit max-w-full gap-1 overflow-x-auto rounded-full bg-slate-100 p-1 dark:bg-slate-800">
+          {[[filtro, t("ofertasTodos")], ...hubsDelFiltro.map((h) => [h, origenes[h] || h])].map(
+            ([k, label], i) => (
+              <button
+                key={`${k}-${i}`}
+                onClick={() => { setFiltro(k); setVisibles(LOTE); }}
+                className={`shrink-0 rounded-full px-3 py-1 text-[12px] font-semibold transition ${
+                  filtro === k
+                    ? "bg-white text-marca-700 shadow-sm dark:bg-slate-600 dark:text-marca-300"
+                    : "text-slate-500 dark:text-slate-400"
+                }`}
+              >
+                {label}
+              </button>
+            )
+          )}
         </div>
       )}
 
