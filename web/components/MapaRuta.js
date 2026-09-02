@@ -47,6 +47,13 @@ export default function MapaRuta({ paradas = [], alto = 320 }) {
   const ref = useRef(null);
   const mapaRef = useRef(null);
   const marcadoresRef = useRef([]);
+  // El mapa avisa de que esta listo UNA vez. Si el efecto se vuelve a
+  // ejecutar despues de ese aviso (y se ejecuta: cada parada nueva lo
+  // dispara), un segundo once("load") no llega nunca y el mapa se queda
+  // pintado a medias. Por eso el estado "listo" vive en un ref y no en el
+  // evento, y lo que se repinta es siempre la ultima version de pintar().
+  const listoRef = useRef(false);
+  const pintarRef = useRef(null);
 
   // Solo las paradas que tienen coordenadas. Una ciudad sin geocodificar no
   // se puede pintar, y saltarsela es mejor que no pintar el mapa entero.
@@ -60,34 +67,18 @@ export default function MapaRuta({ paradas = [], alto = 320 }) {
 
   useEffect(() => {
     let cancelado = false;
-    let maplibregl;
 
-    async function dibujar() {
+    async function preparar() {
       if (!ref.current || puntos.length === 0) return;
       asegurarCss();
-      maplibregl = (await import("maplibre-gl")).default;
+      const maplibregl = (await import("maplibre-gl")).default;
       if (cancelado || !ref.current) return;
 
-      if (!mapaRef.current) {
-        mapaRef.current = new maplibregl.Map({
-          container: ref.current,
-          style: ESTILO,
-          center: [puntos[0].lon, puntos[0].lat],
-          zoom: 3,
-          attributionControl: { compact: true },
-        });
-        mapaRef.current.addControl(
-          new maplibregl.NavigationControl({ showCompass: false }),
-          "top-right"
-        );
-        // El scroll del raton es para leer la pagina: el mapa vive dentro de
-        // una tarjeta larga y capturarlo dejaba al usuario atrapado en el.
-        mapaRef.current.scrollZoom.disable();
-      }
-      const mapa = mapaRef.current;
+      pintarRef.current = () => {
+        const mapa = mapaRef.current;
+        if (!mapa) return;
+        mapa.resize();
 
-      const pintar = () => {
-        if (cancelado) return;
         marcadoresRef.current.forEach((m) => m.remove());
         marcadoresRef.current = [];
 
@@ -102,9 +93,7 @@ export default function MapaRuta({ paradas = [], alto = 320 }) {
             .setPopup(
               new maplibregl.Popup({ offset: 16, closeButton: false }).setHTML(
                 `<div style="font-weight:800;font-size:12.5px;color:#052b28">${p.n}. ${p.ciudad}</div>` +
-                  (p.iata
-                    ? `<div style="font-size:11px;color:#64748b">${p.iata}</div>`
-                    : "")
+                  (p.iata ? `<div style="font-size:11px;color:#64748b">${p.iata}</div>` : "")
               )
             )
             .addTo(mapa);
@@ -118,10 +107,7 @@ export default function MapaRuta({ paradas = [], alto = 320 }) {
             type: "geojson",
             data: {
               type: "Feature",
-              geometry: {
-                type: "LineString",
-                coordinates: puntos.map((p) => [p.lon, p.lat]),
-              },
+              geometry: { type: "LineString", coordinates: puntos.map((p) => [p.lon, p.lat]) },
             },
           });
           mapa.addLayer({
@@ -132,13 +118,11 @@ export default function MapaRuta({ paradas = [], alto = 320 }) {
             paint: {
               "line-color": "#0f766e",
               "line-width": 2.5,
-              "line-opacity": 0.75,
+              "line-opacity": 0.8,
               "line-dasharray": [2, 1.6],
             },
           });
-        }
 
-        if (puntos.length > 1) {
           const b = new maplibregl.LngLatBounds();
           puntos.forEach((p) => b.extend([p.lon, p.lat]));
           mapa.fitBounds(b, { padding: 56, maxZoom: 8, duration: 600 });
@@ -147,11 +131,29 @@ export default function MapaRuta({ paradas = [], alto = 320 }) {
         }
       };
 
-      if (mapa.isStyleLoaded()) pintar();
-      else mapa.once("load", pintar);
+      if (!mapaRef.current) {
+        const mapa = new maplibregl.Map({
+          container: ref.current,
+          style: ESTILO,
+          center: [puntos[0].lon, puntos[0].lat],
+          zoom: 3,
+        });
+        mapaRef.current = mapa;
+        mapa.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+        // El scroll del raton es para leer la pagina: el mapa vive dentro de
+        // una tarjeta larga y capturarlo dejaba al usuario atrapado en el.
+        mapa.scrollZoom.disable();
+        mapa.on("load", () => {
+          listoRef.current = true;
+          pintarRef.current?.();
+        });
+        return;
+      }
+
+      if (listoRef.current) pintarRef.current();
     }
 
-    dibujar();
+    preparar();
     return () => { cancelado = true; };
     // `clave` resume el contenido: ver arriba.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -163,6 +165,7 @@ export default function MapaRuta({ paradas = [], alto = 320 }) {
       marcadoresRef.current = [];
       mapaRef.current?.remove();
       mapaRef.current = null;
+      listoRef.current = false;
     },
     []
   );
