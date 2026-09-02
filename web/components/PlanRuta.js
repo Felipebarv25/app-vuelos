@@ -64,10 +64,26 @@ function leerBorrador() {
   }
 }
 
-export default function PlanRuta({ t = (k) => k, lang = "es", usuario = null, rutaInicial = null, alGuardar = null }) {
-  // Una ruta abierta por enlace manda sobre el borrador; si no, se recupera lo
-  // que estabas armando.
-  const inicio = rutaInicial || (typeof window !== "undefined" ? leerBorrador() : null);
+export default function PlanRuta({
+  t = (k) => k,
+  lang = "es",
+  usuario = null,
+  rutaInicial = null,
+  alGuardar = null,
+  // Vuelve a la lista de viajes. Solo lo pasa /mis-viajes, donde este
+  // planificador es el DETALLE de un viaje concreto; en /ruta no aplica.
+  onVolver = null,
+}) {
+  // Qué se carga al abrir. El borrador solo vale para el viaje al que
+  // pertenece: si estabas editando la ruta A sin guardar y abres la B, lo que
+  // manda es lo guardado de B, no tus cambios de A.
+  const inicio = (() => {
+    const b = typeof window !== "undefined" ? leerBorrador() : null;
+    // Viaje nuevo: solo sirve un borrador que tampoco tenga id.
+    if (!rutaInicial || rutaInicial.nueva) return b && !b.id ? b : null;
+    // Viaje guardado: el borrador solo si es de ESTE viaje.
+    return b && b.id === rutaInicial.id ? b : rutaInicial;
+  })();
   const [paradas, setParadas] = useState(() => inicio?.paradas || []);
   const [viajeros, setViajeros] = useState(() => inicio?.viajeros || 1);
   // Nombre propio del viaje. La API ya lo aceptaba y ya tenia un automatico
@@ -77,7 +93,7 @@ export default function PlanRuta({ t = (k) => k, lang = "es", usuario = null, ru
   // de todo el viaje, sin pedirlas dos veces ni poder contradecirse.
   const [fechaInicio, setFechaInicio] = useState(() => inicio?.fechaInicio || "");
   const [recuperado, setRecuperado] = useState(
-    () => Boolean(!rutaInicial && inicio?.paradas?.length)
+    () => Boolean(inicio && inicio !== rutaInicial && inicio?.paradas?.length)
   );
   const [ofertas, setOfertas] = useState(null);
   const [vivos, setVivos] = useState(() => inicio?.vivos || {}); // clave tramo -> precio real pedido a mano
@@ -350,16 +366,26 @@ export default function PlanRuta({ t = (k) => k, lang = "es", usuario = null, ru
           <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-marca-700 dark:text-marca-300">
             {t("rutaIdentidadEyebrow")}
           </div>
-          {paradas.length > 0 && (
+          {onVolver ? (
             <button
               type="button"
-              onClick={() => {
-                if (idRuta || window.confirm(t("rutaNuevoConfirmar"))) nuevoViaje();
-              }}
+              onClick={onVolver}
               className="rounded-full border-[1.5px] border-slate-200 px-3 py-1 text-[12px] font-bold text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
             >
-              + {t("rutaNuevo")}
+              ← {t("rutaVolverALista")}
             </button>
+          ) : (
+            paradas.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (idRuta || window.confirm(t("rutaNuevoConfirmar"))) nuevoViaje();
+                }}
+                className="rounded-full border-[1.5px] border-slate-200 px-3 py-1 text-[12px] font-bold text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+              >
+                + {t("rutaNuevo")}
+              </button>
+            )
           )}
         </div>
 

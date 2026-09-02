@@ -118,6 +118,96 @@ function ContadorRegresivo({ estado, t }) {
   );
 }
 
+// Lista de viajes multiparada. Es el primer nivel de "Yo ordeno las ciudades":
+// aqui se ven todos tus viajes y desde aqui se entra a definir la ruta de cada
+// uno. Antes no habia este nivel — el planificador era un formulario suelto,
+// solo cabia un itinerario a la vez, y empezar otro obligaba a borrar el que
+// tenias.
+function ListaViajes({ t, lang, rutas = [], borrador = null, onCrear, onAbrir, onBorrar }) {
+  const fmt = (iso) =>
+    iso
+      ? new Date(iso + "T00:00:00").toLocaleDateString(lang, {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : t("rutasSinFecha");
+
+  const Tarjeta = ({ r, sinGuardar }) => (
+    <li className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-marca-300 dark:border-slate-700 dark:bg-slate-800">
+      <div className="flex items-start justify-between gap-2">
+        <h3 className="text-[15px] font-extrabold text-slate-900 dark:text-slate-100">
+          {r.nombre ||
+            ((r.paradas || []).length >= 2
+              ? `${r.paradas[0].ciudad} → ${r.paradas[r.paradas.length - 1].ciudad}`
+              : t("rutaNombrePlaceholder"))}
+        </h3>
+        {sinGuardar ? (
+          <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+            {t("listaBorrador")}
+          </span>
+        ) : (
+          <button
+            onClick={() => onBorrar(r.id)}
+            aria-label={t("misViajesEliminar")}
+            className="shrink-0 rounded-full p-1 text-slate-300 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/30"
+          >
+            <Icono nombre="x" size={14} />
+          </button>
+        )}
+      </div>
+      <p className="mt-1 truncate text-[12.5px] text-slate-500 dark:text-slate-400">
+        {(r.paradas || []).map((p) => p.ciudad).join(" → ") || "—"}
+      </p>
+      <p className="mt-1 text-[12px] text-slate-400">
+        {fmt(r.fechaInicio)} · {t("rutasNParadas").replace("{n}", (r.paradas || []).length)}
+      </p>
+      <button
+        onClick={() => onAbrir(r)}
+        className="mt-3 rounded-full bg-marca-700 px-4 py-1.5 text-[12.5px] font-bold text-white transition hover:bg-marca-800"
+      >
+        {sinGuardar ? t("listaSeguirEditando") : t("misViajesAbrir")}
+      </button>
+    </li>
+  );
+
+  const hayAlgo = rutas.length > 0 || borrador;
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-marca-700 dark:text-marca-300">
+            {t("listaViajesEyebrow")}
+          </div>
+          <p className="mt-0.5 max-w-lg text-[13px] text-slate-500 dark:text-slate-400">
+            {t("listaViajesSub")}
+          </p>
+        </div>
+        <button
+          onClick={onCrear}
+          className="rounded-full bg-marca-700 px-4 py-2 text-[13px] font-bold text-white shadow-sm transition hover:bg-marca-800"
+        >
+          + {t("listaCrear")}
+        </button>
+      </div>
+
+      {!hayAlgo ? (
+        <p className="mt-5 rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-[13px] text-slate-500 dark:border-slate-600 dark:text-slate-400">
+          {t("listaVacia")}
+        </p>
+      ) : (
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+          {borrador && <Tarjeta r={borrador} sinGuardar />}
+          {rutas.map((r) => (
+            <Tarjeta key={r.id} r={r} />
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function PaginaMisViajes() {
   const { t, lang, usuario } = useApp();
   const router = useRouter();
@@ -134,6 +224,9 @@ export default function PaginaMisViajes() {
   const [rutas, setRutas] = useState([]);
   const [rutaAbierta, setRutaAbierta] = useState(null);
   const [confirmRuta, setConfirmRuta] = useState(null);
+  // Viaje a medio armar y sin guardar. Se lista junto a los guardados para que
+  // no quede invisible: es exactamente lo que se perdia antes.
+  const [borrador, setBorrador] = useState(null);
   const cargadas = useRef(new Set());
 
   useEffect(() => {
@@ -191,14 +284,17 @@ export default function PaginaMisViajes() {
 
   useEffect(() => { cargarRutas(); }, [cargarRutas, usuario]);
 
-  function abrirRuta(r) {
-    setRutaAbierta(r);
-    setModoPlan("manual");
-    setTimeout(
-      () => document.getElementById("planificador")?.scrollIntoView({ behavior: "smooth" }),
-      50,
-    );
-  }
+  // Relee el borrador al volver a la lista, para que refleje lo ultimo escrito.
+  useEffect(() => {
+    if (rutaAbierta) return;
+    try {
+      const raw = localStorage.getItem("anduve_ruta_borrador");
+      const d = raw ? JSON.parse(raw) : null;
+      setBorrador(d?.paradas?.length && !d.id ? d : null);
+    } catch {
+      setBorrador(null);
+    }
+  }, [rutaAbierta, rutas]);
 
   async function borrarRuta(id) {
     try {
@@ -287,64 +383,6 @@ export default function PaginaMisViajes() {
           </a>
         </div>
 
-        {/* Rutas de varias ciudades guardadas. Cada una con el nombre que le
-            pusiste, sus fechas y su recorrido. Antes no se listaban en ningun
-            sitio: se guardaban bien en KV y desaparecian de la vista. */}
-        {rutas.length > 0 && (
-          <section className="mb-10">
-            <h2 className="mb-1 text-[17px] font-extrabold text-slate-900 dark:text-slate-100">
-              {t("rutasGuardadasTit")}
-            </h2>
-            <p className="mb-4 text-[13px] text-slate-500 dark:text-slate-400">
-              {(rutas.length === 1 ? t("rutasGuardadasN1") : t("rutasGuardadasN")).replace(
-                "{n}",
-                rutas.length,
-              )}
-            </p>
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {rutas.map((r) => (
-                <li
-                  key={r.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-marca-300 dark:border-slate-700 dark:bg-slate-800"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-[15px] font-extrabold text-slate-900 dark:text-slate-100">
-                      {r.nombre}
-                    </h3>
-                    <button
-                      onClick={() => setConfirmRuta(r.id)}
-                      aria-label={t("misViajesEliminar")}
-                      className="shrink-0 rounded-full p-1 text-slate-300 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/30"
-                    >
-                      <Icono nombre="x" size={14} />
-                    </button>
-                  </div>
-                  <p className="mt-1 truncate text-[12.5px] text-slate-500 dark:text-slate-400">
-                    {(r.paradas || []).map((p) => p.ciudad).join(" → ")}
-                  </p>
-                  <p className="mt-1 text-[12px] text-slate-400">
-                    {r.fechaInicio
-                      ? new Date(r.fechaInicio + "T00:00:00").toLocaleDateString(lang, {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })
-                      : t("rutasSinFecha")}
-                    {" · "}
-                    {t("rutasNParadas").replace("{n}", (r.paradas || []).length)}
-                  </p>
-                  <button
-                    onClick={() => abrirRuta(r)}
-                    className="mt-3 rounded-full bg-marca-700 px-4 py-1.5 text-[12.5px] font-bold text-white transition hover:bg-marca-800"
-                  >
-                    {t("misViajesAbrir")}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
         {/* ------------------------------------------------------------------
             Planificar un viaje nuevo. Dos planificadores, la misma pagina.
 
@@ -416,16 +454,31 @@ export default function PaginaMisViajes() {
                 }
                 onCerrar={() => {}}
               />
-            ) : (
+            ) : rutaAbierta ? (
+              /* DETALLE de un viaje: su nombre, sus fechas y su itinerario. */
               <PlanRuta
                 t={t}
                 lang={lang}
                 usuario={usuario}
                 rutaInicial={rutaAbierta}
-                alGuardar={cargarRutas}
-                // Remontar al abrir otra ruta: si no, se quedarian las paradas
-                // de la anterior mezcladas con las nuevas.
-                key={rutaAbierta?.id || "nueva"}
+                alGuardar={(r) => { cargarRutas(); setRutaAbierta(r); }}
+                onVolver={() => { setRutaAbierta(null); cargarRutas(); }}
+                // Remontar al abrir otro viaje: si no, se quedarian las paradas
+                // del anterior mezcladas con las nuevas.
+                key={rutaAbierta.id || "nueva"}
+              />
+            ) : (
+              /* LISTA de viajes. La ruta se define DENTRO de cada viaje, no en
+                 un formulario suelto: antes solo cabia un itinerario a la vez y
+                 empezar otro obligaba a borrar el anterior. */
+              <ListaViajes
+                t={t}
+                lang={lang}
+                rutas={rutas}
+                borrador={borrador}
+                onCrear={() => setRutaAbierta({ nueva: true })}
+                onAbrir={(r) => setRutaAbierta(r)}
+                onBorrar={(id) => setConfirmRuta(id)}
               />
             )}
           </div>
@@ -448,10 +501,10 @@ export default function PaginaMisViajes() {
         {/* Estado vacío aspiracional */}
         {!cargando && viajes.length === 0 && (
           <div className="flex flex-col items-center rounded-2xl border-2 border-dashed border-slate-200 bg-white px-6 py-16 text-center dark:border-slate-700 dark:bg-slate-800/60">
-            <div className="relative mb-6">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-marca-100 to-emerald-100 dark:from-marca-900/40 dark:to-emerald-900/30">
-                <Logo size={44} animado />
-              </div>
+            {/* El walker va suelto: el círculo verde claro que lo envolvía
+                competía con el dibujo en vez de acompañarlo. */}
+            <div className="mb-6">
+              <Logo size={56} animado />
             </div>
             <h2 className="text-[20px] font-extrabold text-slate-900 dark:text-slate-100">
               {t("misViajesVacioTitulo")}
