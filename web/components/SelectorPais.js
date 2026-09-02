@@ -14,6 +14,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { PAISES_ISO } from "@/lib/paisesISO";
 import { aliasBusqueda, nombrePaisMostrar, normalizar } from "@/lib/paisesNombres";
 import { useApp } from "@/lib/AppContext";
+// Bandera vs emoji: en Windows los emoji de bandera no renderizan, asi que se
+// usa flagcdn (PNGs livianos con soporte universal). Vive en components/Bandera.
+import Bandera from "./Bandera";
 
 // Se construye una vez al importar. Cada pais lleva su lista de alias
 // normalizados para busqueda O(n) sin regex.
@@ -21,25 +24,6 @@ const PAISES = Object.keys(PAISES_ISO).map((cc) => ({
   cc,
   alias: aliasBusqueda(cc),
 }));
-
-// Bandera vs emoji: en Windows los emoji de bandera no renderizan, asi
-// que se usa flagcdn (PNGs livianos con soporte universal).
-function Bandera({ cc, size = 18 }) {
-  if (!cc) return null;
-  const lo = cc.toLowerCase();
-  return (
-    <img
-      src={`https://flagcdn.com/${size}x${Math.round(size * 0.75)}/${lo}.png`}
-      srcSet={`https://flagcdn.com/${size * 2}x${Math.round(size * 1.5)}/${lo}.png 2x`}
-      alt={cc}
-      width={size}
-      height={Math.round(size * 0.75)}
-      className="inline-block rounded-[2px] align-middle"
-      loading="lazy"
-      onError={(e) => { e.currentTarget.style.display = "none"; }}
-    />
-  );
-}
 
 function buscarPaises(query, lang) {
   const q = normalizar(query);

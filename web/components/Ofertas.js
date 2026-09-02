@@ -5,30 +5,16 @@ import { obtenerTasas } from "@/lib/fx";
 import { isoDesdeNombre } from "@/lib/requisitos";
 import AlertaPrecio from "./AlertaPrecio";
 import SelectorAeropuerto, { banderaDePais } from "./SelectorAeropuerto";
+import SelectorOrigen from "./SelectorOrigen";
+import Bandera from "./Bandera";
 import { PAISES_ORIGEN } from "@/lib/paisesOrigen";
 import { obtenerOfertas } from "@/lib/ofertasDatos";
 import { obtenerGeo } from "@/lib/geo";
 
-// Bandera PNG via flagcdn: los emoji de bandera (🇺🇸) NO renderizan en Windows
-// (segoe UI emoji no incluye flags) y se ven como "us" — lo que confunde al
-// usuario ("us Nueva York" en vez de "🇺🇸 Nueva York"). Usamos flagcdn como en
-// SelectorPais para tener rendering consistente en todo OS.
-function BanderaCC({ cc, size = 14 }) {
-  if (!cc) return null;
-  const lo = cc.toLowerCase();
-  return (
-    <img
-      src={`https://flagcdn.com/${size}x${Math.round(size * 0.75)}/${lo}.png`}
-      srcSet={`https://flagcdn.com/${size * 2}x${Math.round(size * 1.5)}/${lo}.png 2x`}
-      alt=""
-      width={size}
-      height={Math.round(size * 0.75)}
-      className="inline-block rounded-[2px] align-middle"
-      loading="lazy"
-      onError={(e) => { e.currentTarget.style.display = "none"; }}
-    />
-  );
-}
+// Bandera PNG via flagcdn (components/Bandera.js): los emoji de bandera (🇺🇸)
+// NO renderizan en Windows y se ven como "us" — lo que confunde al usuario
+// ("us Nueva York" en vez de "🇺🇸 Nueva York").
+const BanderaCC = Bandera;
 
 // Tablero de "vuelos baratos detectados": lee web/public/ofertas.json
 // (generado por el detector de precios) y muestra las mejores ofertas
@@ -199,15 +185,46 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
     if (paisesConRutas.some((p) => p.cc === paisUsuario)) setFiltro(paisUsuario);
   }, [paisUsuario, paisesConRutas]);
 
-  // Hubs que corresponden al filtro activo.
+  // Cuántas ofertas tiene hoy cada hub. Lo usa el combobox de origen para
+  // decir, opción por opción, si hay precios ya detectados o si tocaría
+  // buscar en vivo. Sin esto el menú prometería cobertura que no existe.
+  const rutasPorHub = useMemo(() => {
+    const m = {};
+    for (const r of data?.rutas || []) m[r.origen] = (m[r.origen] || 0) + 1;
+    return m;
+  }, [data]);
+
+  // Hubs que corresponden al filtro activo Y tienen datos hoy: es lo que
+  // filtra la lista precalculada.
   const hubsDelFiltro = useMemo(() => {
     if (filtro === "todos") return [];
     if (filtro.length === 2) {
       const p = paisesConRutas.find((x) => x.cc === filtro);
       return p ? p.hubs : [];
     }
+    return rutasPorHub[filtro] ? [filtro] : [];
+  }, [filtro, paisesConRutas, rutasPorHub]);
+
+  // Hubs del origen elegido SEGÚN EL CATÁLOGO, tenga datos o no. Es lo que se
+  // manda a la búsqueda en vivo: desde que el combobox deja escribir cualquier
+  // país, si alguien elige Francia la búsqueda tiene que salir de París, no
+  // caer al país del usuario ni al default del servidor (BOG,MDE).
+  const hubsOrigenElegido = useMemo(() => {
+    const delCatalogo = (cc) => (PAISES_ORIGEN[cc]?.hubs || []).map((h) => h.iata);
+    if (filtro === "todos") {
+      const d = paisesConRutas.find((x) => x.cc === paisUsuario);
+      return d ? d.hubs : delCatalogo(paisUsuario);
+    }
+    if (filtro.length === 2) {
+      const p = paisesConRutas.find((x) => x.cc === filtro);
+      return p ? p.hubs : delCatalogo(filtro);
+    }
     return [filtro];
-  }, [filtro, paisesConRutas]);
+  }, [filtro, paisesConRutas, paisUsuario]);
+
+  // Origen elegido a mano que el radar todavía no escanea. No es un error: hay
+  // que decirlo tal cual y ofrecer la salida (buscar en vivo con un destino).
+  const origenSinRadar = filtro !== "todos" && hubsDelFiltro.length === 0;
 
   const rutas = useMemo(() => {
     const list = data?.rutas || [];
@@ -256,20 +273,18 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
     if (!destinoSel || rutas.length > 0) return;
     let activo = true;
     setCargandoVivo(true);
-    // El endpoint acepta hasta 3 origenes. Se mandan los hubs del filtro activo;
-    // con "todos" se manda el hub del pais del usuario si se conoce, para no
-    // caer en el default del servidor (BOG,MDE), que le devolvia precios desde
-    // Colombia a un usuario de cualquier otro pais.
-    const delPais = paisesConRutas.find((x) => x.cc === paisUsuario);
-    const lista = hubsDelFiltro.length ? hubsDelFiltro : delPais ? delPais.hubs : [];
-    const orig = lista.slice(0, 3).join(",");
+    // El endpoint acepta hasta 3 origenes. Se mandan los hubs del origen
+    // elegido; con "todos" se manda el hub del pais del usuario si se conoce,
+    // para no caer en el default del servidor (BOG,MDE), que le devolvia
+    // precios desde Colombia a un usuario de cualquier otro pais.
+    const orig = hubsOrigenElegido.slice(0, 3).join(",");
     fetch(`/api/vuelo-vivo?iata=${destinoSel.iata}${orig ? `&origenes=${orig}` : ""}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (activo) setVivo(d?.encontrado ? d : { encontrado: false }); })
       .catch(() => { if (activo) setVivo({ encontrado: false }); })
       .finally(() => { if (activo) setCargandoVivo(false); });
     return () => { activo = false; };
-  }, [destinoSel, rutas.length, filtro, hubsDelFiltro, paisesConRutas, paisUsuario]);
+  }, [destinoSel, rutas.length, filtro, hubsOrigenElegido]);
 
   // Mejor precio y menor duracion POR DESTINO entre las tarjetas visibles.
   //
@@ -310,6 +325,19 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
   if (!data.rutas?.length) return null;
 
   const origenes = data.origenes || { BOG: "Bogotá", MDE: "Medellín" };
+
+  // Nombre legible del origen elegido, para los mensajes. Un país sale por su
+  // nombre; una ciudad, por el que trae ofertas.json y si no, por el catálogo.
+  const etiquetaOrigen = (() => {
+    if (filtro === "todos") return "";
+    if (filtro.length === 2) return PAISES_ORIGEN[filtro]?.nombre || filtro;
+    if (origenes[filtro]) return origenes[filtro];
+    for (const info of Object.values(PAISES_ORIGEN)) {
+      const h = (info.hubs || []).find((x) => x.iata === filtro);
+      if (h) return h.ciudad;
+    }
+    return filtro;
+  })();
 
   function fmtFecha(iso) {
     if (!iso) return "";
@@ -394,28 +422,26 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
           ))}
         </div>
 
-        {/* Filtro de origen. Se arma con los paises que TIENEN rutas hoy, con el
-            del usuario de primero. Antes estaba escrito a mano con Colombia,
-            Bogotá y Medellín, asi que quien viviera en cualquier otro de los 10
-            paises detectados no podia ver los vuelos que salen de su ciudad. */}
-        <div className="flex gap-1 overflow-x-auto rounded-full bg-slate-100 p-1 dark:bg-slate-700">
-          {[
-            ["todos", t("ofertasTodos")],
-            ...paisesConRutas.map((p) => [
-              p.cc,
-              `${PAISES_ORIGEN[p.cc]?.bandera || ""} ${PAISES_ORIGEN[p.cc]?.nombre || p.cc}`.trim(),
-            ]),
-          ].map(([k, label]) => (
-            <button
-              key={k}
-              onClick={() => { setFiltro(k); setVisibles(LOTE); }}
-              className={`shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition ${
-                filtro === k ? "bg-white text-marca-700 shadow dark:bg-slate-600 dark:text-marca-300" : "text-slate-500 dark:text-slate-400"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        {/* Filtro de origen: combobox donde se escribe + chips populares.
+            Empezó siendo solo los chips, armados con los paises que TIENEN
+            rutas hoy (antes estaban escritos a mano con Colombia, Bogotá y
+            Medellín, asi que quien viviera en otro de los 10 paises detectados
+            no podia ver los vuelos que salen de su ciudad). Los chips siguen
+            porque sirven de referencia de un vistazo, pero ya no son la única
+            entrada: el combobox cubre los ~60 paises del catálogo y busca
+            también por ciudad y por código IATA. */}
+        <div className="w-full sm:w-auto sm:min-w-[280px]">
+          <div className="mb-1 text-[11.5px] font-semibold uppercase tracking-wider text-slate-400">
+            {t("origenLabel")}
+          </div>
+          <SelectorOrigen
+            value={filtro}
+            onChange={(k) => { setFiltro(k); setVisibles(LOTE); }}
+            paisesConRutas={paisesConRutas}
+            rutasPorHub={rutasPorHub}
+            origenes={origenes}
+            t={t}
+          />
         </div>
 
         {/* Segunda fila: los hubs del país elegido, cuando tiene más de uno. */}
@@ -439,6 +465,51 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
           </div>
         )}
       </div>
+
+      {/* Puntos de partida populares: los paises que SÍ tienen ofertas hoy, con
+          el del usuario de primero. Son atajos, no el catálogo completo — para
+          cualquier otro origen está el combobox de arriba. Las banderas van en
+          PNG (flagcdn) y no en emoji porque en Windows el emoji de bandera se
+          dibuja como dos letras sueltas y el chip se leía "co Colombia". */}
+      {paisesConRutas.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <span className="mr-0.5 text-[11.5px] font-semibold uppercase tracking-wider text-slate-400">
+            {t("origenPopulares")}
+          </span>
+          {[["todos", null, t("ofertasTodos")], ...paisesConRutas.slice(0, 8).map((p) => [
+            p.cc,
+            p.cc,
+            PAISES_ORIGEN[p.cc]?.nombre || p.cc,
+          ])].map(([k, cc, label]) => (
+            <button
+              key={k}
+              onClick={() => { setFiltro(k); setVisibles(LOTE); }}
+              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12.5px] font-semibold transition ${
+                filtro === k
+                  ? "border-marca-300 bg-marca-50 text-marca-700 dark:border-marca-700 dark:bg-marca-900/40 dark:text-marca-300"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-marca-300 hover:text-marca-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+              }`}
+            >
+              {cc && <Bandera cc={cc} size={16} />}
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Origen elegido que el radar todavía no escanea. Se dice tal cual: el
+          hueco es NUESTRO, no del mercado, y hay salida (elegir un destino
+          dispara la búsqueda en vivo desde ese origen). */}
+      {origenSinRadar && !destinoSel && (
+        <div className="mt-4 max-w-2xl rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+          <div className="text-[14px] font-bold text-amber-900 dark:text-amber-200">
+            {t("origenSinRadarTitulo").replace("{lugar}", etiquetaOrigen)}
+          </div>
+          <p className="mt-1 text-[13px] text-amber-800 dark:text-amber-300">
+            {t("origenSinRadarTexto")}
+          </p>
+        </div>
+      )}
 
       {/* Buscador por destino: combobox sobre el catalogo IATA completo, el mismo
           que usa el planificador. Permite pedir CUALQUIER ciudad del mundo, no
