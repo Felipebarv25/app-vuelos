@@ -18,6 +18,7 @@ import { coordsCuradas, evaluarTramo, detectarZigzag, resumenRuta } from "@/lib/
 import { fmtDuracion } from "@/lib/tramos";
 import { linkTransporte, linkCarro, linkHoteles, linkCivitatis } from "@/lib/afiliados";
 import { track } from "@/lib/track";
+import { leerLocales, escribirLocal, borrarLocal, nuevoUid } from "@/lib/rutasLocales";
 
 const sinAcentos = (s) =>
   (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
@@ -42,28 +43,6 @@ function Sello({ fuente, t }) {
   );
 }
 
-// Borrador en curso. El usuario armo una ruta de dos paradas, cambio de
-// pestana en /mis-viajes y la perdio entera: el planificador solo esta montado
-// mientras su pestana esta activa, asi que React lo desmonta y el estado se va.
-// Un refresco hacia lo mismo. Guardar en KV no servia de red: exige sesion y
-// ademas hay que acordarse de pulsar el boton.
-//
-// Esto persiste lo que estas armando en el propio navegador, sin cuenta y sin
-// pulsar nada. No sustituye a "Guardar" (eso sincroniza y permite compartir):
-// es que perder media hora de trabajo por cambiar de pestana no es aceptable.
-const BORRADOR = "anduve_ruta_borrador";
-
-function leerBorrador() {
-  try {
-    const raw = localStorage.getItem(BORRADOR);
-    if (!raw) return null;
-    const d = JSON.parse(raw);
-    return Array.isArray(d?.paradas) && d.paradas.length ? d : null;
-  } catch {
-    return null;
-  }
-}
-
 export default function PlanRuta({
   t = (k) => k,
   lang = "es",
@@ -74,16 +53,20 @@ export default function PlanRuta({
   // planificador es el DETALLE de un viaje concreto; en /ruta no aplica.
   onVolver = null,
 }) {
-  // Qué se carga al abrir. El borrador solo vale para el viaje al que
-  // pertenece: si estabas editando la ruta A sin guardar y abres la B, lo que
-  // manda es lo guardado de B, no tus cambios de A.
-  const inicio = (() => {
-    const b = typeof window !== "undefined" ? leerBorrador() : null;
-    // Viaje nuevo: solo sirve un borrador que tampoco tenga id.
-    if (!rutaInicial || rutaInicial.nueva) return b && !b.id ? b : null;
-    // Viaje guardado: el borrador solo si es de ESTE viaje.
-    return b && b.id === rutaInicial.id ? b : rutaInicial;
-  })();
+  // Qué se carga al abrir, y bajo qué identidad local se guarda.
+  //
+  //   viaje nuevo        -> uid nuevo, vacío
+  //   entrada local      -> esa misma entrada (tus cambios sin guardar)
+  //   ruta del servidor  -> sus cambios locales si los hay, si no lo guardado
+  const [inicio, uid] = useMemo(() => {
+    if (typeof window === "undefined") return [rutaInicial, nuevoUid()];
+    if (!rutaInicial || rutaInicial.nueva) return [null, nuevoUid()];
+    if (rutaInicial.uid) return [rutaInicial, rutaInicial.uid];
+    const local = leerLocales().find((x) => x.id && x.id === rutaInicial.id);
+    return [local || rutaInicial, local?.uid || nuevoUid()];
+    // Solo al montar: remontamos con `key` al abrir otro viaje.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [paradas, setParadas] = useState(() => inicio?.paradas || []);
   const [viajeros, setViajeros] = useState(() => inicio?.viajeros || 1);
   // Nombre propio del viaje. La API ya lo aceptaba y ya tenia un automatico
@@ -115,17 +98,12 @@ export default function PlanRuta({
 
   useEffect(() => { obtenerOfertas().then(setOfertas); }, []);
 
-  // Guarda el borrador en cada cambio. Se incluyen los precios en vivo ya
-  // consultados para no volver a gastar cuota de Travelpayouts al volver.
+  // Persiste en cada cambio. Se incluyen los precios en vivo ya consultados
+  // para no volver a gastar cuota de Travelpayouts al reabrir el viaje.
   useEffect(() => {
-    try {
-      if (!paradas.length) { localStorage.removeItem(BORRADOR); return; }
-      localStorage.setItem(
-        BORRADOR,
-        JSON.stringify({ paradas, viajeros, nombre, fechaInicio, id: idRuta, vivos })
-      );
-    } catch {}
-  }, [paradas, viajeros, nombre, fechaInicio, idRuta, vivos]);
+    if (!paradas.length && !nombre && !fechaInicio) { borrarLocal(uid); return; }
+    escribirLocal({ uid, id: idRuta, paradas, viajeros, nombre, fechaInicio, vivos });
+  }, [uid, paradas, viajeros, nombre, fechaInicio, idRuta, vivos]);
 
   // Empezar otro viaje sin perder el guardado: se suelta el id para que el
   // siguiente "Guardar" cree una ruta nueva en vez de pisar la anterior.
@@ -137,7 +115,7 @@ export default function PlanRuta({
     setIdRuta(null);
     setVivos({});
     setRecuperado(false);
-    try { localStorage.removeItem(BORRADOR); } catch {}
+    borrarLocal(uid);
   }
 
   const fmtUsd = (v) => "US$ " + Math.round(v || 0).toLocaleString("en-US");

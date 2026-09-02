@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useApp } from "@/lib/AppContext";
 import { listarViajesAsync, borrarViajeAsync } from "@/lib/viajes";
 import { DESTINOS_PRESUPUESTO } from "@/lib/presupuesto";
+import { leerLocales, borrarLocal } from "@/lib/rutasLocales";
 import NavTop from "@/components/NavTop";
 import BotonVolver from "@/components/BotonVolver";
 import FooterAnduve from "@/components/FooterAnduve";
@@ -123,7 +124,7 @@ function ContadorRegresivo({ estado, t }) {
 // uno. Antes no habia este nivel — el planificador era un formulario suelto,
 // solo cabia un itinerario a la vez, y empezar otro obligaba a borrar el que
 // tenias.
-function ListaViajes({ t, lang, rutas = [], borrador = null, onCrear, onAbrir, onBorrar }) {
+function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBorrar, onDescartar }) {
   const fmt = (iso) =>
     iso
       ? new Date(iso + "T00:00:00").toLocaleDateString(lang, {
@@ -142,19 +143,20 @@ function ListaViajes({ t, lang, rutas = [], borrador = null, onCrear, onAbrir, o
               ? `${r.paradas[0].ciudad} → ${r.paradas[r.paradas.length - 1].ciudad}`
               : t("rutaNombrePlaceholder"))}
         </h3>
-        {sinGuardar ? (
-          <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
-            {t("listaBorrador")}
-          </span>
-        ) : (
+        <div className="flex shrink-0 items-center gap-1.5">
+          {sinGuardar && (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+              {t("listaBorrador")}
+            </span>
+          )}
           <button
-            onClick={() => onBorrar(r.id)}
+            onClick={() => (sinGuardar ? onDescartar(r.uid) : onBorrar(r.id))}
             aria-label={t("misViajesEliminar")}
-            className="shrink-0 rounded-full p-1 text-slate-300 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/30"
+            className="rounded-full p-1 text-slate-300 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/30"
           >
             <Icono nombre="x" size={14} />
           </button>
-        )}
+        </div>
       </div>
       <p className="mt-1 truncate text-[12.5px] text-slate-500 dark:text-slate-400">
         {(r.paradas || []).map((p) => p.ciudad).join(" → ") || "—"}
@@ -171,7 +173,7 @@ function ListaViajes({ t, lang, rutas = [], borrador = null, onCrear, onAbrir, o
     </li>
   );
 
-  const hayAlgo = rutas.length > 0 || borrador;
+  const hayAlgo = rutas.length > 0 || locales.length > 0;
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
@@ -198,7 +200,9 @@ function ListaViajes({ t, lang, rutas = [], borrador = null, onCrear, onAbrir, o
         </p>
       ) : (
         <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-          {borrador && <Tarjeta r={borrador} sinGuardar />}
+          {locales.map((r) => (
+            <Tarjeta key={r.uid} r={r} sinGuardar />
+          ))}
           {rutas.map((r) => (
             <Tarjeta key={r.id} r={r} />
           ))}
@@ -224,9 +228,10 @@ export default function PaginaMisViajes() {
   const [rutas, setRutas] = useState([]);
   const [rutaAbierta, setRutaAbierta] = useState(null);
   const [confirmRuta, setConfirmRuta] = useState(null);
-  // Viaje a medio armar y sin guardar. Se lista junto a los guardados para que
-  // no quede invisible: es exactamente lo que se perdia antes.
-  const [borrador, setBorrador] = useState(null);
+  // Viajes a medio armar y sin guardar (uno por cada que hayas empezado). Se
+  // listan junto a los guardados para que no queden invisibles: es exactamente
+  // lo que se perdia antes.
+  const [locales, setLocales] = useState([]);
   const cargadas = useRef(new Set());
 
   useEffect(() => {
@@ -284,17 +289,18 @@ export default function PaginaMisViajes() {
 
   useEffect(() => { cargarRutas(); }, [cargarRutas, usuario]);
 
-  // Relee el borrador al volver a la lista, para que refleje lo ultimo escrito.
+  // Relee los locales al volver a la lista, para reflejar lo ultimo escrito.
+  // Solo se muestran como "sin guardar" los que no tienen copia en el
+  // servidor; los que ya se guardaron aparecen una sola vez, como guardados.
   useEffect(() => {
     if (rutaAbierta) return;
-    try {
-      const raw = localStorage.getItem("anduve_ruta_borrador");
-      const d = raw ? JSON.parse(raw) : null;
-      setBorrador(d?.paradas?.length && !d.id ? d : null);
-    } catch {
-      setBorrador(null);
-    }
+    setLocales(leerLocales().filter((x) => !x.id));
   }, [rutaAbierta, rutas]);
+
+  function descartarLocal(uid) {
+    borrarLocal(uid);
+    setLocales(leerLocales().filter((x) => !x.id));
+  }
 
   async function borrarRuta(id) {
     try {
@@ -475,10 +481,11 @@ export default function PaginaMisViajes() {
                 t={t}
                 lang={lang}
                 rutas={rutas}
-                borrador={borrador}
+                locales={locales}
                 onCrear={() => setRutaAbierta({ nueva: true })}
                 onAbrir={(r) => setRutaAbierta(r)}
                 onBorrar={(id) => setConfirmRuta(id)}
+                onDescartar={descartarLocal}
               />
             )}
           </div>
