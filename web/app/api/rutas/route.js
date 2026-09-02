@@ -1,8 +1,8 @@
 // Rutas multiparada guardadas.
 //
 // El modelo de /api/viajes guarda UNA ciudad por viaje, así que un itinerario
-// de varias paradas no cabía ahí. Esto lo guarda entero: paradas en orden,
-// noches por ciudad y número de viajeros.
+// de varias paradas no cabía ahí. Esto lo guarda entero: nombre que le pone el
+// viajero, fecha de salida, paradas en orden, noches por ciudad y viajeros.
 //
 // Identidad unificada (Google o código por correo) vía lib/identidad, no solo
 // getServerSession: los usuarios que entran con código también guardan.
@@ -117,6 +117,10 @@ export async function POST(req) {
     nombre: String(body?.nombre || "").slice(0, 120) || `${paradas[0].ciudad} → ${paradas[paradas.length - 1].ciudad}`,
     paradas,
     viajeros: Math.max(1, Math.min(20, Math.round(Number(body?.viajeros) || 1))),
+    // Fecha de salida "YYYY-MM-DD". La de regreso NO se guarda: sale de esta
+    // mas las noches de cada parada, y tener las dos permitiria que se
+    // contradijeran sin forma de saber cual manda.
+    fechaInicio: /^\d{4}-\d{2}-\d{2}$/.test(body?.fechaInicio || "") ? body.fechaInicio : "",
     moneda: String(body?.moneda || "USD").slice(0, 3).toUpperCase(),
     creada: Number(body?.creada) || Date.now(),
     actualizada: Date.now(),

@@ -42,14 +42,48 @@ function Sello({ fuente, t }) {
   );
 }
 
-export default function PlanRuta({ t = (k) => k, lang = "es", usuario = null, rutaInicial = null }) {
-  const [paradas, setParadas] = useState(() => rutaInicial?.paradas || []);
-  const [viajeros, setViajeros] = useState(() => rutaInicial?.viajeros || 1);
+// Borrador en curso. El usuario armo una ruta de dos paradas, cambio de
+// pestana en /mis-viajes y la perdio entera: el planificador solo esta montado
+// mientras su pestana esta activa, asi que React lo desmonta y el estado se va.
+// Un refresco hacia lo mismo. Guardar en KV no servia de red: exige sesion y
+// ademas hay que acordarse de pulsar el boton.
+//
+// Esto persiste lo que estas armando en el propio navegador, sin cuenta y sin
+// pulsar nada. No sustituye a "Guardar" (eso sincroniza y permite compartir):
+// es que perder media hora de trabajo por cambiar de pestana no es aceptable.
+const BORRADOR = "anduve_ruta_borrador";
+
+function leerBorrador() {
+  try {
+    const raw = localStorage.getItem(BORRADOR);
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    return Array.isArray(d?.paradas) && d.paradas.length ? d : null;
+  } catch {
+    return null;
+  }
+}
+
+export default function PlanRuta({ t = (k) => k, lang = "es", usuario = null, rutaInicial = null, alGuardar = null }) {
+  // Una ruta abierta por enlace manda sobre el borrador; si no, se recupera lo
+  // que estabas armando.
+  const inicio = rutaInicial || (typeof window !== "undefined" ? leerBorrador() : null);
+  const [paradas, setParadas] = useState(() => inicio?.paradas || []);
+  const [viajeros, setViajeros] = useState(() => inicio?.viajeros || 1);
+  // Nombre propio del viaje. La API ya lo aceptaba y ya tenia un automatico
+  // ("Medellin -> Madrid"); lo que faltaba era poder escribir el tuyo.
+  const [nombre, setNombre] = useState(() => inicio?.nombre || "");
+  // Fecha de salida. De aqui y de las noches de cada parada salen las fechas
+  // de todo el viaje, sin pedirlas dos veces ni poder contradecirse.
+  const [fechaInicio, setFechaInicio] = useState(() => inicio?.fechaInicio || "");
+  const [recuperado, setRecuperado] = useState(
+    () => Boolean(!rutaInicial && inicio?.paradas?.length)
+  );
   const [ofertas, setOfertas] = useState(null);
-  const [vivos, setVivos] = useState({});      // clave tramo -> precio real pedido a mano
+  const [vivos, setVivos] = useState(() => inicio?.vivos || {}); // clave tramo -> precio real pedido a mano
   const [buscando, setBuscando] = useState({});
   const [guardando, setGuardando] = useState(false);
-  const [idRuta, setIdRuta] = useState(rutaInicial?.id || null);
+  const [idRuta, setIdRuta] = useState(inicio?.id || null);
   const [aviso, setAviso] = useState(null);
   // Cambia tras cada parada agregada para remontar el buscador y dejarlo
   // vacío: si no, se queda con "Madrid (MAD)" escrito y encadenar la
@@ -64,6 +98,31 @@ export default function PlanRuta({ t = (k) => k, lang = "es", usuario = null, ru
   const [buscandoLibre, setBuscandoLibre] = useState(false);
 
   useEffect(() => { obtenerOfertas().then(setOfertas); }, []);
+
+  // Guarda el borrador en cada cambio. Se incluyen los precios en vivo ya
+  // consultados para no volver a gastar cuota de Travelpayouts al volver.
+  useEffect(() => {
+    try {
+      if (!paradas.length) { localStorage.removeItem(BORRADOR); return; }
+      localStorage.setItem(
+        BORRADOR,
+        JSON.stringify({ paradas, viajeros, nombre, fechaInicio, id: idRuta, vivos })
+      );
+    } catch {}
+  }, [paradas, viajeros, nombre, fechaInicio, idRuta, vivos]);
+
+  // Empezar otro viaje sin perder el guardado: se suelta el id para que el
+  // siguiente "Guardar" cree una ruta nueva en vez de pisar la anterior.
+  function nuevoViaje() {
+    setParadas([]);
+    setViajeros(1);
+    setNombre("");
+    setFechaInicio("");
+    setIdRuta(null);
+    setVivos({});
+    setRecuperado(false);
+    try { localStorage.removeItem(BORRADOR); } catch {}
+  }
 
   const fmtUsd = (v) => "US$ " + Math.round(v || 0).toLocaleString("en-US");
 
@@ -190,6 +249,31 @@ export default function PlanRuta({ t = (k) => k, lang = "es", usuario = null, ru
   );
   const zigzag = useMemo(() => detectarZigzag(paradas), [paradas]);
 
+  // Fechas de cada parada a partir de la salida y de las noches que ya pusiste
+  // ciudad por ciudad. Se derivan en vez de pedirse: si el usuario escribiera
+  // la fecha de fin a mano, podria contradecir a las noches y no habria forma
+  // de saber cual de las dos manda.
+  const fechas = useMemo(() => {
+    if (!fechaInicio) return null;
+    const base = new Date(fechaInicio + "T00:00:00");
+    if (Number.isNaN(base.getTime())) return null;
+    const suma = (dias) => {
+      const d = new Date(base);
+      d.setDate(d.getDate() + dias);
+      return d;
+    };
+    const porParada = [];
+    let acumulado = 0;
+    paradas.forEach((p, i) => {
+      porParada.push({ llegada: suma(acumulado), noches: i === 0 ? 0 : Math.max(0, Number(p.noches) || 0) });
+      if (i > 0) acumulado += Math.max(0, Number(p.noches) || 0);
+    });
+    return { porParada, fin: suma(acumulado), noches: acumulado };
+  }, [fechaInicio, paradas]);
+
+  const fmtFecha = (d) =>
+    d ? d.toLocaleDateString(lang, { day: "numeric", month: "short" }) : "";
+
   // --- Precio real bajo demanda ---------------------------------------------
   // No se piden solos: cada consulta gasta cuota de Travelpayouts. El usuario
   // decide en qué tramo quiere el dato de verdad.
@@ -232,13 +316,15 @@ export default function PlanRuta({ t = (k) => k, lang = "es", usuario = null, ru
       const r = await fetch("/api/rutas", {
         method: "POST",
         headers: h,
-        body: JSON.stringify({ id: idRuta, paradas, viajeros }),
+        body: JSON.stringify({ id: idRuta, paradas, viajeros, nombre, fechaInicio }),
       });
       const d = await r.json();
       if (d?.ok) {
         setIdRuta(d.ruta.id);
         setAviso(t("rutaGuardada"));
         track("ruta_guardada", { paradas: paradas.length });
+        // Que la lista de rutas guardadas de /mis-viajes se entere sin recargar.
+        alGuardar?.(d.ruta);
       } else {
         setAviso(d?.motivo === "no-auth" ? t("rutaEntraParaGuardar") : t("rutaErrorGuardar"));
       }
@@ -255,6 +341,84 @@ export default function PlanRuta({ t = (k) => k, lang = "es", usuario = null, ru
   // ---------------------------------------------------------------------------
   return (
     <div className="grid gap-6">
+      {/* Identidad del viaje: nombre propio y fecha de salida.
+          Faltaban las dos. La API ya guardaba `nombre` pero el planificador
+          nunca lo mandaba, asi que todas las rutas quedaban con el automatico
+          "Medellin -> Madrid"; y de fechas no habia nada en ningun sitio. */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-marca-700 dark:text-marca-300">
+            {t("rutaIdentidadEyebrow")}
+          </div>
+          {paradas.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                if (idRuta || window.confirm(t("rutaNuevoConfirmar"))) nuevoViaje();
+              }}
+              className="rounded-full border-[1.5px] border-slate-200 px-3 py-1 text-[12px] font-bold text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              + {t("rutaNuevo")}
+            </button>
+          )}
+        </div>
+
+        <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+          <label className="block">
+            <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-wider text-slate-400">
+              {t("rutaNombre")}
+            </span>
+            <input
+              type="text"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              maxLength={120}
+              placeholder={
+                paradas.length >= 2
+                  ? `${paradas[0].ciudad} → ${paradas[paradas.length - 1].ciudad}`
+                  : t("rutaNombrePlaceholder")
+              }
+              className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] font-semibold text-marca-900 outline-none focus:border-marca-400 sm:text-[14px] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-wider text-slate-400">
+              {t("rutaFechaSalida")}
+            </span>
+            <input
+              type="date"
+              value={fechaInicio}
+              onChange={(e) => setFechaInicio(e.target.value)}
+              className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] font-semibold text-marca-900 outline-none focus:border-marca-400 sm:text-[14px] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+            />
+          </label>
+        </div>
+
+        {fechas && (
+          <p className="mt-2 text-[12.5px] text-slate-500 dark:text-slate-400">
+            {t("rutaFechasResumen")
+              .replace("{salida}", fmtFecha(fechas.porParada[0]?.llegada))
+              .replace("{regreso}", fmtFecha(fechas.fin))
+              .replace("{n}", fechas.noches)}
+          </p>
+        )}
+      </div>
+
+      {/* Borrador recuperado: se avisa, porque ver contenido que no acabas de
+          escribir sin explicacion desconcierta mas de lo que ayuda. */}
+      {recuperado && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-[13px] text-emerald-900 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200">
+          <span>{t("rutaBorradorRecuperado")}</span>
+          <button
+            type="button"
+            onClick={() => setRecuperado(false)}
+            className="ml-auto font-bold text-emerald-700 hover:underline dark:text-emerald-300"
+          >
+            {t("rutaEntendido")}
+          </button>
+        </div>
+      )}
+
       {/* Añadir parada */}
       <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
         <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-marca-700 dark:text-marca-300">
@@ -382,6 +546,23 @@ export default function PlanRuta({ t = (k) => k, lang = "es", usuario = null, ru
                         {p.ciudad}{" "}
                         <span className="text-[12.5px] font-normal text-slate-400">{p.iata}</span>
                       </div>
+                      {/* Fechas de esta parada, derivadas de la salida y de
+                          las noches. Solo aparecen si pusiste fecha. */}
+                      {fechas && (
+                        <div className="text-[11.5px] font-semibold text-marca-700 dark:text-marca-300">
+                          {i === 0
+                            ? t("rutaSalesEl").replace("{fecha}", fmtFecha(fechas.porParada[0].llegada))
+                            : t("rutaEstasDel")
+                                .replace("{desde}", fmtFecha(fechas.porParada[i].llegada))
+                                .replace(
+                                  "{hasta}",
+                                  fmtFecha(
+                                    fechas.porParada[i + 1]?.llegada ||
+                                      (i === paradas.length - 1 ? fechas.fin : null)
+                                  )
+                                )}
+                        </div>
+                      )}
                       {p.lat == null && (
                         <div className="text-[11.5px] text-amber-700 dark:text-amber-400">
                           {t("rutaSinCoordenadas")}

@@ -1,7 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useApp } from "@/lib/AppContext";
 import { listarViajesAsync, borrarViajeAsync } from "@/lib/viajes";
@@ -127,6 +127,13 @@ export default function PaginaMisViajes() {
   const [confirmElim, setConfirmElim] = useState(null);
   // "reco" = te armo la ruta desde el presupuesto | "manual" = tu ordenas las ciudades
   const [modoPlan, setModoPlan] = useState("reco");
+  // Rutas multiparada. Viven en /api/rutas, un almacen distinto del de
+  // /api/viajes (que guarda UNA ciudad por viaje). Esta pagina solo listaba el
+  // segundo, asi que una ruta guardada no aparecia en ninguna parte y parecia
+  // que se hubiera borrado. El backend siempre soporto 25 por usuario.
+  const [rutas, setRutas] = useState([]);
+  const [rutaAbierta, setRutaAbierta] = useState(null);
+  const [confirmRuta, setConfirmRuta] = useState(null);
   const cargadas = useRef(new Set());
 
   useEffect(() => {
@@ -158,6 +165,52 @@ export default function PaginaMisViajes() {
       vivo = false;
     };
   }, [viajes]);
+
+  // Cabecera con el token de sesion por correo, igual que en PlanRuta: hay
+  // usuarios que entran con codigo y no con Google.
+  function cabeceras() {
+    const h = { "Content-Type": "application/json" };
+    try {
+      const tk =
+        localStorage.getItem("anduve_auth_token") ||
+        sessionStorage.getItem("anduve_auth_token");
+      if (tk) h.Authorization = `Bearer ${tk}`;
+    } catch {}
+    return h;
+  }
+
+  const cargarRutas = useCallback(async () => {
+    try {
+      const r = await fetch("/api/rutas", { headers: cabeceras() });
+      const d = r.ok ? await r.json() : null;
+      setRutas(d?.ok && Array.isArray(d.rutas) ? d.rutas : []);
+    } catch {
+      setRutas([]);
+    }
+  }, []);
+
+  useEffect(() => { cargarRutas(); }, [cargarRutas, usuario]);
+
+  function abrirRuta(r) {
+    setRutaAbierta(r);
+    setModoPlan("manual");
+    setTimeout(
+      () => document.getElementById("planificador")?.scrollIntoView({ behavior: "smooth" }),
+      50,
+    );
+  }
+
+  async function borrarRuta(id) {
+    try {
+      await fetch(`/api/rutas?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers: cabeceras(),
+      });
+    } catch {}
+    setConfirmRuta(null);
+    if (rutaAbierta?.id === id) setRutaAbierta(null);
+    cargarRutas();
+  }
 
   function reabrir(v) {
     const q = v.ciudad?.nombre
@@ -234,6 +287,64 @@ export default function PaginaMisViajes() {
           </a>
         </div>
 
+        {/* Rutas de varias ciudades guardadas. Cada una con el nombre que le
+            pusiste, sus fechas y su recorrido. Antes no se listaban en ningun
+            sitio: se guardaban bien en KV y desaparecian de la vista. */}
+        {rutas.length > 0 && (
+          <section className="mb-10">
+            <h2 className="mb-1 text-[17px] font-extrabold text-slate-900 dark:text-slate-100">
+              {t("rutasGuardadasTit")}
+            </h2>
+            <p className="mb-4 text-[13px] text-slate-500 dark:text-slate-400">
+              {(rutas.length === 1 ? t("rutasGuardadasN1") : t("rutasGuardadasN")).replace(
+                "{n}",
+                rutas.length,
+              )}
+            </p>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {rutas.map((r) => (
+                <li
+                  key={r.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-marca-300 dark:border-slate-700 dark:bg-slate-800"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-[15px] font-extrabold text-slate-900 dark:text-slate-100">
+                      {r.nombre}
+                    </h3>
+                    <button
+                      onClick={() => setConfirmRuta(r.id)}
+                      aria-label={t("misViajesEliminar")}
+                      className="shrink-0 rounded-full p-1 text-slate-300 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/30"
+                    >
+                      <Icono nombre="x" size={14} />
+                    </button>
+                  </div>
+                  <p className="mt-1 truncate text-[12.5px] text-slate-500 dark:text-slate-400">
+                    {(r.paradas || []).map((p) => p.ciudad).join(" → ")}
+                  </p>
+                  <p className="mt-1 text-[12px] text-slate-400">
+                    {r.fechaInicio
+                      ? new Date(r.fechaInicio + "T00:00:00").toLocaleDateString(lang, {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : t("rutasSinFecha")}
+                    {" · "}
+                    {t("rutasNParadas").replace("{n}", (r.paradas || []).length)}
+                  </p>
+                  <button
+                    onClick={() => abrirRuta(r)}
+                    className="mt-3 rounded-full bg-marca-700 px-4 py-1.5 text-[12.5px] font-bold text-white transition hover:bg-marca-800"
+                  >
+                    {t("misViajesAbrir")}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {/* ------------------------------------------------------------------
             Planificar un viaje nuevo. Dos planificadores, la misma pagina.
 
@@ -306,7 +417,16 @@ export default function PaginaMisViajes() {
                 onCerrar={() => {}}
               />
             ) : (
-              <PlanRuta t={t} lang={lang} usuario={usuario} />
+              <PlanRuta
+                t={t}
+                lang={lang}
+                usuario={usuario}
+                rutaInicial={rutaAbierta}
+                alGuardar={cargarRutas}
+                // Remontar al abrir otra ruta: si no, se quedarian las paradas
+                // de la anterior mezcladas con las nuevas.
+                key={rutaAbierta?.id || "nueva"}
+              />
             )}
           </div>
         </section>
@@ -530,6 +650,40 @@ export default function PaginaMisViajes() {
           </>
         )}
       </main>
+
+      {/* Confirmación de borrado de una ruta multiparada */}
+      {confirmRuta && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setConfirmRuta(null)}
+        >
+          <div
+            className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-[16px] font-bold text-slate-900 dark:text-slate-100">
+              {t("misViajesConfirmElim")}
+            </h3>
+            <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">
+              {rutas.find((x) => x.id === confirmRuta)?.nombre || ""}
+            </p>
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => setConfirmRuta(null)}
+                className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+              >
+                {t("misViajesConfirmNo")}
+              </button>
+              <button
+                onClick={() => borrarRuta(confirmRuta)}
+                className="flex-1 rounded-lg bg-red-500 px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-red-600"
+              >
+                {t("misViajesConfirmSi")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de confirmación de eliminación */}
       {confirmElim && (
