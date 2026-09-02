@@ -47,13 +47,6 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
   const ref = useRef(null);
   const mapaRef = useRef(null);
   const marcadoresRef = useRef([]);
-  // El mapa avisa de que esta listo UNA vez. Si el efecto se vuelve a
-  // ejecutar despues de ese aviso (y se ejecuta: cada parada nueva lo
-  // dispara), un segundo once("load") no llega nunca y el mapa se queda
-  // pintado a medias. Por eso el estado "listo" vive en un ref y no en el
-  // evento, y lo que se repinta es siempre la ultima version de pintar().
-  const listoRef = useRef(false);
-  const pintarRef = useRef(null);
   const [fallo, setFallo] = useState(false);
 
   // Solo las paradas que tienen coordenadas. Una ciudad sin geocodificar no
@@ -69,68 +62,11 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
   useEffect(() => {
     let cancelado = false;
 
-    async function preparar() {
+    async function dibujar() {
       if (!ref.current || puntos.length === 0) return;
       asegurarCss();
       const maplibregl = (await import("maplibre-gl")).default;
       if (cancelado || !ref.current) return;
-
-      pintarRef.current = () => {
-        const mapa = mapaRef.current;
-        if (!mapa) return;
-        mapa.resize();
-
-        marcadoresRef.current.forEach((m) => m.remove());
-        marcadoresRef.current = [];
-
-        for (const p of puntos) {
-          const el = document.createElement("div");
-          el.innerHTML =
-            `<div style="background:#0f766e;color:#fff;width:26px;height:26px;border-radius:50%;` +
-            `display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;` +
-            `border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)">${p.n}</div>`;
-          const m = new maplibregl.Marker({ element: el })
-            .setLngLat([p.lon, p.lat])
-            .setPopup(
-              new maplibregl.Popup({ offset: 16, closeButton: false }).setHTML(
-                `<div style="font-weight:800;font-size:12.5px;color:#052b28">${p.n}. ${p.ciudad}</div>` +
-                  (p.iata ? `<div style="font-size:11px;color:#64748b">${p.iata}</div>` : "")
-              )
-            )
-            .addTo(mapa);
-          marcadoresRef.current.push(m);
-        }
-
-        try { mapa.removeLayer("linea-ruta"); } catch {}
-        try { mapa.removeSource("ruta"); } catch {}
-        if (puntos.length > 1) {
-          mapa.addSource("ruta", {
-            type: "geojson",
-            data: {
-              type: "Feature",
-              geometry: { type: "LineString", coordinates: puntos.map((p) => [p.lon, p.lat]) },
-            },
-          });
-          mapa.addLayer({
-            id: "linea-ruta",
-            type: "line",
-            source: "ruta",
-            layout: { "line-cap": "round", "line-join": "round" },
-            paint: {
-              "line-color": "#0f766e",
-              "line-width": 2.5,
-              "line-opacity": 0.8,
-              "line-dasharray": [2, 1.6],
-            },
-          });
-
-          const b = new maplibregl.LngLatBounds();
-          puntos.forEach((p) => b.extend([p.lon, p.lat]));
-          mapa.fitBounds(b, { padding: 56, maxZoom: 8, duration: 600 });
-        } else {
-          mapa.flyTo({ center: [puntos[0].lon, puntos[0].lat], zoom: 5, duration: 600 });
-        }
-      };
 
       if (!mapaRef.current) {
         const mapa = new maplibregl.Map({
@@ -144,38 +80,93 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
         // El scroll del raton es para leer la pagina: el mapa vive dentro de
         // una tarjeta larga y capturarlo dejaba al usuario atrapado en el.
         mapa.scrollZoom.disable();
-        mapa.on("load", () => {
-          listoRef.current = true;
-          pintarRef.current?.();
-        });
         mapa.on("error", (e) => {
-          // Un fallo de tiles no debe dejar la tarjeta con un rectangulo gris
-          // y sin explicacion: se anota para poder decirlo en pantalla.
-          console.warn("[MapaRuta]", e?.error?.message || e);
+          console.warn("[MapaRuta]", e?.error?.message || "fallo del mapa");
+          setFallo(true);
         });
       }
+      const mapa = mapaRef.current;
+      mapa.resize();
 
-      // No basta con esperar a "load". Ese evento pasa UNA vez y no siempre
-      // llega (un error del estilo lo deja colgado), asi que el mapa se
-      // quedaba en gris sin marcadores y sin forma de recuperarse. Se
-      // comprueba tambien el estado real del estilo, reintentando un rato.
-      let intentos = 0;
-      const arrancar = () => {
-        if (cancelado) return;
-        const mapa = mapaRef.current;
-        if (!mapa) return;
-        if (mapa.isStyleLoaded()) {
-          listoRef.current = true;
-          pintarRef.current?.();
-          return;
-        }
-        if (intentos++ < 60) setTimeout(arrancar, 100);
-        else setFallo(true);
+      // --- Lo que NO necesita el estilo: marcadores y encuadre --------------
+      //
+      // Esto va primero y sin esperar a nada, y no es un detalle de orden.
+      // El dibujado colgaba entero del evento "load" de maplibre, y donde ese
+      // evento no llega — probado: un mapa minimo en el mismo navegador se
+      // queda con isStyleLoaded()=false para siempre — la tarjeta mostraba un
+      // rectangulo gris sin una sola parada. Los marcadores y el encuadre no
+      // dependen del estilo: se pintan ya, y si el mapa base no llega al menos
+      // se ve el viaje.
+      marcadoresRef.current.forEach((m) => m.remove());
+      marcadoresRef.current = [];
+
+      for (const p of puntos) {
+        const el = document.createElement("div");
+        el.innerHTML =
+          `<div style="background:#0f766e;color:#fff;width:26px;height:26px;border-radius:50%;` +
+          `display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;` +
+          `border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)">${p.n}</div>`;
+        const m = new maplibregl.Marker({ element: el })
+          .setLngLat([p.lon, p.lat])
+          .setPopup(
+            new maplibregl.Popup({ offset: 16, closeButton: false }).setHTML(
+              `<div style="font-weight:800;font-size:12.5px;color:#052b28">${p.n}. ${p.ciudad}</div>` +
+                (p.iata ? `<div style="font-size:11px;color:#64748b">${p.iata}</div>` : "")
+            )
+          )
+          .addTo(mapa);
+        marcadoresRef.current.push(m);
+      }
+
+      if (puntos.length > 1) {
+        const b = new maplibregl.LngLatBounds();
+        puntos.forEach((p) => b.extend([p.lon, p.lat]));
+        mapa.fitBounds(b, { padding: 56, maxZoom: 8, duration: 600 });
+      } else {
+        mapa.flyTo({ center: [puntos[0].lon, puntos[0].lat], zoom: 5, duration: 600 });
+      }
+
+      // --- Lo que SI necesita el estilo: la linea del recorrido -------------
+      // addSource/addLayer solo funcionan con el estilo cargado. Se intenta
+      // cuando ya lo esta y, si no, se reintenta un rato corto; si nunca
+      // llega, el mapa se queda con sus paradas y sin linea, que es mucho
+      // mejor que quedarse sin nada.
+      const linea = () => {
+        if (cancelado || !mapaRef.current) return;
+        try { mapaRef.current.removeLayer("linea-ruta"); } catch {}
+        try { mapaRef.current.removeSource("ruta"); } catch {}
+        if (puntos.length < 2) return;
+        mapaRef.current.addSource("ruta", {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            geometry: { type: "LineString", coordinates: puntos.map((p) => [p.lon, p.lat]) },
+          },
+        });
+        mapaRef.current.addLayer({
+          id: "linea-ruta",
+          type: "line",
+          source: "ruta",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-color": "#0f766e",
+            "line-width": 2.5,
+            "line-opacity": 0.8,
+            "line-dasharray": [2, 1.6],
+          },
+        });
       };
-      arrancar();
+
+      let intentos = 0;
+      const cuandoHayaEstilo = () => {
+        if (cancelado || !mapaRef.current) return;
+        if (mapaRef.current.isStyleLoaded()) { try { linea(); } catch {} return; }
+        if (intentos++ < 50) setTimeout(cuandoHayaEstilo, 120);
+      };
+      cuandoHayaEstilo();
     }
 
-    preparar();
+    dibujar();
     return () => { cancelado = true; };
     // `clave` resume el contenido: ver arriba.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -187,7 +178,6 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
       marcadoresRef.current = [];
       mapaRef.current?.remove();
       mapaRef.current = null;
-      listoRef.current = false;
     },
     []
   );
