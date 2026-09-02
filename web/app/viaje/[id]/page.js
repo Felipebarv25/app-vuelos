@@ -43,6 +43,9 @@ export default async function PaginaViajeCompartido({ params }) {
   if (!v?.ciudad) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-20 text-center">
+        {/* Tambien aqui: la rama de "no encontrado" es una pagina a la que
+            se llega por enlace, y se veia sin marca ni navegacion. */}
+        <NavTop />
         <div className="text-6xl">🧳</div>
         <h1 className="mt-3 text-3xl font-extrabold text-marca-900 dark:text-marca-300">
           Itinerario no disponible

@@ -62,6 +62,9 @@ export default async function DestinoPt({ params }) {
   if (!d) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-16 text-center">
+        {/* Tambien aqui: la rama de "no encontrado" es una pagina a la que
+            se llega por enlace, y se veia sin marca ni navegacion. */}
+        <NavTop />
         <h1 className="text-3xl font-extrabold">Destino não encontrado</h1>
         <p className="mt-2 text-slate-600"><Link href="/pt" className="text-marca-600 underline">Voltar ao início</Link></p>
       </main>
