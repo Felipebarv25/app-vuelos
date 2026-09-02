@@ -125,14 +125,16 @@ function ContadorRegresivo({ estado, t }) {
 // solo cabia un itinerario a la vez, y empezar otro obligaba a borrar el que
 // tenias.
 function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBorrar, onDescartar }) {
-  const fmt = (iso) =>
-    iso
-      ? new Date(iso + "T00:00:00").toLocaleDateString(lang, {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
-      : t("rutasSinFecha");
+  // Los viajes se planean por MES, no por dia. Se lee tambien el campo viejo
+  // para que las rutas guardadas antes del cambio sigan mostrando su fecha.
+  const fmt = (r) => {
+    const m = String(r.mesInicio || r.fechaInicio || "").slice(0, 7);
+    if (!/^\d{4}-\d{2}$/.test(m)) return t("rutasSinFecha");
+    const d = new Date(m + "-01T00:00:00");
+    return Number.isNaN(d.getTime())
+      ? t("rutasSinFecha")
+      : d.toLocaleDateString(lang, { month: "short", year: "numeric" });
+  };
 
   const Tarjeta = ({ r, sinGuardar }) => (
     <li className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-marca-300 dark:border-slate-700 dark:bg-slate-800">
@@ -162,7 +164,8 @@ function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBo
         {(r.paradas || []).map((p) => p.ciudad).join(" → ") || "—"}
       </p>
       <p className="mt-1 text-[12px] text-slate-400">
-        {fmt(r.fechaInicio)} · {t("rutasNParadas").replace("{n}", (r.paradas || []).length)}
+        <span className="capitalize">{fmt(r)}</span> ·{" "}
+        {t("rutasNParadas").replace("{n}", (r.paradas || []).length)}
       </p>
       <button
         onClick={() => onAbrir(r)}

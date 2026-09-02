@@ -20,6 +20,10 @@ import { linkTransporte, linkCarro, linkHoteles, linkCivitatis } from "@/lib/afi
 import { track } from "@/lib/track";
 import { leerLocales, escribirLocal, borrarLocal, nuevoUid } from "@/lib/rutasLocales";
 
+// "2027-04-02" y "2027-04" entran igual y salen como "2027-04". El formato
+// largo es el que guardaban las rutas antes de pasar a mes.
+const aMes = (s) => (/^\d{4}-\d{2}/.test(s || "") ? String(s).slice(0, 7) : "");
+
 const sinAcentos = (s) =>
   (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 
@@ -112,9 +116,14 @@ export default function PlanRuta({
   // Nombre propio del viaje. La API ya lo aceptaba y ya tenia un automatico
   // ("Medellin -> Madrid"); lo que faltaba era poder escribir el tuyo.
   const [nombre, setNombre] = useState(() => inicio?.nombre || "");
-  // Fecha de salida. De aqui y de las noches de cada parada salen las fechas
-  // de todo el viaje, sin pedirlas dos veces ni poder contradecirse.
-  const [fechaInicio, setFechaInicio] = useState(() => inicio?.fechaInicio || "");
+  // MES de salida ("YYYY-MM"), no dia.
+  //
+  // Antes se pedia el dia exacto. Un viaje que se planea con meses de
+  // antelacion no tiene dia: el usuario elegia uno inventado y la tarjeta lo
+  // repetia despues como si fuera un dato. El mes es lo que de verdad se sabe
+  // a esas alturas, y es tambien la unidad con la que se piden precios reales.
+  // Se lee el formato viejo "YYYY-MM-DD" para no perder lo ya guardado.
+  const [mesInicio, setMesInicio] = useState(() => aMes(inicio?.mesInicio || inicio?.fechaInicio));
   const [recuperado, setRecuperado] = useState(
     () => Boolean(inicio && inicio !== rutaInicial && inicio?.paradas?.length)
   );
@@ -141,9 +150,9 @@ export default function PlanRuta({
   // Persiste en cada cambio. Se incluyen los precios en vivo ya consultados
   // para no volver a gastar cuota de Travelpayouts al reabrir el viaje.
   useEffect(() => {
-    if (!paradas.length && !nombre && !fechaInicio) { borrarLocal(uid); return; }
-    escribirLocal({ uid, id: idRuta, paradas, viajeros, nombre, fechaInicio, vivos });
-  }, [uid, paradas, viajeros, nombre, fechaInicio, idRuta, vivos]);
+    if (!paradas.length && !nombre && !mesInicio) { borrarLocal(uid); return; }
+    escribirLocal({ uid, id: idRuta, paradas, viajeros, nombre, mesInicio, vivos });
+  }, [uid, paradas, viajeros, nombre, mesInicio, idRuta, vivos]);
 
   // Empezar otro viaje sin perder el guardado: se suelta el id para que el
   // siguiente "Guardar" cree una ruta nueva en vez de pisar la anterior.
@@ -151,7 +160,7 @@ export default function PlanRuta({
     setParadas([]);
     setViajeros(1);
     setNombre("");
-    setFechaInicio("");
+    setMesInicio("");
     setIdRuta(null);
     setVivos({});
     setRecuperado(false);
@@ -283,30 +292,48 @@ export default function PlanRuta({
   );
   const zigzag = useMemo(() => detectarZigzag(paradas), [paradas]);
 
-  // Fechas de cada parada a partir de la salida y de las noches que ya pusiste
-  // ciudad por ciudad. Se derivan en vez de pedirse: si el usuario escribiera
-  // la fecha de fin a mano, podria contradecir a las noches y no habria forma
-  // de saber cual de las dos manda.
-  const fechas = useMemo(() => {
-    if (!fechaInicio) return null;
-    const base = new Date(fechaInicio + "T00:00:00");
-    if (Number.isNaN(base.getTime())) return null;
-    const suma = (dias) => {
-      const d = new Date(base);
-      d.setDate(d.getDate() + dias);
-      return d;
-    };
+  // DIAS del viaje, no fechas. Con el mes de salida no hay dia exacto que dar,
+  // y numerar los dias dice lo mismo sin inventarse nada: cuanto dura el viaje
+  // y en que tramo cae cada ciudad depende solo de las noches que pongas.
+  //
+  // El dia 1 es el de salida, y la primera parada de destino cae tambien en el
+  // dia 1: se sale y se llega el mismo dia, igual que calculaba la version con
+  // fechas.
+  const dias = useMemo(() => {
+    if (!paradas.length) return null;
     const porParada = [];
-    let acumulado = 0;
+    let acum = 0;
     paradas.forEach((p, i) => {
-      porParada.push({ llegada: suma(acumulado), noches: i === 0 ? 0 : Math.max(0, Number(p.noches) || 0) });
-      if (i > 0) acumulado += Math.max(0, Number(p.noches) || 0);
+      const desde = acum + 1;
+      if (i > 0) acum += Math.max(0, Number(p.noches) || 0);
+      porParada.push({ desde, hasta: acum + 1 });
     });
-    return { porParada, fin: suma(acumulado), noches: acumulado };
-  }, [fechaInicio, paradas]);
+    return { porParada, noches: acum, total: acum + 1 };
+  }, [paradas]);
 
-  const fmtFecha = (d) =>
-    d ? d.toLocaleDateString(lang, { day: "numeric", month: "short" }) : "";
+  // Etiqueta del mes elegido, en el idioma de la interfaz.
+  const mesLabel = useMemo(() => {
+    if (!mesInicio) return "";
+    const d = new Date(mesInicio + "-01T00:00:00");
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleDateString(lang, { month: "long", year: "numeric" });
+  }, [mesInicio, lang]);
+
+  // Los proximos 24 meses. Dos anos, no uno: la gente planea viajes largos con
+  // mas antelacion que una escapada, y el planificador ya guardaba viajes a
+  // 2028.
+  const proximosMeses = useMemo(() => {
+    const base = new Date();
+    const out = [];
+    for (let i = 0; i < 24; i++) {
+      const m = new Date(base.getFullYear(), base.getMonth() + i, 1);
+      out.push({
+        clave: `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, "0")}`,
+        etiqueta: m.toLocaleDateString(lang, { month: "long", year: "numeric" }),
+      });
+    }
+    return out;
+  }, [lang]);
 
   // --- Precio real bajo demanda ---------------------------------------------
   // No se piden solos: cada consulta gasta cuota de Travelpayouts. El usuario
@@ -350,7 +377,7 @@ export default function PlanRuta({
       const r = await fetch("/api/rutas", {
         method: "POST",
         headers: h,
-        body: JSON.stringify({ id: idRuta, paradas, viajeros, nombre, fechaInicio }),
+        body: JSON.stringify({ id: idRuta, paradas, viajeros, nombre, mesInicio }),
       });
       const d = await r.json();
       if (d?.ok) {
@@ -433,11 +460,7 @@ export default function PlanRuta({
 
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
           <Chip>
-            {fechas
-              ? t("rutaFechasChip")
-                  .replace("{salida}", fmtFecha(fechas.porParada[0]?.llegada))
-                  .replace("{regreso}", fmtFecha(fechas.fin))
-              : t("rutasSinFecha")}
+            <span className="capitalize">{mesLabel || t("rutasSinFecha")}</span>
           </Chip>
           <Chip>{t("rutasNParadas").replace("{n}", paradas.length)}</Chip>
           <Chip>
@@ -477,25 +500,40 @@ export default function PlanRuta({
                 className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] font-semibold text-marca-900 outline-none focus:border-marca-400 sm:text-[14px] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
               />
             </label>
+            {/* Un <select> y no <input type="month">: el nativo no existe en
+                Firefox ni en Safari, y ahi se degrada a una caja de texto
+                donde hay que escribir "2027-04" a mano. */}
             <label className="block">
               <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-wider text-slate-400">
-                {t("rutaFechaSalida")}
+                {t("rutaMesSalida")}
               </span>
-              <input
-                type="date"
-                value={fechaInicio}
-                onChange={(e) => setFechaInicio(e.target.value)}
-                className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] font-semibold text-marca-900 outline-none focus:border-marca-400 sm:text-[14px] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
-              />
+              <select
+                value={mesInicio}
+                onChange={(e) => setMesInicio(e.target.value)}
+                className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] font-semibold capitalize text-marca-900 outline-none focus:border-marca-400 sm:text-[14px] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+              >
+                <option value="">{t("rutaMesSinDefinir")}</option>
+                {/* El mes guardado puede haber quedado atras, o venir de un
+                    viaje a mas de dos anos vista: se anade para no perderlo al
+                    abrir la tarjeta. */}
+                {mesInicio && !proximosMeses.some((m) => m.clave === mesInicio) && (
+                  <option value={mesInicio}>{mesLabel || mesInicio}</option>
+                )}
+                {proximosMeses.map((m) => (
+                  <option key={m.clave} value={m.clave} className="capitalize">
+                    {m.etiqueta}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
 
-          {fechas && (
+          {(mesLabel || dias) && (
             <p className="mt-2 text-[12.5px] text-slate-500 dark:text-slate-400">
-              {t("rutaFechasResumen")
-                .replace("{salida}", fmtFecha(fechas.porParada[0]?.llegada))
-                .replace("{regreso}", fmtFecha(fechas.fin))
-                .replace("{n}", fechas.noches)}
+              {(mesLabel ? t("rutaMesResumen") : t("rutaMesResumenSinMes"))
+                .replace("{mes}", mesLabel)
+                .replace("{n}", dias ? dias.noches : 0)
+                .replace("{d}", dias ? dias.total : 0)}
             </p>
           )}
         </section>
@@ -641,21 +679,16 @@ export default function PlanRuta({
                           {p.ciudad}{" "}
                           <span className="text-[12.5px] font-normal text-slate-400">{p.iata}</span>
                         </div>
-                        {/* Fechas de esta parada, derivadas de la salida y de
-                            las noches. Solo aparecen si pusiste fecha. */}
-                        {fechas && (
+                        {/* En que dia del viaje cae esta parada. Sale de las
+                            noches, no del calendario: sin dia de salida no hay
+                            fecha que dar, pero el tramo del viaje si se sabe. */}
+                        {dias && (
                           <div className="text-[11.5px] font-semibold text-marca-700 dark:text-marca-300">
                             {i === 0
-                              ? t("rutaSalesEl").replace("{fecha}", fmtFecha(fechas.porParada[0].llegada))
-                              : t("rutaEstasDel")
-                                  .replace("{desde}", fmtFecha(fechas.porParada[i].llegada))
-                                  .replace(
-                                    "{hasta}",
-                                    fmtFecha(
-                                      fechas.porParada[i + 1]?.llegada ||
-                                        (i === paradas.length - 1 ? fechas.fin : null)
-                                    )
-                                  )}
+                              ? t("rutaDiaSalida")
+                              : t("rutaDiasParada")
+                                  .replace("{desde}", dias.porParada[i].desde)
+                                  .replace("{hasta}", dias.porParada[i].hasta)}
                           </div>
                         )}
                         {p.lat == null && (
