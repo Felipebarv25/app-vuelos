@@ -214,11 +214,17 @@ function buscarPaises(paises, q, limite = 100) {
   return [...empieza, ...contiene].slice(0, limite);
 }
 
-// Etiqueta visible para el campo de país. Si no hay filtro, muestra texto
-// genérico. Si hay, bandera + nombre localizado.
+// Etiqueta visible para el campo de país. Solo el NOMBRE: la bandera va como
+// icono al lado del input, no dentro de su texto.
+//
+// Antes esto devolvia `${emoji} ${nombre}` y ese texto era el value de un
+// <input>. En Windows el emoji de bandera no existe en la fuente y el campo
+// se leia literalmente "co Colombia" (reportado por el usuario viendo el
+// planificador). Dentro de un input no cabe una imagen, asi que el texto se
+// queda limpio y la bandera se dibuja superpuesta al lado.
 function etiquetaPais(codigo, lang) {
-  if (!codigo) return "🌍 Todo el mundo";
-  return `${banderaDePais(codigo)} ${nombrePais(codigo, lang)}`;
+  if (!codigo) return "Todo el mundo";
+  return nombrePais(codigo, lang);
 }
 
 export default function SelectorAeropuerto({
@@ -315,7 +321,8 @@ export default function SelectorAeropuerto({
     const etiquetaActual = etiquetaPais(paisFiltro, lang);
     // Si lo que está escrito coincide con la etiqueta del país actual,
     // mostramos toda la lista (para que puedan navegar).
-    const queryReal = textoPais === etiquetaActual ? "" : textoPais.replace(/^[\u{1F1E6}-\u{1F1FF}🌍\s]+/u, "");
+    // Ya no hace falta despegar emojis: etiquetaPais() devuelve solo el nombre.
+    const queryReal = textoPais === etiquetaActual ? "" : textoPais.trim();
     const base = buscarPaises(paisesDisponibles, queryReal, 100);
     // Prepend "Todo el mundo" como opción explícita.
     return [{ codigo: "", nombre: "Todo el mundo" }, ...base];
@@ -420,6 +427,14 @@ export default function SelectorAeropuerto({
       {/* En modo búsqueda libre no se muestra: no hay un "país de salida" que
           elegir, y dejarlo visible además anclaba la búsqueda a ese país. */}
       <div ref={cajaPaisRef} className={`relative ${filtroPais ? "" : "hidden"}`}>
+        {/* Bandera del pais elegido, superpuesta sobre el hueco que deja el
+            padding izquierdo del input. Se oculta mientras el usuario escribe,
+            para no dejar una bandera que ya no corresponde al texto. */}
+        {paisFiltro && textoPais === etiquetaPais(paisFiltro, lang) && (
+          <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2">
+            <Bandera cc={paisFiltro} size={18} />
+          </span>
+        )}
         <input
           ref={paisInputRef}
           type="text"
@@ -439,7 +454,9 @@ export default function SelectorAeropuerto({
             try { e.target.select(); } catch {}
           }}
           onKeyDown={onKeyPais}
-          className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] sm:text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+          className={`w-full rounded-xl border-2 border-slate-200 bg-white py-2.5 pr-3 text-[16px] sm:text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 ${
+            paisFiltro && textoPais === etiquetaPais(paisFiltro, lang) ? "pl-10" : "pl-3"
+          }`}
         />
         {abiertoPais && paisesFiltrados.length > 0 && (
           <ul
