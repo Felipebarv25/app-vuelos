@@ -15,6 +15,12 @@ import { Logo } from "@/components/Logo";
 
 const Asesor = dynamic(() => import("@/components/Asesor"));
 
+// Los dos planificadores viven AQUI, no en un modal encima del home. Carga
+// diferida: entre los dos son ~2.000 lineas y la mayoria de las visitas a esta
+// pagina vienen a ver los viajes guardados, no a planear uno nuevo.
+const Presupuesto = dynamic(() => import("@/components/Presupuesto"), { ssr: false });
+const PlanRuta = dynamic(() => import("@/components/PlanRuta"), { ssr: false });
+
 const RE_MALA =
   /escudo|coat[_ ]?of[_ ]?arms|flag|bandera|seal|sello|logo|emblem|crest|mapa|map[_ .]|locator|montage|collage|blason/i;
 
@@ -119,6 +125,8 @@ export default function PaginaMisViajes() {
   const [cargando, setCargando] = useState(true);
   const [fotos, setFotos] = useState({});
   const [confirmElim, setConfirmElim] = useState(null);
+  // "reco" = te armo la ruta desde el presupuesto | "manual" = tu ordenas las ciudades
+  const [modoPlan, setModoPlan] = useState("reco");
   const cargadas = useRef(new Set());
 
   useEffect(() => {
@@ -216,13 +224,98 @@ export default function PaginaMisViajes() {
                 : t("misViajesVacioSub")}
             </p>
           </div>
-          <Link
-            href="/?presupuesto=1"
+          {/* Ancla a la seccion de abajo: el planificador ya vive en esta
+              pagina, asi que mandar al home a abrir un modal era un rodeo. */}
+          <a
+            href="#planificador"
             className="rounded-full bg-marca-700 px-5 py-2.5 text-[13px] font-semibold text-white shadow-md transition hover:bg-marca-800 hover:shadow-lg"
           >
             {t("misViajesPlanearNuevo")}
-          </Link>
+          </a>
         </div>
+
+        {/* ------------------------------------------------------------------
+            Planificar un viaje nuevo. Dos planificadores, la misma pagina.
+
+            Antes esto era un modal que se abria encima del home ("Mis viajes"
+            en el home ni siquiera navegaba si no tenias viajes guardados: te
+            desplegaba el planificador encima). Ahora es contenido de esta
+            pagina, con las dos formas de llegar al presupuesto:
+
+              reco   -> pones cuanta plata tienes y te proponemos las ciudades
+              manual -> pones tus ciudades en tu orden y calculamos el costo
+
+            Son los flujos inversos, no dos versiones de lo mismo: por eso son
+            dos pestanas y no una sola con opciones.
+            ------------------------------------------------------------------ */}
+        <section id="planificador" className="mb-12 scroll-mt-24">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-marca-700 dark:text-marca-300">
+            {t("planEyebrow")}
+          </div>
+          <h2 className="mt-1 text-[21px] font-extrabold tracking-tight text-slate-900 lg:text-[25px] dark:text-slate-100">
+            {t("planTitulo")}
+          </h2>
+          <p className="mt-1.5 max-w-2xl text-[13.5px] leading-relaxed text-slate-600 dark:text-slate-400">
+            {t("planSub")}
+          </p>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {[
+              ["reco", "compass", t("planModoReco"), t("planModoRecoSub")],
+              ["manual", "map", t("planModoManual"), t("planModoManualSub")],
+            ].map(([k, icono, titulo, sub]) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setModoPlan(k)}
+                aria-pressed={modoPlan === k}
+                className={`rounded-2xl border-2 p-4 text-left transition ${
+                  modoPlan === k
+                    ? "border-marca-500 bg-marca-50 dark:border-marca-500 dark:bg-marca-900/30"
+                    : "border-slate-200 bg-white hover:border-marca-300 dark:border-slate-700 dark:bg-slate-800"
+                }`}
+              >
+                <span
+                  className={`inline-flex items-center gap-2 text-[14.5px] font-extrabold ${
+                    modoPlan === k
+                      ? "text-marca-800 dark:text-marca-200"
+                      : "text-slate-800 dark:text-slate-200"
+                  }`}
+                >
+                  <Icono nombre={icono} size={16} /> {titulo}
+                </span>
+                <span className="mt-1 block text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400">
+                  {sub}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-4">
+            {modoPlan === "reco" ? (
+              <Presupuesto
+                incrustado
+                t={t}
+                onElegirCiudad={(c) =>
+                  router.push(
+                    `/?q=${encodeURIComponent(
+                      typeof c === "string" ? c : `${c?.ciudad || ""}, ${c?.pais || ""}`,
+                    )}`,
+                  )
+                }
+                onCerrar={() => {}}
+              />
+            ) : (
+              <PlanRuta t={t} lang={lang} usuario={usuario} />
+            )}
+          </div>
+        </section>
+
+        {viajesOrdenados.length > 0 && (
+          <h2 className="mb-4 text-[17px] font-extrabold text-slate-900 dark:text-slate-100">
+            {t("planGuardadosTit")}
+          </h2>
+        )}
 
         {/* Cargando */}
         {cargando && (
@@ -246,13 +339,14 @@ export default function PaginaMisViajes() {
             <p className="mt-2 max-w-md text-[14px] leading-relaxed text-slate-500 dark:text-slate-400">
               {t("misViajesVacioMsg")}
             </p>
-            <Link
-              href="/?presupuesto=1"
+            {/* Al planificador de arriba, no al modal del home. */}
+            <a
+              href="#planificador"
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-marca-700 px-6 py-3 text-[14px] font-semibold text-white shadow-md transition hover:bg-marca-800 hover:shadow-lg"
             >
               <Icono nombre="compass" size={16} />
               {t("misViajesEmpezar")}
-            </Link>
+            </a>
 
             {inspiracion.length > 0 && (
               <div className="mt-10 w-full">
@@ -402,12 +496,12 @@ export default function PaginaMisViajes() {
                       )}
                     </p>
                   </div>
-                  <Link
-                    href="/?presupuesto=1"
+                  <a
+                    href="#planificador"
                     className="text-[13px] font-semibold text-marca-700 hover:text-marca-800 dark:text-marca-300"
                   >
                     {t("misViajesInspiCta")} →
-                  </Link>
+                  </a>
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {inspiracion.map((d, i) => (
@@ -481,7 +575,10 @@ export default function PaginaMisViajes() {
           t={t}
           usuario={usuario}
           onPlanear={(q) => router.push(`/?q=${encodeURIComponent(q)}`)}
-          onAbrirPresupuesto={() => router.push("/?presupuesto=1")}
+          onAbrirPresupuesto={() => {
+            setModoPlan("reco");
+            document.getElementById("planificador")?.scrollIntoView({ behavior: "smooth" });
+          }}
         />
       </div>
 

@@ -29,11 +29,15 @@ import { obtenerGeo } from "@/lib/geo";
 //  - Un destino: lista de ciudades que caben en el presupuesto.
 //  - Ruta multiciudad: arma una ruta de varias ciudades dentro del presupuesto,
 //    con botón para regenerar otra ruta.
-export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, inicial = null }) {
+// `incrustado`: renderiza el planificador como un bloque mas de la pagina en
+// vez de como modal flotante. Lo usa /mis-viajes, donde el planificador es
+// contenido de la pagina y no algo que se despliega encima de otra cosa.
+export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, inicial = null, incrustado = false }) {
   // Que la flecha "atrás" del navegador cierre este modal en vez de sacar al
   // usuario al pre-login. Como el componente solo se monta cuando esta abierto,
   // pasamos true fijo: el hook registra/limpia history en mount/unmount.
-  useBrowserBackClose(true, onCerrar);
+  // Incrustado no captura el boton "atras": no hay nada que cerrar.
+  useBrowserBackClose(!incrustado, onCerrar);
   const [modo, setModo] = useState("ruta"); // "ruta" | "destino"
   // `inicial` permite que el HERO abra este modal pre-llenado con el monto+moneda
   // que el usuario tipeo en el input principal de la home. Sin override quedan
@@ -456,8 +460,14 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[4000] flex items-end justify-center bg-slate-900/60 backdrop-blur-sm">
-      <div className="animar-subir flex max-h-[94vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-[0_-12px_40px_rgba(0,0,0,.25)] dark:bg-slate-900">
+    <div className={incrustado ? "" : "fixed inset-0 z-[4000] flex items-end justify-center bg-slate-900/60 backdrop-blur-sm"}>
+      <div
+        className={
+          incrustado
+            ? "flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+            : "animar-subir flex max-h-[94vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-[0_-12px_40px_rgba(0,0,0,.25)] dark:bg-slate-900"
+        }
+      >
         {/* Cabecera: tono sobrio, sin gradiente tropical — diseño "panel de
             herramienta seria" en vez de marketing. */}
         <div className="border-b border-slate-200 bg-white px-5 pb-3 pt-4 dark:border-slate-700 dark:bg-slate-900">
@@ -470,13 +480,15 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                 {t("presupTitulo")}
               </div>
             </div>
-            <button
-              onClick={onCerrar}
-              aria-label="Cerrar"
-              className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              <Icono nombre="x" size={16} />
-            </button>
+            {!incrustado && (
+              <button
+                onClick={onCerrar}
+                aria-label="Cerrar"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <Icono nombre="x" size={16} />
+              </button>
+            )}
           </div>
 
           {/* Conmutador de modo — más sutil, estilo tabs en vez de pills */}
@@ -504,7 +516,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
         </div>
 
         {/* Cuerpo scrollable */}
-        <div className="flex-1 overflow-y-auto px-5 py-4">
+        <div className={`px-5 py-4 ${incrustado ? "" : "flex-1 overflow-y-auto"}`}>
           {/* Orden de campos (rediseño 2026-06-24): origen → presupuesto →
               REGIÓN → personas → mes → días (recomendado por la app). Antes
               se pedían días arriba sin contexto; ahora la app DEDUCE los días
