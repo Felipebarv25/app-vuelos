@@ -124,6 +124,8 @@ function ContadorRegresivo({ estado, t }) {
 // uno. Antes no habia este nivel — el planificador era un formulario suelto,
 // solo cabia un itinerario a la vez, y empezar otro obligaba a borrar el que
 // tenias.
+const conMayuscula = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
 function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBorrar, onDescartar }) {
   // Los viajes se planean por MES, no por dia. Se lee tambien el campo viejo
   // para que las rutas guardadas antes del cambio sigan mostrando su fecha.
@@ -133,7 +135,7 @@ function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBo
     const d = new Date(m + "-01T00:00:00");
     return Number.isNaN(d.getTime())
       ? t("rutasSinFecha")
-      : d.toLocaleDateString(lang, { month: "short", year: "numeric" });
+      : conMayuscula(d.toLocaleDateString(lang, { month: "short", year: "numeric" }));
   };
 
   const Tarjeta = ({ r, sinGuardar }) => (
@@ -164,7 +166,7 @@ function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBo
         {(r.paradas || []).map((p) => p.ciudad).join(" → ") || "—"}
       </p>
       <p className="mt-1 text-[12px] text-slate-400">
-        <span className="capitalize">{fmt(r)}</span> ·{" "}
+        {fmt(r)} ·{" "}
         {t("rutasNParadas").replace("{n}", (r.paradas || []).length)}
       </p>
       <button

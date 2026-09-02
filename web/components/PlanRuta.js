@@ -22,6 +22,8 @@ import { leerLocales, escribirLocal, borrarLocal, nuevoUid } from "@/lib/rutasLo
 
 // "2027-04-02" y "2027-04" entran igual y salen como "2027-04". El formato
 // largo es el que guardaban las rutas antes de pasar a mes.
+const conMayuscula = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
 const aMes = (s) => (/^\d{4}-\d{2}/.test(s || "") ? String(s).slice(0, 7) : "");
 
 const sinAcentos = (s) =>
@@ -316,7 +318,7 @@ export default function PlanRuta({
     if (!mesInicio) return "";
     const d = new Date(mesInicio + "-01T00:00:00");
     if (Number.isNaN(d.getTime())) return "";
-    return d.toLocaleDateString(lang, { month: "long", year: "numeric" });
+    return conMayuscula(d.toLocaleDateString(lang, { month: "long", year: "numeric" }));
   }, [mesInicio, lang]);
 
   // Los proximos 24 meses. Dos anos, no uno: la gente planea viajes largos con
@@ -329,7 +331,7 @@ export default function PlanRuta({
       const m = new Date(base.getFullYear(), base.getMonth() + i, 1);
       out.push({
         clave: `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, "0")}`,
-        etiqueta: m.toLocaleDateString(lang, { month: "long", year: "numeric" }),
+        etiqueta: conMayuscula(m.toLocaleDateString(lang, { month: "long", year: "numeric" })),
       });
     }
     return out;
@@ -460,7 +462,7 @@ export default function PlanRuta({
 
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
           <Chip>
-            <span className="capitalize">{mesLabel || t("rutasSinFecha")}</span>
+            {mesLabel || t("rutasSinFecha")}
           </Chip>
           <Chip>{t("rutasNParadas").replace("{n}", paradas.length)}</Chip>
           <Chip>
@@ -510,7 +512,7 @@ export default function PlanRuta({
               <select
                 value={mesInicio}
                 onChange={(e) => setMesInicio(e.target.value)}
-                className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] font-semibold capitalize text-marca-900 outline-none focus:border-marca-400 sm:text-[14px] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+                className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] font-semibold text-marca-900 outline-none focus:border-marca-400 sm:text-[14px] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
               >
                 <option value="">{t("rutaMesSinDefinir")}</option>
                 {/* El mes guardado puede haber quedado atras, o venir de un
@@ -520,7 +522,7 @@ export default function PlanRuta({
                   <option value={mesInicio}>{mesLabel || mesInicio}</option>
                 )}
                 {proximosMeses.map((m) => (
-                  <option key={m.clave} value={m.clave} className="capitalize">
+                  <option key={m.clave} value={m.clave}>
                     {m.etiqueta}
                   </option>
                 ))}
