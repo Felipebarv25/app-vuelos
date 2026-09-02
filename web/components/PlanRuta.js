@@ -313,12 +313,21 @@ export default function PlanRuta({
     return { porParada, noches: acum, total: acum + 1 };
   }, [paradas]);
 
-  // Etiqueta del mes elegido, en el idioma de la interfaz.
-  const mesLabel = useMemo(() => {
-    if (!mesInicio) return "";
+  // Etiqueta del mes elegido, en el idioma de la interfaz, en dos formas.
+  //
+  // `llano` es lo que devuelve el navegador: en espanol, portugues y frances
+  // el mes va en minuscula; en ingles, en mayuscula. Esa es la que se mete
+  // dentro de una frase ("Sales en abril de 2027" / "You leave in April
+  // 2027"). Capitalizar siempre daba "Sales en Abril de 2027".
+  //
+  // `mesLabel` es la misma con mayuscula inicial, para cuando va sola: la
+  // pastilla de la portada y el selector.
+  const [mesLlano, mesLabel] = useMemo(() => {
+    if (!mesInicio) return ["", ""];
     const d = new Date(mesInicio + "-01T00:00:00");
-    if (Number.isNaN(d.getTime())) return "";
-    return conMayuscula(d.toLocaleDateString(lang, { month: "long", year: "numeric" }));
+    if (Number.isNaN(d.getTime())) return ["", ""];
+    const llano = d.toLocaleDateString(lang, { month: "long", year: "numeric" });
+    return [llano, conMayuscula(llano)];
   }, [mesInicio, lang]);
 
   // Los proximos 24 meses. Dos anos, no uno: la gente planea viajes largos con
@@ -533,7 +542,7 @@ export default function PlanRuta({
           {(mesLabel || dias) && (
             <p className="mt-2 text-[12.5px] text-slate-500 dark:text-slate-400">
               {(mesLabel ? t("rutaMesResumen") : t("rutaMesResumenSinMes"))
-                .replace("{mes}", mesLabel)
+                .replace("{mes}", mesLlano)
                 .replace("{n}", dias ? dias.noches : 0)
                 .replace("{d}", dias ? dias.total : 0)}
             </p>
