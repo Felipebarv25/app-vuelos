@@ -292,7 +292,21 @@ export function detectarZigzag(paradas, umbralPct = 12) {
   const optimo = largo(ruta);
   const ahorroKm = actual - optimo;
   const pct = actual > 0 ? Math.round((ahorroKm / actual) * 100) : 0;
-  if (pct < umbralPct) return { hayZigzag: false, kmActual: actual, kmOptimo: optimo };
+
+  // Dos criterios, y el segundo no es un parche.
+  //
+  // Con el porcentaje solo, el aviso practicamente nunca salta en un viaje
+  // transatlantico: entre Medellin y Europa hay 8.000 km de oceano que no
+  // cambian se ordene como se ordene, asi que arreglar un rodeo de 1.300 km
+  // dentro de Europa sale al 6% del total y se quedaba callado. Y 1.300 km
+  // son dos vuelos y un dia de viaje.
+  //
+  // El umbral absoluto mide lo que de verdad se ahorra. El porcentaje sigue
+  // valiendo para los viajes cortos, donde 400 km si serian el viaje entero.
+  const AHORRO_MINIMO_KM = 400;
+  if (pct < umbralPct && ahorroKm < AHORRO_MINIMO_KM) {
+    return { hayZigzag: false, kmActual: Math.round(actual), kmOptimo: Math.round(optimo) };
+  }
 
   // Los indices del orden nuevo sobre el array original: sin esto la sugerencia
   // solo se puede leer, y habia que reordenar a mano con las flechitas.
