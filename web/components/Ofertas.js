@@ -554,7 +554,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
         <div className="mt-4 max-w-2xl rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[15px] font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-              {banderaDePais(destinoSel.pais)} {destinoSel.ciudad}
+              <Bandera cc={destinoSel.pais} size={16} /> {destinoSel.ciudad}
             </span>
             <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-slate-500 dark:bg-slate-700 dark:text-slate-300">
               {destinoSel.iata}

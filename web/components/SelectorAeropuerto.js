@@ -12,6 +12,9 @@
 // Carga el JSON bajo demanda la primera vez que el componente se monta.
 // Singleton compartido entre instancias.
 import { useEffect, useMemo, useRef, useState } from "react";
+// Banderas en PNG: el emoji de bandera no renderiza en Windows y las filas se
+// leian "jp Tokio" en vez de "🇯🇵 Tokio".
+import Bandera from "./Bandera";
 import {
   HUBS_PRIORITARIOS,
   HUBS_SECUNDARIOS,
@@ -456,7 +459,7 @@ export default function SelectorAeropuerto({
                     : "text-slate-700 dark:text-slate-200"
                 }`}
               >
-                <span className="text-base" aria-hidden>{p.codigo ? banderaDePais(p.codigo) : "🌍"}</span>
+                <span className="flex w-[18px] shrink-0 justify-center" aria-hidden>{p.codigo ? <Bandera cc={p.codigo} size={18} /> : "🌍"}</span>
                 <span className="truncate font-semibold">{p.nombre}</span>
               </li>
             ))}
@@ -510,7 +513,7 @@ export default function SelectorAeropuerto({
                     : "text-slate-700 dark:text-slate-200"
                 }`}
               >
-                <span className="text-base" aria-hidden>{banderaDePais(a.pais)}</span>
+                <span className="flex w-[18px] shrink-0 justify-center" aria-hidden><Bandera cc={a.pais} size={18} /></span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-semibold">
                     {a.ciudad} <span className="text-slate-400">·</span> {nombrePais(a.pais, lang)}
