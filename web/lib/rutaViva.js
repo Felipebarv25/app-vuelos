@@ -12,7 +12,7 @@
 //   coordenadas   catálogo curado -> geocodificador (Photon) -> sin dato
 //   costo diario  ciudad curada -> mediana del país -> mediana de región -> global
 //   tramo         vuelo real detectado -> tramo curado -> estimación por distancia
-import { DESTINOS_PRESUPUESTO } from "./presupuesto";
+import { DESTINOS_PRESUPUESTO, REPARTO_DIARIO } from "./presupuesto";
 import { costoTramoReal } from "./tramos";
 
 // --- Geometría --------------------------------------------------------------
@@ -240,6 +240,20 @@ export function resumenRuta({ paradas = [], tramos = [], viajeros = 1 }) {
   const noches = porCiudad.reduce((s, c) => s + c.noches, 0);
   const porPersona = transporte + estadia;
 
+  // Presupuesto por TIPOLOGIA DE GASTO, que es como la gente lo piensa
+  // ("cuanto me voy a gastar en hoteles") y no como lo teniamos ("estadia").
+  // La estadia es un agregado del costo diario de cada ciudad; se reparte con
+  // las mismas proporciones que usa el planificador recomendado, para que los
+  // dos caminos al presupuesto no den cifras distintas del mismo viaje.
+  const enDestino = estadia * n;
+  const desglose = {
+    transporte: Math.round(transporte * n),
+    hospedaje: Math.round(enDestino * REPARTO_DIARIO.hospedaje),
+    comida: Math.round(enDestino * REPARTO_DIARIO.comida),
+    local: Math.round(enDestino * REPARTO_DIARIO.transporte),
+    extras: Math.round(enDestino * REPARTO_DIARIO.extras),
+  };
+
   return {
     transporte,
     estadia,
@@ -249,6 +263,7 @@ export function resumenRuta({ paradas = [], tramos = [], viajeros = 1 }) {
     horasEnMovimiento: Math.round(horas * 10) / 10,
     porPersona,
     total: porPersona * n,
+    desglose,
     viajeros: n,
     // Cuánto del total descansa en cifras de mercado y cuánto en estimaciones.
     confianza: {

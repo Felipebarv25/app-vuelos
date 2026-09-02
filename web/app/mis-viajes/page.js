@@ -357,7 +357,7 @@ export default function PaginaMisViajes() {
 
       <main className="mx-auto max-w-5xl px-4 py-8 lg:px-8 lg:py-10">
         {/* Cabecera */}
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
+        <div className="mb-8">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-marca-700 dark:text-marca-300">
               {t("misViajesEyebrow")}
@@ -379,14 +379,6 @@ export default function PaginaMisViajes() {
                 : t("misViajesVacioSub")}
             </p>
           </div>
-          {/* Ancla a la seccion de abajo: el planificador ya vive en esta
-              pagina, asi que mandar al home a abrir un modal era un rodeo. */}
-          <a
-            href="#planificador"
-            className="rounded-full bg-marca-700 px-5 py-2.5 text-[13px] font-semibold text-white shadow-md transition hover:bg-marca-800 hover:shadow-lg"
-          >
-            {t("misViajesPlanearNuevo")}
-          </a>
         </div>
 
         {/* ------------------------------------------------------------------
@@ -505,30 +497,13 @@ export default function PaginaMisViajes() {
           </div>
         )}
 
-        {/* Sin viajes guardados: solo el boton.
+        {/* Sin viajes guardados no se pinta nada aqui.
 
-            Aqui habia un estado vacio "aspiracional": caja de borde punteado a
-            pantalla completa, ilustracion, titulo, parrafo y una rejilla de
-            cuatro destinos sugeridos. Tres problemas juntos. Ocupaba una
-            pantalla entera para decir "no tienes nada", y lo decia JUSTO
-            debajo de los dos planificadores que si sirven para algo. Repetia
-            con otras palabras la llamada a la accion de la cabecera. Y la
-            rejilla pintaba la bandera del pais como emoji, que en Windows sale
-            como dos letras ("BR Sao Paulo").
-
-            El usuario pidio dejar en su lugar el mismo boton de la cabecera.
-            La rejilla de inspiracion no se pierde: sigue apareciendo mas abajo
-            para quien ya tiene uno o dos viajes guardados. */}
-        {!cargando && viajes.length === 0 && (
-          <div className="flex justify-center py-6">
-            <a
-              href="#planificador"
-              className="rounded-full bg-marca-700 px-5 py-2.5 text-[13px] font-semibold text-white shadow-md transition hover:bg-marca-800 hover:shadow-lg"
-            >
-              {t("misViajesPlanearNuevo")}
-            </a>
-          </div>
-        )}
+            Primero hubo un estado vacio "aspiracional" a pantalla completa;
+            despues, a peticion del usuario, solo el boton de la cabecera. Al
+            verlo montado sobraban los dos: la pagina ya lleva el planificador
+            abierto justo encima, con su propio "+ Crear un viaje", asi que
+            un tercer boton para lo mismo solo repetia. */}
 
         {/* Grid de tarjetas postales */}
         {!cargando && viajesOrdenados.length > 0 && (

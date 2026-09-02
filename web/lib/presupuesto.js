@@ -254,6 +254,18 @@ export const DESTINOS_PRESUPUESTO = [
   { ciudad: "Wellington", pais: "Nueva Zelanda", region: "oceania", bandera: "🇳🇿", vuelo: 2000, dia: 105, lat: -41.2866, lon: 174.7756 },
 ];
 
+// En que se va el costo diario. El `dia` de cada ciudad es un agregado
+// (hospedaje + comida + transporte local + actividades); estas proporciones lo
+// reparten para poder ensenarlo por tipologia de gasto. Estaban escritas a
+// mano en los dos sitios que calculan un desglose, con el riesgo obvio de que
+// una se tocara y la otra no. Suman 1.
+export const REPARTO_DIARIO = {
+  hospedaje: 0.45,
+  comida: 0.3,
+  transporte: 0.12,
+  extras: 0.13,
+};
+
 export const REGIONES = {
   todas: "Todo el mundo",
   sudamerica: "Sudamérica",
@@ -397,10 +409,10 @@ export function calcularDestinos({ presupuestoUsd, dias, personas, region, preci
 
     const desglose = {
       vuelo: vuelos,
-      hospedaje: Math.round(d.dia * 0.45 * dias * personas),
-      comida: Math.round(d.dia * 0.3 * dias * personas),
-      transporte: Math.round(d.dia * 0.12 * dias * personas),
-      extras: Math.round(d.dia * 0.13 * dias * personas),
+      hospedaje: Math.round(d.dia * REPARTO_DIARIO.hospedaje * dias * personas),
+      comida: Math.round(d.dia * REPARTO_DIARIO.comida * dias * personas),
+      transporte: Math.round(d.dia * REPARTO_DIARIO.transporte * dias * personas),
+      extras: Math.round(d.dia * REPARTO_DIARIO.extras * dias * personas),
     };
 
     return {
@@ -628,10 +640,10 @@ export function construirRuta({
   const desglose = {
     vueloIntl,
     saltos,
-    hospedaje: Math.round(totDia * 0.45),
-    comida: Math.round(totDia * 0.3),
-    transporte: Math.round(totDia * 0.12),
-    extras: Math.round(totDia * 0.13),
+    hospedaje: Math.round(totDia * REPARTO_DIARIO.hospedaje),
+    comida: Math.round(totDia * REPARTO_DIARIO.comida),
+    transporte: Math.round(totDia * REPARTO_DIARIO.transporte),
+    extras: Math.round(totDia * REPARTO_DIARIO.extras),
   };
   const total = vueloIntl + saltos + totDia;
 
