@@ -10,6 +10,7 @@
 // las coordenadas del catálogo curado o del geocodificador, y el costo diario
 // de la ciudad, del país o de la región, en ese orden. Cada cifra dice de dónde
 // viene para no vender una estimación como si fuera un precio de mercado.
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SelectorAeropuerto from "./SelectorAeropuerto";
 import Bandera from "./Bandera";
@@ -26,6 +27,10 @@ import { fmtDuracion } from "@/lib/tramos";
 import { linkTransporte, linkCarro, linkHoteles, linkCivitatis } from "@/lib/afiliados";
 import { track } from "@/lib/track";
 import { leerLocales, escribirLocal, borrarLocal, nuevoUid } from "@/lib/rutasLocales";
+
+// maplibre pesa y no todo el mundo abre un viaje: se carga solo cuando hay
+// mapa que pintar.
+const MapaRuta = dynamic(() => import("./MapaRuta"), { ssr: false });
 
 // "2027-04-02" y "2027-04" entran igual y salen como "2027-04". El formato
 // largo es el que guardaban las rutas antes de pasar a mes.
@@ -724,6 +729,13 @@ export default function PlanRuta({
                   )}
               </div>
             )}
+
+            {/* El viaje sobre el mapa, encuadrado a sus propias ciudades.
+                Una lista de once paradas no deja ver si el recorrido tiene
+                sentido; el mapa lo ensena de un vistazo, y es lo que hace
+                evidente si conviene reordenar. */}
+            <MapaRuta paradas={paradas} alto={300} />
+
 
             {/* Itinerario */}
             <ol className="grid gap-0">
