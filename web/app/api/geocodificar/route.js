@@ -125,7 +125,20 @@ export async function GET(req) {
 // mientras teclea y el resultado depende de la cadena exacta.
 async function inversa(lat, lon) {
   try {
-    const url = `https://photon.komoot.io/reverse?lat=${lat}&lon=${lon}&lang=es&limit=1`;
+    // Dos cosas que se me escaparon a la primera y devolvian siempre
+    // "encontrado:false":
+    //
+    //   · lang=es NO existe en el reverse de Photon (solo default, de, en, fr)
+    //     y la peticion entera se rechazaba. Da igual: el nombre que devuelve
+    //     es el local, y "Medellin" se llama Medellin en cualquier idioma.
+    //
+    //   · sin osm_tag devuelve el objeto MAS CERCANO de cualquier tipo. Para
+    //     unas coordenadas de Medellin contesto "waste_transfer_station". Hay
+    //     que pedir lugares habitados, exactamente como ya hace la busqueda
+    //     normal unas lineas mas abajo.
+    const url =
+      `https://photon.komoot.io/reverse?lat=${lat}&lon=${lon}&limit=1&radius=25` +
+      `&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village`;
     const r = await fetch(url, { headers: { "User-Agent": "Anduve/1.0" } });
     if (!r.ok) throw new Error("photon " + r.status);
     const d = await r.json();
