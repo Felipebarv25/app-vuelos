@@ -14,17 +14,14 @@ import { useState } from "react";
 import { Icono } from "./Icono";
 import { montoEfectivo, estaEditada, convertir } from "@/lib/presupuestoLineas";
 
-const ETIQUETA = {
-  pre_viaje: "Antes de salir",
-  transporte_internacional: "Vuelos de largo radio",
-  transporte_entre_ciudades: "Entre ciudades",
-  transporte_local: "Moverte allá",
-  hospedaje: "Dormir",
-  alimentacion: "Comer",
-  actividades: "Salir y ver",
-  varios: "Varios",
-  colchon: "Colchón",
-};
+// Las etiquetas salen de idiomas.js, no de aqui.
+//
+// Estaban escritas en espanol a pelo dentro del componente: un usuario en
+// ingles veia "Dormir" y "Colchon" en mitad de una interfaz traducida. Y al
+// vivir aqui dentro, el asesor no podia usar las mismas — que es justo lo que
+// pide la unificacion de los dos modos: mismas categorias, mismo orden,
+// mismos nombres.
+const clave = (categoria) => "cat_" + categoria;
 
 const COLOR = {
   pre_viaje: "bg-violet-500",
@@ -39,16 +36,16 @@ const COLOR = {
 };
 
 const SELLO = {
-  real_detectado: ["bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300", "PRECIO REAL"],
-  verificado_manual: ["bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300", "VERIFICADO"],
-  estimado: ["bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", "ESTIMADO"],
+  real_detectado: ["bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300", "selloReal"],
+  verificado_manual: ["bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300", "selloVerificado"],
+  estimado: ["bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", "selloEstimado"],
 };
 
-function Sello({ confianza }) {
+function Sello({ confianza, t }) {
   const [clase, texto] = SELLO[confianza] || SELLO.estimado;
   return (
     <span className={`shrink-0 rounded px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide ${clase}`}>
-      {texto}
+      {t(texto)}
     </span>
   );
 }
@@ -78,7 +75,7 @@ function Linea({ linea, overrides, onFijar, fmt, porUsd, t }) {
         </span>
         {editada && (
           <span className="shrink-0 rounded bg-marca-100 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-marca-800 dark:bg-marca-900/40 dark:text-marca-200">
-            Tuyo
+            {t("lineaTuyo")}
           </span>
         )}
         <span className="shrink-0 text-[13px] font-bold tabular-nums text-slate-900 dark:text-slate-100">
@@ -89,7 +86,7 @@ function Linea({ linea, overrides, onFijar, fmt, porUsd, t }) {
       {abierta && (
         <div className="pb-3 pl-6 pr-1">
           <div className="flex flex-wrap items-center gap-2">
-            <Sello confianza={linea.confianza} />
+            <Sello confianza={linea.confianza} t={t} />
             <span className="text-[12px] font-semibold text-slate-600 dark:text-slate-300">
               {linea.formula}
             </span>
@@ -122,7 +119,7 @@ function Linea({ linea, overrides, onFijar, fmt, porUsd, t }) {
           {linea.editable && (
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className="text-[11.5px] font-semibold uppercase tracking-wide text-slate-400">
-                Tu cifra en {propia}
+                {t("lineaTuCifra")} {propia}
               </span>
               <input
                 type="number"
@@ -136,7 +133,7 @@ function Linea({ linea, overrides, onFijar, fmt, porUsd, t }) {
                 onClick={() => onFijar(linea.id, Number(texto))}
                 className="rounded-full bg-marca-700 px-3 py-1 text-[12px] font-bold text-white transition hover:bg-marca-800"
               >
-                Fijar
+                {t("lineaFijar")}
               </button>
               {editada && (
                 <button
@@ -144,7 +141,7 @@ function Linea({ linea, overrides, onFijar, fmt, porUsd, t }) {
                   onClick={() => onFijar(linea.id, null)}
                   className="text-[12px] font-semibold text-slate-500 underline underline-offset-2 hover:text-slate-700 dark:text-slate-400"
                 >
-                  Volver al calculado
+                  {t("lineaVolver")}
                 </button>
               )}
             </div>
@@ -190,7 +187,7 @@ export default function DesglosePresupuesto({
               >
                 <Icono nombre={esta ? "chevronUp" : "chevronDown"} size={14} />
                 <span className="w-[104px] shrink-0 text-[12.5px] font-semibold text-slate-600 dark:text-slate-300">
-                  {ETIQUETA[c.categoria] || c.categoria}
+                  {t(clave(c.categoria))}
                 </span>
                 <span className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
                   <span

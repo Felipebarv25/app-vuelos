@@ -949,7 +949,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                         />
                         {d.esReal && <FechasOferta vueloReal={d.vueloReal} t={t} origenElegido={origen} />}
                         <Fila
-                          nombre={t("presupHospedaje")}
+                          nombre={t("cat_hospedaje")}
                           valor={fmtUsd(d.desglose.hospedaje)}
                           accion={
                             <a
@@ -963,9 +963,9 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                             </a>
                           }
                         />
-                        <Fila nombre={t("presupComida")} valor={fmtUsd(d.desglose.comida)} />
-                        <Fila nombre={t("presupTransporte")} valor={fmtUsd(d.desglose.transporte)} />
-                        <Fila nombre={t("presupExtras")} valor={fmtUsd(d.desglose.extras)} />
+                        <Fila nombre={t("cat_alimentacion")} valor={fmtUsd(d.desglose.comida)} />
+                        <Fila nombre={t("cat_transporte_local")} valor={fmtUsd(d.desglose.transporte)} />
+                        <Fila nombre={t("cat_actividades")} valor={fmtUsd(d.desglose.extras)} />
                         {d.cabe ? (
                           <div className="mt-1.5 text-xs font-semibold text-emerald-600">
                             {t("presupTeSobra")} {fmtUsd(d.sobra)} · {t("presupAlcanza")}{" "}
@@ -1419,11 +1419,11 @@ function RutaCard({
           </a>
         )}
 
-        <Fila nombre={t("presupEntreCiudades")} valor={fmtUsd(desglose.saltos)} />
-        <Fila nombre={t("presupHospedaje")} valor={fmtUsd(desglose.hospedaje)} />
-        <Fila nombre={t("presupComida")} valor={fmtUsd(desglose.comida)} />
-        <Fila nombre={t("presupTransporte")} valor={fmtUsd(desglose.transporte)} />
-        <Fila nombre={t("presupExtras")} valor={fmtUsd(desglose.extras)} />
+        <Fila nombre={t("cat_transporte_entre_ciudades")} valor={fmtUsd(desglose.saltos)} />
+        <Fila nombre={t("cat_hospedaje")} valor={fmtUsd(desglose.hospedaje)} />
+        <Fila nombre={t("cat_alimentacion")} valor={fmtUsd(desglose.comida)} />
+        <Fila nombre={t("cat_transporte_local")} valor={fmtUsd(desglose.transporte)} />
+        <Fila nombre={t("cat_actividades")} valor={fmtUsd(desglose.extras)} />
       </div>
 
       {/* Total */}
