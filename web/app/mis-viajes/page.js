@@ -246,7 +246,13 @@ export default function PaginaMisViajes() {
   const [fotos, setFotos] = useState({});
   const [confirmElim, setConfirmElim] = useState(null);
   // "reco" = te armo la ruta desde el presupuesto | "manual" = tu ordenas las ciudades
-  const [modoPlan, setModoPlan] = useState("reco");
+  // NADA desplegado al entrar.
+  //
+  // Arrancaba en "reco", asi que abrir "Mis viajes" te plantaba el asesor de
+  // presupuesto abierto sin haberlo pedido — y empujaba hacia abajo lo que
+  // vienes a ver, que son tus viajes. Los dos modos son opciones, no un
+  // estado por defecto: el planificador se abre cuando eliges uno.
+  const [modoPlan, setModoPlan] = useState(null);
   // Rutas multiparada. Viven en /api/rutas, un almacen distinto del de
   // /api/viajes (que guarda UNA ciudad por viaje). Esta pagina solo listaba el
   // segundo, asi que una ruta guardada no aparecia en ninguna parte y parecia
@@ -453,8 +459,11 @@ export default function PaginaMisViajes() {
               <button
                 key={k}
                 type="button"
-                onClick={() => setModoPlan(k)}
+                // Segundo clic en el que ya esta abierto: se cierra. Si
+                // abrirlo es una decision, cerrarlo tiene que serlo tambien.
+                onClick={() => setModoPlan(modoPlan === k ? null : k)}
                 aria-pressed={modoPlan === k}
+                aria-expanded={modoPlan === k}
                 className={`rounded-2xl border-2 p-4 text-left transition ${
                   modoPlan === k
                     ? "border-marca-500 bg-marca-50 dark:border-marca-500 dark:bg-marca-900/30"
@@ -477,6 +486,8 @@ export default function PaginaMisViajes() {
             ))}
           </div>
 
+          {/* Sin modo elegido no se pinta nada: ni el bloque ni su margen. */}
+          {modoPlan && (
           <div className="mt-4">
             {modoPlan === "reco" ? (
               <Presupuesto
@@ -520,6 +531,7 @@ export default function PaginaMisViajes() {
               />
             )}
           </div>
+          )}
         </section>
 
         {viajesOrdenados.length > 0 && (
