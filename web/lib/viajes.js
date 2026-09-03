@@ -62,15 +62,28 @@ async function pedirNube(url, opciones) {
   }
 }
 
-// Lista los viajes: nube si hay sesión Google, local si no. Si la nube falla,
-// usa el local como fallback (mejor algo que nada). Async.
-export async function listarViajesAsync(usuario) {
+// Lista los viajes DICIENDO de donde salieron.
+//
+// El fallback a local existia desde el principio y esta bien — mejor algo que
+// nada —, pero se tragaba el fallo en silencio: la pagina seguia mostrando
+// "SINCRONIZADO" con /api/viajes devolviendo 503 y la lista vacia. Afirmar
+// que algo esta a salvo en la nube cuando no lo esta es la peor de las
+// mentiras que puede contar esta app.
+//
+//   sincronizado: los datos vienen de la nube y estan a salvo alli
+//   motivo: por que no, cuando no ("sin-sesion" | "nube-caida")
+export async function listarViajesConEstado(usuario) {
   if (enNube(usuario)) {
     const data = await pedirNube("/api/viajes");
-    if (data?.viajes) return data.viajes;
-    // Fallback a local si la nube falla.
+    if (data?.viajes) return { viajes: data.viajes, sincronizado: true, motivo: null };
+    return { viajes: listarViajes(), sincronizado: false, motivo: "nube-caida" };
   }
-  return listarViajes();
+  return { viajes: listarViajes(), sincronizado: false, motivo: "sin-sesion" };
+}
+
+// Firma vieja, para quien solo quiere la lista.
+export async function listarViajesAsync(usuario) {
+  return (await listarViajesConEstado(usuario)).viajes;
 }
 
 export async function guardarViajeAsync(usuario, viaje) {

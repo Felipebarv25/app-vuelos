@@ -264,7 +264,7 @@ export default async function DestinationPage({ params }) {
               </div>
               <span className="text-xl">→</span>
             </a>
-            <a href={linkHoteles({ ciudad: d.ciudad, lat: d.lat, lon: d.lon })} target="_blank" rel="sponsored noopener"
+            <a href={linkHoteles({ ciudad: d.ciudad, pais: d.pais, lat: d.lat, lon: d.lon })} target="_blank" rel="sponsored noopener"
               className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-3.5 text-emerald-700 shadow-suave transition hover:brightness-[0.98]">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">🛏️</span>
               <div className="min-w-0 flex-1">

@@ -171,7 +171,7 @@ const PAISES_TRANSPORTE_CARO = new Set([
 // retorna un objeto (nunca null) para que construirRuta lo use sin checks.
 // El campo `esCurado` permite a la UI mostrar el chip "estimado · varía con
 // anticipación" cuando no es real, o "AVE · 2h 30" cuando sí lo es.
-export function costoTramoReal(a, b, km) {
+export function costoTramoReal(a, b, km, { agua = false } = {}) {
   const llave = `${a.ciudad}|${a.pais}→${b.ciudad}|${b.pais}`;
   const curado = TRAMOS_NORMALIZADOS[llave];
   if (curado) {
@@ -188,6 +188,32 @@ export function costoTramoReal(a, b, km) {
   // Paises de transporte caro (2026-07-18): un "bus US$30" no existe en
   // Suiza/nordicos — se multiplica el estimado y en cortas el medio es tren.
   const caro = PAISES_TRANSPORTE_CARO.has(a.pais) || PAISES_TRANSPORTE_CARO.has(b.pais);
+
+  // Con mar de por medio no hay tren ni bus que valga. En corto el ferry es
+  // lo normal y suele ser mas barato (Liverpool -> Dublin, Barcelona ->
+  // Palma); pasada cierta distancia el ferry deja de tener sentido y se vuela.
+  // Antes esto se cotizaba como "Tren, 348 km, US$83" sobre el mar de Irlanda.
+  if (agua) {
+    if (km < 600) {
+      return {
+        precio: Math.max(25, Math.round(30 + km * 0.09)),
+        medio: "ferry",
+        operador: null,
+        // El ferry va a ~35 km/h y suma embarque: es lento, y ocultarlo
+        // haria parecer que sale gratis en tiempo.
+        duracion_h: Math.round((1.5 + km / 35) * 10) / 10,
+        esCurado: false,
+      };
+    }
+    return {
+      precio: Math.round(60 + km * 0.05),
+      medio: "vuelo",
+      operador: null,
+      duracion_h: Math.round((2 + km / 800) * 10) / 10,
+      esCurado: false,
+    };
+  }
+
   let precio, medio, dur;
   if (km < 300)       { precio = Math.max(10, Math.round(km * 0.12)); medio = caro ? "tren" : "bus"; dur = km / (caro ? 90 : 60); }
   else if (km < 700)  { precio = Math.round(25 + km * 0.06);         medio = "tren";  dur = km / 100; }

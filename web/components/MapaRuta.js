@@ -161,8 +161,11 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
       // mejor que quedarse sin nada.
       lineaRef.current = () => {
         if (cancelado || !mapaRef.current) return;
-        try { mapaRef.current.removeLayer("linea-ruta"); } catch {}
-        try { mapaRef.current.removeSource("ruta"); } catch {}
+        // Preguntar antes de quitar. El try/catch no bastaba: maplibre no
+        // lanza al quitar una capa que no existe, emite un evento "error", y
+        // eso llenaba la consola de "Cannot remove non-existing layer".
+        if (mapaRef.current.getLayer("linea-ruta")) mapaRef.current.removeLayer("linea-ruta");
+        if (mapaRef.current.getSource("ruta")) mapaRef.current.removeSource("ruta");
         if (puntos.length < 2) return;
         mapaRef.current.addSource("ruta", {
           type: "geojson",

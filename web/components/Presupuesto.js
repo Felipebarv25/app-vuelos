@@ -904,7 +904,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                           valor={fmtUsd(d.desglose.hospedaje)}
                           accion={
                             <a
-                              href={linkHoteles({ ciudad: d.ciudad })}
+                              href={linkHoteles({ ciudad: d.ciudad, pais: d.pais, lat: d.lat, lon: d.lon })}
                               target="_blank"
                               rel="sponsored noopener"
                               className="text-[11px] font-bold text-marca-600 hover:underline"

@@ -14,6 +14,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SelectorAeropuerto from "./SelectorAeropuerto";
 import Bandera from "./Bandera";
+import { nombrePaisMostrar } from "@/lib/paisesNombres";
 import { Icono } from "./Icono";
 import { obtenerOfertas } from "@/lib/ofertasDatos";
 import {
@@ -39,6 +40,21 @@ const MapaRuta = dynamic(() => import("./MapaRuta"), { ssr: false });
 const conMayuscula = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
 const aMes = (s) => (/^\d{4}-\d{2}/.test(s || "") ? String(s).slice(0, 7) : "");
+
+// Donde entra una parada nueva.
+//
+// Se anadia siempre al final, y en un viaje que ya cierra en casa eso deja la
+// ciudad nueva DESPUES del regreso: el itinerario terminaba Glasgow ->
+// Medellin -> York, con un vuelo Medellin -> York de largo radio que nadie
+// planeo. La ultima parada es el regreso: la nueva va justo antes.
+function posicionParaNueva(paradas) {
+  if (paradas.length < 2) return paradas.length;
+  const primera = paradas[0];
+  const ultima = paradas[paradas.length - 1];
+  const cierra =
+    (primera.iata && primera.iata === ultima.iata) || primera.ciudad === ultima.ciudad;
+  return cierra ? paradas.length - 1 : paradas.length;
+}
 
 const sinAcentos = (s) =>
   (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
@@ -201,7 +217,7 @@ export default function PlanRuta({
     // 1) catálogo curado (instantáneo)  2) geocodificador (cualquier ciudad)
     const cur = coordsCuradas(a.ciudad, a.paisNombre || a.pais);
     if (cur) Object.assign(base, cur);
-    setParadas((prev) => [...prev, base]);
+    setParadas((prev) => [...prev.slice(0, posicionParaNueva(prev)), base, ...prev.slice(posicionParaNueva(prev))]);
 
     if (!cur) {
       try {
@@ -242,9 +258,11 @@ export default function PlanRuta({
   }
 
   function agregarLibre(c) {
-    setParadas((prev) => [
-      ...prev,
-      {
+    setParadas((prev) => {
+      const pos = posicionParaNueva(prev);
+      return [
+        ...prev.slice(0, pos),
+        {
         ciudad: c.ciudad,
         pais: c.iso,
         paisNombre: c.pais || c.iso,
@@ -252,8 +270,10 @@ export default function PlanRuta({
         noches: 2,
         lat: c.lat,
         lon: c.lon,
-      },
-    ]);
+        },
+        ...prev.slice(pos),
+      ];
+    });
     setTextoLibre("");
     setCandidatos(null);
     track("ruta_parada_sin_aeropuerto", { ciudad: c.ciudad });
@@ -863,7 +883,7 @@ export default function PlanRuta({
                       {/* Reservas de la ciudad (no en la primera: es tu casa) */}
                       {i > 0 && (
                         <div className="flex w-full flex-wrap gap-1.5 border-t border-slate-100 pt-2.5 dark:border-slate-700">
-                          <a href={linkHoteles({ ciudad: p.ciudad, lat: p.lat, lon: p.lon })} target="_blank" rel="sponsored noopener"
+                          <a href={linkHoteles({ ciudad: p.ciudad, pais: p.paisNombre || nombrePaisMostrar(p.pais, lang), lat: p.lat, lon: p.lon })} target="_blank" rel="sponsored noopener"
                              className="rounded-lg border border-slate-200 px-2.5 py-1 text-[12px] font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700">
                             {t("rutaDormir")}
                           </a>
@@ -880,7 +900,7 @@ export default function PlanRuta({
                     </div>
 
                     {/* Tramo hacia la siguiente parada */}
-                    {!esUltima && tr && (
+                    {!esUltima && tr && tr.fuente !== "misma-ciudad" && (
                       <div className="ml-3.5 border-l-2 border-dashed border-slate-200 py-2 pl-5 dark:border-slate-700">
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[13px]">
                           <span className="inline-flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-200">

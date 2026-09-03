@@ -14,6 +14,7 @@
 //   tramo         vuelo real detectado -> tramo curado -> estimación por distancia
 import { DESTINOS_PRESUPUESTO, REPARTO_DIARIO } from "./presupuesto";
 import { PAISES_ORIGEN } from "./paisesOrigen";
+import { hayCruceDeAgua } from "./masasTierra";
 import { costoTramoReal } from "./tramos";
 
 // --- Geometría --------------------------------------------------------------
@@ -121,6 +122,19 @@ export function puertaAPuerta(medio, duracionH) {
 export function evaluarTramo({ desde, hasta, vueloReal = null }) {
   const km = distanciaKm(desde, hasta);
 
+  // Dos paradas seguidas en la misma ciudad no son un trayecto. Antes esto
+  // caia en el estimador con km = 0 y salia un "Bus, 0 km, US$10" — el
+  // minimo de la formula — cobrado por no moverse.
+  const mismaParada =
+    (desde?.iata && desde.iata === hasta?.iata) ||
+    (km != null && km < 5 && desde?.ciudad === hasta?.ciudad);
+  if (mismaParada) {
+    return {
+      medio: null, precio: 0, duracion_h: 0, puertaAPuerta_h: 0,
+      operador: "", fuente: "misma-ciudad", km: 0,
+    };
+  }
+
   // 1) Precio real del detector: el único dato de mercado que tenemos propio.
   //    OJO: viene de Travelpayouts con one_way=false, o sea que es un precio
   //    de IDA Y VUELTA. Se marca para que quien sume sepa que ese billete ya
@@ -148,10 +162,15 @@ export function evaluarTramo({ desde, hasta, vueloReal = null }) {
 
   // 2) tabla curada de trenes/buses  3) estimación geométrica
   // La tabla se indexa por nombre de país, no por ISO.
+  // ¿Hay mar de por medio? Se resuelve aqui porque costoTramoReal recibe el
+  // NOMBRE del pais y la tabla de masas de tierra va por ISO. Un tramo sobre
+  // agua no puede ser tren ni bus: o ferry o vuelo.
+  const agua = hayCruceDeAgua(desde, hasta);
   const r = costoTramoReal(
     { ...desde, pais: nombreDePais(desde) },
     { ...hasta, pais: nombreDePais(hasta) },
-    km
+    km,
+    { agua: agua === true }
   );
   return {
     medio: r.medio,

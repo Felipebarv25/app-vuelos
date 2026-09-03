@@ -12,10 +12,20 @@ export default function Bandera({ cc, size = 16, className = "" }) {
   if (!cc) return null;
   const lo = String(cc).toLowerCase();
   const alto = Math.round(size * 0.75);
+  // Se pide por ANCHO (w40), no por "anchoxalto".
+  //
+  // flagcdn solo sirve un juego cerrado de tamanos, y cada uno tiene su alto
+  // fijo: 36x27 existe, 36x28 no. Como el alto se calculaba redondeando
+  // (size 18 -> 14, y a 2x -> 36x28), la bandera de Colombia daba 404 y
+  // desaparecia. Con w<N> lo calcula flagcdn y siempre acierta.
+  const w = (n) => `https://flagcdn.com/w${n}/${lo}.png`;
+  // Los anchos que sirve flagcdn; se toma el primero que llegue al pedido.
+  const ANCHOS = [20, 40, 80, 160, 320];
+  const elegir = (px) => ANCHOS.find((a) => a >= px) || ANCHOS[ANCHOS.length - 1];
   return (
     <img
-      src={`https://flagcdn.com/${size}x${alto}/${lo}.png`}
-      srcSet={`https://flagcdn.com/${size * 2}x${alto * 2}/${lo}.png 2x`}
+      src={w(elegir(size))}
+      srcSet={`${w(elegir(size * 2))} 2x`}
       alt=""
       width={size}
       height={alto}

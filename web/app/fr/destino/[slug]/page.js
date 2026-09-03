@@ -174,7 +174,7 @@ export default async function DestinoFr({ params }) {
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">🎟️</span>
               <div className="min-w-0 flex-1"><div className="text-[14.5px] font-bold leading-tight">Visites et activités</div><div className="truncate text-[12.5px] text-slate-500">Billets coupe-file via GetYourGuide</div></div><span className="text-xl">→</span>
             </a>
-            <a href={linkHoteles({ ciudad: d.ciudad, lat: d.lat, lon: d.lon })} target="_blank" rel="sponsored noopener" className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-3.5 text-emerald-700 shadow-suave transition hover:brightness-[0.98]">
+            <a href={linkHoteles({ ciudad: d.ciudad, pais: d.pais, lat: d.lat, lon: d.lon })} target="_blank" rel="sponsored noopener" className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-3.5 text-emerald-700 shadow-suave transition hover:brightness-[0.98]">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">🛏️</span>
               <div className="min-w-0 flex-1"><div className="text-[14.5px] font-bold leading-tight">Où dormir</div><div className="truncate text-[12.5px] text-slate-500">Comparez Booking + Hotellook</div></div><span className="text-xl">→</span>
             </a>

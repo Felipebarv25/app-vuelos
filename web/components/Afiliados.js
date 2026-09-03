@@ -37,6 +37,9 @@ function CtaReserva({ href, icono, titulo, desc, tipo, color = "marca" }) {
 export function AfiliadosCiudad({ ciudad, t = (k) => k }) {
   if (!ciudad?.nombre) return null;
   const nombre = ciudad.nombre;
+  // El pais desambigua el nombre en el buscador del afiliado: "York" a secas
+  // resolvia a Nueva York.
+  const pais = ciudad.pais || ciudad.paisNombre || "";
   const lat = ciudad.lat;
   const lon = ciudad.lon;
   return (
@@ -60,7 +63,7 @@ export function AfiliadosCiudad({ ciudad, t = (k) => k }) {
           color="emerald"
         />
         <CtaReserva
-          href={linkHoteles({ ciudad: nombre, lat, lon })}
+          href={linkHoteles({ ciudad: nombre, pais, lat, lon })}
           icono="bed"
           titulo={t("afHoteles")}
           desc={t("afHotelesDesc")}

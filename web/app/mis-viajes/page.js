@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useApp } from "@/lib/AppContext";
-import { listarViajesAsync, borrarViajeAsync } from "@/lib/viajes";
+import { listarViajesConEstado, borrarViajeAsync } from "@/lib/viajes";
 import { DESTINOS_PRESUPUESTO } from "@/lib/presupuesto";
 import { leerLocales, borrarLocal } from "@/lib/rutasLocales";
 import NavTop from "@/components/NavTop";
@@ -240,6 +240,8 @@ export default function PaginaMisViajes() {
   const { t, lang, usuario } = useApp();
   const router = useRouter();
   const [viajes, setViajes] = useState([]);
+  // Estado real de la nube, para no prometer sincronizacion que no hubo.
+  const [nube, setNube] = useState({ sincronizado: false, motivo: null });
   const [cargando, setCargando] = useState(true);
   const [fotos, setFotos] = useState({});
   const [confirmElim, setConfirmElim] = useState(null);
@@ -261,9 +263,10 @@ export default function PaginaMisViajes() {
   useEffect(() => {
     let vivo = true;
     (async () => {
-      const v = await listarViajesAsync(usuario);
+      const r = await listarViajesConEstado(usuario);
       if (vivo) {
-        setViajes(v || []);
+        setViajes(r.viajes || []);
+        setNube({ sincronizado: r.sincronizado, motivo: r.motivo });
         setCargando(false);
       }
     })();
@@ -388,9 +391,19 @@ export default function PaginaMisViajes() {
             </div>
             <h1 className="mt-1 text-[28px] font-extrabold tracking-tight text-slate-900 lg:text-[34px] dark:text-slate-100">
               {t("misViajesH1")}
-              {usuario?.google && (
+              {/* El badge sigue al estado REAL, no a que haya sesion. */}
+              {!cargando && nube.sincronizado && (
                 <span className="ml-3 inline-flex items-center gap-1 align-middle text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
                   <Icono nombre="check" size={12} /> {t("misViajesSync")}
+                </span>
+              )}
+              {!cargando && !nube.sincronizado && (
+                <span
+                  title={nube.motivo === "nube-caida" ? t("misViajesSinNubeAyuda") : ""}
+                  className="ml-3 inline-flex items-center gap-1 align-middle text-[11px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400"
+                >
+                  <Icono nombre="alert" size={12} />{" "}
+                  {nube.motivo === "nube-caida" ? t("misViajesSinNube") : t("misViajesSoloLocal")}
                 </span>
               )}
             </h1>

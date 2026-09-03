@@ -465,7 +465,7 @@ export default async function PaginaDestino({ params }) {
               <span className="text-xl">→</span>
             </a>
             <a
-              href={linkHoteles({ ciudad: d.ciudad, lat: d.lat, lon: d.lon })}
+              href={linkHoteles({ ciudad: d.ciudad, pais: d.pais, lat: d.lat, lon: d.lon })}
               target="_blank"
               rel="sponsored noopener"
               className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-3.5 text-emerald-700 shadow-suave transition hover:brightness-[0.98] dark:border-emerald-800 dark:from-emerald-900/30 dark:to-teal-900/20 dark:text-emerald-300"
