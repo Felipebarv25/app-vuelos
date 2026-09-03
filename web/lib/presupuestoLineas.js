@@ -166,13 +166,44 @@ export function montoEfectivo(linea, overrides = {}) {
 export const estaEditada = (linea, overrides = {}) =>
   overrides?.[linea.id] != null && Number.isFinite(Number(overrides[linea.id]));
 
-export function agruparPorCategoria(lineas, overrides = {}) {
+export function agruparPorCategoria(lineas, overrides = {}, porUsd = {}) {
   const m = new Map();
   for (const l of lineas) {
     const v = m.get(l.categoria) || { categoria: l.categoria, total: 0, lineas: [] };
-    v.total += montoEfectivo(l, overrides);
+    // Los totales se suman SIEMPRE en dolares: en una misma categoria puede
+    // haber libras (visa britanica) y euros (ETIAS), y sumarlos a pelo daria
+    // un numero sin significado.
+    v.total += convertir(montoEfectivo(l, overrides), l.moneda || "USD", "USD", porUsd);
     v.lineas.push(l);
     m.set(l.categoria, v);
   }
   return CATEGORIAS.map((c) => m.get(c)).filter(Boolean);
+}
+
+// --- Multimoneda -------------------------------------------------------------
+//
+// Cada linea guarda su monto en su MONEDA NATURAL: la visa britanica en libras,
+// el ETIAS en euros, el hotel en dolares. Convertir al guardar acumularia error
+// sobre datos que son exactos en origen — una tarifa consular no es una
+// estimacion — y ademas ataria el dato guardado a la tasa del dia en que se
+// escribio.
+//
+// La conversion se hace solo para MOSTRAR, y siempre con la tasa y su fecha a
+// la vista.
+
+/** Pasa un monto de una moneda a otra. `porUsd`: cuantas unidades = 1 USD. */
+export function convertir(monto, de = "USD", a = "USD", porUsd = {}) {
+  const n = Number(monto) || 0;
+  if (!n || de === a) return n;
+  const tasaDe = de === "USD" ? 1 : porUsd?.[de];
+  const tasaA = a === "USD" ? 1 : porUsd?.[a];
+  // Sin tasa no se inventa una: se devuelve el monto tal cual, y la interfaz
+  // ya avisa de que las tasas son de respaldo.
+  if (!tasaDe || !tasaA) return n;
+  return (n / tasaDe) * tasaA;
+}
+
+/** El monto que manda, en dolares. Es la unidad en la que se suma todo. */
+export function montoUSD(linea, overrides = {}, porUsd = {}) {
+  return convertir(montoEfectivo(linea, overrides), linea.moneda || "USD", "USD", porUsd);
 }

@@ -12,7 +12,7 @@
 
 import { useState } from "react";
 import { Icono } from "./Icono";
-import { montoEfectivo, estaEditada } from "@/lib/presupuestoLineas";
+import { montoEfectivo, estaEditada, convertir } from "@/lib/presupuestoLineas";
 
 const ETIQUETA = {
   pre_viaje: "Antes de salir",
@@ -53,11 +53,17 @@ function Sello({ confianza }) {
   );
 }
 
-function Linea({ linea, overrides, onFijar, fmt }) {
+function Linea({ linea, overrides, onFijar, fmt, porUsd }) {
   const [abierta, setAbierta] = useState(false);
   const [texto, setTexto] = useState("");
   const editada = estaEditada(linea, overrides);
+  // El monto vive en la moneda NATURAL de la linea (libras la visa britanica,
+  // euros el ETIAS) y se pinta en la de vista. El campo de edicion, en cambio,
+  // se queda en la natural: lo que se guarda tiene que ser inequivoco, y una
+  // tarifa consular en libras editada en pesos se degradaria a cada recalculo.
   const monto = montoEfectivo(linea, overrides);
+  const propia = linea.moneda || "USD";
+  const montoUsd = convertir(monto, propia, "USD", porUsd);
 
   return (
     <li className="border-b border-slate-100 last:border-0 dark:border-slate-700">
@@ -76,7 +82,7 @@ function Linea({ linea, overrides, onFijar, fmt }) {
           </span>
         )}
         <span className="shrink-0 text-[13px] font-bold tabular-nums text-slate-900 dark:text-slate-100">
-          {fmt(monto)}
+          {fmt(montoUsd)}
         </span>
       </button>
 
@@ -96,7 +102,7 @@ function Linea({ linea, overrides, onFijar, fmt }) {
           {linea.editable && (
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className="text-[11.5px] font-semibold uppercase tracking-wide text-slate-400">
-                Tu cifra
+                Tu cifra en {propia}
               </span>
               <input
                 type="number"
@@ -134,6 +140,8 @@ export default function DesglosePresupuesto({
   overrides = {},
   onFijar,
   fmt = (n) => `US$ ${Math.round(n).toLocaleString("es-CO")}`,
+  moneda = "USD",
+  porUsd = {},
   t = (k) => k,
 }) {
   const [abierta, setAbierta] = useState(null);
@@ -187,6 +195,7 @@ export default function DesglosePresupuesto({
                       overrides={overrides}
                       onFijar={onFijar}
                       fmt={fmt}
+                      porUsd={porUsd}
                     />
                   ))}
                 </ul>

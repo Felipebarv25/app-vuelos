@@ -17,6 +17,10 @@ import Bandera from "./Bandera";
 import DesglosePresupuesto from "./DesglosePresupuesto";
 import IlustracionRuta from "./IlustracionRuta";
 import { construirPresupuesto } from "@/lib/presupuestoConstruir";
+import { lineasMigracion } from "@/lib/migracion";
+import { cargarVisas, listaPaises } from "@/lib/requisitos";
+import { obtenerTasas } from "@/lib/fx";
+import { convertir } from "@/lib/presupuestoLineas";
 import { nombrePaisMostrar } from "@/lib/paisesNombres";
 import { Icono } from "./Icono";
 import { obtenerOfertas } from "@/lib/ofertasDatos";
@@ -57,6 +61,15 @@ function posicionParaNueva(paradas) {
   const cierra =
     (primera.iata && primera.iata === ultima.iata) || primera.ciudad === ultima.ciudad;
   return cierra ? paradas.length - 1 : paradas.length;
+}
+
+// Nacionalidades para el selector. PAISES_ISO guarda el ISO como "nombre"
+// ("GB": {nombre: "GB"}), asi que el nombre legible sale de
+// nombrePaisMostrar y la lista se ordena ya traducida.
+function nacionalidades(lang) {
+  return listaPaises()
+    .map((x) => ({ cc: x.cc, nombre: nombrePaisMostrar(x.cc, lang) || x.cc }))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
 }
 
 const sinAcentos = (s) =>
@@ -162,6 +175,17 @@ export default function PlanRuta({
   // Lo que el viajero fijo a mano, por ID de linea. Va por ID y no por
   // posicion a proposito: si reordena las ciudades, su precio del hotel de
   // Madrid sigue siendo el de Madrid.
+  // NACIONALIDAD, que no es el pais de salida.
+  //
+  // Hasta ahora solo se preguntaba "sales desde", y de eso se deducia todo.
+  // No es lo mismo: un colombiano que sale de Madrid sigue necesitando visa
+  // britanica, y un espanol que sale de Bogota no. Sin este campo el calculo
+  // migratorio no se puede hacer bien, y era el agujero del diferencial de
+  // Anduve.
+  const [pasaporte, setPasaporte] = useState(() => inicio?.pasaporte || "CO");
+  const [monedaVista, setMonedaVista] = useState(() => inicio?.monedaVista || "COP");
+  const [visas, setVisas] = useState(null);
+  const [tasas, setTasas] = useState(null);
   const [overrides, setOverrides] = useState(() => inicio?.presupuesto?.overrides || {});
   const [ajustes, setAjustes] = useState(
     () => inicio?.presupuesto?.ajustes || { contingenciaPct: 0.1, margenCambiarioPct: 0.03 }
@@ -179,6 +203,12 @@ export default function PlanRuta({
   const [buscandoLibre, setBuscandoLibre] = useState(false);
 
   useEffect(() => { obtenerOfertas().then(setOfertas); }, []);
+  // El dataset de visas pesa 660 KB: se pide una sola vez y solo cuando el
+  // viaje ya tiene paradas que consultar.
+  useEffect(() => {
+    if (paradas.length > 0 && !visas) cargarVisas().then(setVisas);
+  }, [paradas.length, visas]);
+  useEffect(() => { obtenerTasas().then(setTasas); }, []);
 
   // Persiste en cada cambio. Se incluyen los precios en vivo ya consultados
   // para no volver a gastar cuota de Travelpayouts al reabrir el viaje.
@@ -186,9 +216,10 @@ export default function PlanRuta({
     if (!paradas.length && !nombre && !mesInicio) { borrarLocal(uid); return; }
     escribirLocal({
       uid, id: idRuta, paradas, viajeros, nombre, mesInicio, vivos,
+      pasaporte, monedaVista,
       presupuesto: { overrides, ajustes },
     });
-  }, [uid, paradas, viajeros, nombre, mesInicio, idRuta, vivos, overrides, ajustes]);
+  }, [uid, paradas, viajeros, nombre, mesInicio, idRuta, vivos, overrides, ajustes, pasaporte, monedaVista]);
 
   // Empezar otro viaje sin perder el guardado: se suelta el id para que el
   // siguiente "Guardar" cree una ruta nueva en vez de pisar la anterior.
@@ -378,9 +409,36 @@ export default function PlanRuta({
   // El presupuesto de verdad: lineas con formula, fuente y confianza. El
   // `resumen` de arriba se queda solo para las cifras de cabecera (tiempo en
   // movimiento, confianza de los tramos), que no son gasto.
+  const porUsd = tasas?.porUsd || {};
+
+  // Visas y autorizaciones entran como lineas de pre-viaje del mismo motor,
+  // no como un bloque aparte: son gasto del viaje igual que el hotel.
+  const extrasMigracion = useMemo(
+    () => (visas ? lineasMigracion({ paradas, pasaporte, viajeros, visas }) : []),
+    [visas, paradas, pasaporte, viajeros]
+  );
+
   const presupuesto = useMemo(
-    () => construirPresupuesto({ paradas, tramos, viajeros, overrides, ajustes }),
-    [paradas, tramos, viajeros, overrides, ajustes]
+    () =>
+      construirPresupuesto({
+        paradas, tramos, viajeros, overrides, ajustes,
+        extras: extrasMigracion,
+        porUsd,
+      }),
+    [paradas, tramos, viajeros, overrides, ajustes, extrasMigracion, porUsd]
+  );
+
+  // Formato en la moneda que el viajero eligio ver. Los totales del motor
+  // vienen en dolares; aqui se convierten solo para pintarlos.
+  const fmtVista = useCallback(
+    (usd) => {
+      const v = convertir(usd, "USD", monedaVista, porUsd);
+      const dec = monedaVista === "COP" || monedaVista === "CLP" ? 0 : 0;
+      return `${monedaVista === "USD" ? "US$" : ""}${Math.round(v).toLocaleString("es-CO", {
+        maximumFractionDigits: dec,
+      })}${monedaVista === "USD" ? "" : " " + monedaVista}`;
+    },
+    [monedaVista, porUsd]
   );
 
   // Suma de unas categorias concretas del presupuesto nuevo.
@@ -537,6 +595,7 @@ export default function PlanRuta({
         headers: h,
         body: JSON.stringify({
           id: idRuta, paradas, viajeros, nombre, mesInicio,
+          pasaporte, monedaVista,
           presupuesto: { overrides, ajustes },
         }),
       });
@@ -668,12 +727,12 @@ export default function PlanRuta({
                 {t("rutaBannerPresupuesto")}
               </div>
               <div className="text-[30px] font-bold leading-none tabular-nums">
-                {fmtUsd(presupuesto.total)}
+                {fmtVista(presupuesto.total)}
               </div>
             </div>
             <div className="pb-0.5 text-[12.5px] font-medium text-white/80">
               {t("rutaBannerPorDia")
-                .replace("{porDia}", fmtUsd(porDia))
+                .replace("{porDia}", fmtVista(porDia))
                 .replace(
                   "{viajeros}",
                   (viajeros === 1 ? t("rutaChipViajero") : t("rutaChipViajeros")).replace(
@@ -753,6 +812,58 @@ export default function PlanRuta({
                   </option>
                 ))}
               </select>
+            </label>
+          </div>
+
+          {/* PASAPORTE Y MONEDA.
+              El pasaporte decide las visas — no el aeropuerto de salida — y la
+              moneda decide en que se lee todo. Por defecto Colombia y COP,
+              que es el publico de esta app; el itinerario mostraba solo
+              dolares mientras el asesor ya sabia hablar en pesos. */}
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-wider text-slate-400">
+                {t("rutaPasaporte")}
+              </span>
+              <select
+                value={pasaporte}
+                onChange={(e) => setPasaporte(e.target.value)}
+                className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] font-semibold text-marca-900 outline-none focus:border-marca-400 sm:text-[14px] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+              >
+                {nacionalidades(lang).map((x) => (
+                  <option key={x.cc} value={x.cc}>{x.nombre}</option>
+                ))}
+              </select>
+              <span className="mt-1 block text-[11.5px] text-slate-400">
+                {t("rutaPasaporteAyuda")}
+              </span>
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-wider text-slate-400">
+                {t("rutaMonedaVista")}
+              </span>
+              <select
+                value={monedaVista}
+                onChange={(e) => setMonedaVista(e.target.value)}
+                className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] font-semibold text-marca-900 outline-none focus:border-marca-400 sm:text-[14px] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+              >
+                {["COP", "USD", "EUR", "GBP", "MXN", "PEN", "CLP", "ARS", "BRL"].map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+              {monedaVista !== "USD" && porUsd[monedaVista] > 0 && (
+                <span className="mt-1 block text-[11.5px] text-slate-400">
+                  {t("rutaTasa")
+                    .replace("{tasa}", Math.round(porUsd[monedaVista]).toLocaleString("es-CO"))
+                    .replace("{moneda}", monedaVista)
+                    .replace(
+                      "{fecha}",
+                      tasas?.enVivo
+                        ? t("rutaTasaHoy")
+                        : t("rutaTasaRespaldo")
+                    )}
+                </span>
+              )}
             </label>
           </div>
 
@@ -1048,13 +1159,13 @@ export default function PlanRuta({
                               </span>
                               {tr.precioSuelto > 0 && (
                                 <span className="text-[12px] tabular-nums text-slate-400 line-through">
-                                  {fmtUsd(tr.precioSuelto)}
+                                  {fmtVista(tr.precioSuelto)}
                                 </span>
                               )}
                             </span>
                           ) : (
                             <span className="font-bold tabular-nums text-slate-900 dark:text-slate-100">
-                              {tr.precio != null ? fmtUsd(tr.precio) : "—"}
+                              {tr.precio != null ? fmtVista(tr.precio) : "—"}
                             </span>
                           )}
                           {tr.puertaAPuerta_h != null && (
@@ -1143,7 +1254,7 @@ export default function PlanRuta({
                   <div>
                     <div className="text-[12px] text-slate-500 dark:text-slate-400">{t("rutaTransporte")}</div>
                     <div className="text-[19px] font-extrabold tabular-nums text-slate-900 dark:text-slate-100">
-                      {fmtUsd(totalDeCategorias(["transporte_internacional", "transporte_entre_ciudades"]))}
+                      {fmtVista(totalDeCategorias(["transporte_internacional", "transporte_entre_ciudades"]))}
                     </div>
                   </div>
                   <div>
@@ -1151,7 +1262,7 @@ export default function PlanRuta({
                       {t("rutaEstadia").replace("{noches}", presupuesto.noches)}
                     </div>
                     <div className="text-[19px] font-extrabold tabular-nums text-slate-900 dark:text-slate-100">
-                      {fmtUsd(totalDeCategorias(["hospedaje", "alimentacion", "transporte_local", "actividades"]))}
+                      {fmtVista(totalDeCategorias(["hospedaje", "alimentacion", "transporte_local", "actividades"]))}
                     </div>
                   </div>
                   <div>
@@ -1173,7 +1284,9 @@ export default function PlanRuta({
                   presupuesto={presupuesto}
                   overrides={overrides}
                   onFijar={fijarLinea}
-                  fmt={fmtUsd}
+                  fmt={fmtVista}
+                    moneda={monedaVista}
+                    porUsd={porUsd}
                   t={t}
                   />
                   <p className="mt-2.5 text-[11.5px] leading-relaxed text-slate-400">
@@ -1185,7 +1298,7 @@ export default function PlanRuta({
                   {regresoIncluido && (
                     <p className="mt-2.5 rounded-lg bg-emerald-50 px-3 py-2 text-[12px] leading-relaxed text-emerald-900 dark:bg-emerald-900/20 dark:text-emerald-200">
                       {t("rutaRegresoNota")
-                        .replace("{ahorro}", fmtUsd(regresoIncluido.ahorro))
+                        .replace("{ahorro}", fmtVista(regresoIncluido.ahorro))
                         .replace("{ciudad}", regresoIncluido.ciudad)
                         .replace("{casa}", regresoIncluido.casa)}
                     </p>
@@ -1203,12 +1316,12 @@ export default function PlanRuta({
 
                 <div className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-slate-100 pt-4 dark:border-slate-700">
                   <span className="text-[13px] text-slate-500 dark:text-slate-400">{t("rutaPorPersona")}</span>
-                  <span className="text-[17px] font-bold tabular-nums text-slate-700 dark:text-slate-200">{fmtUsd(presupuesto.totalPorPersona)}</span>
+                  <span className="text-[17px] font-bold tabular-nums text-slate-700 dark:text-slate-200">{fmtVista(presupuesto.totalPorPersona)}</span>
                   <span className="ml-auto text-[13px] text-slate-500 dark:text-slate-400">
                     {t("rutaTotal").replace("{n}", presupuesto.viajeros)}
                   </span>
                   <span className="text-[26px] font-extrabold tabular-nums tracking-tight text-marca-700 dark:text-marca-300">
-                    {fmtUsd(presupuesto.total)}
+                    {fmtVista(presupuesto.total)}
                   </span>
                 </div>
 

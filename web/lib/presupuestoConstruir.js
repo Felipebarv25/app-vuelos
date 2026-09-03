@@ -13,6 +13,7 @@ import {
   crearLinea,
   diasPorCiudad,
   montoEfectivo,
+  montoUSD,
   agruparPorCategoria,
   normalizarClave as norm,
 } from "./presupuestoLineas";
@@ -37,6 +38,9 @@ export function construirPresupuesto({
   overrides = {},
   ajustes = {},
   extras = [],
+  // Tasas para sumar lineas en monedas distintas. Sin ellas todo se trata
+  // como dolares, que es lo que pasaba antes de que existieran las visas.
+  porUsd = {},
 } = {}) {
   const n = Math.max(1, Math.round(Number(viajeros) || 1));
   const lineas = [];
@@ -264,12 +268,15 @@ export function construirPresupuesto({
   // Va al final porque se calcula SOBRE lo anterior, incluidas las lineas que
   // el usuario haya pisado a mano: si baja el hotel, baja tambien el colchon.
   const todas = [...lineas, ...(extras || []).filter(Boolean)];
-  const subtotal = todas.reduce((s, l) => s + montoEfectivo(l, overrides), 0);
+  // En dolares, no en "el numero que lleve cada linea": las visas vienen en
+  // libras y en euros, y sumarlas a pelo con los hoteles daria una cifra sin
+  // significado.
+  const subtotal = todas.reduce((s, l) => s + montoUSD(l, overrides, porUsd), 0);
   const gastoEnDestino = todas
     .filter((l) =>
       ["hospedaje", "alimentacion", "transporte_local", "actividades"].includes(l.categoria)
     )
-    .reduce((s, l) => s + montoEfectivo(l, overrides), 0);
+    .reduce((s, l) => s + montoUSD(l, overrides, porUsd), 0);
 
   todas.push(
     crearLinea({
@@ -305,7 +312,7 @@ export function construirPresupuesto({
     })
   );
 
-  const total = todas.reduce((s, l) => s + montoEfectivo(l, overrides), 0);
+  const total = todas.reduce((s, l) => s + montoUSD(l, overrides, porUsd), 0);
 
   return {
     lineas: todas,
@@ -315,6 +322,6 @@ export function construirPresupuesto({
     habitaciones,
     noches: nochesTotal,
     dias: diasTotal,
-    porCategoria: agruparPorCategoria(todas, overrides),
+    porCategoria: agruparPorCategoria(todas, overrides, porUsd),
   };
 }
