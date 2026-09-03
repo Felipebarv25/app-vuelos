@@ -202,13 +202,6 @@ export default function PlanRuta({
   // vacío: si no, se queda con "Madrid (MAD)" escrito y encadenar la
   // siguiente parada obliga a borrar a mano.
   const [nSelector, setNSelector] = useState(0);
-  // Buscador secundario para ciudades SIN AEROPUERTO. El selector principal
-  // busca sobre el catálogo IATA, así que York, Brujas o Siena no aparecen
-  // aunque sean paradas normales de una ruta en tren. Sin esto, "York" caía
-  // en York, Estados Unidos, que sí tiene aeropuerto.
-  const [textoLibre, setTextoLibre] = useState("");
-  const [candidatos, setCandidatos] = useState(null);
-  const [buscandoLibre, setBuscandoLibre] = useState(false);
 
   useEffect(() => { obtenerOfertas().then(setOfertas); }, []);
   // El dataset de visas pesa 660 KB: se pide una sola vez y solo cuando el
@@ -257,6 +250,21 @@ export default function PlanRuta({
       lat: null,
       lon: null,
     };
+    // Si el selector ya trae coordenadas — las ciudades sin aeropuerto vienen
+    // del geocodificador con ellas — nos ahorramos la segunda consulta.
+    if (Number.isFinite(a.lat) && Number.isFinite(a.lon)) {
+      base.lat = a.lat;
+      base.lon = a.lon;
+      setParadas((prev) => [
+        ...prev.slice(0, posicionParaNueva(prev)),
+        base,
+        ...prev.slice(posicionParaNueva(prev)),
+      ]);
+      setNSelector((n) => n + 1);
+      track("ruta_parada_agregada", { ciudad: a.ciudad, iata: a.iata || "sin-aeropuerto" });
+      return;
+    }
+
     // 1) catálogo curado (instantáneo)  2) geocodificador (cualquier ciudad)
     const cur = coordsCuradas(a.ciudad, a.paisNombre || a.pais);
     if (cur) Object.assign(base, cur);
@@ -283,79 +291,6 @@ export default function PlanRuta({
     }
     setNSelector((n) => n + 1);
     track("ruta_parada_agregada", { ciudad: a.ciudad, iata: a.iata });
-  }, []);
-
-  async function buscarLibre() {
-    const q = textoLibre.trim();
-    if (q.length < 2) return;
-    setBuscandoLibre(true);
-    setCandidatos(null);
-    try {
-      const r = await fetch(`/api/geocodificar?lista=1&ciudad=${encodeURIComponent(q)}`);
-      const d = r.ok ? await r.json() : null;
-      setCandidatos(d?.resultados || []);
-    } catch {
-      setCandidatos([]);
-    }
-    setBuscandoLibre(false);
-  }
-
-  function agregarLibre(c) {
-    setParadas((prev) => {
-      const pos = posicionParaNueva(prev);
-      return [
-        ...prev.slice(0, pos),
-        {
-        ciudad: c.ciudad,
-        pais: c.iso,
-        paisNombre: c.pais || c.iso,
-        iata: "",           // sin aeropuerto: los tramos serán terrestres
-        noches: 2,
-        lat: c.lat,
-        lon: c.lon,
-        },
-        ...prev.slice(pos),
-      ];
-    });
-    setTextoLibre("");
-    setCandidatos(null);
-    track("ruta_parada_sin_aeropuerto", { ciudad: c.ciudad });
-  }
-
-  // Meter una escala EN MEDIO, no al final.
-  //
-  // Hasta ahora solo se podia anadir al final y despues subirla a mano con las
-  // flechas. Cuando lo que hace falta es exactamente "pasar por Madrid antes
-  // de volver", eso son cinco clics para una decision que ya esta tomada.
-  const insertarEscala = useCallback(async (pos, hub) => {
-    const base = {
-      ciudad: hub.ciudad,
-      pais: hub.cc,
-      paisNombre: hub.pais,
-      iata: hub.iata,
-      noches: 1,
-      lat: null,
-      lon: null,
-    };
-    const cur = coordsCuradas(hub.ciudad, hub.pais);
-    if (cur) Object.assign(base, cur);
-    setParadas((prev) => [...prev.slice(0, pos), base, ...prev.slice(pos)]);
-    track("ruta_escala_hub", { ciudad: hub.ciudad, iata: hub.iata });
-
-    if (cur) return;
-    try {
-      const r = await fetch(
-        `/api/geocodificar?ciudad=${encodeURIComponent(hub.ciudad)}&iso=${encodeURIComponent(hub.cc)}`
-      );
-      const d = r.ok ? await r.json() : null;
-      if (d?.encontrado) {
-        setParadas((prev) =>
-          prev.map((x) =>
-            x.iata === hub.iata && x.lat == null ? { ...x, lat: d.lat, lon: d.lon } : x
-          )
-        );
-      }
-    } catch {}
   }, []);
 
   const quitar = (i) => setParadas((p) => p.filter((_, k) => k !== i));
@@ -926,6 +861,10 @@ export default function PlanRuta({
             <SelectorAeropuerto
               key={nSelector}
               filtroPais={false}
+              // Ciudades sin aeropuerto en la MISMA busqueda. Antes York de
+              // Inglaterra solo aparecia en un segundo buscador plegado que
+              // habia que descubrir y que ni siquiera autocompletaba.
+              incluirSinAeropuerto
               value=""
               onChange={agregar}
               placeholder={t("rutaBuscarCiudad")}
@@ -934,53 +873,11 @@ export default function PlanRuta({
             />
           </div>
 
-          {/* Ciudades sin aeropuerto */}
-          <details className="mt-3 max-w-md">
-            <summary className="cursor-pointer text-[12.5px] font-semibold text-slate-500 underline underline-offset-2 hover:text-slate-700 dark:text-slate-400">
-              {t("rutaSinAeropuerto")}
-            </summary>
-            <div className="mt-2 flex gap-2">
-              <input
-                type="text"
-                value={textoLibre}
-                onChange={(e) => setTextoLibre(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); buscarLibre(); } }}
-                placeholder={t("rutaSinAeropuertoPlaceholder")}
-                className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] font-semibold text-marca-900 outline-none focus:border-marca-400 sm:text-[14px] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
-              />
-              <button
-                type="button"
-                onClick={buscarLibre}
-                disabled={buscandoLibre || textoLibre.trim().length < 2}
-                className="shrink-0 rounded-xl border-[1.5px] border-slate-200 px-3 text-[13px] font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
-              >
-                {buscandoLibre ? "…" : t("rutaBuscar")}
-              </button>
-            </div>
-            {candidatos && candidatos.length === 0 && (
-              <div className="mt-2 text-[12.5px] text-slate-500 dark:text-slate-400">
-                {t("rutaSinAeropuertoVacio")}
-              </div>
-            )}
-            {candidatos && candidatos.length > 0 && (
-              <ul className="mt-2 grid gap-1">
-                {candidatos.map((c, i) => (
-                  <li key={`${c.ciudad}-${c.iso}-${i}`}>
-                    <button
-                      type="button"
-                      onClick={() => agregarLibre(c)}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-left text-[13.5px] transition hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700"
-                    >
-                      <span className="font-semibold text-slate-800 dark:text-slate-100">{c.ciudad}</span>
-                      <span className="text-slate-500 dark:text-slate-400">
-                        {c.region ? ` · ${c.region}` : ""}{c.pais ? ` · ${c.pais}` : ""}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </details>
+          {/* Aqui vivia un segundo buscador plegado, "¿Tu ciudad no tiene
+              aeropuerto?", con su propio input y su propio boton. Sobra: la
+              busqueda principal ya ofrece esas ciudades, y con
+              autocompletado en vez de un boton. Dos formas de hacer lo mismo,
+              una escondida, es peor que una sola que funcione. */}
         </section>
 
         {paradas.length > 0 && (

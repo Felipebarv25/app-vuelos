@@ -61,6 +61,12 @@ async function cargarCatalogo() {
 }
 
 // Normaliza para búsqueda: minúsculas + sin tildes.
+// Este componente no recibe `t`: se apana con `lang`, igual que ya hace con
+// nombrePais(cc, lang). Sus otros textos siguen en espanol a pelo
+// ("Ningun aeropuerto coincide", el placeholder) — deuda anterior a esto, no
+// la arreglo de paso para no ensanchar el cambio.
+const SIN_APT = { es: "sin aeropuerto", en: "no airport", pt: "sem aeroporto", fr: "sans aéroport" };
+
 function norm(s) {
   return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
@@ -245,6 +251,20 @@ export default function SelectorAeropuerto({
   // "Ningún aeropuerto coincide en España". O sea, solo se podia buscar una
   // ciudad por sesion y la segunda busqueda siempre fallaba.
   filtroPais = true,
+  // CIUDADES SIN AEROPUERTO en la busqueda principal.
+  //
+  // Este buscador va sobre el catalogo IATA, asi que una ciudad mediana sin
+  // aeropuerto no existe para el. Escribir "York" ofrecia York (Pensilvania) y
+  // Nueva York, pero NO York de Inglaterra — que es la que casi cualquiera
+  // esta buscando. Solo aparecia en un segundo buscador plegado, "¿Tu ciudad
+  // no tiene aeropuerto?", que habia que descubrir y que ni siquiera
+  // autocompletaba: habia que pulsar un boton.
+  //
+  // Con esto activado, el geocodificador se consulta en paralelo y sus
+  // ciudades se ofrecen debajo de los aeropuertos, marcadas como lo que son.
+  // Va tras un prop y no siempre porque en /ofertas no tiene sentido: alli se
+  // buscan destinos de VUELO, y una ciudad sin aeropuerto no es un destino.
+  incluirSinAeropuerto = false,
 }) {
   const [catalogo, setCatalogo] = useState([]);
 
@@ -334,6 +354,47 @@ export default function SelectorAeropuerto({
     [catalogo, texto, paisFiltro]
   );
 
+  // Ciudades del geocodificador. Se pide con retardo (350 ms desde la ultima
+  // tecla) porque cada consulta sale a la red: sin eso serian seis peticiones
+  // para escribir "Brujas".
+  const [sinApt, setSinApt] = useState([]);
+  useEffect(() => {
+    if (!incluirSinAeropuerto) { setSinApt([]); return; }
+    const q = texto.trim();
+    // Tres letras: con dos, cualquier cosa devuelve medio mundo.
+    if (q.length < 3) { setSinApt([]); return; }
+    let vivo = true;
+    const id = setTimeout(async () => {
+      try {
+        const r = await fetch(`/api/geocodificar?lista=1&ciudad=${encodeURIComponent(q)}`);
+        const d = r.ok ? await r.json() : null;
+        if (!vivo) return;
+        // Fuera las que ya trae el catalogo de aeropuertos: ofrecer Madrid dos
+        // veces, una con vuelo y otra sin el, solo confunde.
+        const yaHay = new Set(resultados.map((a) => `${norm(a.ciudad)}|${a.pais}`));
+        setSinApt(
+          (d?.resultados || [])
+            .filter((c) => c.ciudad && !yaHay.has(`${norm(c.ciudad)}|${c.iso}`))
+            .slice(0, 6)
+        );
+      } catch {
+        if (vivo) setSinApt([]);
+      }
+    }, 350);
+    return () => { vivo = false; clearTimeout(id); };
+  }, [texto, incluirSinAeropuerto, resultados]);
+
+  // Lista unica para pintar y para el teclado: aeropuertos primero — son
+  // instantaneos y casi siempre lo que se busca — y debajo las ciudades sin
+  // aeropuerto.
+  const opciones = useMemo(
+    () => [
+      ...resultados.map((a) => ({ tipo: "apt", a })),
+      ...sinApt.map((c) => ({ tipo: "ciudad", c })),
+    ],
+    [resultados, sinApt]
+  );
+
   // --- handlers país ---
   function elegirPais(codigo) {
     setPaisFiltro(codigo);
@@ -398,6 +459,31 @@ export default function SelectorAeropuerto({
     });
   }
 
+  // Ciudad sin aeropuerto. Se propaga con iata vacio y CON coordenadas: quien
+  // consume esto ya sabe tratar una parada sin aeropuerto (los tramos salen
+  // terrestres), y las coordenadas ahorran una segunda consulta al
+  // geocodificador.
+  function elegirCiudad(c) {
+    setTexto(c.ciudad);
+    setAbierto(false);
+    onChange?.({
+      iata: "",
+      ciudad: c.ciudad,
+      pais: c.iso,
+      paisNombre: nombrePais(c.iso, lang) || c.pais,
+      nombre: [c.region, nombrePais(c.iso, lang) || c.pais].filter(Boolean).join(", "),
+      lat: c.lat,
+      lon: c.lon,
+      sinAeropuerto: true,
+    });
+  }
+
+  function elegirOpcion(o) {
+    if (!o) return;
+    if (o.tipo === "apt") elegirAeropuerto(o.a);
+    else elegirCiudad(o.c);
+  }
+
   function onKeyAeropuerto(e) {
     if (!abierto && (e.key === "ArrowDown" || e.key === "Enter")) {
       setAbierto(true);
@@ -406,14 +492,13 @@ export default function SelectorAeropuerto({
     if (!abierto) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setResaltado((i) => Math.min(i + 1, resultados.length - 1));
+      setResaltado((i) => Math.min(i + 1, opciones.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setResaltado((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      const a = resultados[resaltado];
-      if (a) elegirAeropuerto(a);
+      elegirOpcion(opciones[resaltado]);
     } else if (e.key === "Escape") {
       setAbierto(false);
     }
@@ -512,38 +597,69 @@ export default function SelectorAeropuerto({
           onKeyDown={onKeyAeropuerto}
           className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] sm:text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
         />
-        {abierto && resultados.length > 0 && (
+        {abierto && opciones.length > 0 && (
           <ul
             role="listbox"
             className="absolute left-0 right-0 top-full z-[6500] mt-1 max-h-[min(300px,45dvh)] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800"
           >
-            {resultados.map((a, i) => (
-              <li
-                key={a.iata + a.pais + i}
-                role="option"
-                aria-selected={i === resaltado}
-                onMouseDown={(e) => { e.preventDefault(); elegirAeropuerto(a); }}
-                onMouseEnter={() => setResaltado(i)}
-                className={`flex cursor-pointer items-center gap-2.5 px-3 py-2 text-[13.5px] ${
-                  i === resaltado
-                    ? "bg-marca-50 text-marca-900 dark:bg-marca-900/40 dark:text-marca-300"
-                    : "text-slate-700 dark:text-slate-200"
-                }`}
-              >
-                <span className="flex w-[18px] shrink-0 justify-center" aria-hidden><Bandera cc={a.pais} size={18} /></span>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-semibold">
-                    {a.ciudad} <span className="text-slate-400">·</span> {nombrePais(a.pais, lang)}
+            {opciones.map((o, i) =>
+              o.tipo === "apt" ? (
+                <li
+                  key={`a-${o.a.iata}-${o.a.pais}-${i}`}
+                  role="option"
+                  aria-selected={i === resaltado}
+                  onMouseDown={(e) => { e.preventDefault(); elegirAeropuerto(o.a); }}
+                  onMouseEnter={() => setResaltado(i)}
+                  className={`flex cursor-pointer items-center gap-2.5 px-3 py-2 text-[13.5px] ${
+                    i === resaltado
+                      ? "bg-marca-50 text-marca-900 dark:bg-marca-900/40 dark:text-marca-300"
+                      : "text-slate-700 dark:text-slate-200"
+                  }`}
+                >
+                  <span className="flex w-[18px] shrink-0 justify-center" aria-hidden><Bandera cc={o.a.pais} size={18} /></span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-semibold">
+                      {o.a.ciudad} <span className="text-slate-400">·</span> {nombrePais(o.a.pais, lang)}
+                    </div>
+                    <div className="truncate text-[11.5px] text-slate-500 dark:text-slate-400">
+                      {o.a.nombre}
+                    </div>
                   </div>
-                  <div className="truncate text-[11.5px] text-slate-500 dark:text-slate-400">
-                    {a.nombre}
+                  <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                    {o.a.iata}
+                  </span>
+                </li>
+              ) : (
+                /* Ciudad sin aeropuerto. La REGION va en la linea de abajo y no
+                   es decoracion: es lo que distingue York de Inglaterra de York
+                   de Pensilvania, que es exactamente donde fallaba antes. */
+                <li
+                  key={`c-${o.c.ciudad}-${o.c.iso}-${o.c.lat}-${i}`}
+                  role="option"
+                  aria-selected={i === resaltado}
+                  onMouseDown={(e) => { e.preventDefault(); elegirCiudad(o.c); }}
+                  onMouseEnter={() => setResaltado(i)}
+                  className={`flex cursor-pointer items-center gap-2.5 px-3 py-2 text-[13.5px] ${
+                    i === resaltado
+                      ? "bg-marca-50 text-marca-900 dark:bg-marca-900/40 dark:text-marca-300"
+                      : "text-slate-700 dark:text-slate-200"
+                  }`}
+                >
+                  <span className="flex w-[18px] shrink-0 justify-center" aria-hidden><Bandera cc={o.c.iso} size={18} /></span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-semibold">
+                      {o.c.ciudad} <span className="text-slate-400">·</span> {nombrePais(o.c.iso, lang) || o.c.pais}
+                    </div>
+                    <div className="truncate text-[11.5px] text-slate-500 dark:text-slate-400">
+                      {o.c.region || nombrePais(o.c.iso, lang) || o.c.pais}
+                    </div>
                   </div>
-                </div>
-                <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                  {a.iata}
-                </span>
-              </li>
-            ))}
+                  <span className="shrink-0 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                    {SIN_APT[lang] || SIN_APT.es}
+                  </span>
+                </li>
+              )
+            )}
           </ul>
         )}
         {abierto && texto.length >= 2 && resultados.length === 0 && catalogo.length > 0 && (
