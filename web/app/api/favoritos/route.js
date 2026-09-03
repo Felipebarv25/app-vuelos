@@ -6,8 +6,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 
 function envKv() {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  // Los DOS juegos de nombres. Vercel inyecta KV_* al crear un KV desde su
+  // panel; una integracion de Upstash directa inyecta UPSTASH_*. lib/kv.js
+  // acepta ambos desde siempre, pero estos endpoints se leian las variables
+  // a mano y solo miraban los KV_*: con la integracion de Upstash puesta,
+  // el almacenamiento funcionaba para todo menos para ellos.
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
   return url && token ? { url, token } : null;
 }
 

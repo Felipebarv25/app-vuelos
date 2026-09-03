@@ -2,10 +2,11 @@
 // Google en Vercel KV (Upstash Redis) usando solo fetch al endpoint REST
 // (sin SDK adicional para mantener el bundle delgado).
 //
-// Env vars que Vercel autoconfigura cuando creas un KV en el dashboard:
-//   · KV_REST_API_URL
-//   · KV_REST_API_TOKEN
-// Si no existen, el endpoint devuelve 503 y el cliente cae a localStorage.
+// Env vars del almacenamiento. Hay DOS juegos de nombres segun como se haya
+// conectado: KV_REST_API_URL/TOKEN si se creo un KV desde el panel de Vercel,
+// UPSTASH_REDIS_REST_URL/TOKEN si se conecto la integracion de Upstash. Se
+// aceptan los dos — es lo que lib/kv.js hace desde siempre.
+// Si no existe ninguno, el endpoint devuelve 503 y el cliente cae a localStorage.
 //
 // Una sola clave por usuario: viajes:<email> guarda un array JSON con los
 // últimos 20 viajes. Atómico: leer → modificar → escribir. Para 1 usuario
@@ -16,8 +17,13 @@ import { authOptions } from "../auth/[...nextauth]/route";
 const TOPE = 20;
 
 function envKv() {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  // Los DOS juegos de nombres. Vercel inyecta KV_* al crear un KV desde su
+  // panel; una integracion de Upstash directa inyecta UPSTASH_*. lib/kv.js
+  // acepta ambos desde siempre, pero estos endpoints se leian las variables
+  // a mano y solo miraban los KV_*: con la integracion de Upstash puesta,
+  // el almacenamiento funcionaba para todo menos para ellos.
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
   return url && token ? { url, token } : null;
 }
 

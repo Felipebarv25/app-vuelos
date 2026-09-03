@@ -37,8 +37,13 @@ export async function POST(req) {
 
   // Guardar en KV con TTL 7 días si está configurado (sirve para
   // construir un dashboard de qué orígenes faltan en allowlist).
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  // Los DOS juegos de nombres. Vercel inyecta KV_* al crear un KV desde su
+  // panel; una integracion de Upstash directa inyecta UPSTASH_*. lib/kv.js
+  // acepta ambos desde siempre, pero estos endpoints se leian las variables
+  // a mano y solo miraban los KV_*: con la integracion de Upstash puesta,
+  // el almacenamiento funcionaba para todo menos para ellos.
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
   if (url && token) {
     try {
       const clave = `csp:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;

@@ -11,8 +11,13 @@ const MAX_SAMPLES = 1000;
 const TTL_VISITS = 60 * 60 * 24 * 30; // 30 días
 
 export async function POST(req) {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  // Los DOS juegos de nombres. Vercel inyecta KV_* al crear un KV desde su
+  // panel; una integracion de Upstash directa inyecta UPSTASH_*. lib/kv.js
+  // acepta ambos desde siempre, pero estos endpoints se leian las variables
+  // a mano y solo miraban los KV_*: con la integracion de Upstash puesta,
+  // el almacenamiento funcionaba para todo menos para ellos.
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) return new Response(null, { status: 204 });
 
   let datos;
@@ -60,8 +65,13 @@ export async function POST(req) {
 // queda detrás de la auth del /panel cliente (el panel valida con su
 // código antes de mostrarlo).
 export async function GET() {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  // Los DOS juegos de nombres. Vercel inyecta KV_* al crear un KV desde su
+  // panel; una integracion de Upstash directa inyecta UPSTASH_*. lib/kv.js
+  // acepta ambos desde siempre, pero estos endpoints se leian las variables
+  // a mano y solo miraban los KV_*: con la integracion de Upstash puesta,
+  // el almacenamiento funcionaba para todo menos para ellos.
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) {
     return Response.json({ ok: false, error: "kv_no_configurado" }, { status: 503 });
   }
