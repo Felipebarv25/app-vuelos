@@ -2,6 +2,9 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { track } from "@/lib/track";
 import { Icono } from "./Icono";
+import DesglosePresupuesto from "./DesglosePresupuesto";
+import { construirPresupuesto } from "@/lib/presupuestoConstruir";
+import { isoDesdeNombre } from "@/lib/requisitos";
 
 import {
   calcularDestinos,
@@ -370,6 +373,80 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
       construirRuta({ presupuestoUsd: presupuestoCalc, dias, personas, region, inicio, semilla, excluir: excluidos, preciosReales, origen, origenes: iatasPais, ritmo }),
     [presupuestoCalc, dias, personas, region, inicio, semilla, excluidos, preciosReales, origen, iatasPais, ritmo]
   );
+
+  // EL MISMO PRESUPUESTO QUE EL PLANIFICADOR MANUAL.
+  //
+  // El asesor tenia su propio desglose de cinco numeros y su propio total, y
+  // del mismo viaje daba cifras distintas que el otro modo. Peor: su total no
+  // contaba seguro, equipaje, traslados, tasa turistica, eSIM, comisiones de
+  // cambio ni colchon, asi que decia "te cabe" de viajes que no caben.
+  //
+  // No se recalcula el transporte: los precios de vuelo y de saltos son los
+  // que el asesor ya eligio, y se pasan tal cual (por persona, que es como los
+  // guarda) para que las dos vistas no se contradigan. Lo que anade el motor
+  // es todo lo que faltaba.
+  //
+  // El mapeo de dias a noches importa: el asesor piensa en DIAS y el motor en
+  // NOCHES. Un viaje de N dias son N-1 noches, asi que la ultima ciudad cede
+  // una — y el motor le devuelve ese dia al repartir. Sin esto el total salia
+  // con un dia de gasto de mas.
+  const presupuestoUnificado = useMemo(() => {
+    if (modo !== "ruta" || !ruta?.ciudades?.length) return null;
+    const cs = ruta.ciudades;
+    const casa = {
+      ciudad: paisActual?.nombre || "Tu ciudad",
+      pais: paisOrigen || "",
+      paisNombre: paisActual?.nombre || "",
+      iata: origen || "",
+      noches: 0,
+      lat: null,
+      lon: null,
+    };
+    const paradas = [
+      casa,
+      ...cs.map((c, i) => ({
+        ciudad: c.ciudad,
+        pais: isoDesdeNombre(c.pais) || "",
+        paisNombre: c.pais,
+        iata: "",
+        lat: c.lat,
+        lon: c.lon,
+        region: c.region,
+        noches:
+          i === cs.length - 1
+            ? Math.max(0, (c.diasAqui || 1) - 1)
+            : c.diasAqui || 1,
+      })),
+    ];
+    const tramos = [
+      {
+        medio: "vuelo",
+        precio: ruta.entrada?.vuelo || 0,
+        largo: true,
+        fuente: ruta.esRealEntrada ? "detectado" : "estimado",
+        desde: casa,
+        hasta: paradas[1],
+        km: null,
+        puertaAPuerta_h: null,
+      },
+      ...cs.slice(1).map((c, i) => ({
+        medio: "vuelo",
+        precio: c.salto || 0,
+        largo: false,
+        fuente: "estimado",
+        desde: paradas[i + 1],
+        hasta: paradas[i + 2],
+        km: c.km || null,
+        puertaAPuerta_h: null,
+      })),
+    ];
+    return construirPresupuesto({
+      paradas,
+      tramos,
+      viajeros: personas,
+      porUsd: tasas?.porUsd || {},
+    });
+  }, [modo, ruta, personas, tasas, origen, paisActual, paisOrigen]);
 
   // Modo RUTA: cuando hay ruta y la entrada todavía no tiene precio real,
   // disparamos buscarVueloEnVivo automáticamente (best-effort). Así el usuario
@@ -828,6 +905,9 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   onPedirVivoEntrada={() => pedirVivo(ruta.entrada)}
                   origenElegido={origen}
                   paisOrigenNombre={paisActual.nombre}
+                  presupuestoUnificado={presupuestoUnificado}
+                  presupuestoUsd={presupuestoCalc}
+                  porUsd={tasas?.porUsd || {}}
                 />
                 </>
               )}
@@ -1267,8 +1347,26 @@ function RutaCard({
   onPedirVivoEntrada,
   origenElegido = null,
   paisOrigenNombre = null,
+  presupuestoUnificado = null,
+  presupuestoUsd = 0,
+  porUsd = {},
 }) {
-  const { ciudades, desglose, total, cabe, sobra, diasTotales } = ruta;
+  const { ciudades, diasTotales } = ruta;
+
+  // EL TOTAL QUE MANDA ES EL COMPLETO.
+  //
+  // Antes "cabe" comparaba contra el costo base — vuelos y costo de vida — y
+  // se olvidaba de seguro, equipaje, traslados, tasa turistica, eSIM,
+  // comisiones de cambio y colchon. Decia "te sobra US$50" de un viaje al que
+  // en realidad le faltaban varios cientos, y eso es la peor forma de fallarle
+  // a alguien que esta contando cada peso.
+  //
+  // Ahora la cuenta es la misma que en el planificador manual. Van a caber
+  // menos destinos que antes: no es que la app se haya vuelto pesimista, es
+  // que antes no sumaba todo.
+  const total = presupuestoUnificado ? presupuestoUnificado.total : ruta.total;
+  const sobra = presupuestoUsd > 0 ? presupuestoUsd - total : ruta.sobra;
+  const cabe = presupuestoUsd > 0 ? total <= presupuestoUsd : ruta.cabe;
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-suave dark:border-slate-700 dark:bg-slate-800">
       {/* Encabezado de la ruta */}
@@ -1356,7 +1454,7 @@ function RutaCard({
       <div className="border-t border-slate-100 px-4 py-3">
         <Fila
           nombre={paisOrigenNombre && ruta.entrada?.pais === paisOrigenNombre ? t("presupVueloDom") : t("presupVueloIntl")}
-          valor={fmtUsd(desglose.vueloIntl)}
+          valor={fmtUsd(ruta.desglose.vueloIntl)}
           badge={ruta.esRealEntrada ? t("presupPrecioReal") : t("presupEstimado")}
           badgeReal={ruta.esRealEntrada}
         />
@@ -1419,11 +1517,20 @@ function RutaCard({
           </a>
         )}
 
-        <Fila nombre={t("cat_transporte_entre_ciudades")} valor={fmtUsd(desglose.saltos)} />
-        <Fila nombre={t("cat_hospedaje")} valor={fmtUsd(desglose.hospedaje)} />
-        <Fila nombre={t("cat_alimentacion")} valor={fmtUsd(desglose.comida)} />
-        <Fila nombre={t("cat_transporte_local")} valor={fmtUsd(desglose.transporte)} />
-        <Fila nombre={t("cat_actividades")} valor={fmtUsd(desglose.extras)} />
+        {/* El desglose compartido: las mismas categorias que el planificador
+            manual, cada linea con su formula, su fuente, su confianza, su
+            boton de reservar y editable a mano. Antes eran cinco numeros
+            opacos en los que no se podia hacer clic. */}
+        {presupuestoUnificado && (
+          <DesglosePresupuesto
+            presupuesto={presupuestoUnificado}
+            overrides={{}}
+            onFijar={() => {}}
+            fmt={fmtUsd}
+            porUsd={porUsd}
+            t={t}
+          />
+        )}
       </div>
 
       {/* Total */}

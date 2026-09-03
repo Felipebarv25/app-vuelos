@@ -95,12 +95,17 @@ export function construirPresupuesto({
   const habitaciones = Math.ceil(n / BASES.personasPorHabitacion);
 
   const conAeropuerto = paradas.filter((p) => p.iata);
-  const hayLargoRadio = tramos.some((t) => t.medio === "vuelo" && (t.km || 0) >= 3000);
+  const hayLargoRadio = tramos.some(
+    (t) => t.medio === "vuelo" && (t.largo != null ? !!t.largo : (t.km || 0) >= 3000)
+  );
 
   // ---- 1. Transporte: una linea por tramo ---------------------------------
   tramos.forEach((t, i) => {
     if (t.fuente === "misma-ciudad") return;
-    const largo = (t.km || 0) >= 3000;
+    // El que llama puede DECIR que el tramo es de largo radio. Lo necesita el
+    // asesor: sus saltos no traen kilometros, pero el vuelo de entrada sabe
+    // perfectamente que es intercontinental.
+    const largo = t.largo != null ? !!t.largo : (t.km || 0) >= 3000;
     lineas.push(
       crearLinea({
         id: `tramo_${i}`,
