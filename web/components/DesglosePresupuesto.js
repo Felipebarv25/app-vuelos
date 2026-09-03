@@ -53,7 +53,7 @@ function Sello({ confianza }) {
   );
 }
 
-function Linea({ linea, overrides, onFijar, fmt, porUsd }) {
+function Linea({ linea, overrides, onFijar, fmt, porUsd, t }) {
   const [abierta, setAbierta] = useState(false);
   const [texto, setTexto] = useState("");
   const editada = estaEditada(linea, overrides);
@@ -216,6 +216,7 @@ export default function DesglosePresupuesto({
                       onFijar={onFijar}
                       fmt={fmt}
                       porUsd={porUsd}
+                      t={t}
                     />
                   ))}
                 </ul>
