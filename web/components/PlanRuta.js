@@ -585,9 +585,14 @@ export default function PlanRuta({
           ------------------------------------------------------------------ */}
       <div className="relative overflow-hidden bg-gradient-to-br from-marca-800 via-marca-600 to-emerald-500 px-5 py-6 text-white sm:px-7">
         {/* La franja derecha estaba vacia: media tarjeta de degradado sin nada
-            que decir. En movil la ilustracion baja de opacidad porque ahi el
-            texto ocupa todo el ancho y se le pondria encima. */}
-        <IlustracionRuta className="opacity-50 sm:opacity-100" />
+            que decir.
+
+            En MOVIL no se pinta. Bajarle la opacidad no era suficiente: a 390
+            px el texto ocupa el ancho completo y los pines caian justo encima
+            del titulo y del recorrido — probado, ilegible. Un degradado limpio
+            es mejor que una ilustracion que estorba, y el movil es donde esta
+            la mayoria de este publico. */}
+        <IlustracionRuta className="hidden sm:block" />
 
         <div className="relative z-10 flex items-start justify-between gap-3">
           <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/70">

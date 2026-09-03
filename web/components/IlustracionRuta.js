@@ -19,7 +19,7 @@
 
 const CORAL = "#f4734d";
 
-export default function IlustracionRuta({ className = "", opacidad = 1 }) {
+export default function IlustracionRuta({ className = "" }) {
   return (
     <svg
       className={`pointer-events-none absolute inset-0 z-0 h-full w-full ${className}`}
@@ -27,7 +27,6 @@ export default function IlustracionRuta({ className = "", opacidad = 1 }) {
       preserveAspectRatio="xMaxYMid slice"
       fill="none"
       aria-hidden="true"
-      style={{ opacity: opacidad }}
     >
       <defs>
         {/* Profundidad: un halo verde arriba a la derecha, donde el degradado
