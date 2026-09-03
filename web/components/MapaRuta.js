@@ -38,7 +38,22 @@ const ESTILO = {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     },
   },
-  layers: [{ id: "base", type: "raster", source: "base" }],
+  layers: [
+    {
+      id: "base",
+      type: "raster",
+      source: "base",
+      // El fondo se veia apagado. OSM viene deliberadamente desaturado para
+      // que los datos encima resalten, pero aqui los datos son cuatro pines:
+      // el mapa PUEDE llevar mas color. Se sube saturacion y contraste y se
+      // aclara un punto, que es lo que le da aire de globo iluminado.
+      paint: {
+        "raster-saturation": 0.35,
+        "raster-contrast": 0.12,
+        "raster-brightness-min": 0.05,
+      },
+    },
+  ],
 };
 
 function asegurarCss() {
@@ -87,6 +102,11 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
           center: [puntos[0].lon, puntos[0].lat],
           zoom: 3,
           cooperativeGestures: true,
+          // El mundo NO se repite. Al alejar el zoom, maplibre pinta copias del
+          // planeta a los lados: se veian TRES mundos con la ruta dibujada tres
+          // veces. Con una sola copia el encuadre es el de un globo y no el de
+          // un papel pintado.
+          renderWorldCopies: false,
         });
         mapaRef.current = mapa;
         mapa.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
@@ -139,11 +159,39 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
 
       for (const p of puntos) {
         const el = document.createElement("div");
-        el.innerHTML =
-          `<div style="background:#0f766e;color:#fff;width:26px;height:26px;border-radius:50%;` +
-          `display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;` +
-          `border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)">${p.n}</div>`;
-        const m = new maplibregl.Marker({ element: el })
+        // CHINCHE, no circulo.
+        //
+        // Eran discos numerados flotando sobre el mapa: leen bien pero no
+        // dicen nada. Un chinche clavado es lo que uno hace de verdad sobre
+        // un mapa cuando marca a donde va, y de paso resuelve dos cosas que
+        // el circulo hacia mal: senala un PUNTO exacto — la aguja apunta a la
+        // coordenada, el circulo la tapaba — y da profundidad, porque tiene
+        // sombra propia y se ve apoyado en vez de pegado.
+        //
+        // La aguja va en el ancla del marcador (abajo), asi que el marcador se
+        // desplaza hacia arriba para que la punta caiga en la coordenada.
+        const CABEZA = 13;   // radio de la cabeza del chinche
+        const AGUJA = 15;    // largo de la aguja
+        const ancho = CABEZA * 2 + 4;
+        const alto = CABEZA * 2 + AGUJA + 4;
+        el.innerHTML = `
+          <svg width="${ancho}" height="${alto}" viewBox="0 0 ${ancho} ${alto}" style="display:block;overflow:visible">
+            <defs>
+              <radialGradient id="ch${p.n}" cx="35%" cy="28%" r="75%">
+                <stop offset="0%" stop-color="#2aa79b"/>
+                <stop offset="60%" stop-color="#0f766e"/>
+                <stop offset="100%" stop-color="#08514c"/>
+              </radialGradient>
+            </defs>
+            <ellipse cx="${ancho / 2 + 1}" cy="${alto - 2}" rx="4.5" ry="1.8" fill="#000" opacity="0.22"/>
+            <path d="M${ancho / 2} ${CABEZA + 2} L${ancho / 2} ${alto - 3}" stroke="#c9d4d3" stroke-width="2" stroke-linecap="round"/>
+            <path d="M${ancho / 2} ${CABEZA + 2} L${ancho / 2} ${alto - 3}" stroke="#8fa3a1" stroke-width="0.8" stroke-linecap="round"/>
+            <circle cx="${ancho / 2}" cy="${CABEZA + 2}" r="${CABEZA}" fill="url(#ch${p.n})" stroke="#fff" stroke-width="2"/>
+            <ellipse cx="${ancho / 2 - CABEZA * 0.32}" cy="${CABEZA + 2 - CABEZA * 0.38}" rx="${CABEZA * 0.34}" ry="${CABEZA * 0.24}" fill="#fff" opacity="0.35"/>
+            <text x="${ancho / 2}" y="${CABEZA + 2}" text-anchor="middle" dominant-baseline="central"
+                  font-size="12" font-weight="800" fill="#fff" style="font-family:inherit">${p.n}</text>
+          </svg>`;
+        const m = new maplibregl.Marker({ element: el, anchor: "bottom" })
           .setLngLat([p.lon, p.lat])
           .setPopup(
             new maplibregl.Popup({ offset: 16, closeButton: false }).setHTML(

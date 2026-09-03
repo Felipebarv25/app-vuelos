@@ -978,9 +978,14 @@ export default function PlanRuta({
                         {i + 1}
                       </span>
                       <div className="min-w-0 flex-1 basis-full sm:basis-0">
-                        <div className="truncate text-[15px] font-bold text-slate-900 dark:text-slate-100">
-                          {p.ciudad}{" "}
-                          <span className="text-[12.5px] font-normal text-slate-400">{p.iata}</span>
+                        <div className="flex items-center gap-1.5 truncate text-[15px] font-bold text-slate-900 dark:text-slate-100">
+                          <span className="truncate">{p.ciudad}</span>
+                          {/* La bandera del pais de la parada. Cada parada ya
+                              guarda su ISO, asi que no cuesta un dato nuevo. */}
+                          <Bandera cc={p.pais} size={16} className="shrink-0" />
+                          {p.iata && (
+                            <span className="shrink-0 text-[12.5px] font-normal text-slate-400">{p.iata}</span>
+                          )}
                         </div>
                         {/* En que dia del viaje cae esta parada. Sale de las
                             noches, no del calendario: sin dia de salida no hay

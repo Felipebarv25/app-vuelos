@@ -372,6 +372,13 @@ function costeTramo(a, b) {
  * correcto. Repetir una ciudad MAS ADELANTE en el viaje si es legitimo — se
  * vuelve por Madrid — asi que solo se juntan las consecutivas.
  */
+// Identidad de una parada para decidir si dos son la MISMA ciudad. El IATA
+// manda cuando lo hay; si no, el nombre normalizado.
+export function claveCiudad(p) {
+  if (p?.iata) return "i:" + p.iata;
+  return "c:" + String(p?.ciudad || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+}
+
 export function fusionarRepetidas(paradas = []) {
   const out = [];
   for (const p of paradas) {
@@ -428,49 +435,105 @@ export function detectarZigzag(paradasOriginales, umbralPct = 12) {
   const actual = largo(paradas);
   const costeActual = coste(paradas);
 
-  // Paso 1: vecino mas cercano, ya sobre el coste. Rapido y casi siempre
-  // razonable, pero deja cruces: se come las ciudades cercanas primero y al
-  // final tiene que cruzar el mapa entero para recoger la que dejo suelta.
-  const inicio = paradas[0];
-  const fin = paradas[paradas.length - 1];
-  const pendientes = paradas.slice(1, -1);
-  let ruta = [inicio];
-  let cursor = inicio;
-  while (pendientes.length) {
-    let mejor = 0;
-    let mejorD = Infinity;
-    for (let i = 0; i < pendientes.length; i++) {
-      const d = costeTramo(cursor, pendientes[i]);
-      if (d < mejorD) { mejorD = d; mejor = i; }
-    }
-    cursor = pendientes.splice(mejor, 1)[0];
-    ruta.push(cursor);
-  }
-  ruta.push(fin);
-
-  // Paso 2: 2-opt. Deshace justamente esos cruces dando la vuelta a un tramo
-  // entero del recorrido, y es lo que separa "un orden decente" de "el orden
-  // que de verdad no da rodeos". Con el tope de 25 paradas del planificador
-  // esto son unos pocos miles de comparaciones: ni se nota.
+  // QUE SE PUEDE MOVER Y QUE NO.
   //
-  // Los extremos NO se mueven nunca: casi siempre son de donde sales y a
-  // donde vuelves, y cambiarlos no seria optimizar el viaje sino otro viaje.
-  let mejoro = true;
-  let vueltas = 0;
-  while (mejoro && vueltas < 40) {
-    mejoro = false;
-    vueltas++;
-    for (let a = 1; a < ruta.length - 2; a++) {
-      for (let b = a + 1; b < ruta.length - 1; b++) {
-        const antes = costeTramo(ruta[a - 1], ruta[a]) + costeTramo(ruta[b], ruta[b + 1]);
-        const despues = costeTramo(ruta[a - 1], ruta[b]) + costeTramo(ruta[a], ruta[b + 1]);
-        if (despues < antes - 1) {
-          const medio = ruta.slice(a, b + 1).reverse();
-          ruta = [...ruta.slice(0, a), ...medio, ...ruta.slice(b + 1)];
-          mejoro = true;
+  // Los extremos nunca: son de donde sales y a donde vuelves, y cambiarlos no
+  // seria optimizar el viaje sino otro viaje.
+  //
+  // Y tampoco las ciudades REPETIDAS. Una ciudad que aparece dos veces en una
+  // ruta no esta ahi por descuido: es la puerta de entrada y salida — Medellin
+  // -> Madrid -> [Europa] -> Madrid -> Medellin. El optimizador las juntaba
+  // sistematicamente, y con razon desde su punto de vista: la distancia entre
+  // Madrid y Madrid es cero, asi que ponerlas seguidas siempre "ahorra". El
+  // resultado era la sugerencia absurda que se veia en pantalla:
+  //
+  //     Medellin -> Madrid -> Madrid -> Zagreb -> ... -> Medellin
+  //
+  // Nadie vuela de Madrid a Madrid. Si una ciudad se repite, sus dos
+  // posiciones se quedan donde estan y solo se reordena lo que hay entre
+  // ellas.
+  const vecesPorCiudad = new Map();
+  for (const p of paradas) {
+    const k = claveCiudad(p);
+    vecesPorCiudad.set(k, (vecesPorCiudad.get(k) || 0) + 1);
+  }
+  const fija = (i) =>
+    i === 0 ||
+    i === paradas.length - 1 ||
+    (vecesPorCiudad.get(claveCiudad(paradas[i])) || 0) > 1;
+
+  // La ruta se parte en TRAMOS entre posiciones fijas, y cada tramo se ordena
+  // por su cuenta con sus dos anclas. Asi el reordenamiento nunca cruza una
+  // puerta de entrada.
+  let ruta = paradas.slice();
+  const bloques = [];
+  let ini = null;
+  for (let i = 0; i < paradas.length; i++) {
+    if (fija(i)) {
+      if (ini != null) bloques.push([ini, i - 1]);
+      ini = null;
+    } else if (ini == null) {
+      ini = i;
+    }
+  }
+  if (ini != null) bloques.push([ini, paradas.length - 1]);
+
+  for (const [desde, hasta] of bloques) {
+    const antes = ruta[desde - 1] || null;
+    const despues = ruta[hasta + 1] || null;
+    let libres = ruta.slice(desde, hasta + 1);
+    if (libres.length < 2) continue;
+
+    // Paso 1: vecino mas cercano desde el ancla de la izquierda. Rapido y casi
+    // siempre razonable, pero deja cruces: se come las ciudades cercanas
+    // primero y al final tiene que cruzar el mapa para recoger la suelta.
+    const pendientes = libres.slice();
+    const orden = [];
+    let cursor = antes;
+    while (pendientes.length) {
+      let mejor = 0;
+      let mejorD = Infinity;
+      for (let k = 0; k < pendientes.length; k++) {
+        const d = cursor ? costeTramo(cursor, pendientes[k]) : 0;
+        if (d < mejorD) { mejorD = d; mejor = k; }
+      }
+      cursor = pendientes.splice(mejor, 1)[0];
+      orden.push(cursor);
+    }
+
+    // Paso 2: 2-opt sobre el tramo, contando las anclas en el coste. Deshace
+    // justamente esos cruces dando la vuelta a un trozo del recorrido, y es lo
+    // que separa "un orden decente" de "el orden que de verdad no da rodeos".
+    const costeConAnclas = (arr) => {
+      let t = 0;
+      const cad = [antes, ...arr, despues].filter(Boolean);
+      for (let k = 0; k < cad.length - 1; k++) t += costeTramo(cad[k], cad[k + 1]);
+      return t;
+    };
+    let mejorOrden = orden;
+    let mejorCoste = costeConAnclas(orden);
+    let mejoro = true;
+    let vueltas = 0;
+    while (mejoro && vueltas < 40) {
+      mejoro = false;
+      vueltas++;
+      for (let a = 0; a < mejorOrden.length - 1; a++) {
+        for (let b = a + 1; b < mejorOrden.length; b++) {
+          const cand = [
+            ...mejorOrden.slice(0, a),
+            ...mejorOrden.slice(a, b + 1).reverse(),
+            ...mejorOrden.slice(b + 1),
+          ];
+          const c = costeConAnclas(cand);
+          if (c < mejorCoste - 1) {
+            mejorOrden = cand;
+            mejorCoste = c;
+            mejoro = true;
+          }
         }
       }
     }
+    ruta = [...ruta.slice(0, desde), ...mejorOrden, ...ruta.slice(hasta + 1)];
   }
 
   const optimo = largo(ruta);

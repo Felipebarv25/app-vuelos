@@ -75,38 +75,68 @@ export default function IlustracionRuta({ className = "" }) {
         </g>
       ))}
 
-      {/* El muneco de Anduve, caminando sobre la linea. Cabeza, torso, un
-          brazo adelantado, piernas en zancada y la mochila coral, que es lo
-          que lo hace reconocible a este tamano. */}
-      <g transform="translate(266, 44)">
-        {/* mochila: detras del torso, pequena y con esquinas redondeadas */}
-        <rect x="-4.6" y="4.6" width="4.6" height="7" rx="1.6" fill={CORAL} fillOpacity="0.95" />
-        {/* cabeza */}
-        <circle cx="0" cy="0" r="3.1" fill="#ffffff" fillOpacity="0.9" />
-        {/* torso */}
-        <path
-          d="M0 3.4 V12"
-          stroke="#ffffff"
-          strokeOpacity="0.9"
-          strokeWidth="2.3"
-          strokeLinecap="round"
-        />
-        {/* brazo adelantado */}
-        <path
-          d="M0.4 6.4 L4.6 4.6"
-          stroke="#ffffff"
-          strokeOpacity="0.9"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        />
-        {/* piernas en zancada */}
-        <path
-          d="M0 12 L-3.4 18 M0 12 L4.2 17.2"
-          stroke="#ffffff"
-          strokeOpacity="0.9"
-          strokeWidth="2.1"
-          strokeLinecap="round"
-        />
+      {/* EL MUNECO, con los trazos EXACTOS del logo.
+          Estaba dibujado a mano — cabeza redonda, torso de una linea, piernas
+          de dos trazos — y se parecia, pero no era. La silueta del logo no es
+          eso: tiene hombros, la mochila con su correa, el brazo en angulo y la
+          cabeza con pelo. Aqui van los mismos paths de AnduveLogo.js, sin
+          redibujar nada: en blanco, con la mochila coral, que es lo que lo
+          hace reconocible.
+
+          El SVG del logo dibuja al muneco alrededor de (100, 50) en su propio
+          sistema; se traslada y se escala a este lienzo. */}
+      <g transform="translate(266, 44) scale(0.62) translate(-100, -50)">
+        {/* pierna de atras */}
+        <g transform="rotate(-10 100 62)">
+          <path
+            d="M98.5 62 L101.5 62 L101.5 68.6 Q101.7 69.7 102.6 70.1 Q103.6 70.5 104 71.1 Q104.4 71.5 104.4 71.9 Q104.4 72.3 103.8 72.3 L98.8 72.3 Q98.3 72.3 98.3 71.6 Z"
+            fill="#ffffff"
+            fillOpacity="0.92"
+          />
+        </g>
+        {/* pierna de delante */}
+        <g transform="rotate(10 100 62)">
+          <path
+            d="M98.5 62 L101.5 62 L101.5 68.6 Q101.7 69.7 102.6 70.1 Q103.6 70.5 104 71.1 Q104.4 71.5 104.4 71.9 Q104.4 72.3 103.8 72.3 L98.8 72.3 Q98.3 72.3 98.3 71.6 Z"
+            fill="#ffffff"
+            fillOpacity="0.92"
+          />
+        </g>
+        {/* torso inclinado, con los brazos y la mochila */}
+        <g transform="rotate(-13 100 56)">
+          <g transform="rotate(-26 100 41)">
+            <path d="M98.7 41 L101.3 41 L100.7 54.5 L99.3 54.5 Z" fill="#ffffff" fillOpacity="0.92" />
+            <path
+              d="M99.1 54.5 Q98.4 54.5 98.3 55.6 Q97.5 55.7 97.7 56.6 Q97.9 57.3 98.7 57.2 Q98.8 58.2 99.5 58.4 Q100 58.6 100.5 58.4 Q101.4 58.1 101.4 57 L101.4 55.5 Q101.4 54.5 100 54.5 Z"
+              fill="#ffffff"
+              fillOpacity="0.92"
+            />
+          </g>
+          {/* mochila y su correa, en coral */}
+          <rect x="89" y="43.5" width="8" height="11" rx="3" fill={CORAL} />
+          <rect x="94.4" y="42.5" width="1.9" height="10" rx="0.9" fill={CORAL} />
+          <path
+            d="M97.7 40.5 C97.7 38.2 103.1 38.2 103.1 40.5 L104 54.5 Q104 59 100.4 59 Q96.8 59 96.8 54.5 Z"
+            fill="#ffffff"
+            fillOpacity="0.92"
+          />
+          <g transform="rotate(26 100 41)">
+            <path d="M98.7 41 L101.3 41 L100.7 54.5 L99.3 54.5 Z" fill="#ffffff" fillOpacity="0.92" />
+            <path
+              d="M99.1 54.5 Q98.4 54.5 98.3 55.6 Q97.5 55.7 97.7 56.6 Q97.9 57.3 98.7 57.2 Q98.8 58.2 99.5 58.4 Q100 58.6 100.5 58.4 Q101.4 58.1 101.4 57 L101.4 55.5 Q101.4 54.5 100 54.5 Z"
+              fill="#ffffff"
+              fillOpacity="0.92"
+            />
+          </g>
+          {/* cabeza, oreja y pelo */}
+          <circle cx="100.4" cy="32.5" r="5.2" fill="#ffffff" fillOpacity="0.92" />
+          <path d="M104.5 31.1 Q106.7 31.5 106.6 32.6 Q106.5 33.7 104.5 34.1 Z" fill="#ffffff" fillOpacity="0.92" />
+          <path
+            d="M95.3 33 Q94.9 26.4 100.4 26.4 Q105.9 26.4 105.5 33 Q104 30.1 101 30.5 Q97.6 30.9 95.3 33 Z"
+            fill="#ffffff"
+            fillOpacity="0.92"
+          />
+        </g>
       </g>
     </svg>
   );
