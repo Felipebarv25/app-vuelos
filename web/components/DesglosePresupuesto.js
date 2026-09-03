@@ -99,6 +99,26 @@ function Linea({ linea, overrides, onFijar, fmt, porUsd }) {
             {linea.nota ? ` · ${linea.nota}` : ""}
           </p>
 
+          {/* RESERVAR. De cada linea de transporte, hospedaje o actividad se
+              puede reservar aqui mismo. Antes solo el asesor tenia enlaces de
+              afiliado; el planificador manual mostraba precios de los que no
+              se podia hacer nada — justo la parte del producto que lo paga.
+              Si el ID de afiliado no esta configurado el enlace lleva igual al
+              buscador, sin comision: nunca un boton muerto. */}
+          {linea.urlAfiliado && (
+            <a
+              href={linea.urlAfiliado}
+              target="_blank"
+              rel="sponsored noopener"
+              className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-marca-50 px-3 py-1 text-[12px] font-bold text-marca-700 transition hover:bg-marca-100 dark:bg-marca-900/30 dark:text-marca-300"
+            >
+              {t("lineaReservar")}
+              {linea.proveedorAfiliado && (
+                <span className="font-normal opacity-70">· {linea.proveedorAfiliado}</span>
+              )}
+            </a>
+          )}
+
           {linea.editable && (
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className="text-[11.5px] font-semibold uppercase tracking-wide text-slate-400">

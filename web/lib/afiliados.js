@@ -132,7 +132,9 @@ export function linkESIM({ pais = "", iso2 = "" } = {}) {
   if (AFILIADOS.travelpayouts && AFILIADOS.tpTrs) {
     return `https://tp.media/r?marker=${AFILIADOS.travelpayouts}&trs=${AFILIADOS.tpTrs}&p=4115&u=https%3A%2F%2Fwww.airalo.com%2F&campaign_id=541`;
   }
-  return "https://www.airalo.com/";
+  // El pais SI se usa: llegar a la pagina de tu destino convierte mucho mejor
+  // que la portada. Habia dos return seguidos y el segundo — el que usaba
+  // iso2 — era codigo muerto: el enlace siempre iba a la portada de Airalo.
   return `https://www.airalo.com/${iso2 ? `?country=${iso2.toLowerCase()}` : ""}`;
 }
 

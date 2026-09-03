@@ -135,6 +135,12 @@ export function diasPorCiudad(paradas) {
   const conNoches = paradas.slice(1).map((p) => ({
     ciudad: p.ciudad,
     pais: p.paisNombre || p.pais,
+    // El ISO y las coordenadas viajan tambien: de ellos salen los enlaces de
+    // reserva, y con el nombre a secas el buscador del afiliado resolvia
+    // "York" como Nueva York.
+    iso: p.pais,
+    lat: p.lat,
+    lon: p.lon,
     region: p.region,
     noches: Math.max(0, Number(p.noches) || 0),
   }));

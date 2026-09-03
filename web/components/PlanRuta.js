@@ -34,7 +34,15 @@ import {
   hubsSugeridos,
 } from "@/lib/rutaViva";
 import { fmtDuracion } from "@/lib/tramos";
-import { linkTransporte, linkCarro, linkHoteles, linkCivitatis } from "@/lib/afiliados";
+import {
+  linkTransporte,
+  linkCarro,
+  linkHoteles,
+  linkCivitatis,
+  linkVuelos,
+  linkTren,
+  linkBus,
+} from "@/lib/afiliados";
 import { track } from "@/lib/track";
 import { leerLocales, escribirLocal, borrarLocal, nuevoUid } from "@/lib/rutasLocales";
 
@@ -1179,6 +1187,35 @@ export default function PlanRuta({
                           <Sello fuente={tr.fuente} t={t} />
                         </div>
                         <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {/* RESERVAR, no solo mirar. El tramo tenia "Ver como
+                              llegar" (Rome2Rio, informativo) y "Buscar precio
+                              real", pero de aqui no se podia comprar nada. El
+                              destino depende del medio: vuelo a Aviasales,
+                              tren y bus a Omio, ferry y el resto a Rome2Rio,
+                              que es el unico que cubre rutas fuera de Europa
+                              sin configurar nada. */}
+                          {tr.fuente !== "incluido" && (
+                            <a
+                              href={
+                                tr.medio === "vuelo"
+                                  ? linkVuelos({
+                                      ciudad: tr.hasta.ciudad,
+                                      pais: tr.hasta.paisNombre || nombrePaisMostrar(tr.hasta.pais, lang),
+                                    })
+                                  : tr.medio === "tren"
+                                  ? linkTren({ desde: tr.desde.ciudad, hasta: tr.hasta.ciudad })
+                                  : tr.medio === "bus"
+                                  ? linkBus({ desde: tr.desde.ciudad, hasta: tr.hasta.ciudad })
+                                  : linkTransporte({ desde: tr.desde.ciudad, hasta: tr.hasta.ciudad })
+                              }
+                              target="_blank"
+                              rel="sponsored noopener"
+                              onClick={() => track("reserva_tramo", { medio: tr.medio })}
+                              className="rounded-lg bg-marca-700 px-2.5 py-1 text-[12px] font-bold text-white transition hover:bg-marca-800"
+                            >
+                              {t("rutaReservar")}
+                            </a>
+                          )}
                           <a href={linkTransporte({ desde: tr.desde.ciudad, hasta: tr.hasta.ciudad })}
                              target="_blank" rel="sponsored noopener"
                              className="rounded-lg bg-marca-50 px-2.5 py-1 text-[12px] font-bold text-marca-700 transition hover:bg-marca-100 dark:bg-marca-900/30 dark:text-marca-300">

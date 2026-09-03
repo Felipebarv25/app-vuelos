@@ -6,6 +6,17 @@
 // de planificacion; la politica se puede discutir y ajustar sin tocarlo.
 
 import { REPARTO_DIARIO } from "./presupuesto";
+import {
+  linkVuelos,
+  linkTren,
+  linkBus,
+  linkTransporte,
+  linkCarro,
+  linkHoteles,
+  linkCivitatis,
+  linkESIM,
+  linkSeguro,
+} from "./afiliados";
 import { costoDiario } from "./rutaViva";
 import {
   BASES,
@@ -19,6 +30,40 @@ import {
 } from "./presupuestoLineas";
 
 const fmt = (n) => `US$${Math.round(n).toLocaleString("es-CO")}`;
+
+// De donde se reserva cada tramo.
+//
+// Los enlaces y los IDs de afiliado ya existian y el asesor ya los usaba; el
+// planificador manual no. Tenia "Ver como llegar" (informativo) y "Buscar
+// precio real", y de ninguna de sus lineas se podia reservar — justo la parte
+// del producto que paga el producto.
+//
+// El criterio es el mismo de afiliados.js: si no hay ID configurado el enlace
+// lleva igual al buscador, solo que sin comision. Nunca un boton muerto.
+function reservaDeTramo(t) {
+  const desde = t.desde?.ciudad || "";
+  const hasta = t.hasta?.ciudad || "";
+  switch (t.medio) {
+    case "vuelo":
+      return {
+        proveedor: "Aviasales",
+        url: linkVuelos({ ciudad: hasta, pais: t.hasta?.paisNombre || "" }),
+      };
+    case "tren":
+      return { proveedor: "Omio", url: linkTren({ desde, hasta }) };
+    case "bus":
+      return { proveedor: "Omio", url: linkBus({ desde, hasta }) };
+    case "carro":
+      return {
+        proveedor: "Discover Cars",
+        url: linkCarro({ ciudad: desde, pais: t.desde?.paisNombre || "" }),
+      };
+    // El ferry no tiene agregador propio configurado: Rome2Rio si lo vende, y
+    // es el unico que cubre rutas fuera de Europa sin configurar nada.
+    default:
+      return { proveedor: "Rome2Rio", url: linkTransporte({ desde, hasta }) };
+  }
+}
 
 /**
  * Arma TODAS las lineas de un viaje.
@@ -81,6 +126,8 @@ export function construirPresupuesto({
             ? "Tarifa curada a mano"
             : `Estimado por distancia (${(t.km || 0).toLocaleString("es-CO")} km)`,
         monetizable: true,
+        proveedorAfiliado: reservaDeTramo(t).proveedor,
+        urlAfiliado: reservaDeTramo(t).url,
         nota: t.fuente === "incluido" ? "El vuelo de ida ya trae la vuelta." : "",
       })
     );
@@ -164,6 +211,15 @@ export function construirPresupuesto({
           formula: `${c.noches} ${c.noches === 1 ? "noche" : "noches"} × ${fmt(porNoche)} × ${habitaciones} ${habitaciones === 1 ? "habitación" : "habitaciones"}`,
           fuente: fuenteDia,
           monetizable: true,
+          proveedorAfiliado: "Booking / Hotellook",
+          // Ciudad, pais Y coordenadas: con el nombre a secas el buscador del
+          // afiliado resolvia "York" como Nueva York.
+          urlAfiliado: linkHoteles({
+            ciudad: c.ciudad,
+            pais: c.pais,
+            lat: c.lat,
+            lon: c.lon,
+          }),
           nota:
             n > 1
               ? `${n} viajeros en ${habitaciones} ${habitaciones === 1 ? "habitación" : "habitaciones"}: la habitación no se paga dos veces.`
@@ -219,6 +275,8 @@ export function construirPresupuesto({
           formula: `${c.dias} ${c.dias === 1 ? "día" : "días"} × ${fmt(unit)} × ${n}`,
           fuente: fuenteDia,
           monetizable: cat === "actividades",
+          proveedorAfiliado: cat === "actividades" ? "Civitatis" : null,
+          urlAfiliado: cat === "actividades" ? linkCivitatis({ ciudad: c.ciudad }) : null,
         })
       );
     }
@@ -235,6 +293,9 @@ export function construirPresupuesto({
       porPersona: true,
       formula: `${diasTotal} días × ${fmt(BASES.seguroDia)} × ${n}`,
       fuente: "Base típica de seguro de viaje internacional",
+      monetizable: true,
+      proveedorAfiliado: "EKTA",
+      urlAfiliado: linkSeguro({ pais: ciudades[0]?.pais || "", dias: diasTotal }),
       nota: "Obligatorio para el espacio Schengen.",
     })
   );
@@ -247,6 +308,14 @@ export function construirPresupuesto({
       porPersona: true,
       formula: `${fmt(BASES.esim)} × ${n}`,
       fuente: "Base típica de plan de datos regional",
+      monetizable: true,
+      proveedorAfiliado: "Airalo",
+      // El pais del primer DESTINO, no el de casa: la eSIM se compra para
+      // donde vas.
+      urlAfiliado: linkESIM({
+        pais: ciudades[0]?.pais || "",
+        iso2: ciudades[0]?.iso || "",
+      }),
     })
   );
   const cargas = Math.floor(diasTotal / BASES.diasPorCarga);
