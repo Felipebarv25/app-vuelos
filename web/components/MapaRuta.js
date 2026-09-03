@@ -101,9 +101,21 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
           const msg = e?.error?.message || "";
           if (msg && !/tile|fetch|load/i.test(msg)) console.warn("[MapaRuta]", msg);
         });
-        // Si a los ocho segundos no ha entrado un solo tile, se dice, pero
-        // debajo del mapa y sin tapar nada.
-        setTimeout(() => { if (!cancelado) setSinFondo(tilesOk === 0); }, 8000);
+        // Si pasados diez segundos no ha entrado un solo tile, se dice, pero
+        // debajo del mapa y sin tapar nada. Y se sigue mirando un minuto: en
+        // conexiones lentas los tiles tardan de sobra — medido, cuarenta
+        // segundos — y un aviso que se queda puesto cuando el mapa ya cargo
+        // miente igual que el cartel que lo tapaba.
+        setTimeout(() => {
+          if (cancelado) return;
+          setSinFondo(tilesOk === 0);
+          if (tilesOk > 0) return;
+          const reloj = setInterval(() => {
+            if (cancelado) { clearInterval(reloj); return; }
+            if (tilesOk > 0) { setSinFondo(false); clearInterval(reloj); }
+          }, 2000);
+          setTimeout(() => clearInterval(reloj), 60000);
+        }, 10000);
       }
       const mapa = mapaRef.current;
       mapa.resize();
