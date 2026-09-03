@@ -88,6 +88,7 @@ export function migrarRuta(r) {
     ...r,
     v: 2,
     pasaporte: r.pasaporte || "CO",
+    nivel: r.nivel || "medio",
     monedaVista: r.monedaVista || "COP",
     presupuesto: sanearPresupuesto(r.presupuesto),
     mesInicio: r.mesInicio || (r.fechaInicio ? String(r.fechaInicio).slice(0, 7) : ""),
@@ -200,6 +201,9 @@ export async function POST(req) {
     // Moneda en la que el viajero quiere VER el presupuesto. La de cada linea
     // se guarda aparte, en su moneda natural.
     monedaVista: String(body?.monedaVista || "COP").slice(0, 3).toUpperCase(),
+    // Nivel de gasto: el mismo viaje da tres presupuestos muy distintos, asi
+    // que es parte de la identidad del viaje y no un ajuste de sesion.
+    nivel: ["mochilero", "medio", "comodo"].includes(body?.nivel) ? body.nivel : "medio",
     presupuesto: sanearPresupuesto(body?.presupuesto),
 
     creada: Number(body?.creada) || Date.now(),

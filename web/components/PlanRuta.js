@@ -20,7 +20,7 @@ import { construirPresupuesto } from "@/lib/presupuestoConstruir";
 import { lineasMigracion } from "@/lib/migracion";
 import { cargarVisas, listaPaises } from "@/lib/requisitos";
 import { obtenerTasas } from "@/lib/fx";
-import { convertir } from "@/lib/presupuestoLineas";
+import { convertir, NIVELES, NIVEL_POR_DEFECTO } from "@/lib/presupuestoLineas";
 import { nombrePaisMostrar } from "@/lib/paisesNombres";
 import { Icono } from "./Icono";
 import { obtenerOfertas } from "@/lib/ofertasDatos";
@@ -192,6 +192,11 @@ export default function PlanRuta({
   // Anduve.
   const [pasaporte, setPasaporte] = useState(() => inicio?.pasaporte || "CO");
   const [monedaVista, setMonedaVista] = useState(() => inicio?.monedaVista || "COP");
+  // NIVEL DE GASTO. El mismo viaje da tres presupuestos muy distintos, y
+  // hasta ahora solo existia el de en medio: el catalogo de costo de vida
+  // esta calibrado para "gama media" y no habia forma de decir que duermes en
+  // hostal o que quieres un cuatro estrellas.
+  const [nivel, setNivel] = useState(() => inicio?.nivel || NIVEL_POR_DEFECTO);
   const [visas, setVisas] = useState(null);
   const [tasas, setTasas] = useState(null);
   const [overrides, setOverrides] = useState(() => inicio?.presupuesto?.overrides || {});
@@ -217,10 +222,10 @@ export default function PlanRuta({
     if (!paradas.length && !nombre && !mesInicio) { borrarLocal(uid); return; }
     escribirLocal({
       uid, id: idRuta, paradas, viajeros, nombre, mesInicio, vivos,
-      pasaporte, monedaVista,
+      pasaporte, monedaVista, nivel,
       presupuesto: { overrides, ajustes },
     });
-  }, [uid, paradas, viajeros, nombre, mesInicio, idRuta, vivos, overrides, ajustes, pasaporte, monedaVista]);
+  }, [uid, paradas, viajeros, nombre, mesInicio, idRuta, vivos, overrides, ajustes, pasaporte, monedaVista, nivel]);
 
   // Empezar otro viaje sin perder el guardado: se suelta el id para que el
   // siguiente "Guardar" cree una ruta nueva en vez de pisar la anterior.
@@ -381,8 +386,9 @@ export default function PlanRuta({
         paradas: paradasCalc, tramos, viajeros, overrides, ajustes,
         extras: extrasMigracion,
         porUsd,
+        nivel,
       }),
-    [paradasCalc, tramos, viajeros, overrides, ajustes, extrasMigracion, porUsd]
+    [paradasCalc, tramos, viajeros, overrides, ajustes, extrasMigracion, porUsd, nivel]
   );
 
   // Formato en la moneda que el viajero eligio ver. Los totales del motor
@@ -553,7 +559,7 @@ export default function PlanRuta({
         headers: h,
         body: JSON.stringify({
           id: idRuta, paradas, viajeros, nombre, mesInicio,
-          pasaporte, monedaVista,
+          pasaporte, monedaVista, nivel,
           presupuesto: { overrides, ajustes },
         }),
       });
@@ -823,6 +829,45 @@ export default function PlanRuta({
                 </span>
               )}
             </label>
+          </div>
+
+          {/* NIVEL DE GASTO. Tres formas de hacer el mismo viaje, y no es un
+              factor sobre el total: cada rubro se mueve lo suyo. El hospedaje
+              cambia de categoria, la comida de sitio, el transporte de medio,
+              y el equipaje y la clase de vuelo aparecen o no. */}
+          <div className="mt-4">
+            <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-wider text-slate-400">
+              {t("rutaNivelLabel")}
+            </span>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {["mochilero", "medio", "comodo"].map((k) => {
+                const activo = nivel === k;
+                return (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => { setNivel(k); track("ruta_nivel", { nivel: k }); }}
+                    aria-pressed={activo}
+                    className={`rounded-xl border-2 p-2.5 text-left transition ${
+                      activo
+                        ? "border-marca-500 bg-marca-50 dark:border-marca-500 dark:bg-marca-900/30"
+                        : "border-slate-200 bg-white hover:border-marca-300 dark:border-slate-700 dark:bg-slate-800"
+                    }`}
+                  >
+                    <span
+                      className={`block text-[13.5px] font-extrabold ${
+                        activo ? "text-marca-800 dark:text-marca-200" : "text-slate-700 dark:text-slate-200"
+                      }`}
+                    >
+                      {t("nivel_" + k)}
+                    </span>
+                    <span className="mt-0.5 block text-[11.5px] leading-snug text-slate-500 dark:text-slate-400">
+                      {t("nivelSub_" + k)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {(mesLabel || dias) && (

@@ -66,6 +66,9 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
     d.setMonth(d.getMonth() + 2);
     return d.toISOString().slice(0, 7);
   });
+  // Nivel de gasto, el mismo que el planificador manual: los dos modos tienen
+  // que dar el mismo presupuesto del mismo viaje.
+  const [nivelGasto, setNivelGasto] = useState("medio");
   const [detalle, setDetalle] = useState(null);
 
   // PERSISTENCIA DEL STATE DEL MODAL (Item D1 — auditoria 2026-06-25):
@@ -445,8 +448,9 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
       tramos,
       viajeros: personas,
       porUsd: tasas?.porUsd || {},
+      nivel: nivelGasto,
     });
-  }, [modo, ruta, personas, tasas, origen, paisActual, paisOrigen]);
+  }, [modo, ruta, personas, tasas, origen, paisActual, paisOrigen, nivelGasto]);
 
   // Modo RUTA: cuando hay ruta y la entrada todavía no tiene precio real,
   // disparamos buscarVueloEnVivo automáticamente (best-effort). Así el usuario
@@ -733,6 +737,29 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   ))}
                 </select>
               </label>
+            </div>
+
+            {/* NIVEL DE GASTO. El mismo que el planificador manual: los dos
+                modos tienen que dar el mismo presupuesto del mismo viaje. */}
+            <div>
+              <Label>{t("rutaNivelLabel")}</Label>
+              <div className="mt-1 grid grid-cols-3 gap-1.5">
+                {["mochilero", "medio", "comodo"].map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setNivelGasto(k)}
+                    aria-pressed={nivelGasto === k}
+                    className={`rounded-md border px-2 py-2 text-[12.5px] font-bold transition ${
+                      nivelGasto === k
+                        ? "border-marca-500 bg-marca-50 text-marca-800 dark:bg-marca-900/30 dark:text-marca-200"
+                        : "border-slate-300 bg-white text-slate-600 hover:border-marca-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                    }`}
+                  >
+                    {t("nivel_" + k)}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* 6) DÍAS (recomendado por la app). El select queda editable, pero

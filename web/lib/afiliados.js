@@ -64,7 +64,7 @@ export function linkTours({ q = "", lat, lon } = {}) {
 // afiliado lo resolvia a su antojo: "Dormir" en York (Inglaterra) abria
 // "Hoteles en Nueva York". Con "York, Reino Unido" no hay ambiguedad, y
 // cuando hay coordenadas se mandan tambien, que es un dato y no un nombre.
-export function linkHoteles({ ciudad = "", pais = "", lat, lon } = {}) {
+export function linkHoteles({ ciudad = "", pais = "", lat, lon, estrellas = 0 } = {}) {
   const destino = [ciudad, pais].filter(Boolean).join(", ");
   if (AFILIADOS.bookingAid) {
     const p = new URLSearchParams();
@@ -74,6 +74,9 @@ export function linkHoteles({ ciudad = "", pais = "", lat, lon } = {}) {
       p.set("longitude", String(lon));
     }
     p.set("aid", AFILIADOS.bookingAid);
+    // Filtro de categoria: si el presupuesto es de hostal, ensenar hoteles de
+    // cinco estrellas es perder el clic. Booking lo acepta como nflt=class=N.
+    if (estrellas >= 1 && estrellas <= 5) p.set("nflt", `class=${estrellas}`);
     return `https://www.booking.com/searchresults.html?${p.toString()}`;
   }
   // Hotellook (Travelpayouts) con tu marker.
@@ -83,6 +86,7 @@ export function linkHoteles({ ciudad = "", pais = "", lat, lon } = {}) {
     p.set("latitude", String(lat));
     p.set("longitude", String(lon));
   }
+  if (estrellas >= 1 && estrellas <= 5) p.set("stars", String(estrellas));
   if (AFILIADOS.travelpayouts) p.set("marker", AFILIADOS.travelpayouts);
   return `https://search.hotellook.com/?${p.toString()}`;
 }

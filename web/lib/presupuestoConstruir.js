@@ -115,12 +115,23 @@ export function construirPresupuesto({
     // asesor: sus saltos no traen kilometros, pero el vuelo de entrada sabe
     // perfectamente que es intercontinental.
     const largo = t.largo != null ? !!t.largo : (t.km || 0) >= 3000;
+    // EL PRECIO REAL NO SE TOCA CON EL NIVEL.
+    //
+    // Es una tarifa de mercado detectada, la mas barata que hay: multiplicarla
+    // por un factor de nivel la convierte en un numero inventado con pinta de
+    // dato. Lo que cambia con el nivel es lo que compras ALREDEDOR del vuelo
+    // — equipaje, asiento, clase —, y eso va en sus propias lineas.
+    //
+    // Los tramos ESTIMADOS si escalan: ya son una estimacion, y un mochilero
+    // toma el bus nocturno donde el nivel comodo vuela.
+    const escala = t.fuente === "detectado" || t.fuente === "curado" ? 1 : nv.tramoEstimado;
+    const precioTramo = Math.round((t.precio || 0) * escala);
     lineas.push(
       crearLinea({
         id: `tramo_${i}`,
         concepto: `${t.desde?.ciudad || "?"} → ${t.hasta?.ciudad || "?"}`,
         categoria: largo ? "transporte_internacional" : "transporte_entre_ciudades",
-        monto: (t.precio || 0) * n,
+        monto: precioTramo * n,
         base: "tramo",
         porPersona: true,
         confianza:
@@ -132,7 +143,9 @@ export function construirPresupuesto({
         formula:
           t.fuente === "incluido"
             ? "Ya cubierto por el billete de ida y vuelta"
-            : `${fmt(t.precio || 0)} × ${n} ${n === 1 ? "persona" : "personas"}`,
+            : escala === 1
+            ? `${fmt(precioTramo)} × ${n} ${n === 1 ? "persona" : "personas"}`
+            : `${fmt(t.precio || 0)} × ${escala} (nivel ${etiquetaNivel}) × ${n}`,
         fuente:
           t.fuente === "detectado"
             ? "Precio real detectado (Travelpayouts)"
@@ -152,15 +165,50 @@ export function construirPresupuesto({
     lineas.push(
       crearLinea({
         id: "equipaje",
-        concepto: "Equipaje facturado",
+        concepto:
+          nv.clave === "mochilero"
+            ? "Equipaje (solo de mano)"
+            : nv.clave === "comodo"
+            ? "Equipaje facturado (2 maletas + asiento)"
+            : "Equipaje facturado",
         categoria: "transporte_internacional",
-        monto: BASES.equipajeLargoRadio * n,
+        monto: nv.equipaje * n,
         porPersona: true,
-        formula: `${fmt(BASES.equipajeLargoRadio)} ida y vuelta × ${n}`,
-        fuente: "Base típica de equipaje facturado en vuelo de largo radio",
-        nota: "Si viajas solo con equipaje de mano, pon 0.",
+        formula:
+          nv.equipaje > 0
+            ? `${fmt(nv.equipaje)} ida y vuelta × ${n}`
+            : "Viajar con lo de mano, nivel mochilero",
+        fuente:
+          nv.equipaje > 0
+            ? "Base típica de equipaje facturado en vuelo de largo radio"
+            : "En el nivel mochilero no se factura maleta",
+        nota:
+          nv.equipaje > 0
+            ? "Si viajas solo con equipaje de mano, pon 0."
+            : "En 0 a propósito: con equipaje de mano no se paga.",
       })
     );
+
+    // Mejora de clase: solo en el nivel comodo, y se cobra el SALTO sobre la
+    // tarifa detectada, no un billete entero. En largo radio la premium
+    // economy sale del orden de 2,2 veces la economica.
+    const tramoLargo = tramos.find(
+      (t) => t.medio === "vuelo" && (t.largo != null ? !!t.largo : (t.km || 0) >= 3000)
+    );
+    if (nv.mejoraClase > 0 && tramoLargo?.precio > 0) {
+      lineas.push(
+        crearLinea({
+          id: "mejora_clase",
+          concepto: "Mejora a premium economy",
+          categoria: "transporte_internacional",
+          monto: Math.round(tramoLargo.precio * nv.mejoraClase) * n,
+          porPersona: true,
+          formula: `${fmt(tramoLargo.precio)} × ${nv.mejoraClase} × ${n}`,
+          fuente: "La premium economy de largo radio cuesta ~2,2× la económica",
+          nota: "Es el salto sobre la tarifa económica, no el billete completo.",
+        })
+      );
+    }
     lineas.push(
       crearLinea({
         id: "tasas_aereas",
@@ -184,9 +232,14 @@ export function construirPresupuesto({
         id: "traslado_aeropuerto",
         concepto: "Traslados aeropuerto ↔ centro",
         categoria: "transporte_local",
-        monto: BASES.trasladoAeropuerto * trayectos * habitaciones,
-        formula: `${trayectos} trayectos × ${fmt(BASES.trasladoAeropuerto)}`,
-        fuente: "Base típica de bus lanzadera o taxi compartido",
+        monto: nv.trasladoAeropuerto * trayectos * habitaciones,
+        formula: `${trayectos} trayectos × ${fmt(nv.trasladoAeropuerto)} (nivel ${etiquetaNivel})`,
+        fuente:
+          nv.clave === "mochilero"
+            ? "Bus lanzadera o transporte público al aeropuerto"
+            : nv.clave === "comodo"
+            ? "Traslado privado puerta a puerta"
+            : "Base típica de bus lanzadera o taxi compartido",
         nota: "Se va en grupo, así que no se multiplica por viajero.",
       })
     );
@@ -211,28 +264,40 @@ export function construirPresupuesto({
     // Aqui estaba el error que mas se notaba con dos viajeros: se multiplicaba
     // por persona, asi que un viaje en pareja duplicaba la cuenta del hotel.
     // Una habitacion cuesta lo que cuesta, la duerma uno o la duerman dos.
-    const porNoche = Math.round(dia * REPARTO_DIARIO.hospedaje);
+    // El nivel cambia la CATEGORIA del hospedaje, que es el rubro que mas se
+    // mueve de los tres: un dormitorio compartido cuesta como un 40% de un
+    // hotel de 3 estrellas, y un 4-5 estrellas mas del doble.
+    const porNoche = Math.round(dia * REPARTO_DIARIO.hospedaje * nv.hospedaje);
+    const tipoHospedaje =
+      nv.clave === "mochilero"
+        ? "Hostal o dormitorio"
+        : nv.clave === "comodo"
+        ? "Hotel 4-5★"
+        : "Hotel 3★ o apartamento";
     if (c.noches > 0) {
       lineas.push(
         crearLinea({
           id: `hosp_${norm(c.ciudad)}`,
-          concepto: `Hospedaje en ${c.ciudad}`,
+          concepto: `${tipoHospedaje} en ${c.ciudad}`,
           categoria: "hospedaje",
           monto: porNoche * c.noches * habitaciones,
           base: "noche",
           porPersona: false,
           ciudad: c.ciudad,
           formula: `${c.noches} ${c.noches === 1 ? "noche" : "noches"} × ${fmt(porNoche)} × ${habitaciones} ${habitaciones === 1 ? "habitación" : "habitaciones"}`,
-          fuente: fuenteDia,
+          fuente: `${fuenteDia} · nivel ${etiquetaNivel}`,
           monetizable: true,
           proveedorAfiliado: "Booking / Hotellook",
           // Ciudad, pais Y coordenadas: con el nombre a secas el buscador del
           // afiliado resolvia "York" como Nueva York.
+          // Las estrellas van al buscador del afiliado: si el presupuesto es
+          // de hostal, ensenar hoteles de cinco estrellas es perder el clic.
           urlAfiliado: linkHoteles({
             ciudad: c.ciudad,
             pais: c.pais,
             lat: c.lat,
             lon: c.lon,
+            estrellas: nv.estrellas,
           }),
           nota:
             n > 1
@@ -247,7 +312,8 @@ export function construirPresupuesto({
           id: `tasa_${norm(c.ciudad)}`,
           concepto: `Tasa turística en ${c.ciudad}`,
           categoria: "hospedaje",
-          monto: (tasa || 0) * c.noches * n,
+          // La tasa municipal casi siempre escala con la categoria del hotel.
+          monto: Math.round((tasa || 0) * nv.tasaTuristica) * c.noches * n,
           base: "noche",
           porPersona: true,
           ciudad: c.ciudad,
@@ -270,13 +336,37 @@ export function construirPresupuesto({
     // viejo multiplicaba todo por noches: un viaje de tres noches pagaba tres
     // dias de comida cuando se comen cuatro. Sobre veinte noches, eso es un
     // dia entero de gasto que no aparecia por ningun lado.
+    // Cada rubro con SU factor, no con uno global.
+    //
+    // Comer en mercado no baja al 40% de comer en restaurante: baja a la
+    // mitad, porque el ingrediente cuesta lo que cuesta. Y el transporte
+    // publico apenas se mueve — el metro vale igual para todos —, asi que es
+    // justo el que un factor unico castigaria mas.
+    const detalleNivel = {
+      mochilero: {
+        comida: "Mercado, comida de calle y cocinar",
+        local: "Metro y bus, sin taxis",
+        activ: "Lo gratis primero, alguna entrada",
+      },
+      medio: {
+        comida: "Mezcla de restaurante y supermercado",
+        local: "Transporte público y algún taxi",
+        activ: "Una actividad de pago al día",
+      },
+      comodo: {
+        comida: "Restaurante a diario",
+        local: "Taxis y traslados privados",
+        activ: "Tours guiados y experiencias",
+      },
+    }[nv.clave];
+
     const porDia = [
-      ["comida", "alimentacion", `Comer en ${c.ciudad}`, REPARTO_DIARIO.comida],
-      ["local", "transporte_local", `Moverte en ${c.ciudad}`, REPARTO_DIARIO.transporte],
-      ["activ", "actividades", `Salir y ver en ${c.ciudad}`, REPARTO_DIARIO.extras],
+      ["comida", "alimentacion", `Comer en ${c.ciudad}`, REPARTO_DIARIO.comida, nv.comida, detalleNivel.comida],
+      ["local", "transporte_local", `Moverte en ${c.ciudad}`, REPARTO_DIARIO.transporte, nv.transporte, detalleNivel.local],
+      ["activ", "actividades", `Salir y ver en ${c.ciudad}`, REPARTO_DIARIO.extras, nv.actividades, detalleNivel.activ],
     ];
-    for (const [pre, cat, concepto, prop] of porDia) {
-      const unit = Math.round(dia * prop);
+    for (const [pre, cat, concepto, prop, factor, detalle] of porDia) {
+      const unit = Math.round(dia * prop * factor);
       lineas.push(
         crearLinea({
           id: `${pre}_${norm(c.ciudad)}`,
@@ -287,7 +377,7 @@ export function construirPresupuesto({
           porPersona: true,
           ciudad: c.ciudad,
           formula: `${c.dias} ${c.dias === 1 ? "día" : "días"} × ${fmt(unit)} × ${n}`,
-          fuente: fuenteDia,
+          fuente: `${fuenteDia} · ${detalle}`,
           monetizable: cat === "actividades",
           proveedorAfiliado: cat === "actividades" ? "Civitatis" : null,
           urlAfiliado: cat === "actividades" ? linkCivitatis({ ciudad: c.ciudad }) : null,
@@ -302,11 +392,16 @@ export function construirPresupuesto({
       id: "seguro",
       concepto: "Seguro de viaje",
       categoria: "pre_viaje",
-      monto: Math.round(BASES.seguroDia * diasTotal * n),
+      monto: Math.round(nv.seguroDia * diasTotal * n),
       base: "dia",
       porPersona: true,
-      formula: `${diasTotal} días × ${fmt(BASES.seguroDia)} × ${n}`,
-      fuente: "Base típica de seguro de viaje internacional",
+      formula: `${diasTotal} días × ${fmt(nv.seguroDia)} × ${n}`,
+      fuente:
+        nv.clave === "mochilero"
+          ? "Seguro básico: cobertura médica mínima Schengen"
+          : nv.clave === "comodo"
+          ? "Seguro amplio: cancelación, equipaje y cobertura alta"
+          : "Base típica de seguro de viaje internacional",
       monetizable: true,
       proveedorAfiliado: "EKTA",
       urlAfiliado: linkSeguro({ pais: ciudades[0]?.pais || "", dias: diasTotal }),
@@ -318,10 +413,15 @@ export function construirPresupuesto({
       id: "esim",
       concepto: "eSIM o plan de datos",
       categoria: "varios",
-      monto: BASES.esim * n,
+      monto: nv.esim * n,
       porPersona: true,
-      formula: `${fmt(BASES.esim)} × ${n}`,
-      fuente: "Base típica de plan de datos regional",
+      formula: `${fmt(nv.esim)} × ${n}`,
+      fuente:
+        nv.clave === "mochilero"
+          ? "Plan de datos mínimo, wifi donde se pueda"
+          : nv.clave === "comodo"
+          ? "Plan de datos amplio, sin racionar"
+          : "Base típica de plan de datos regional",
       monetizable: true,
       proveedorAfiliado: "Airalo",
       // El pais del primer DESTINO, no el de casa: la eSIM se compra para
@@ -338,10 +438,10 @@ export function construirPresupuesto({
       id: "lavanderia",
       concepto: "Lavandería",
       categoria: "varios",
-      monto: cargas * BASES.lavanderiaPorCarga * habitaciones,
+      monto: cargas * nv.lavanderiaPorCarga * habitaciones,
       formula:
         cargas > 0
-          ? `${cargas} ${cargas === 1 ? "carga" : "cargas"} × ${fmt(BASES.lavanderiaPorCarga)}`
+          ? `${cargas} ${cargas === 1 ? "carga" : "cargas"} × ${fmt(nv.lavanderiaPorCarga)}`
           : `Viaje corto (${diasTotal} días): no hace falta`,
       fuente: "Una carga cada 7 días",
     })
@@ -399,6 +499,7 @@ export function construirPresupuesto({
 
   return {
     lineas: todas,
+    nivel: nv.clave,
     total,
     totalPorPersona: Math.round(total / n),
     viajeros: n,
