@@ -700,7 +700,10 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                 <p className="mt-1.5 text-[11.5px] leading-relaxed text-slate-500 dark:text-slate-400">
                   {t("presupDiasPorQue")
                     .replace("{dias}", recom.recomendado)
-                    .replace("{alcanza}", recom.diasRaw ?? recom.recomendado)}
+                    // Redondeado: "alcanza para unos 6.8" se lee raro, y el
+                    // decimal finge una precision que una mediana regional no
+                    // tiene.
+                    .replace("{alcanza}", Math.round(recom.diasRaw ?? recom.recomendado))}
                 </p>
               )}
               {recom.advertencia === "insuficiente_vuelo" && (
