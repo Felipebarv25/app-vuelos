@@ -470,3 +470,18 @@ button:active {
    gris que ensuciaba la UI (feedback mobile 2026-07-11). */
 .sin-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 .sin-scrollbar::-webkit-scrollbar { display: none; }
+
+/* El landing que se sirve mientras no sabemos quien eres.
+ *
+ * La portada devolvia null hasta que cargaban localStorage y la sesion, asi
+ * que en servidor el HTML llegaba vacio: nada que indexar y ningun primer
+ * pintado. Ahora se renderiza el landing, y para quien YA tiene sesion se
+ * esconde antes del primer pintado — el script del layout marca
+ * data-sesion="1" en el <html> si encuentra rastro de sesion.
+ *
+ * Es CSS y no una rama de React a proposito: el marcado tiene que ser
+ * identico en servidor y en cliente para que la hidratacion no se queje.
+ * Mismo patron que ya usaba el modo oscuro aqui. */
+html[data-sesion="1"] .landing-previa {
+  display: none;
+}

@@ -1238,8 +1238,35 @@ export default function Home() {
 
   const lugaresDelDia = plan[diaVisible]?.paradas || [];
 
-  // Mientras carga el estado guardado, no parpadear.
-  if (!listo) return null;
+  // MIENTRAS NO SABEMOS QUIEN ERES, SE SIRVE EL LANDING (auditoria, P-04).
+  //
+  // Esto devolvia `null`, y `listo` depende de localStorage y de la sesion:
+  // las dos cosas son de cliente, asi que en el servidor SIEMPRE era false.
+  // Resultado: el HTML de la portada llegaba con cero caracteres de texto
+  // — comprobado con curl —, sin nada que indexar y sin primer pintado hasta
+  // que arrancaba el JavaScript. En la pagina principal de la app.
+  //
+  // La causa nunca fue el "use client": Next si renderiza en servidor los
+  // componentes de cliente. Era este return.
+  //
+  // Y el `null` tenia su razon, que sigue valiendo: el comentario decia "no
+  // parpadear", y es verdad — si el servidor pinta el landing, quien ya tiene
+  // sesion lo veria un instante antes de que carguen sus datos.
+  //
+  // Se resuelve como ya se resolvia el modo oscuro en esta misma app: un
+  // script en el layout que corre ANTES del primer pintado marca
+  // data-sesion="1" en el <html> si encuentra rastro de sesion, y una regla
+  // de CSS esconde este bloque en ese caso. El visitante nuevo — que es quien
+  // importa para el SEO y para el primer pintado — ve el landing de
+  // inmediato; el que vuelve no ve el parpadeo. El marcado es el MISMO en
+  // servidor y en cliente, asi que no hay desajuste de hidratacion: solo CSS.
+  if (!listo) {
+    return (
+      <div className="landing-previa">
+        <Bienvenida />
+      </div>
+    );
+  }
   // Primera vez: pantalla de bienvenida (idioma + nombre).
   if (!usuario) return <Bienvenida />;
 
