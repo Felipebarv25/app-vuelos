@@ -69,6 +69,18 @@ export const TASA_TURISTICA = {
   bruselas: 4.2, dubrovnik: 2.5, atenas: 1.5, edimburgo: 0, londres: 0,
 };
 
+// ISO-2 -> nombre en espanol. Si ya es un nombre, se devuelve tal cual.
+const nombreDePaisISO = (cc) => {
+  const x = String(cc || "");
+  if (!/^[A-Za-z]{2}$/.test(x)) return x;
+  try {
+    const n = new Intl.DisplayNames(["es"], { type: "region" }).of(x.toUpperCase());
+    return n && n !== x.toUpperCase() ? n : x;
+  } catch {
+    return x;
+  }
+};
+
 const norm = (s) =>
   String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
@@ -134,7 +146,13 @@ export const diasDeNoches = (noches) => Math.max(1, Math.round(noches) + 1);
 export function diasPorCiudad(paradas) {
   const conNoches = paradas.slice(1).map((p) => ({
     ciudad: p.ciudad,
-    pais: p.paisNombre || p.pais,
+    // El NOMBRE del pais, traduciendo el ISO si es lo unico que hay. El
+    // catalogo de costo de vida se indexa por nombre ("Espana", no "ES"), asi
+    // que sin esto Madrid caia a la media mundial. Arregle nombreDePais() en
+    // rutaViva.js por el mismo motivo, pero ESTA es la ruta que usa el
+    // constructor del presupuesto: llama a costoDiario() con la cadena
+    // directa, sin pasar por alli.
+    pais: p.paisNombre || nombreDePaisISO(p.pais),
     // El ISO y las coordenadas viajan tambien: de ellos salen los enlaces de
     // reserva, y con el nombre a secas el buscador del afiliado resolvia
     // "York" como Nueva York.
