@@ -22,6 +22,8 @@ import {
   detectarZigzag,
   resumenRuta,
   ajustarIdaYVuelta,
+  tramoSinVueloLargo,
+  hubsSugeridos,
 } from "@/lib/rutaViva";
 import { fmtDuracion } from "@/lib/tramos";
 import { linkTransporte, linkCarro, linkHoteles, linkCivitatis } from "@/lib/afiliados";
@@ -256,6 +258,42 @@ export default function PlanRuta({
     setCandidatos(null);
     track("ruta_parada_sin_aeropuerto", { ciudad: c.ciudad });
   }
+
+  // Meter una escala EN MEDIO, no al final.
+  //
+  // Hasta ahora solo se podia anadir al final y despues subirla a mano con las
+  // flechas. Cuando lo que hace falta es exactamente "pasar por Madrid antes
+  // de volver", eso son cinco clics para una decision que ya esta tomada.
+  const insertarEscala = useCallback(async (pos, hub) => {
+    const base = {
+      ciudad: hub.ciudad,
+      pais: hub.cc,
+      paisNombre: hub.pais,
+      iata: hub.iata,
+      noches: 1,
+      lat: null,
+      lon: null,
+    };
+    const cur = coordsCuradas(hub.ciudad, hub.pais);
+    if (cur) Object.assign(base, cur);
+    setParadas((prev) => [...prev.slice(0, pos), base, ...prev.slice(pos)]);
+    track("ruta_escala_hub", { ciudad: hub.ciudad, iata: hub.iata });
+
+    if (cur) return;
+    try {
+      const r = await fetch(
+        `/api/geocodificar?ciudad=${encodeURIComponent(hub.ciudad)}&iso=${encodeURIComponent(hub.cc)}`
+      );
+      const d = r.ok ? await r.json() : null;
+      if (d?.encontrado) {
+        setParadas((prev) =>
+          prev.map((x) =>
+            x.iata === hub.iata && x.lat == null ? { ...x, lat: d.lat, lon: d.lon } : x
+          )
+        );
+      }
+    } catch {}
+  }, []);
 
   const quitar = (i) => setParadas((p) => p.filter((_, k) => k !== i));
   const mover = (i, delta) =>
@@ -702,12 +740,18 @@ export default function PlanRuta({
             {zigzag.hayZigzag && (
               <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
                 <div className="text-[13.5px] font-bold text-amber-900 dark:text-amber-200">
-                  {t("rutaZigzagTitulo").replace("{pct}", zigzag.ahorroPct)}
+                  {zigzag.arreglaImposibles > 0
+                    ? t("rutaZigzagImposibleTitulo")
+                    : t("rutaZigzagTitulo").replace("{pct}", zigzag.ahorroPct)}
                 </div>
                 <p className="mt-1 text-[13px] leading-relaxed text-amber-800 dark:text-amber-300">
-                  {t("rutaZigzagAyuda")
-                    .replace("{actual}", zigzag.kmActual.toLocaleString("es-CO"))
-                    .replace("{optimo}", zigzag.kmOptimo.toLocaleString("es-CO"))}
+                  {/* Cuando el orden nuevo evita un vuelo que no existe, hablar
+                      de kilometros seria enganoso: casi siempre son MAS. */}
+                  {zigzag.arreglaImposibles > 0
+                    ? t("rutaZigzagImposibleAyuda")
+                    : t("rutaZigzagAyuda")
+                        .replace("{actual}", zigzag.kmActual.toLocaleString("es-CO"))
+                        .replace("{optimo}", zigzag.kmOptimo.toLocaleString("es-CO"))}
                 </p>
                 <div className="mt-2 text-[12.5px] font-semibold text-amber-900 dark:text-amber-200">
                   {zigzag.ordenSugerido.join("  →  ")}
@@ -886,6 +930,47 @@ export default function PlanRuta({
                             </button>
                           )}
                         </div>
+
+                        {/* Un vuelo que no existe.
+                            El planificador estimaba precio y duracion de Glasgow -> Medellin
+                            como si fuera un vuelo mas. No lo es: de Glasgow no sale nadie
+                            cruzando el Atlantico. Se dice, y se ofrece la escala que hace
+                            falta con un clic, que es lo que el viajero iba a hacer igual. */}
+                        {(() => {
+                          const falla = tramoSinVueloLargo(tr.desde, tr.hasta, tr.km);
+                          if (!falla) return null;
+                          const problema = falla.salida ? tr.desde : tr.hasta;
+                          const hubs = hubsSugeridos(problema, paradas);
+                          return (
+                            <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
+                              <div className="text-[12.5px] font-bold text-amber-900 dark:text-amber-200">
+                                {t(falla.salida ? "rutaSinVueloSalida" : "rutaSinVueloLlegada")
+                                  .replace("{desde}", tr.desde.ciudad)
+                                  .replace("{hasta}", tr.hasta.ciudad)}
+                              </div>
+                              <p className="mt-1 text-[12px] leading-relaxed text-amber-800 dark:text-amber-300">
+                                {t("rutaSinVueloAyuda")}
+                              </p>
+                              {hubs.length > 0 && (
+                                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                                  <span className="text-[11.5px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                                    {t("rutaSinVueloEscala")}
+                                  </span>
+                                  {hubs.map((h) => (
+                                    <button
+                                      key={h.iata}
+                                      type="button"
+                                      onClick={() => insertarEscala(i + 1, h)}
+                                      className="rounded-full border border-amber-300 bg-white px-2.5 py-1 text-[12px] font-bold text-amber-900 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-slate-800 dark:text-amber-200"
+                                    >
+                                      + {h.etiqueta}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
                   </li>

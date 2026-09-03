@@ -13,6 +13,7 @@
 //   costo diario  ciudad curada -> mediana del país -> mediana de región -> global
 //   tramo         vuelo real detectado -> tramo curado -> estimación por distancia
 import { DESTINOS_PRESUPUESTO, REPARTO_DIARIO } from "./presupuesto";
+import { PAISES_ORIGEN } from "./paisesOrigen";
 import { costoTramoReal } from "./tramos";
 
 // --- Geometría --------------------------------------------------------------
@@ -163,6 +164,72 @@ export function evaluarTramo({ desde, hasta, vueloReal = null }) {
   };
 }
 
+// --- Aeropuertos con vuelo largo ---------------------------------------------
+//
+// Un viaje se cierra volviendo a casa, y a casa no se vuelve desde cualquier
+// aeropuerto. El reordenador media en kilometros y solo en kilometros, asi que
+// dejaba Glasgow como ultima parada antes de Medellin: por distancia es lo
+// mejor, porque el rodeo de bajar a Londres o a Madrid son kilometros de mas.
+// Pero ese vuelo NO EXISTE. Optimizar sobre una ruta imposible no es optimizar.
+//
+// La lista sale de PAISES_ORIGEN, que ya es exactamente eso: uno a cuatro
+// aeropuertos principales por pais, curados a mano. Glasgow no esta; Londres,
+// Madrid y Medellin si.
+const HUBS = new Map();
+for (const [cc, info] of Object.entries(PAISES_ORIGEN || {})) {
+  for (const h of info.hubs || []) HUBS.set(h.iata, { ...h, cc, pais: info.nombre });
+}
+
+// A partir de esta distancia un tramo deja de ser un salto regional y pasa a
+// necesitar un aeropuerto con vuelo de largo radio en los dos extremos.
+export const KM_LARGO = 3000;
+
+export const esHub = (p) => !!p?.iata && HUBS.has(p.iata);
+
+/**
+ * ¿Este tramo pide un vuelo que casi seguro no existe? Devuelve cual de los
+ * dos extremos es el problema, o null si el tramo es plausible.
+ */
+export function tramoSinVueloLargo(desde, hasta, km) {
+  if (km == null || km < KM_LARGO) return null;
+  const salida = !esHub(desde);
+  const llegada = !esHub(hasta);
+  if (!salida && !llegada) return null;
+  return { salida, llegada };
+}
+
+/**
+ * Por donde convendria pasar. Primero los hubs del propio pais de la parada
+ * — de Glasgow se baja a Londres — y despues los de los paises que el viaje ya
+ * visita, que es la otra salida natural: si ya pasas por Madrid, vuelves por
+ * Madrid. Se omite el que ya esta en la ruta y solo se ofrece uno por ciudad,
+ * que dos aeropuertos de Londres no son dos opciones.
+ */
+export function hubsSugeridos(parada, paradas = [], tope = 3) {
+  const yaEnRuta = new Set((paradas || []).map((p) => p.iata).filter(Boolean));
+  const ciudadesVistas = new Set();
+  const out = [];
+
+  const agregarDe = (cc) => {
+    for (const h of PAISES_ORIGEN?.[cc]?.hubs || []) {
+      if (out.length >= tope) return;
+      if (yaEnRuta.has(h.iata)) continue;
+      const ciudad = h.ciudad.split(" (")[0];
+      if (ciudadesVistas.has(ciudad)) continue;
+      ciudadesVistas.add(ciudad);
+      out.push({ iata: h.iata, ciudad, etiqueta: h.ciudad, cc, pais: PAISES_ORIGEN[cc].nombre });
+    }
+  };
+
+  const propio = String(parada?.pais || "").toUpperCase();
+  if (propio) agregarDe(propio);
+  for (const p of paradas || []) {
+    const cc = String(p?.pais || "").toUpperCase();
+    if (cc && cc !== propio) agregarDe(cc);
+  }
+  return out;
+}
+
 // --- Ida y vuelta ------------------------------------------------------------
 const mismaCiudad = (a, b) => {
   if (!a || !b) return false;
@@ -231,20 +298,53 @@ export function ajustarIdaYVuelta(tramos = []) {
  * rompería el viaje. Solo permuta las intermedias, y solo propone el cambio si
  * el ahorro se nota.
  */
+// Lo que cuesta un tramo A LOS OJOS DEL REORDENADOR. No son kilometros: son
+// kilometros mas lo que penaliza pedir un vuelo que no existe.
+//
+// Sin esto el reordenador hacia lo unico que sabia hacer — acortar — y por
+// distancia pura Glasgow -> Medellin gana a Glasgow -> Madrid -> Medellin. Es
+// mas corto y es imposible. La penalizacion no se inventa un precio ni una
+// duracion: solo dice "por aqui no se puede salir", y con eso el 2-opt coloca
+// el hub al final por su cuenta.
+const PENALIZACION_SIN_HUB = 6000;
+
+function costeTramo(a, b) {
+  const km = distanciaKm(a, b);
+  if (km == null) return 0;
+  return km + (tramoSinVueloLargo(a, b, km) ? PENALIZACION_SIN_HUB : 0);
+}
+
 export function detectarZigzag(paradas, umbralPct = 12) {
   if (!Array.isArray(paradas) || paradas.length < 4) return { hayZigzag: false };
   if (paradas.some((p) => p.lat == null || p.lon == null)) return { hayZigzag: false };
 
+  // Dos medidas distintas y no intercambiables: `largo` son los kilometros de
+  // verdad, los que se le ensenan al viajero; `coste` es lo que se optimiza.
   const largo = (orden) => {
     let t = 0;
     for (let i = 0; i < orden.length - 1; i++) t += distanciaKm(orden[i], orden[i + 1]) || 0;
     return t;
   };
-  const actual = largo(paradas);
+  const coste = (orden) => {
+    let t = 0;
+    for (let i = 0; i < orden.length - 1; i++) t += costeTramo(orden[i], orden[i + 1]);
+    return t;
+  };
+  const imposibles = (orden) => {
+    let n = 0;
+    for (let i = 0; i < orden.length - 1; i++) {
+      const km = distanciaKm(orden[i], orden[i + 1]);
+      if (tramoSinVueloLargo(orden[i], orden[i + 1], km)) n++;
+    }
+    return n;
+  };
 
-  // Paso 1: vecino mas cercano. Rapido y casi siempre razonable, pero deja
-  // cruces: se come las ciudades cercanas primero y al final tiene que cruzar
-  // el mapa entero para recoger la que dejo suelta.
+  const actual = largo(paradas);
+  const costeActual = coste(paradas);
+
+  // Paso 1: vecino mas cercano, ya sobre el coste. Rapido y casi siempre
+  // razonable, pero deja cruces: se come las ciudades cercanas primero y al
+  // final tiene que cruzar el mapa entero para recoger la que dejo suelta.
   const inicio = paradas[0];
   const fin = paradas[paradas.length - 1];
   const pendientes = paradas.slice(1, -1);
@@ -254,7 +354,7 @@ export function detectarZigzag(paradas, umbralPct = 12) {
     let mejor = 0;
     let mejorD = Infinity;
     for (let i = 0; i < pendientes.length; i++) {
-      const d = distanciaKm(cursor, pendientes[i]) ?? Infinity;
+      const d = costeTramo(cursor, pendientes[i]);
       if (d < mejorD) { mejorD = d; mejor = i; }
     }
     cursor = pendientes.splice(mejor, 1)[0];
@@ -276,10 +376,8 @@ export function detectarZigzag(paradas, umbralPct = 12) {
     vueltas++;
     for (let a = 1; a < ruta.length - 2; a++) {
       for (let b = a + 1; b < ruta.length - 1; b++) {
-        const antes =
-          (distanciaKm(ruta[a - 1], ruta[a]) || 0) + (distanciaKm(ruta[b], ruta[b + 1]) || 0);
-        const despues =
-          (distanciaKm(ruta[a - 1], ruta[b]) || 0) + (distanciaKm(ruta[a], ruta[b + 1]) || 0);
+        const antes = costeTramo(ruta[a - 1], ruta[a]) + costeTramo(ruta[b], ruta[b + 1]);
+        const despues = costeTramo(ruta[a - 1], ruta[b]) + costeTramo(ruta[a], ruta[b + 1]);
         if (despues < antes - 1) {
           const medio = ruta.slice(a, b + 1).reverse();
           ruta = [...ruta.slice(0, a), ...medio, ...ruta.slice(b + 1)];
@@ -290,21 +388,24 @@ export function detectarZigzag(paradas, umbralPct = 12) {
   }
 
   const optimo = largo(ruta);
+  const costeOptimo = coste(ruta);
   const ahorroKm = actual - optimo;
   const pct = actual > 0 ? Math.round((ahorroKm / actual) * 100) : 0;
 
-  // Dos criterios, y el segundo no es un parche.
-  //
-  // Con el porcentaje solo, el aviso practicamente nunca salta en un viaje
-  // transatlantico: entre Medellin y Europa hay 8.000 km de oceano que no
-  // cambian se ordene como se ordene, asi que arreglar un rodeo de 1.300 km
-  // dentro de Europa sale al 6% del total y se quedaba callado. Y 1.300 km
-  // son dos vuelos y un dia de viaje.
-  //
-  // El umbral absoluto mide lo que de verdad se ahorra. El porcentaje sigue
-  // valiendo para los viajes cortos, donde 400 km si serian el viaje entero.
+  // Cuantos vuelos imposibles quita el orden nuevo. Es lo primero que se mira:
+  // un orden que evita un vuelo que no existe vale la pena AUNQUE sea mas
+  // largo en kilometros — que es justo el caso de bajar a Madrid antes de
+  // cruzar el Atlantico.
+  const arreglaImposibles = imposibles(paradas) - imposibles(ruta);
+
+  // Tres criterios. El porcentaje sirve para viajes cortos; los kilometros,
+  // para los largos, donde 8.000 km de oceano diluyen cualquier arreglo
+  // europeo; y los tramos imposibles mandan sobre los otros dos.
   const AHORRO_MINIMO_KM = 400;
-  if (pct < umbralPct && ahorroKm < AHORRO_MINIMO_KM) {
+  if (arreglaImposibles <= 0 && pct < umbralPct && ahorroKm < AHORRO_MINIMO_KM) {
+    return { hayZigzag: false, kmActual: Math.round(actual), kmOptimo: Math.round(optimo) };
+  }
+  if (costeOptimo >= costeActual) {
     return { hayZigzag: false, kmActual: Math.round(actual), kmOptimo: Math.round(optimo) };
   }
 
@@ -323,6 +424,7 @@ export function detectarZigzag(paradas, umbralPct = 12) {
     kmOptimo: Math.round(optimo),
     ahorroKm: Math.round(ahorroKm),
     ahorroPct: pct,
+    arreglaImposibles,
     indices,
     ordenSugerido: ruta.map((p) => p.ciudad),
   };
