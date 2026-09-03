@@ -199,33 +199,59 @@ export function tramoSinVueloLargo(desde, hasta, km) {
 }
 
 /**
- * Por donde convendria pasar. Primero los hubs del propio pais de la parada
- * — de Glasgow se baja a Londres — y despues los de los paises que el viaje ya
- * visita, que es la otra salida natural: si ya pasas por Madrid, vuelves por
- * Madrid. Se omite el que ya esta en la ruta y solo se ofrece uno por ciudad,
- * que dos aeropuertos de Londres no son dos opciones.
+ * Por donde convendria pasar antes del salto largo.
+ *
+ * Primero los hubs del propio pais de la parada — de Glasgow se baja a
+ * Londres — y despues los de los paises que el viaje ya visita: si ya pasas
+ * por Madrid, volver por Madrid es lo natural, aunque signifique pisarlo dos
+ * veces. Eso ultimo es a proposito: repetir ciudad para tomar el vuelo de
+ * vuelta es normal, y era el ejemplo exacto que puso el usuario.
+ *
+ * Se descarta el pais de casa. Volviendo a Medellin, ofrecer Bogota como
+ * escala no ayuda: esa conexion va DESPUES del oceano, no antes, y ocupaba
+ * el sitio de Madrid.
+ *
+ * Una ciudad, una opcion: dos aeropuertos de Londres no son dos alternativas.
+ * Y si esa ciudad ya esta en la ruta se reutiliza SU aeropuerto, para no
+ * proponer Gatwick a quien ya tiene Heathrow puesto.
  */
 export function hubsSugeridos(parada, paradas = [], tope = 3) {
-  const yaEnRuta = new Set((paradas || []).map((p) => p.iata).filter(Boolean));
-  const ciudadesVistas = new Set();
+  const lista = paradas || [];
+  const casa = String(lista[lista.length - 1]?.pais || "").toUpperCase();
+  const propio = String(parada?.pais || "").toUpperCase();
+
+  // Ciudad -> aeropuerto que el viaje ya usa para esa ciudad.
+  const enRuta = new Map();
+  for (const p of lista) {
+    if (p?.iata && p?.ciudad) enRuta.set(p.ciudad.split(" (")[0], p.iata);
+  }
+
+  const ciudadesVistas = new Set([String(parada?.ciudad || "").split(" (")[0]]);
   const out = [];
 
   const agregarDe = (cc) => {
     for (const h of PAISES_ORIGEN?.[cc]?.hubs || []) {
       if (out.length >= tope) return;
-      if (yaEnRuta.has(h.iata)) continue;
       const ciudad = h.ciudad.split(" (")[0];
       if (ciudadesVistas.has(ciudad)) continue;
       ciudadesVistas.add(ciudad);
-      out.push({ iata: h.iata, ciudad, etiqueta: h.ciudad, cc, pais: PAISES_ORIGEN[cc].nombre });
+      const iata = enRuta.get(ciudad) || h.iata;
+      out.push({
+        iata,
+        ciudad,
+        // Si la ciudad ya esta en la ruta se muestra su nombre a secas: la
+        // coletilla del aeropuerto solo sirve para desempatar entre dos.
+        etiqueta: enRuta.has(ciudad) ? ciudad : h.ciudad,
+        cc,
+        pais: PAISES_ORIGEN[cc].nombre,
+      });
     }
   };
 
-  const propio = String(parada?.pais || "").toUpperCase();
   if (propio) agregarDe(propio);
-  for (const p of paradas || []) {
+  for (const p of lista) {
     const cc = String(p?.pais || "").toUpperCase();
-    if (cc && cc !== propio) agregarDe(cc);
+    if (cc && cc !== propio && cc !== casa) agregarDe(cc);
   }
   return out;
 }
