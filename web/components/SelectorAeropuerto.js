@@ -387,13 +387,30 @@ export default function SelectorAeropuerto({
   // Lista unica para pintar y para el teclado: aeropuertos primero — son
   // instantaneos y casi siempre lo que se busca — y debajo las ciudades sin
   // aeropuerto.
-  const opciones = useMemo(
-    () => [
-      ...resultados.map((a) => ({ tipo: "apt", a })),
-      ...sinApt.map((c) => ({ tipo: "ciudad", c })),
-    ],
-    [resultados, sinApt]
-  );
+  const opciones = useMemo(() => {
+    const apt = resultados.map((a) => ({ tipo: "apt", a }));
+    const ciu = sinApt.map((c) => ({ tipo: "ciudad", c }));
+    const q = norm(texto.trim());
+    if (!q) return [...apt, ...ciu];
+
+    // Lo que coincide EXACTO va primero, venga de donde venga.
+    //
+    // Con las ciudades simplemente pegadas al final, escribir "York" dejaba
+    // York de Inglaterra en novena posicion, detras de Yorkton, Yorke Island y
+    // "Rock Hill York Co Bryant field". Tenerla en la lista no sirve de nada
+    // si hay que bajar ocho filas para verla.
+    //
+    // No se degrada un aeropuerto que si coincide exacto: York de Pensilvania
+    // sigue saliendo primero. Solo se adelanta la ciudad exacta al monton de
+    // coincidencias parciales.
+    const exacto = (nombre) => norm(nombre) === q;
+    return [
+      ...apt.filter((o) => exacto(o.a.ciudad)),
+      ...ciu.filter((o) => exacto(o.c.ciudad)),
+      ...apt.filter((o) => !exacto(o.a.ciudad)),
+      ...ciu.filter((o) => !exacto(o.c.ciudad)),
+    ];
+  }, [resultados, sinApt, texto]);
 
   // --- handlers país ---
   function elegirPais(codigo) {
