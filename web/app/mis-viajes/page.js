@@ -445,8 +445,10 @@ export default function PaginaMisViajes() {
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {[
-              ["reco", "compass", t("planModoReco"), t("planModoRecoSub")],
+              // Manual primero: es el modo que la gente usa cuando ya sabe a
+              // donde va, y el que el usuario abre siempre.
               ["manual", "map", t("planModoManual"), t("planModoManualSub")],
+              ["reco", "compass", t("planModoReco"), t("planModoRecoSub")],
             ].map(([k, icono, titulo, sub]) => (
               <button
                 key={k}

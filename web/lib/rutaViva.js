@@ -359,8 +359,49 @@ function costeTramo(a, b) {
   return km + (tramoSinVueloLargo(a, b, km) ? PENALIZACION_SIN_HUB : 0);
 }
 
-export function detectarZigzag(paradas, umbralPct = 12) {
-  if (!Array.isArray(paradas) || paradas.length < 4) return { hayZigzag: false };
+/**
+ * Junta las paradas repetidas SEGUIDAS, sumando sus noches.
+ *
+ * Tres "Londres" consecutivos no son tres paradas: son una de tres noches con
+ * dos tramos de cero kilometros entre medias. El reordenador las arrastraba
+ * tal cual y su sugerencia salia asi:
+ *
+ *   Medellin -> Londres -> Londres -> Londres -> Manchester -> ...
+ *
+ * que es exactamente el aspecto de un algoritmo roto, aunque el orden fuera
+ * correcto. Repetir una ciudad MAS ADELANTE en el viaje si es legitimo — se
+ * vuelve por Madrid — asi que solo se juntan las consecutivas.
+ */
+export function fusionarRepetidas(paradas = []) {
+  const out = [];
+  for (const p of paradas) {
+    const ultima = out[out.length - 1];
+    const misma =
+      ultima &&
+      ((ultima.iata && p.iata && ultima.iata === p.iata) ||
+        (!ultima.iata && !p.iata && ultima.ciudad === p.ciudad));
+    if (misma) {
+      out[out.length - 1] = {
+        ...ultima,
+        noches: (Number(ultima.noches) || 0) + (Number(p.noches) || 0),
+      };
+    } else {
+      out.push(p);
+    }
+  }
+  return out;
+}
+
+export function detectarZigzag(paradasOriginales, umbralPct = 12) {
+  if (!Array.isArray(paradasOriginales)) return { hayZigzag: false };
+
+  // Se optimiza sobre la ruta con las repetidas seguidas ya juntas. Si habia
+  // alguna, juntarlas ES parte de la mejora: se ofrece igual aunque el orden
+  // no cambie, porque una ruta con "Londres, Londres, Londres" esta mal
+  // escrita aunque este bien ordenada.
+  const paradas = fusionarRepetidas(paradasOriginales);
+  const habiaRepetidas = paradas.length !== paradasOriginales.length;
+  if (paradas.length < 4 && !habiaRepetidas) return { hayZigzag: false };
   if (paradas.some((p) => p.lat == null || p.lon == null)) return { hayZigzag: false };
 
   // Dos medidas distintas y no intercambiables: `largo` son los kilometros de
@@ -447,31 +488,32 @@ export function detectarZigzag(paradas, umbralPct = 12) {
   // para los largos, donde 8.000 km de oceano diluyen cualquier arreglo
   // europeo; y los tramos imposibles mandan sobre los otros dos.
   const AHORRO_MINIMO_KM = 400;
-  if (arreglaImposibles <= 0 && pct < umbralPct && ahorroKm < AHORRO_MINIMO_KM) {
+  const nadaQueGanar =
+    arreglaImposibles <= 0 && pct < umbralPct && ahorroKm < AHORRO_MINIMO_KM;
+  if (!habiaRepetidas && (nadaQueGanar || costeOptimo >= costeActual)) {
     return { hayZigzag: false, kmActual: Math.round(actual), kmOptimo: Math.round(optimo) };
   }
-  if (costeOptimo >= costeActual) {
-    return { hayZigzag: false, kmActual: Math.round(actual), kmOptimo: Math.round(optimo) };
-  }
+  // Si solo habia repetidas y el orden ya era el mejor, se ofrece el limpiado
+  // igual: es una mejora real de la ruta aunque no ahorre un metro.
+  const rutaFinal = costeOptimo < costeActual ? ruta : paradas;
 
-  // Los indices del orden nuevo sobre el array original: sin esto la sugerencia
-  // solo se puede leer, y habia que reordenar a mano con las flechitas.
-  const usados = new Set();
-  const indices = ruta.map((p) => {
-    const k = paradas.findIndex((x, n) => !usados.has(n) && x === p);
-    usados.add(k);
-    return k;
-  });
-
+  // Se devuelve la RUTA YA ARMADA, no indices sobre el array viejo.
+  //
+  // Antes eran indices, y con las repetidas fusionadas ya no hay una
+  // correspondencia uno a uno con las paradas originales: dos "Londres" del
+  // array viejo son una sola parada aqui. Devolver el itinerario resuelto es
+  // ademas mas honesto — la sugerencia es exactamente esto, no una receta que
+  // la UI tiene que interpretar.
   return {
     hayZigzag: true,
     kmActual: Math.round(actual),
-    kmOptimo: Math.round(optimo),
-    ahorroKm: Math.round(ahorroKm),
-    ahorroPct: pct,
+    kmOptimo: Math.round(largo(rutaFinal)),
+    ahorroKm: Math.round(actual - largo(rutaFinal)),
+    ahorroPct: actual > 0 ? Math.round(((actual - largo(rutaFinal)) / actual) * 100) : 0,
     arreglaImposibles,
-    indices,
-    ordenSugerido: ruta.map((p) => p.ciudad),
+    fusionoRepetidas: habiaRepetidas,
+    paradasSugeridas: rutaFinal,
+    ordenSugerido: rutaFinal.map((p) => p.ciudad),
   };
 }
 

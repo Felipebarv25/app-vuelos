@@ -15,6 +15,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import SelectorAeropuerto from "./SelectorAeropuerto";
 import Bandera from "./Bandera";
 import DesglosePresupuesto from "./DesglosePresupuesto";
+import IlustracionRuta from "./IlustracionRuta";
 import { construirPresupuesto } from "@/lib/presupuestoConstruir";
 import { nombrePaisMostrar } from "@/lib/paisesNombres";
 import { Icono } from "./Icono";
@@ -433,6 +434,32 @@ export default function PlanRuta({
     return vistos;
   }, [paradas]);
 
+  // Recorrido en una linea: de donde sales, por que paises pasas, y cuanto
+  // dura. Antes esto habia que deducirlo leyendo la lista entera de paradas.
+  const recorrido = useMemo(() => {
+    if (paradas.length < 2) return "";
+    const nombres = [];
+    for (const p of paradas) {
+      const nom = p.paisNombre || nombrePaisMostrar(p.pais, lang) || p.ciudad;
+      if (nombres[nombres.length - 1] !== nom) nombres.push(nom);
+    }
+    // Mas de cuatro paises no se lee: se resume por los extremos.
+    const tramo =
+      nombres.length > 4
+        ? [nombres[0], "…", nombres[nombres.length - 1]].join(" → ")
+        : nombres.join(" → ");
+    return tramo;
+  }, [paradas, lang]);
+
+  // Cuantos tramos tienen precio de mercado y no estimacion. Es la unica
+  // pastilla de la portada que dice algo sobre la calidad del numero grande.
+  const tramosReales = useMemo(
+    () => tramos.filter((t) => t.fuente === "detectado").length,
+    [tramos]
+  );
+
+  const porDia = presupuesto.dias > 0 ? Math.round(presupuesto.total / presupuesto.dias) : 0;
+
   // Etiqueta del mes elegido, en el idioma de la interfaz, en dos formas.
   //
   // `llano` es lo que devuelve el navegador: en espanol, portugues y frances
@@ -556,8 +583,13 @@ export default function PlanRuta({
           presenta con su nombre, sus fechas y su costo, y el resto del
           trabajo (nombre, ruta, presupuesto) vive dentro en tres pasos.
           ------------------------------------------------------------------ */}
-      <div className="bg-gradient-to-br from-marca-800 via-marca-600 to-emerald-500 px-5 py-6 text-white sm:px-7">
-        <div className="flex items-start justify-between gap-3">
+      <div className="relative overflow-hidden bg-gradient-to-br from-marca-800 via-marca-600 to-emerald-500 px-5 py-6 text-white sm:px-7">
+        {/* La franja derecha estaba vacia: media tarjeta de degradado sin nada
+            que decir. En movil la ilustracion baja de opacidad porque ahi el
+            texto ocupa todo el ancho y se le pondria encima. */}
+        <IlustracionRuta className="opacity-50 sm:opacity-100" />
+
+        <div className="relative z-10 flex items-start justify-between gap-3">
           <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/70">
             {t("rutaIdentidadEyebrow")}
           </div>
@@ -584,7 +616,7 @@ export default function PlanRuta({
           )}
         </div>
 
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div className="relative z-10 mt-2 flex max-w-full flex-wrap items-center gap-x-3 gap-y-2 sm:max-w-[70%]">
           <h3
             className={`text-[24px] font-extrabold leading-tight tracking-tight sm:text-[28px] ${
               nombre.trim() ? "" : "text-white/70"
@@ -602,18 +634,65 @@ export default function PlanRuta({
           )}
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          <Chip>
-            {mesLabel || t("rutasSinFecha")}
-          </Chip>
-          <Chip>{t("rutasNParadas").replace("{n}", paradas.length)}</Chip>
-          <Chip>
-            {(viajeros === 1 ? t("rutaChipViajero") : t("rutaChipViajeros")).replace(
-              "{n}",
-              viajeros
+        {/* Recorrido y duracion en una linea, que antes habia que deducir
+            leyendo la lista entera de paradas. */}
+        {recorrido && (
+          <p className="relative z-10 mt-1.5 max-w-full text-[13px] font-medium leading-relaxed text-white/80 sm:max-w-[70%]">
+            {recorrido}
+            {presupuesto.dias > 0 && (
+              <>
+                {" · "}
+                {t("rutaBannerDuracion")
+                  .replace("{dias}", presupuesto.dias)
+                  .replace("{noches}", presupuesto.noches)}
+              </>
             )}
-          </Chip>
-          {paradas.length >= 2 && <Chip fuerte>{fmtUsd(presupuesto.total)}</Chip>}
+            {paradas.length > 0 && ` · ${t("rutasNParadas").replace("{n}", paradas.length)}`}
+          </p>
+        )}
+
+        {/* EL PRESUPUESTO, que es el diferencial de Anduve y estaba de pastilla
+            entre otras tres. Sale de las pills y se convierte en el numero
+            grande de la portada, con su costo por dia al lado: "cuanto cuesta"
+            y "cuanto cuesta al dia" son las dos preguntas con las que se
+            decide un viaje. */}
+        {paradas.length >= 2 && (
+          <div className="relative z-10 mt-4 flex max-w-full flex-wrap items-end gap-x-5 gap-y-2 sm:max-w-[70%]">
+            <div>
+              <div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-white/70">
+                {t("rutaBannerPresupuesto")}
+              </div>
+              <div className="text-[30px] font-bold leading-none tabular-nums">
+                {fmtUsd(presupuesto.total)}
+              </div>
+            </div>
+            <div className="pb-0.5 text-[12.5px] font-medium text-white/80">
+              {t("rutaBannerPorDia")
+                .replace("{porDia}", fmtUsd(porDia))
+                .replace(
+                  "{viajeros}",
+                  (viajeros === 1 ? t("rutaChipViajero") : t("rutaChipViajeros")).replace(
+                    "{n}",
+                    viajeros
+                  )
+                )}
+            </div>
+          </div>
+        )}
+
+        <div className="relative z-10 mt-3.5 flex flex-wrap items-center gap-1.5">
+          {/* El coral de la marca vuelve al banner, y con un dato detras: el
+              rodeo que el reordenador ya calcula. Si no hay rodeo no hay chip:
+              felicitar por nada es ruido. */}
+          {zigzag.hayZigzag && zigzag.ahorroPct > 0 && (
+            <span className="rounded-full bg-acento-500 px-2.5 py-1 text-[12px] font-bold text-white shadow-sm">
+              {t("rutaBannerRodeo").replace("{pct}", zigzag.ahorroPct)}
+            </span>
+          )}
+          <Chip>{mesLabel || t("rutasSinFecha")}</Chip>
+          {tramosReales > 0 && (
+            <Chip>{t("rutaBannerReales").replace("{n}", tramosReales)}</Chip>
+          )}
         </div>
       </div>
 
@@ -805,19 +884,22 @@ export default function PlanRuta({
                     : t("rutaZigzagAyuda")
                         .replace("{actual}", zigzag.kmActual.toLocaleString("es-CO"))
                         .replace("{optimo}", zigzag.kmOptimo.toLocaleString("es-CO"))}
+                  {zigzag.fusionoRepetidas && " " + t("rutaZigzagFusion")}
                 </p>
                 <div className="mt-2 text-[12.5px] font-semibold text-amber-900 dark:text-amber-200">
                   {zigzag.ordenSugerido.join("  →  ")}
                 </div>
                 {/* Antes esto solo se podia leer: para seguir el consejo habia
                     que reordenar once paradas a mano con las flechitas. */}
-                {zigzag.indices?.length === paradas.length &&
-                  !zigzag.indices.includes(-1) && (
+                {zigzag.paradasSugeridas?.length >= 2 && (
                     <button
                       type="button"
                       onClick={() => {
-                        setParadas((prev) => zigzag.indices.map((k) => prev[k]));
-                        track("ruta_reordenada", { ahorroPct: zigzag.ahorroPct });
+                        setParadas(zigzag.paradasSugeridas);
+                        track("ruta_reordenada", {
+                          ahorroPct: zigzag.ahorroPct,
+                          fusiono: !!zigzag.fusionoRepetidas,
+                        });
                       }}
                       className="mt-3 rounded-full bg-amber-800 px-4 py-1.5 text-[12.5px] font-bold text-white transition hover:bg-amber-900"
                     >

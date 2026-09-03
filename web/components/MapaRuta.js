@@ -86,12 +86,21 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
           style: ESTILO,
           center: [puntos[0].lon, puntos[0].lat],
           zoom: 3,
+          cooperativeGestures: true,
         });
         mapaRef.current = mapa;
         mapa.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-        // El scroll del raton es para leer la pagina: el mapa vive dentro de
-        // una tarjeta larga y capturarlo dejaba al usuario atrapado en el.
-        mapa.scrollZoom.disable();
+        // Zoom con gesto cooperativo, no desactivado.
+        //
+        // Estaba desactivado del todo porque capturar el scroll dentro de una
+        // tarjeta larga deja al usuario atrapado en el mapa. Pero eso quitaba
+        // tambien el zoom, que es justo lo que hace util un mapa de ruta.
+        //
+        // maplibre trae la solucion buena: el scroll a secas pasa a la pagina
+        // y el zoom pide ctrl/cmd (o dos dedos en el trackpad), con un cartel
+        // que lo explica la primera vez.
+        mapa.scrollZoom.enable();
+        mapa.scrollZoom.setWheelZoomRate(1 / 450);
         // Contabilidad del fondo, solo para poder decirlo si no llega. Un
         // error de tile NO es un fallo del mapa: la version anterior tapaba
         // con un cartel un mapa que funcionaba, escondiendo las paradas.
