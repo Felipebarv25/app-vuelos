@@ -869,11 +869,21 @@ export default function PlanRuta({
             </div>
 
             {/* Zigzag */}
-            {zigzag.hayZigzag && (
+            {zigzag.hayZigzag && (() => {
+              // Lo unico que mejora es juntar repetidas: ni rodeo ni vuelo
+              // imposible. Hablar de kilometros aqui seria mentir.
+              const soloFusion = zigzag.fusionoRepetidas && !(zigzag.ahorroPct > 0);
+              return (
               <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
                 <div className="text-[13.5px] font-bold text-amber-900 dark:text-amber-200">
+                  {/* Tres casos distintos, y mezclarlos deja el aviso
+                      contradiciendose: "rodeo del 0%" y "18.806 km cuando
+                      podrias recorrer 18.806 km" cuando lo unico que sobraba
+                      eran dos paradas repetidas. */}
                   {zigzag.arreglaImposibles > 0
                     ? t("rutaZigzagImposibleTitulo")
+                    : soloFusion
+                    ? t("rutaZigzagSoloFusionTitulo")
                     : t("rutaZigzagTitulo").replace("{pct}", zigzag.ahorroPct)}
                 </div>
                 <p className="mt-1 text-[13px] leading-relaxed text-amber-800 dark:text-amber-300">
@@ -881,10 +891,12 @@ export default function PlanRuta({
                       de kilometros seria enganoso: casi siempre son MAS. */}
                   {zigzag.arreglaImposibles > 0
                     ? t("rutaZigzagImposibleAyuda")
+                    : soloFusion
+                    ? t("rutaZigzagSoloFusionAyuda")
                     : t("rutaZigzagAyuda")
                         .replace("{actual}", zigzag.kmActual.toLocaleString("es-CO"))
                         .replace("{optimo}", zigzag.kmOptimo.toLocaleString("es-CO"))}
-                  {zigzag.fusionoRepetidas && " " + t("rutaZigzagFusion")}
+                  {!soloFusion && zigzag.fusionoRepetidas && " " + t("rutaZigzagFusion")}
                 </p>
                 <div className="mt-2 text-[12.5px] font-semibold text-amber-900 dark:text-amber-200">
                   {zigzag.ordenSugerido.join("  →  ")}
@@ -907,7 +919,8 @@ export default function PlanRuta({
                     </button>
                   )}
               </div>
-            )}
+              );
+            })()}
 
             {/* El viaje sobre el mapa, encuadrado a sus propias ciudades.
                 Una lista de once paradas no deja ver si el recorrido tiene
