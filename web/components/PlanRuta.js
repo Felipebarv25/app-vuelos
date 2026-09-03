@@ -382,6 +382,15 @@ export default function PlanRuta({
     [paradas, tramos, viajeros, overrides, ajustes]
   );
 
+  // Suma de unas categorias concretas del presupuesto nuevo.
+  const totalDeCategorias = useCallback(
+    (cats) =>
+      (presupuesto.porCategoria || [])
+        .filter((c) => cats.includes(c.categoria))
+        .reduce((s, c) => s + c.total, 0),
+    [presupuesto]
+  );
+
   const fijarLinea = useCallback((id, monto) => {
     setOverrides((prev) => {
       const sig = { ...prev };
@@ -604,7 +613,7 @@ export default function PlanRuta({
               viajeros
             )}
           </Chip>
-          {paradas.length >= 2 && <Chip fuerte>{fmtUsd(resumen.total)}</Chip>}
+          {paradas.length >= 2 && <Chip fuerte>{fmtUsd(presupuesto.total)}</Chip>}
         </div>
       </div>
 
@@ -1027,15 +1036,23 @@ export default function PlanRuta({
               <section className="border-t border-slate-100 pt-5 dark:border-slate-700">
                 <Paso n={3} titulo={t("rutaPaso3")} sub={t("rutaResumen")} />
                 <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                  {/* Estas dos tarjetas mostraban cifras POR PERSONA mientras
+                      el desglose de abajo mostraba el total del grupo: con dos
+                      viajeros los dos bloques se contradecian en la misma
+                      pantalla. Ahora salen del mismo motor y son totales. */}
                   <div>
                     <div className="text-[12px] text-slate-500 dark:text-slate-400">{t("rutaTransporte")}</div>
-                    <div className="text-[19px] font-extrabold tabular-nums text-slate-900 dark:text-slate-100">{fmtUsd(resumen.transporte)}</div>
+                    <div className="text-[19px] font-extrabold tabular-nums text-slate-900 dark:text-slate-100">
+                      {fmtUsd(totalDeCategorias(["transporte_internacional", "transporte_entre_ciudades"]))}
+                    </div>
                   </div>
                   <div>
                     <div className="text-[12px] text-slate-500 dark:text-slate-400">
-                      {t("rutaEstadia").replace("{noches}", resumen.noches)}
+                      {t("rutaEstadia").replace("{noches}", presupuesto.noches)}
                     </div>
-                    <div className="text-[19px] font-extrabold tabular-nums text-slate-900 dark:text-slate-100">{fmtUsd(resumen.estadia)}</div>
+                    <div className="text-[19px] font-extrabold tabular-nums text-slate-900 dark:text-slate-100">
+                      {fmtUsd(totalDeCategorias(["hospedaje", "alimentacion", "transporte_local", "actividades"]))}
+                    </div>
                   </div>
                   <div>
                     <div className="text-[12px] text-slate-500 dark:text-slate-400">{t("rutaEnMovimiento")}</div>
@@ -1086,12 +1103,12 @@ export default function PlanRuta({
 
                 <div className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-slate-100 pt-4 dark:border-slate-700">
                   <span className="text-[13px] text-slate-500 dark:text-slate-400">{t("rutaPorPersona")}</span>
-                  <span className="text-[17px] font-bold tabular-nums text-slate-700 dark:text-slate-200">{fmtUsd(resumen.porPersona)}</span>
+                  <span className="text-[17px] font-bold tabular-nums text-slate-700 dark:text-slate-200">{fmtUsd(presupuesto.totalPorPersona)}</span>
                   <span className="ml-auto text-[13px] text-slate-500 dark:text-slate-400">
-                    {t("rutaTotal").replace("{n}", resumen.viajeros)}
+                    {t("rutaTotal").replace("{n}", presupuesto.viajeros)}
                   </span>
                   <span className="text-[26px] font-extrabold tabular-nums tracking-tight text-marca-700 dark:text-marca-300">
-                    {fmtUsd(resumen.total)}
+                    {fmtUsd(presupuesto.total)}
                   </span>
                 </div>
 
