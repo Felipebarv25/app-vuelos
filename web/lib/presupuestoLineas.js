@@ -213,3 +213,94 @@ export function convertir(monto, de = "USD", a = "USD", porUsd = {}) {
 export function montoUSD(linea, overrides = {}, porUsd = {}) {
   return convertir(montoEfectivo(linea, overrides), linea.moneda || "USD", "USD", porUsd);
 }
+
+// --- NIVELES DE GASTO --------------------------------------------------------
+//
+// Tres formas de hacer el mismo viaje. NO es un factor sobre el total: cada
+// rubro se mueve lo que se mueve de verdad, y eso cambia mucho de uno a otro.
+//
+// Un dormitorio compartido cuesta como un 40% de un hotel de 3 estrellas, pero
+// comer en mercado no baja al 40% de comer en restaurante: baja a la mitad,
+// porque el pan y la fruta cuestan lo que cuestan en cualquier parte. Y el
+// transporte publico apenas se mueve — el metro vale igual para todos —, asi
+// que el que menos varia es justo el que un factor global castigaria mas.
+//
+// El nivel MEDIO es 1.00 por definicion: el catalogo de costo de vida
+// (DESTINOS_PRESUPUESTO) esta calibrado para "turista de gama media", asi que
+// el balanceado no multiplica nada. Los otros dos se apartan de esa referencia.
+//
+// Las proporciones salen de rangos publicados de alojamiento y comida por
+// categoria, no de una corazonada; van redondeadas y son discutibles de un
+// solo sitio.
+export const NIVELES = {
+  mochilero: {
+    clave: "mochilero",
+    // Hospedaje: dormitorio o hostal privado barato frente a un 3 estrellas.
+    hospedaje: 0.4,
+    // Comida: mercado, comida de calle y cocinar. No baja tanto como el
+    // hospedaje porque el ingrediente cuesta lo que cuesta.
+    comida: 0.55,
+    // Transporte local: metro y bus, igual que el medio pero sin taxis.
+    transporte: 0.75,
+    // Actividades: lo gratis primero, alguna entrada suelta.
+    actividades: 0.5,
+    // Tramos ESTIMADOS (los que no tienen precio real): bus y tren nocturno.
+    tramoEstimado: 0.85,
+    // Tasa turistica municipal: casi siempre escala con la categoria del hotel.
+    tasaTuristica: 0.6,
+    seguroDia: 1.5,
+    esim: 12,
+    trasladoAeropuerto: 8,
+    lavanderiaPorCarga: 8,
+    // Equipaje: viajar con lo de mano es la norma, no un sacrificio.
+    equipaje: 0,
+    // Sin mejora de clase.
+    mejoraClase: 0,
+    // Para filtrar el buscador de hoteles del enlace de reserva.
+    estrellas: 1,
+  },
+  medio: {
+    clave: "medio",
+    hospedaje: 1,
+    comida: 1,
+    transporte: 1,
+    actividades: 1,
+    tramoEstimado: 1,
+    tasaTuristica: 1,
+    seguroDia: 2.5,
+    esim: 20,
+    trasladoAeropuerto: 18,
+    lavanderiaPorCarga: 12,
+    equipaje: 70,
+    mejoraClase: 0,
+    estrellas: 3,
+  },
+  comodo: {
+    clave: "comodo",
+    // Hospedaje: 4-5 estrellas frente a 3. Es el rubro que mas se dispara.
+    hospedaje: 2.4,
+    // Comida: restaurante a diario, alguna cena buena.
+    comida: 1.9,
+    // Transporte local: taxi y traslados privados en vez de metro.
+    transporte: 2.2,
+    // Actividades: tours guiados, entradas sin cola, experiencias.
+    actividades: 2,
+    tramoEstimado: 1.45,
+    tasaTuristica: 1.8,
+    seguroDia: 5,
+    esim: 35,
+    trasladoAeropuerto: 45,
+    lavanderiaPorCarga: 25,
+    // Dos maletas facturadas y seleccion de asiento.
+    equipaje: 160,
+    // Mejora a premium economy sobre el tramo largo. En largo radio la premium
+    // economy cuesta del orden de 2,2 veces la economica; el salto sobre la
+    // tarifa detectada es lo que se cobra aparte, no el billete entero.
+    mejoraClase: 1.2,
+    estrellas: 5,
+  },
+};
+
+export const NIVEL_POR_DEFECTO = "medio";
+
+export const nivelDe = (clave) => NIVELES[clave] || NIVELES[NIVEL_POR_DEFECTO];

@@ -21,10 +21,10 @@ import SelectorMoneda from "@/components/SelectorMoneda";
 import SelectorPais from "@/components/SelectorPais";
 import { monedaDePais, simboloMoneda } from "@/lib/monedas";
 import CardDestino from "@/components/CardDestino";
-// MiniOfertas VUELVE al home (2026-09). Se habia quitado por redundante con
-// el hero de presupuesto; ahora que ese hero se va — el presupuesto vive en
-// /mis-viajes — las ofertas del dia son lo principal de la portada.
-const MiniOfertas = dynamic(() => import("@/components/MiniOfertas"), { ssr: false });
+// MiniOfertas sigue fuera del home. Se probo devolverlo con la portada de
+// ofertas directas y no convencio: ocupaba mucho y decidia por el usuario.
+// La portada ahora son tres puertas y una de ellas lleva a /ofertas, que es
+// donde este componente vive de verdad.
 import { AfiliadosCiudad } from "@/components/Afiliados";
 import { listarViajesAsync, guardarViajeAsync, borrarViajeAsync } from "@/lib/viajes";
 import { LogoMarca } from "@/components/Logo";
@@ -1458,7 +1458,7 @@ export default function Home() {
                   2026-06-23: el usuario reportó demasiada densidad de info
                   en el primer visual. El h1 ya es lo suficientemente claro. */}
               <h1 className="text-[28px] font-extrabold leading-[1.05] tracking-tight drop-shadow-md lg:text-[48px]">
-                {t("heroH1Ofertas")}
+                {t("heroH1Puertas")}
               </h1>
 
               {/* "Saliendo desde 🇨🇴 Colombia · cambiar" — movido aquí 2026-06-25
@@ -1470,30 +1470,82 @@ export default function Home() {
                 <SelectorPais value={paisIso} onChange={cambiarPaisManual} />
               </div>
 
-              {/* LAS OFERTAS DE HOY, no una pregunta.
+              {/* TRES PUERTAS.
                   La portada preguntaba "¿Cuanto presupuesto tienes?" y no
-                  ensenaba nada hasta que respondieras. Ese flujo ya vive
-                  entero en /mis-viajes, asi que aqui era una pregunta que
-                  solo estorbaba: el activo real de la app son los precios
-                  detectados cada hora, y eso se puede ver sin escribir nada.
-                  MiniOfertas ya existia y hace exactamente esto — se habia
-                  quitado del home por redundante con el hero viejo. */}
-              <div className="mx-auto mt-5 max-w-3xl rounded-2xl bg-white/95 p-4 text-left shadow-card ring-1 ring-white/40 backdrop-blur dark:bg-slate-800/95 lg:p-5">
-                <MiniOfertas
-                  onPlanear={(q) => buscarTexto(q)}
-                  t={t}
-                  lang={lang}
-                />
-              </div>
-
-              {/* El presupuesto no desaparece: se va a donde vive ahora. */}
-              <div className="mt-3">
-                <Link
-                  href="/mis-viajes"
-                  className="text-[12.5px] font-semibold text-white/80 underline-offset-4 transition hover:text-white hover:underline"
-                >
-                  {t("heroOPresupuesto")} →
-                </Link>
+                  ensenaba nada hasta que respondieras. Ese flujo vive entero
+                  en /mis-viajes, asi que aqui era una pregunta que estorbaba.
+                  Probamos antes con las ofertas del dia directas y no
+                  convencio: ocupaba mucho y decidia por el usuario.
+                  Esta version es honesta sobre que la app hace TRES cosas
+                  distintas y deja elegir en un clic, sin escribir nada. */}
+              <div className="mx-auto mt-6 grid max-w-3xl gap-3 sm:grid-cols-3">
+                {[
+                  {
+                    href: "/ofertas",
+                    icono: "plane",
+                    titulo: t("puertaOfertas"),
+                    sub: t("puertaOfertasSub"),
+                    ev: "ofertas",
+                  },
+                  {
+                    href: "/mis-viajes",
+                    icono: "map",
+                    titulo: t("puertaPlanear"),
+                    sub: t("puertaPlanearSub"),
+                    ev: "planear",
+                  },
+                  {
+                    href: null,
+                    icono: "pin",
+                    titulo: t("puertaHoy"),
+                    sub: t("puertaHoySub"),
+                    ev: "hoy",
+                  },
+                ].map((o) => {
+                  const contenido = (
+                    <>
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-marca-50 text-marca-700 dark:bg-marca-900/40 dark:text-marca-300">
+                        <Icono nombre={o.icono} size={17} />
+                      </span>
+                      <span className="mt-2.5 block text-[15px] font-extrabold text-slate-900 dark:text-slate-100">
+                        {o.titulo}
+                      </span>
+                      <span className="mt-0.5 block text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400">
+                        {o.sub}
+                      </span>
+                    </>
+                  );
+                  const clase =
+                    "block rounded-2xl bg-white/95 p-4 text-left shadow-card ring-1 ring-white/40 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-lg dark:bg-slate-800/95";
+                  return o.href ? (
+                    <Link
+                      key={o.ev}
+                      href={o.href}
+                      onClick={() => track("puerta_home", { puerta: o.ev })}
+                      className={clase}
+                    >
+                      {contenido}
+                    </Link>
+                  ) : (
+                    /* "Mi dia aqui" no navega: arma la ruta de hoy en la
+                       ciudad donde estas, que es el flujo que ya existe mas
+                       abajo con el banner "Parece que estas en X". */
+                    <button
+                      key={o.ev}
+                      type="button"
+                      onClick={() => {
+                        track("puerta_home", { puerta: o.ev });
+                        setMostrarBuscarCiudad(true);
+                        document
+                          .getElementById("estas-aqui")
+                          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }}
+                      className={clase}
+                    >
+                      {contenido}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Divisor + opcion secundaria: buscar por ciudad. Empieza
@@ -1644,6 +1696,8 @@ export default function Home() {
               hoy". Detecta por IP (sin permiso GPS) y dispara el motor de
               itinerarios con 1 dia. Restaurado por request del usuario
               (2026-07-11). */}
+          {/* Ancla de la tercera puerta del hero ("Mi dia aqui"). */}
+          <div id="estas-aqui" />
           <EstasEnCiudad
             t={t}
             onCrear={(q, momento) => pruebaRapida({ q, dias: 1, momento })}

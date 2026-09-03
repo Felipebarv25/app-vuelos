@@ -27,6 +27,8 @@ import {
   montoUSD,
   agruparPorCategoria,
   normalizarClave as norm,
+  nivelDe,
+  NIVEL_POR_DEFECTO,
 } from "./presupuestoLineas";
 
 const fmt = (n) => `US$${Math.round(n).toLocaleString("es-CO")}`;
@@ -83,11 +85,18 @@ export function construirPresupuesto({
   overrides = {},
   ajustes = {},
   extras = [],
+  // NIVEL DE GASTO: "mochilero" | "medio" | "comodo".
+  nivel = NIVEL_POR_DEFECTO,
   // Tasas para sumar lineas en monedas distintas. Sin ellas todo se trata
   // como dolares, que es lo que pasaba antes de que existieran las visas.
   porUsd = {},
 } = {}) {
   const n = Math.max(1, Math.round(Number(viajeros) || 1));
+  const nv = nivelDe(nivel);
+  // Etiqueta del nivel para las formulas: cada cifra dice con que nivel se
+  // calculo, porque el mismo viaje da tres presupuestos distintos y sin eso
+  // una linea suelta no se puede auditar.
+  const etiquetaNivel = { mochilero: "mochilero", medio: "medio", comodo: "cómodo" }[nv.clave];
   const lineas = [];
   const ciudades = diasPorCiudad(paradas);
   const nochesTotal = ciudades.reduce((s, c) => s + c.noches, 0);
