@@ -638,7 +638,7 @@ export default function PlanRuta({
           )}
         </div>
 
-        <div className="relative z-10 mt-2 flex max-w-full flex-wrap items-center gap-x-3 gap-y-2 sm:max-w-[70%]">
+        <div className="relative z-10 mt-2 flex max-w-full flex-wrap items-center gap-x-3 gap-y-2 sm:max-w-[64%]">
           <h3
             className={`text-[24px] font-extrabold leading-tight tracking-tight sm:text-[28px] ${
               nombre.trim() ? "" : "text-white/70"
@@ -659,7 +659,7 @@ export default function PlanRuta({
         {/* Recorrido y duracion en una linea, que antes habia que deducir
             leyendo la lista entera de paradas. */}
         {recorrido && (
-          <p className="relative z-10 mt-1.5 max-w-full text-[13px] font-medium leading-relaxed text-white/80 sm:max-w-[70%]">
+          <p className="relative z-10 mt-1.5 max-w-full text-[13px] font-medium leading-relaxed text-white/80 sm:max-w-[64%]">
             {recorrido}
             {presupuesto.dias > 0 && (
               <>
@@ -679,7 +679,7 @@ export default function PlanRuta({
             y "cuanto cuesta al dia" son las dos preguntas con las que se
             decide un viaje. */}
         {paradas.length >= 2 && (
-          <div className="relative z-10 mt-4 flex max-w-full flex-wrap items-end gap-x-5 gap-y-2 sm:max-w-[70%]">
+          <div className="relative z-10 mt-4 flex max-w-full flex-wrap items-end gap-x-5 gap-y-2 sm:max-w-[64%]">
             <div>
               <div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-white/70">
                 {t("rutaBannerPresupuesto")}

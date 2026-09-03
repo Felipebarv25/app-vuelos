@@ -31,7 +31,7 @@ export default function IlustracionRuta({ className = "" }) {
       <defs>
         {/* Profundidad: un halo verde arriba a la derecha, donde el degradado
             del banner ya es mas claro. */}
-        <radialGradient id="halo-ruta" cx="0.84" cy="0.2" r="0.7">
+        <radialGradient id="halo-ruta" cx="0.9" cy="0.18" r="0.7">
           <stop offset="0%" stopColor="#34d399" stopOpacity="0.32" />
           <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
         </radialGradient>
@@ -43,7 +43,7 @@ export default function IlustracionRuta({ className = "" }) {
           Arranca abajo a la izquierda y sube a la derecha, para no cruzarse ni
           con el titulo (izquierda) ni con el boton de volver (arriba). */}
       <path
-        d="M244 88 C 272 80, 280 58, 302 50 C 324 42, 344 48, 366 34"
+        d="M286 90 C 312 82, 320 60, 340 52 C 360 44, 378 50, 398 36"
         stroke="#ffffff"
         strokeOpacity="0.35"
         strokeWidth="1.6"
@@ -53,12 +53,12 @@ export default function IlustracionRuta({ className = "" }) {
 
       {/* Pines. El de origen en coral: es de donde sales, y es el unico punto
           del recorrido que no se elige dos veces. */}
-      <circle cx="244" cy="88" r="7.5" fill={CORAL} />
-      <circle cx="244" cy="88" r="2.6" fill="#ffffff" />
+      <circle cx="286" cy="90" r="7.5" fill={CORAL} />
+      <circle cx="286" cy="90" r="2.6" fill="#ffffff" />
 
       {[
-        [302, 50, "2"],
-        [366, 34, "3"],
+        [340, 52, "2"],
+        [398, 36, "3"],
       ].map(([cx, cy, n]) => (
         <g key={n}>
           <circle cx={cx} cy={cy} r="7.5" fill="#ffffff" fillOpacity="0.85" />
@@ -85,7 +85,7 @@ export default function IlustracionRuta({ className = "" }) {
 
           El SVG del logo dibuja al muneco alrededor de (100, 50) en su propio
           sistema; se traslada y se escala a este lienzo. */}
-      <g transform="translate(266, 44) scale(0.62) translate(-100, -50)">
+      <g transform="translate(312, 50) scale(0.62) translate(-100, -50)">
         {/* pierna de atras */}
         <g transform="rotate(-10 100 62)">
           <path
