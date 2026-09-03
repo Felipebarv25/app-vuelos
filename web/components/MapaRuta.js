@@ -13,24 +13,41 @@
 // enfocando para cada viaje").
 import { useEffect, useRef, useState } from "react";
 
-const ESTILO = {
+// Dos fondos, y el segundo no sobra.
+//
+// CARTO se ve mejor, pero no esta en la allowlist de la propia app
+// (next.config.mjs solo autoriza *.tile.openstreetmap.org para imagenes) y
+// hay redes y extensiones que lo bloquean. Cuando pasa, maplibre dispara un
+// error por cada tile y el mapa se queda en blanco.
+//
+// OSM es el fondo que la app ya declara como suyo: sirve de reserva sin
+// depender de nada nuevo.
+const fuente = (tiles, atribucion) => ({
   version: 8,
-  sources: {
-    carto: {
-      type: "raster",
-      tiles: [
-        "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-        "https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-        "https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-        "https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-      ],
-      tileSize: 256,
-      attribution:
-        '© <a href="https://www.openstreetmap.org/copyright">OSM</a> · © <a href="https://carto.com/">CARTO</a>',
-    },
-  },
-  layers: [{ id: "carto", type: "raster", source: "carto" }],
-};
+  sources: { base: { type: "raster", tiles, tileSize: 256, attribution: atribucion } },
+  layers: [{ id: "base", type: "raster", source: "base" }],
+});
+
+const ATRIB_OSM = '© <a href="https://www.openstreetmap.org/copyright">OSM</a>';
+
+const ESTILO = fuente(
+  [
+    "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+    "https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+    "https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+    "https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+  ],
+  ATRIB_OSM + ' · © <a href="https://carto.com/">CARTO</a>'
+);
+
+const ESTILO_RESERVA = fuente(
+  [
+    "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  ],
+  ATRIB_OSM
+);
 
 function asegurarCss() {
   if (typeof document === "undefined") return;
@@ -47,7 +64,11 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
   const ref = useRef(null);
   const mapaRef = useRef(null);
   const marcadoresRef = useRef([]);
-  const [fallo, setFallo] = useState(false);
+  // Si el fondo no llega. NO es "el mapa fallo": las paradas se ven igual,
+  // que es la parte que importa.
+  const [sinFondo, setSinFondo] = useState(false);
+  const reservaRef = useRef(false);
+  const lineaRef = useRef(null);
 
   // Solo las paradas que tienen coordenadas. Una ciudad sin geocodificar no
   // se puede pintar, y saltarsela es mejor que no pintar el mapa entero.
@@ -80,10 +101,32 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
         // El scroll del raton es para leer la pagina: el mapa vive dentro de
         // una tarjeta larga y capturarlo dejaba al usuario atrapado en el.
         mapa.scrollZoom.disable();
-        mapa.on("error", (e) => {
-          console.warn("[MapaRuta]", e?.error?.message || "fallo del mapa");
-          setFallo(true);
+        // Contabilidad del fondo. Un error de tile NO es un fallo del mapa:
+        // la version anterior tapaba con un cartel un mapa que funcionaba
+        // perfectamente, escondiendo las paradas por un tile suelto.
+        let tilesOk = 0;
+        let tilesMal = 0;
+        mapa.on("data", (e) => {
+          if (e?.tile) tilesOk++;
         });
+        mapa.on("error", (e) => {
+          const msg = e?.error?.message || "";
+          if (!/tile|fetch|load/i.test(msg) && msg) console.warn("[MapaRuta]", msg);
+          if (++tilesMal >= 4 && tilesOk === 0 && !reservaRef.current) {
+            // El fondo no viene. Se prueba con OSM antes de rendirse.
+            reservaRef.current = true;
+            tilesMal = 0;
+            try {
+              mapa.setStyle(ESTILO_RESERVA);
+              // setStyle tira las capas propias; los marcadores son DOM y
+              // sobreviven, pero la linea hay que volver a ponerla.
+              mapa.once("styledata", () => { try { lineaRef.current?.(); } catch {} });
+            } catch {}
+          }
+        });
+        // Si a los ocho segundos no ha entrado un solo tile, se dice, pero
+        // debajo del mapa y sin tapar nada.
+        setTimeout(() => { if (!cancelado) setSinFondo(tilesOk === 0); }, 8000);
       }
       const mapa = mapaRef.current;
       mapa.resize();
@@ -131,7 +174,7 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
       // cuando ya lo esta y, si no, se reintenta un rato corto; si nunca
       // llega, el mapa se queda con sus paradas y sin linea, que es mucho
       // mejor que quedarse sin nada.
-      const linea = () => {
+      lineaRef.current = () => {
         if (cancelado || !mapaRef.current) return;
         try { mapaRef.current.removeLayer("linea-ruta"); } catch {}
         try { mapaRef.current.removeSource("ruta"); } catch {}
@@ -160,7 +203,7 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
       let intentos = 0;
       const cuandoHayaEstilo = () => {
         if (cancelado || !mapaRef.current) return;
-        if (mapaRef.current.isStyleLoaded()) { try { linea(); } catch {} return; }
+        if (mapaRef.current.isStyleLoaded()) { try { lineaRef.current(); } catch {} return; }
         if (intentos++ < 50) setTimeout(cuandoHayaEstilo, 120);
       };
       cuandoHayaEstilo();
@@ -191,12 +234,11 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
         style={{ height: alto }}
         className="w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700"
       />
-      {/* Si el mapa no carga, decirlo. Un rectangulo gris sin explicacion
-          parece que la app se rompio; el viaje se planea igual sin el. */}
-      {fallo && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-50 px-6 text-center text-[12.5px] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-          {textoFallo}
-        </div>
+      {/* Si el fondo no llega se dice DEBAJO, nunca encima. El cartel que
+          tapaba el mapa escondia tambien las paradas, que son lo que de
+          verdad hace falta ver. */}
+      {sinFondo && (
+        <p className="mt-1.5 text-[11.5px] leading-relaxed text-slate-400">{textoFallo}</p>
       )}
     </div>
   );
