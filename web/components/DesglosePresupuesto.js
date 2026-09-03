@@ -112,7 +112,7 @@ function Linea({ linea, overrides, onFijar, fmt, porUsd, t }) {
               rel="sponsored noopener"
               className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-marca-50 px-3 py-1 text-[12px] font-bold text-marca-700 transition hover:bg-marca-100 dark:bg-marca-900/30 dark:text-marca-300"
             >
-              {t("lineaReservar")}
+              {t("lineaReservar")}{" "}
               {linea.proveedorAfiliado && (
                 <span className="font-normal opacity-70">· {linea.proveedorAfiliado}</span>
               )}
