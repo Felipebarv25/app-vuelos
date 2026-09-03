@@ -21,8 +21,10 @@ import SelectorMoneda from "@/components/SelectorMoneda";
 import SelectorPais from "@/components/SelectorPais";
 import { monedaDePais, simboloMoneda } from "@/lib/monedas";
 import CardDestino from "@/components/CardDestino";
-// MiniOfertas: import removido (audit 2026-06-29). Componente sigue existiendo
-// para reuso futuro pero no se instancia en el home. Ver linea ~1506.
+// MiniOfertas VUELVE al home (2026-09). Se habia quitado por redundante con
+// el hero de presupuesto; ahora que ese hero se va — el presupuesto vive en
+// /mis-viajes — las ofertas del dia son lo principal de la portada.
+const MiniOfertas = dynamic(() => import("@/components/MiniOfertas"), { ssr: false });
 import { AfiliadosCiudad } from "@/components/Afiliados";
 import { listarViajesAsync, guardarViajeAsync, borrarViajeAsync } from "@/lib/viajes";
 import { LogoMarca } from "@/components/Logo";
@@ -433,7 +435,10 @@ export default function Home() {
   const [presupuestoInicial, setPresupuestoInicial] = useState(null);
   // Despliega/colapsa el bloque de busqueda por ciudad (secundario en el nuevo
   // HERO: la entrada por presupuesto es la principal).
-  const [mostrarBuscarCiudad, setMostrarBuscarCiudad] = useState(false);
+  // Abierto por defecto. Era la opcion escondida detras de "o si ya sabes a
+  // donde" cuando el hero lo ocupaba el presupuesto; ahora que arriba hay
+  // ofertas, el buscador es la segunda entrada legitima y no un secreto.
+  const [mostrarBuscarCiudad, setMostrarBuscarCiudad] = useState(true);
   const [mostrarTodos, setMostrarTodos] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const [viajesGuardados, setViajesGuardados] = useState([]);
@@ -1453,7 +1458,7 @@ export default function Home() {
                   2026-06-23: el usuario reportó demasiada densidad de info
                   en el primer visual. El h1 ya es lo suficientemente claro. */}
               <h1 className="text-[28px] font-extrabold leading-[1.05] tracking-tight drop-shadow-md lg:text-[48px]">
-                {t("heroH1Budget")}
+                {t("heroH1Ofertas")}
               </h1>
 
               {/* "Saliendo desde 🇨🇴 Colombia · cambiar" — movido aquí 2026-06-25
@@ -1465,90 +1470,30 @@ export default function Home() {
                 <SelectorPais value={paisIso} onChange={cambiarPaisManual} />
               </div>
 
-              {/* Form principal: presupuesto + moneda + CTA. Al enviar abre
-                  el modal de Presupuesto pre-llenado con esos valores. */}
-              {/* Tarjeta presupuesto — diseño fintech limpio: borde sutil,
-                  sin gradientes vivos, sin emojis decorativos, currency
-                  selector integrado y CTA con color sólido (no gradient). */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (montoHero > 0) abrirPresupuestoCon(montoHero, monedaHero);
-                }}
-                className={`mx-auto mt-4 max-w-xl rounded-xl bg-white shadow-card ring-1 transition-shadow duration-700 ${montoHero > 0 ? "ring-marca-300 shadow-[0_4px_20px_rgba(15,118,110,.12)]" : "ring-slate-200/80 animate-[pulseRing_2.5s_ease-in-out_infinite]"}`}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-stretch">
-                  <div className="flex flex-1 items-center gap-3 px-4 py-3.5 sm:border-r sm:border-slate-100">
-                    <span className="select-none text-[13px] font-bold uppercase tracking-wider text-slate-500">
-                      {simboloMoneda(monedaHero)}
-                    </span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={montoHero > 0 ? montoHero.toLocaleString(lang === "es" || lang === "pt" ? "es-CO" : "en-US") : ""}
-                      onChange={(e) => {
-                        const raw = (e.target.value || "").replace(/\D/g, "");
-                        if (raw === "") { setMontoHero(0); return; }
-                        const n = parseInt(raw, 10);
-                        if (!Number.isNaN(n)) setMontoHero(n);
-                      }}
-                      onFocus={(e) => { try { e.target.select(); } catch {} }}
-                      placeholder={t("heroPlaceholderMonto")}
-                      aria-label={t("heroH1Budget")}
-                      className="w-full border-0 bg-transparent text-left text-[22px] font-semibold tracking-tight text-slate-900 outline-none placeholder:text-slate-500/60 lg:text-[26px]"
-                    />
-                    <SelectorMoneda
-                      value={monedaHero}
-                      onChange={(code) => {
-                        setMonedaHero(code);
-                        // Marca que el usuario tocó la moneda manualmente,
-                        // para que no la sobreescribamos con la del país en
-                        // próximas recargas.
-                        try { sessionStorage.setItem("anduve_moneda_user_set", "1"); } catch {}
-                      }}
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={montoHero <= 0}
-                    className={`inline-flex items-center justify-center gap-2 rounded-b-xl px-6 py-3.5 text-[14.5px] font-semibold text-white transition-all duration-300 sm:rounded-bl-none sm:rounded-r-xl ${
-                      montoHero > 0
-                        ? "bg-marca-700 shadow-[0_4px_12px_rgba(15,118,110,.3)] hover:bg-marca-800 hover:shadow-[0_6px_16px_rgba(15,118,110,.4)] active:scale-[0.97]"
-                        : "cursor-not-allowed bg-slate-300"
-                    }`}
-                  >
-                    {t("heroVerOpciones")} <Icono nombre="arrowRight" size={16} />
-                  </button>
-                </div>
-              </form>
+              {/* LAS OFERTAS DE HOY, no una pregunta.
+                  La portada preguntaba "¿Cuanto presupuesto tienes?" y no
+                  ensenaba nada hasta que respondieras. Ese flujo ya vive
+                  entero en /mis-viajes, asi que aqui era una pregunta que
+                  solo estorbaba: el activo real de la app son los precios
+                  detectados cada hora, y eso se puede ver sin escribir nada.
+                  MiniOfertas ya existia y hace exactamente esto — se habia
+                  quitado del home por redundante con el hero viejo. */}
+              <div className="mx-auto mt-5 max-w-3xl rounded-2xl bg-white/95 p-4 text-left shadow-card ring-1 ring-white/40 backdrop-blur dark:bg-slate-800/95 lg:p-5">
+                <MiniOfertas
+                  onPlanear={(q) => buscarTexto(q)}
+                  t={t}
+                  lang={lang}
+                />
+              </div>
 
-              {/* Quick amounts — chips secundarios discretos. Antes eran 5 text-
-                  links que llenaban una línea entera con poco ritmo. Ahora 3
-                  chips estilizados que se ajustan según la moneda dominante
-                  del usuario (COP si vive en Colombia, USD si no). El CTA
-                  principal es la tarjeta de arriba; estos son atajos. */}
-              <div className="mx-auto mt-3 flex max-w-xl flex-wrap items-center justify-center gap-2">
-                {(monedaHero === "COP"
-                  ? [
-                      { monto: 5000000, label: "$ 5M" },
-                      { monto: 10000000, label: "$ 10M" },
-                      { monto: 20000000, label: "$ 20M" },
-                    ]
-                  : [
-                      { monto: 1500, label: `${simboloMoneda(monedaHero)} 1.500` },
-                      { monto: 3000, label: `${simboloMoneda(monedaHero)} 3.000` },
-                      { monto: 6000, label: `${simboloMoneda(monedaHero)} 6.000` },
-                    ]
-                ).map((opt) => (
-                  <button
-                    key={opt.label}
-                    type="button"
-                    onClick={() => abrirPresupuestoCon(opt.monto, monedaHero)}
-                    className="rounded-full border border-white/25 bg-white/5 px-3.5 py-1.5 text-[12.5px] font-medium text-white/90 backdrop-blur-sm transition hover:border-white/50 hover:bg-white/15 hover:text-white"
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+              {/* El presupuesto no desaparece: se va a donde vive ahora. */}
+              <div className="mt-3">
+                <Link
+                  href="/mis-viajes"
+                  className="text-[12.5px] font-semibold text-white/80 underline-offset-4 transition hover:text-white hover:underline"
+                >
+                  {t("heroOPresupuesto")} →
+                </Link>
               </div>
 
               {/* Divisor + opcion secundaria: buscar por ciudad. Empieza
