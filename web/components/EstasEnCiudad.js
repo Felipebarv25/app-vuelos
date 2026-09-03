@@ -25,19 +25,67 @@ const PAIS_NOMBRE = {
   PT: "Portugal", NL: "Países Bajos",
 };
 
+// Ciudad corregida a mano o por GPS, para no volver a preguntar en cada carga.
+const CLAVE_CIUDAD = "anduve_ciudad_actual";
+
 export default function EstasEnCiudad({ t = (k) => k, onCrear, onEventos = null, onCorregir = null }) {
-  const [geo, setGeo] = useState(null); // { ciudad, pais, iso } | null
+  const [geo, setGeo] = useState(null); // { ciudad, pais, iso, exacta } | null
+  const [pidiendoGps, setPidiendoGps] = useState(false);
 
   useEffect(() => {
     let vivo = true;
+    // 1) Lo que el usuario ya confirmo alguna vez manda sobre cualquier
+    //    deteccion automatica.
+    try {
+      const g = JSON.parse(localStorage.getItem(CLAVE_CIUDAD) || "null");
+      if (g?.ciudad) { setGeo({ ...g, exacta: true }); return; }
+    } catch {}
+    // 2) Si no, la IP — que acierta el pais casi siempre y la ciudad no tanto.
     obtenerGeo()
       .then((g) => {
         if (!vivo || !g?.ciudad) return;
-        setGeo({ ciudad: g.ciudad, pais: PAIS_NOMBRE[g.pais] || "", iso: g.pais || "" });
+        setGeo({ ciudad: g.ciudad, pais: PAIS_NOMBRE[g.pais] || "", iso: g.pais || "", exacta: false });
       })
       .catch(() => {});
     return () => { vivo = false; };
   }, []);
+
+  // GPS de verdad, solo cuando el usuario lo pide.
+  //
+  // La IP dice donde sale tu red, no donde estas tu: en Colombia resuelve casi
+  // siempre a Bogota porque ahi esta la salida del operador, y a alguien en
+  // Medellin le decia "Estas en Bogota". El header funciona — desde otra
+  // conexion devuelve Medellin bien —, pero mide otra cosa.
+  //
+  // No se pide el permiso solo: un navegador preguntando por tu ubicacion sin
+  // que hayas tocado nada es de las cosas que hacen cerrar una pagina. Va tras
+  // un boton, y la respuesta se recuerda.
+  function usarGps() {
+    if (!navigator.geolocation) return;
+    setPidiendoGps(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude: lat, longitude: lon } = pos.coords;
+          const r = await fetch(`/api/geocodificar?lat=${lat}&lon=${lon}`);
+          const d = r.ok ? await r.json() : null;
+          if (d?.encontrado && d.ciudad) {
+            const nuevo = {
+              ciudad: d.ciudad,
+              pais: PAIS_NOMBRE[d.iso] || d.pais || "",
+              iso: d.iso || "",
+            };
+            try { localStorage.setItem(CLAVE_CIUDAD, JSON.stringify(nuevo)); } catch {}
+            setGeo({ ...nuevo, exacta: true });
+            track("estas_en_gps", { ciudad: d.ciudad });
+          }
+        } catch {}
+        setPidiendoGps(false);
+      },
+      () => setPidiendoGps(false),
+      { timeout: 8000, maximumAge: 5 * 60 * 1000 }
+    );
+  }
 
   if (!geo) return null; // sin ciudad detectada: no ocupar espacio
 
@@ -66,10 +114,26 @@ export default function EstasEnCiudad({ t = (k) => k, onCrear, onEventos = null,
         </span>
         <div className="min-w-0 flex-1">
           <div className="text-[14.5px] font-extrabold text-marca-900 dark:text-marca-200">
-            {t("estasEnTit").replace("{ciudad}", geo.ciudad)}
+            {/* "Estas en X" solo cuando lo sabemos de verdad. Con la IP es una
+                suposicion, y afirmarla es lo que hacia que la app se
+                equivocara en voz alta. */}
+            {t(geo.exacta ? "estasEnTit" : "estasEnQuiza").replace("{ciudad}", geo.ciudad)}
           </div>
           <div className="text-[12.5px] text-slate-600 dark:text-slate-400">
             {t("estasEnSub")}
+            {!geo.exacta && (
+              <>
+                {" "}
+                <button
+                  type="button"
+                  onClick={usarGps}
+                  disabled={pidiendoGps}
+                  className="font-semibold text-marca-600 underline-offset-2 hover:underline disabled:opacity-60 dark:text-marca-300"
+                >
+                  {pidiendoGps ? t("estasEnUbicando") : t("estasEnUsarGps")}
+                </button>
+              </>
+            )}
             {onCorregir && (
               <>
                 {" "}

@@ -18,6 +18,8 @@ import { useApp } from "@/lib/AppContext";
 import { Icono } from "./Icono";
 import { useBrowserBackClose } from "@/lib/useBrowserBack";
 import { PAISES_ORIGEN, PAIS_DEFAULT, paisValido } from "@/lib/paisesOrigen";
+import Bandera from "./Bandera";
+import { aliasBusqueda, normalizar } from "@/lib/paisesNombres";
 import { monedaDePais } from "@/lib/monedas";
 import PrecioDual from "./PrecioDual";
 import { obtenerGeo } from "@/lib/geo";
@@ -27,6 +29,14 @@ function _norm(s) {
   return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 }
 
+// Los ~60 paises de PAISES_ORIGEN, buscables por nombre y por sus alias.
+// Mismo indice que ya usa el selector de origen de /ofertas.
+const PAISES_BUSCABLES = Object.entries(PAISES_ORIGEN || {}).map(([cc, info]) => ({
+  cc,
+  nombre: info.nombre,
+  alias: [...new Set([...aliasBusqueda(cc), normalizar(info.nombre)])],
+}));
+
 export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, label = null, alertaExistente = null, abrirDirecto = false, onActualizada = null, onCerrar = null }) {
   const esEdicion = !!alertaExistente;
   const { t, lang, usuario, abrirPaywall, refrescarAlertas } = useApp();
@@ -35,13 +45,38 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
   // alertas saliendo de Bogota). Hubs del pais del visitante + "cualquiera".
   // Prioridad del default: eleccion previa (localStorage anduve_hub_origen)
   // > ciudad detectada por IP (/api/geo, header x-vercel-ip-city) > 1er hub.
+  // PAIS DE ORIGEN, elegible.
+  //
+  // Estaba clavado al pais que detectaba la IP y no habia forma de cambiarlo:
+  // los hubs que se ofrecian eran SIEMPRE los de ese pais. Un colombiano solo
+  // podia vigilar vuelos que salieran de Colombia, asi que "quiero ver el
+  // precio de Madrid a Londres" era imposible aunque el modelo de datos SI
+  // guardaba el origen desde hace tiempo.
+  //
+  // El texto de busqueda vive aparte del pais elegido para que el campo se
+  // pueda escribir sin perder la seleccion mientras se teclea.
   const [paisOrigen, setPaisOrigen] = useState(PAIS_DEFAULT);
+  const [buscaPais, setBuscaPais] = useState("");
+  const [abiertoPais, setAbiertoPais] = useState(false);
   const [hubOrigen, setHubOrigen] = useState(() => {
     if (!esEdicion) return [];
     const raw = alertaExistente.origen || "";
     return raw ? raw.split(",").filter(Boolean) : [];
   });
   const [escalasMax, setEscalasMax] = useState(esEdicion ? (alertaExistente.escalasMax ?? 0) : 0);
+  // Al EDITAR, el pais sale de los hubs ya guardados. Sin esto se abria en
+  // Colombia y los chips no incluian el hub guardado: la alerta de Madrid se
+  // veia como si no tuviera origen.
+  useEffect(() => {
+    if (!esEdicion) return;
+    const primero = (alertaExistente.origen || "").split(",").filter(Boolean)[0];
+    if (!primero) return;
+    const cc = Object.keys(PAISES_ORIGEN).find((k) =>
+      (PAISES_ORIGEN[k].hubs || []).some((h) => h.iata === primero)
+    );
+    if (cc) setPaisOrigen(cc);
+  }, [esEdicion, alertaExistente]);
+
   useEffect(() => {
     if (esEdicion) return;
     let vivo = true;
@@ -335,7 +370,53 @@ export default function AlertaPrecio({ ciudad, pais, iata, precioActual = null, 
                   {(PAISES_ORIGEN[paisOrigen]?.hubs?.length || 0) > 0 && (
                     <div className="mt-4">
                       <div className="text-[13px] font-bold text-slate-600">{t("alertaOrigenLabel")}</div>
-                      <div className="mt-1 text-[11px] text-slate-400">Puedes elegir varias ciudades.</div>
+
+                      {/* PAIS DE ORIGEN. Sin esto, los hubs de abajo eran
+                          siempre los del pais que detecta la IP, y no habia
+                          manera de vigilar un vuelo Madrid -> Londres. */}
+                      <div className="relative mt-1.5">
+                        <input
+                          type="text"
+                          value={abiertoPais ? buscaPais : PAISES_ORIGEN[paisOrigen]?.nombre || ""}
+                          placeholder={t("alertaPaisPlaceholder")}
+                          onChange={(e) => { setBuscaPais(e.target.value); setAbiertoPais(true); }}
+                          onFocus={() => { setAbiertoPais(true); setBuscaPais(""); }}
+                          onBlur={() => setTimeout(() => setAbiertoPais(false), 120)}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-[13px] font-semibold text-slate-700 outline-none focus:border-amber-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                        />
+                        {abiertoPais && (
+                          <ul className="absolute left-0 right-0 top-full z-[7000] mt-1 max-h-52 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800">
+                            {PAISES_BUSCABLES.filter((x) => {
+                              const q = normalizar(buscaPais);
+                              return !q || x.alias.some((a) => a.includes(q));
+                            })
+                              .slice(0, 30)
+                              .map((x) => (
+                                <li key={x.cc}>
+                                  <button
+                                    type="button"
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      setPaisOrigen(x.cc);
+                                      // Los hubs del pais viejo no sirven para
+                                      // el nuevo: se limpian en vez de dejar
+                                      // una seleccion imposible.
+                                      setHubOrigen([]);
+                                      setAbiertoPais(false);
+                                      setBuscaPais("");
+                                    }}
+                                    className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-[13px] text-slate-700 hover:bg-amber-50 dark:text-slate-200 dark:hover:bg-slate-700"
+                                  >
+                                    <Bandera cc={x.cc} size={16} />
+                                    <span className="truncate">{x.nombre}</span>
+                                  </button>
+                                </li>
+                              ))}
+                          </ul>
+                        )}
+                      </div>
+
+                      <div className="mt-2 text-[11px] text-slate-400">{t("alertaOrigenVarias")}</div>
                       <div className="mt-1.5 flex flex-wrap gap-1.5">
                         {PAISES_ORIGEN[paisOrigen].hubs.map((h) => {
                           const activo = hubOrigen.includes(h.iata);

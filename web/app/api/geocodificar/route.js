@@ -37,6 +37,19 @@ export async function GET(req) {
   // sobre el catalogo IATA, y York, Brujas o Siena no estan ahi aunque sean
   // paradas perfectamente normales de una ruta en tren.
   const lista = searchParams.get("lista") === "1";
+
+  // REVERSE: de coordenadas a ciudad. Lo pide el banner "Estas en {ciudad}".
+  //
+  // Ese banner se guiaba por la IP (header x-vercel-ip-city de Vercel), y en
+  // Colombia la IP resuelve casi siempre a Bogota porque ahi esta la salida
+  // del operador: a un usuario en Medellin le decia "Estas en Bogota". No es
+  // un fallo del header — desde otra conexion devuelve Medellin bien —, es que
+  // la IP dice donde sale tu red, no donde estas tu. La unica forma de saberlo
+  // de verdad es preguntarle al GPS, y para traducir esas coordenadas a un
+  // nombre de ciudad hace falta esto.
+  const lat = Number(searchParams.get("lat"));
+  const lon = Number(searchParams.get("lon"));
+  if (Number.isFinite(lat) && Number.isFinite(lon)) return await inversa(lat, lon);
   if (!ciudad) {
     return Response.json({ error: "falta ciudad" }, { status: 400 });
   }
@@ -110,6 +123,33 @@ export async function GET(req) {
 
 // Varios candidatos para que el usuario elija. Sin caché: son búsquedas
 // mientras teclea y el resultado depende de la cadena exacta.
+async function inversa(lat, lon) {
+  try {
+    const url = `https://photon.komoot.io/reverse?lat=${lat}&lon=${lon}&lang=es&limit=1`;
+    const r = await fetch(url, { headers: { "User-Agent": "Anduve/1.0" } });
+    if (!r.ok) throw new Error("photon " + r.status);
+    const d = await r.json();
+    const p = d?.features?.[0]?.properties;
+    if (!p) throw new Error("sin resultado");
+    // `city` no siempre viene: en nucleos pequenos Photon devuelve el nombre en
+    // `name` y la ciudad grande en `county`/`state`. Se toma el primero que haya.
+    const ciudad = p.city || p.name || p.county || p.state || null;
+    if (!ciudad) throw new Error("sin ciudad");
+    return Response.json({
+      encontrado: true,
+      ciudad,
+      iso: (p.countrycode || "").toUpperCase(),
+      pais: p.country || "",
+      region: p.state || "",
+      lat,
+      lon,
+    });
+  } catch {
+    // Sin dato no se inventa nada: quien llama se queda con lo que tenia.
+    return Response.json({ encontrado: false }, { status: 200 });
+  }
+}
+
 async function buscarVarias(texto, iso) {
   const salida = [];
   try {

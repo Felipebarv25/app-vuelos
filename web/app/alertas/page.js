@@ -10,6 +10,7 @@
 //
 // Los datos salen de dos sitios que ya existen:
 //   - la lista de alertas, del AppContext (fuente unica, se refresca al crear,
+import { PAISES_ORIGEN } from "@/lib/paisesOrigen";
 //     borrar o editar en cualquier pantalla)
 //   - el mejor precio por destino, de /historial-resumen.json, el mismo fichero
 //     que consume el banner VuelosBaratos
@@ -54,6 +55,28 @@ function mejorPrecio(alerta, resumen) {
   if (!candidatos.length) return null;
   return candidatos.reduce((mejor, v) => (!mejor || v.precio < mejor.precio ? v : mejor), null);
 }
+
+// IATA -> nombre de ciudad, para poder escribir "Madrid → Londres" en vez de
+// solo "Londres". Una alerta sin origen vigila desde cualquier parte, y eso
+// tambien hay que decirlo: antes la tarjeta no mencionaba el origen de
+// ninguna forma, asi que dos alertas al mismo destino desde ciudades
+// distintas se veian identicas.
+const CIUDAD_DE_IATA = (() => {
+  const m = {};
+  for (const info of Object.values(PAISES_ORIGEN || {})) {
+    for (const h of info.hubs || []) m[h.iata] = h.ciudad.split(" (")[0];
+  }
+  return m;
+})();
+
+const origenLegible = (origen) => {
+  const cs = String(origen || "")
+    .split(",")
+    .filter(Boolean)
+    .map((i) => CIUDAD_DE_IATA[i] || i);
+  if (!cs.length) return null;
+  return cs.length <= 2 ? cs.join(" o ") : `${cs[0]} +${cs.length - 1}`;
+};
 
 export default function PaginaAlertas() {
   const { t, usuario, alertas, refrescarAlertas } = useApp();
@@ -158,7 +181,17 @@ export default function PaginaAlertas() {
                             href={`/alertas/${a.id}`}
                             className="text-[16px] font-extrabold tracking-tight text-slate-900 hover:text-marca-700 dark:text-slate-100 dark:hover:text-marca-300"
                           >
-                            {a.ciudad}
+                            {origenLegible(a.origen) ? (
+                              <>
+                                <span className="font-bold text-slate-500 dark:text-slate-400">
+                                  {origenLegible(a.origen)}
+                                </span>
+                                <span className="mx-1.5 text-slate-300">→</span>
+                                {a.ciudad}
+                              </>
+                            ) : (
+                              a.ciudad
+                            )}
                           </Link>
                           {a.pais && (
                             <span className="text-[12px] text-slate-400 dark:text-slate-500">{a.pais}</span>
@@ -178,6 +211,9 @@ export default function PaginaAlertas() {
                         </div>
                         <div className="mt-1 text-[12.5px] text-slate-500 dark:text-slate-400">
                           {t("alertasIdxUmbral")}: <b className="text-marca-700 dark:text-marca-300">{fmt(a.umbral)}</b>
+                          {!origenLegible(a.origen) && (
+                            <span className="ml-2 text-slate-400">· {t("alertasIdxSinOrigen")}</span>
+                          )}
                         </div>
                       </div>
 
