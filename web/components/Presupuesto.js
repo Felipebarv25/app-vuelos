@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { track } from "@/lib/track";
 import { Icono } from "./Icono";
 
@@ -275,6 +275,23 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   const aUsdSel = aUsdDe(tasas?.porUsd, moneda) ?? MONEDAS[moneda].aUsd;
   const presupuestoUsd = monto * aUsdSel;
 
+  // EL RECALCULO NO BLOQUEA LO QUE SE ESCRIBE.
+  //
+  // Cada tecla en el campo de presupuesto disparaba, de forma sincrona y en el
+  // hilo de la interfaz, toda la cadena: dias recomendados, presupuesto minimo,
+  // regiones alternativas, destinos que caben y la ruta completa. Medido con la
+  // herramienta de rendimiento: ~300 ms de INP en el asesor y hasta 2.126 ms en
+  // el planificador. Eso no es "va lento": es que la tecla siguiente no entra.
+  //
+  // useDeferredValue deja que el input se repinte YA con lo que acabas de
+  // teclear y calcula el resto despues, con el ultimo valor. Es de React, no
+  // hace falta libreria, y no cambia ningun resultado: solo cuando se calculan.
+  //
+  // El valor sin diferir se sigue usando para lo que tiene que ir al instante
+  // (el propio campo y su equivalencia en dolares).
+  const presupuestoCalc = useDeferredValue(presupuestoUsd);
+  const recalculando = presupuestoCalc !== presupuestoUsd;
+
   // Métrica: registra el presupuesto + región usados (2s tras dejar de cambiar,
   // para no contar cada tecla). Alimenta el panel privado.
   useEffect(() => {
@@ -290,8 +307,8 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   // El usuario primero elige a dónde y con cuánto; los días los DEDUCE la app.
   // Si el presupuesto no alcanza ni para el vuelo, recom.advertencia indica el caso.
   const recom = useMemo(
-    () => diasRecomendados({ presupuestoUsd, region, personas }),
-    [presupuestoUsd, region, personas]
+    () => diasRecomendados({ presupuestoUsd: presupuestoCalc, region, personas }),
+    [presupuestoCalc, region, personas]
   );
 
   // Mientras el usuario no edite "Días" manualmente, los días siguen
@@ -313,17 +330,17 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   // mostramos un atajo "Ver regiones que sí caben" para no dejar al usuario
   // tirado. Excluye la región actual y "todas". Ordenado por holgura desc.
   const regionesQueCaben = useMemo(() => {
-    if (presupuestoUsd <= 0) return [];
+    if (presupuestoCalc <= 0) return [];
     return Object.keys(REGIONES)
       .filter((r) => r !== "todas" && r !== region)
       .map((r) => ({ key: r, label: REGIONES[r], min: presupuestoMinimoPara({ region: r, dias, personas }) }))
-      .filter((x) => x.min <= presupuestoUsd)
+      .filter((x) => x.min <= presupuestoCalc)
       .sort((a, b) => a.min - b.min);
-  }, [presupuestoUsd, dias, personas, region]);
+  }, [presupuestoCalc, dias, personas, region]);
 
   const resultados = useMemo(
-    () => calcularDestinos({ presupuestoUsd, dias, personas, region, preciosReales, origen, origenes: iatasPais }),
-    [presupuestoUsd, dias, personas, region, preciosReales, origen, iatasPais]
+    () => calcularDestinos({ presupuestoUsd: presupuestoCalc, dias, personas, region, preciosReales, origen, origenes: iatasPais }),
+    [presupuestoCalc, dias, personas, region, preciosReales, origen, iatasPais]
   );
   const caben = resultados.filter((r) => r.cabe);
 
@@ -350,8 +367,8 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
 
   const ruta = useMemo(
     () =>
-      construirRuta({ presupuestoUsd, dias, personas, region, inicio, semilla, excluir: excluidos, preciosReales, origen, origenes: iatasPais, ritmo }),
-    [presupuestoUsd, dias, personas, region, inicio, semilla, excluidos, preciosReales, origen, iatasPais, ritmo]
+      construirRuta({ presupuestoUsd: presupuestoCalc, dias, personas, region, inicio, semilla, excluir: excluidos, preciosReales, origen, origenes: iatasPais, ritmo }),
+    [presupuestoCalc, dias, personas, region, inicio, semilla, excluidos, preciosReales, origen, iatasPais, ritmo]
   );
 
   // Modo RUTA: cuando hay ruta y la entrada todavía no tiene precio real,
@@ -672,6 +689,29 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   <option key={n} value={n}>{n}</option>
                 ))}
               </select>
+              {/* POR QUE ESOS DIAS.
+                  La app deduce los dias del presupuesto y los escribe en el
+                  select sin decir nada: con 100.000 COP para Europa te
+                  cambiaba diez dias por dos y el unico rastro era una etiqueta
+                  que dice "Recomendado". Un numero que cambia solo y sin
+                  motivo parece un fallo de la app, no una consecuencia del
+                  presupuesto. */}
+              {!diasTocado && recom.recomendado > 0 && (
+                <p className="mt-1.5 text-[11.5px] leading-relaxed text-slate-500 dark:text-slate-400">
+                  {t("presupDiasPorQue")
+                    .replace("{dias}", recom.recomendado)
+                    .replace("{alcanza}", recom.diasRaw ?? recom.recomendado)}
+                </p>
+              )}
+              {recom.advertencia === "insuficiente_vuelo" && (
+                <p className="mt-1.5 text-[11.5px] leading-relaxed text-amber-700 dark:text-amber-400">
+                  {t("presupNiElVuelo").replace(
+                    "{vuelo}",
+                    `US$${Math.round(recom.vueloMediana * personas).toLocaleString("es-CO")}`
+                  )}
+                </p>
+              )}
+
               {/* En modo ruta, el RutaCard ya muestra "Te sobra / Te falta"
                   con el total REAL de las ciudades elegidas. El aviso genérico
                   usa medianas regionales y puede contradecir el total real
@@ -726,7 +766,13 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
 
           {/* ---------- MODO RUTA ---------- */}
           {modo === "ruta" && (
-            <div className="mt-5">
+            /* Mientras el recalculo diferido va por detras, los resultados se
+               atenuan. Sin esta senal el retraso parece un fallo: escribes
+               5.000 y la ruta sigue mostrando lo de antes. */
+            <div
+              aria-busy={recalculando}
+              className={`mt-5 transition-opacity ${recalculando ? "opacity-50" : ""}`}
+            >
               {presupuestoUsd <= 0 ? (
                 /* Sin monto todavia: invitacion calida, NO el aviso amber de
                    "no alcanza" (ese es para montos insuficientes reales). */

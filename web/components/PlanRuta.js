@@ -11,7 +11,7 @@
 // de la ciudad, del país o de la región, en ese orden. Cada cifra dice de dónde
 // viene para no vender una estimación como si fuera un precio de mercado.
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import SelectorAeropuerto from "./SelectorAeropuerto";
 import Bandera from "./Bandera";
 import DesglosePresupuesto from "./DesglosePresupuesto";
@@ -390,17 +390,31 @@ export default function PlanRuta({
     [ofertas]
   );
 
+  // EL RECALCULO NO BLOQUEA LO QUE SE ESCRIBE.
+  //
+  // Cada tecla en "noches" rehacia, sincrono y en el hilo de la interfaz, los
+  // tramos, el reordenador con su 2-opt y el presupuesto entero linea por
+  // linea. Medido: hasta 2.126 ms de INP. Eso no es "va lento", es que la
+  // tecla siguiente no entra.
+  //
+  // La LISTA de paradas sigue pintandose con el valor inmediato — se ve al
+  // instante lo que escribes —; lo caro se calcula despues con el ultimo
+  // valor. Es de React, sin librerias, y no cambia ningun resultado: solo
+  // cuando se calcula.
+  const paradasCalc = useDeferredValue(paradas);
+  const recalculando = paradasCalc !== paradas;
+
   const tramosCrudos = useMemo(() => {
     const out = [];
-    for (let i = 0; i < paradas.length - 1; i++) {
-      const desde = paradas[i];
-      const hasta = paradas[i + 1];
+    for (let i = 0; i < paradasCalc.length - 1; i++) {
+      const desde = paradasCalc[i];
+      const hasta = paradasCalc[i + 1];
       const clave = `${desde.iata}-${hasta.iata}-${i}`;
       const real = vivos[clave] || vueloDetectado(desde, hasta);
       out.push({ ...evaluarTramo({ desde, hasta, vueloReal: real }), desde, hasta, clave });
     }
     return out;
-  }, [paradas, vivos, vueloDetectado]);
+  }, [paradasCalc, vivos, vueloDetectado]);
 
   // El precio de un vuelo detectado es de IDA Y VUELTA. Si el viaje cierra
   // sobre el mismo par de ciudades, el tramo de regreso ya esta pagado.
@@ -410,8 +424,8 @@ export default function PlanRuta({
   );
 
   const resumen = useMemo(
-    () => resumenRuta({ paradas, tramos, viajeros }),
-    [paradas, tramos, viajeros]
+    () => resumenRuta({ paradas: paradasCalc, tramos, viajeros }),
+    [paradasCalc, tramos, viajeros]
   );
 
   // El presupuesto de verdad: lineas con formula, fuente y confianza. El
@@ -422,18 +436,18 @@ export default function PlanRuta({
   // Visas y autorizaciones entran como lineas de pre-viaje del mismo motor,
   // no como un bloque aparte: son gasto del viaje igual que el hotel.
   const extrasMigracion = useMemo(
-    () => (visas ? lineasMigracion({ paradas, pasaporte, viajeros, visas }) : []),
-    [visas, paradas, pasaporte, viajeros]
+    () => (visas ? lineasMigracion({ paradas: paradasCalc, pasaporte, viajeros, visas }) : []),
+    [visas, paradasCalc, pasaporte, viajeros]
   );
 
   const presupuesto = useMemo(
     () =>
       construirPresupuesto({
-        paradas, tramos, viajeros, overrides, ajustes,
+        paradas: paradasCalc, tramos, viajeros, overrides, ajustes,
         extras: extrasMigracion,
         porUsd,
       }),
-    [paradas, tramos, viajeros, overrides, ajustes, extrasMigracion, porUsd]
+    [paradasCalc, tramos, viajeros, overrides, ajustes, extrasMigracion, porUsd]
   );
 
   // Formato en la moneda que el viajero eligio ver. Los totales del motor
@@ -467,7 +481,8 @@ export default function PlanRuta({
     });
     track("presupuesto_linea_fijada", { id });
   }, []);
-  const zigzag = useMemo(() => detectarZigzag(paradas), [paradas]);
+  // El 2-opt es lo mas caro de todo el componente: va con el valor diferido.
+  const zigzag = useMemo(() => detectarZigzag(paradasCalc), [paradasCalc]);
 
   // DIAS del viaje, no fechas. Con el mes de salida no hay dia exacto que dar,
   // y numerar los dias dice lo mismo sin inventarse nada: cuanto dura el viaje
@@ -1309,7 +1324,13 @@ export default function PlanRuta({
                     </div>
                   </div>
                 </div>
-                <div className="mt-5">
+                {/* Mientras el recalculo diferido va por detras, las cifras
+                    se atenuan. Sin esta senal el retraso parece un fallo:
+                    escribes 5.000 y el total sigue diciendo lo de antes. */}
+                <div
+                  aria-busy={recalculando}
+                  className={`mt-5 transition-opacity ${recalculando ? "opacity-50" : ""}`}
+                >
                   {/* En que se va la plata, ahora auditable.
                   Eran cinco barras de colores con un total: bonito y opaco. Hacer
                   clic no desplegaba nada, no habia forma de saber de donde salia
