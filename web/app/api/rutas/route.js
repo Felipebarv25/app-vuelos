@@ -17,6 +17,7 @@ import { kv, kvActivo, pipeline } from "@/lib/kv";
 import { identificarUsuario } from "@/lib/identidad";
 
 const TOPE_RUTAS = 25;      // por usuario
+const TOPE_OVERRIDES = 200;
 const TOPE_PARADAS = 30;    // por ruta
 const TTL = 60 * 60 * 24 * 365; // un año
 
@@ -43,6 +44,56 @@ function sanearParadas(x) {
   })).filter((p) => p.ciudad);
 }
 
+// Lo que el usuario decidio a mano y no se puede recalcular.
+//
+//   overrides: monto fijado por linea, por ID de linea (no por posicion: si
+//              cambias el orden de las ciudades, tu precio del hotel de Madrid
+//              sigue siendo el de Madrid).
+//   ajustes:   porcentajes de colchon, que son suyos y no nuestros.
+function sanearPresupuesto(x) {
+  const out = { overrides: {}, ajustes: {} };
+  if (!x || typeof x !== "object") return out;
+
+  const ov = x.overrides;
+  if (ov && typeof ov === "object") {
+    let n = 0;
+    for (const [k, v] of Object.entries(ov)) {
+      if (n >= TOPE_OVERRIDES) break;
+      if (!/^[A-Za-z0-9_\-]{1,80}$/.test(k)) continue;
+      const num = Number(v);
+      if (!Number.isFinite(num) || num < 0 || num > 10_000_000) continue;
+      out.overrides[k] = Math.round(num);
+      n++;
+    }
+  }
+
+  const pct = (v, def) => {
+    const num = Number(v);
+    return Number.isFinite(num) && num >= 0 && num <= 1 ? num : def;
+  };
+  out.ajustes = {
+    contingenciaPct: pct(x.ajustes?.contingenciaPct, 0.1),
+    margenCambiarioPct: pct(x.ajustes?.margenCambiarioPct, 0.03),
+  };
+  return out;
+}
+
+// Una ruta guardada antes del esquema v2 se lee igual: se le ponen los
+// valores por defecto al vuelo. No se reescribe en KV hasta que el usuario
+// guarde — migrar datos de nadie sin que los toque no hace falta.
+export function migrarRuta(r) {
+  if (!r || typeof r !== "object") return r;
+  if (r.v >= 2) return r;
+  return {
+    ...r,
+    v: 2,
+    pasaporte: r.pasaporte || "CO",
+    monedaVista: r.monedaVista || "COP",
+    presupuesto: sanearPresupuesto(r.presupuesto),
+    mesInicio: r.mesInicio || (r.fechaInicio ? String(r.fechaInicio).slice(0, 7) : ""),
+  };
+}
+
 export async function GET(req) {
   if (!kvActivo()) return Response.json({ ok: false, motivo: "no-storage" }, { status: 503 });
 
@@ -58,7 +109,7 @@ export async function GET(req) {
       const r = JSON.parse(raw);
       // El correo del dueño no viaja al cliente.
       const { email, ...publica } = r;
-      return Response.json({ ok: true, ruta: publica });
+      return Response.json({ ok: true, ruta: migrarRuta(publica) });
     } catch {
       return Response.json({ ok: false }, { status: 500 });
     }
@@ -74,7 +125,7 @@ export async function GET(req) {
     if (!raw) continue;
     try {
       const { email, ...publica } = JSON.parse(raw);
-      rutas.push(publica);
+      rutas.push(migrarRuta(publica));
     } catch {}
   }
   rutas.sort((a, b) => (b.actualizada || 0) - (a.actualizada || 0));
@@ -128,6 +179,29 @@ export async function POST(req) {
       ? String(body?.mesInicio || body?.fechaInicio).slice(0, 7)
       : "",
     moneda: String(body?.moneda || "USD").slice(0, 3).toUpperCase(),
+
+    // --- Esquema v2 --------------------------------------------------------
+    //
+    // Hasta aqui una ruta guardada eran paradas, viajeros, nombre y mes: el
+    // presupuesto se recalculaba entero cada vez y no habia donde guardar una
+    // sola decision del viajero. Con el motor de lineas hace falta persistir
+    // lo que NO se puede recalcular — lo que el usuario sabe y nosotros no.
+    //
+    // Se versiona en vez de reemplazar. Una ruta sin `v` es v1 y se lee igual;
+    // migrarRuta() le pone los valores por defecto al leerla. Nadie pierde un
+    // viaje por este cambio.
+    v: 2,
+    // Nacionalidad del pasaporte, que NO es el pais de salida: de eso depende
+    // el calculo migratorio (visa, ETIAS, ETA), y hasta ahora se confundia con
+    // el aeropuerto de origen.
+    pasaporte: /^[A-Za-z]{2}$/.test(body?.pasaporte || "")
+      ? String(body.pasaporte).toUpperCase()
+      : "CO",
+    // Moneda en la que el viajero quiere VER el presupuesto. La de cada linea
+    // se guarda aparte, en su moneda natural.
+    monedaVista: String(body?.monedaVista || "COP").slice(0, 3).toUpperCase(),
+    presupuesto: sanearPresupuesto(body?.presupuesto),
+
     creada: Number(body?.creada) || Date.now(),
     actualizada: Date.now(),
   };

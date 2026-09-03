@@ -14,6 +14,8 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SelectorAeropuerto from "./SelectorAeropuerto";
 import Bandera from "./Bandera";
+import DesglosePresupuesto from "./DesglosePresupuesto";
+import { construirPresupuesto } from "@/lib/presupuestoConstruir";
 import { nombrePaisMostrar } from "@/lib/paisesNombres";
 import { Icono } from "./Icono";
 import { obtenerOfertas } from "@/lib/ofertasDatos";
@@ -79,16 +81,6 @@ function Sello({ fuente, t }) {
     </span>
   );
 }
-
-// Tipologias de gasto, en el orden en que pesan de verdad en un viaje.
-// Las claves son las de resumen.desglose (lib/rutaViva.js).
-const CATEGORIAS = [
-  ["transporte", "bg-marca-500"],
-  ["hospedaje", "bg-sky-500"],
-  ["comida", "bg-amber-500"],
-  ["local", "bg-violet-500"],
-  ["extras", "bg-rose-400"],
-];
 
 // Dato suelto de la portada.
 function Chip({ children, fuerte = false }) {
@@ -166,6 +158,13 @@ export default function PlanRuta({
   const [guardando, setGuardando] = useState(false);
   const [idRuta, setIdRuta] = useState(inicio?.id || null);
   const [aviso, setAviso] = useState(null);
+  // Lo que el viajero fijo a mano, por ID de linea. Va por ID y no por
+  // posicion a proposito: si reordena las ciudades, su precio del hotel de
+  // Madrid sigue siendo el de Madrid.
+  const [overrides, setOverrides] = useState(() => inicio?.presupuesto?.overrides || {});
+  const [ajustes, setAjustes] = useState(
+    () => inicio?.presupuesto?.ajustes || { contingenciaPct: 0.1, margenCambiarioPct: 0.03 }
+  );
   // Cambia tras cada parada agregada para remontar el buscador y dejarlo
   // vacío: si no, se queda con "Madrid (MAD)" escrito y encadenar la
   // siguiente parada obliga a borrar a mano.
@@ -184,8 +183,11 @@ export default function PlanRuta({
   // para no volver a gastar cuota de Travelpayouts al reabrir el viaje.
   useEffect(() => {
     if (!paradas.length && !nombre && !mesInicio) { borrarLocal(uid); return; }
-    escribirLocal({ uid, id: idRuta, paradas, viajeros, nombre, mesInicio, vivos });
-  }, [uid, paradas, viajeros, nombre, mesInicio, idRuta, vivos]);
+    escribirLocal({
+      uid, id: idRuta, paradas, viajeros, nombre, mesInicio, vivos,
+      presupuesto: { overrides, ajustes },
+    });
+  }, [uid, paradas, viajeros, nombre, mesInicio, idRuta, vivos, overrides, ajustes]);
 
   // Empezar otro viaje sin perder el guardado: se suelta el id para que el
   // siguiente "Guardar" cree una ruta nueva en vez de pisar la anterior.
@@ -194,6 +196,7 @@ export default function PlanRuta({
     setViajeros(1);
     setNombre("");
     setMesInicio("");
+    setOverrides({});
     setIdRuta(null);
     setVivos({});
     setRecuperado(false);
@@ -370,6 +373,24 @@ export default function PlanRuta({
     () => resumenRuta({ paradas, tramos, viajeros }),
     [paradas, tramos, viajeros]
   );
+
+  // El presupuesto de verdad: lineas con formula, fuente y confianza. El
+  // `resumen` de arriba se queda solo para las cifras de cabecera (tiempo en
+  // movimiento, confianza de los tramos), que no son gasto.
+  const presupuesto = useMemo(
+    () => construirPresupuesto({ paradas, tramos, viajeros, overrides, ajustes }),
+    [paradas, tramos, viajeros, overrides, ajustes]
+  );
+
+  const fijarLinea = useCallback((id, monto) => {
+    setOverrides((prev) => {
+      const sig = { ...prev };
+      if (monto == null || !Number.isFinite(Number(monto))) delete sig[id];
+      else sig[id] = Math.max(0, Math.round(Number(monto)));
+      return sig;
+    });
+    track("presupuesto_linea_fijada", { id });
+  }, []);
   const zigzag = useMemo(() => detectarZigzag(paradas), [paradas]);
 
   // DIAS del viaje, no fechas. Con el mes de salida no hay dia exacto que dar,
@@ -478,7 +499,10 @@ export default function PlanRuta({
       const r = await fetch("/api/rutas", {
         method: "POST",
         headers: h,
-        body: JSON.stringify({ id: idRuta, paradas, viajeros, nombre, mesInicio }),
+        body: JSON.stringify({
+          id: idRuta, paradas, viajeros, nombre, mesInicio,
+          presupuesto: { overrides, ajustes },
+        }),
       });
       const d = await r.json();
       if (d?.ok) {
@@ -1020,44 +1044,23 @@ export default function PlanRuta({
                     </div>
                   </div>
                 </div>
-
-                {/* En que se va la plata.
-                    El resumen solo sabia decir "transporte" y "estadia", pero
-                    nadie planea un viaje en esos dos cajones: se planea en
-                    dormir, comer, moverse por la ciudad y salir. Esto era lo que
-                    faltaba del encargo original ("el presupuesto de cada
-                    tipologia de gastos del viaje"). */}
                 <div className="mt-5">
-                  <div className="text-[11.5px] font-bold uppercase tracking-wider text-slate-400">
-                    {t("rutaPorCategoria")}
-                  </div>
-                  <ul className="mt-2.5 grid gap-2">
-                    {CATEGORIAS.map(([clave, color]) => {
-                      const v = resumen.desglose?.[clave] || 0;
-                      const pct = resumen.total > 0 ? Math.round((v / resumen.total) * 100) : 0;
-                      return (
-                        <li key={clave} className="flex items-center gap-2.5">
-                          <span className="w-[104px] shrink-0 text-[12.5px] font-semibold text-slate-600 dark:text-slate-300">
-                            {t("rutaCat_" + clave)}
-                          </span>
-                          <span className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
-                            <span
-                              className={`block h-full rounded-full ${color}`}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </span>
-                          <span className="w-9 shrink-0 text-right text-[11.5px] tabular-nums text-slate-400">
-                            {pct}%
-                          </span>
-                          <span className="w-[84px] shrink-0 text-right text-[13px] font-bold tabular-nums text-slate-800 dark:text-slate-100">
-                            {fmtUsd(v)}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                  {/* En que se va la plata, ahora auditable.
+                  Eran cinco barras de colores con un total: bonito y opaco. Hacer
+                  clic no desplegaba nada, no habia forma de saber de donde salia
+                  cada cifra ni de corregirla, y faltaban categorias enteras —
+                  seguro, equipaje, tasa turistica, colchon. Ahora cada categoria
+                  se abre en sus lineas y cada linea dice su formula, su fuente y
+                  su confianza, y se puede fijar a mano. */}
+                  <DesglosePresupuesto
+                  presupuesto={presupuesto}
+                  overrides={overrides}
+                  onFijar={fijarLinea}
+                  fmt={fmtUsd}
+                  t={t}
+                  />
                   <p className="mt-2.5 text-[11.5px] leading-relaxed text-slate-400">
-                    {t("rutaCategoriasNota")}
+                  {t("rutaCategoriasNota")}
                   </p>
 
                   {/* Por que el regreso vale cero, o por que el precio de ida trae
