@@ -22,23 +22,30 @@ const COLORES_DIA = [
   "#c026d3", "#0284c7", "#65a30d",
 ];
 
+// El fondo sale de OpenStreetMap.
+//
+// Antes eran los tiles de basemaps.cartocdn.com. Dejaron de servirlos
+// gratis: hoy devuelven la imagen sellada con "API KEY REQUIRED", que es
+// como se veia el mapa en produccion. Mismo cambio que en MapaRuta.js.
+//
+// OSM es ademas el unico host de tiles que la app declara en su CSP. No hay
+// version @2x: algo menos fino en retina, a cambio de verse siempre.
 const ESTILO = {
   version: 8,
   sources: {
-    carto: {
+    osm: {
       type: "raster",
       tiles: [
-        "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-        "https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-        "https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-        "https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+        "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
       ],
       tileSize: 256,
       attribution:
-        '© <a href="https://www.openstreetmap.org/copyright">OSM</a> · © <a href="https://carto.com/">CARTO</a>',
+        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     },
   },
-  layers: [{ id: "carto", type: "raster", source: "carto" }],
+  layers: [{ id: "osm", type: "raster", source: "osm" }],
 };
 
 const ZOOM_PARALLAX = 7;

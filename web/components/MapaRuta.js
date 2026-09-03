@@ -13,41 +13,33 @@
 // enfocando para cada viaje").
 import { useEffect, useRef, useState } from "react";
 
-// Dos fondos, y el segundo no sobra.
+// El fondo sale de OpenStreetMap.
 //
-// CARTO se ve mejor, pero no esta en la allowlist de la propia app
-// (next.config.mjs solo autoriza *.tile.openstreetmap.org para imagenes) y
-// hay redes y extensiones que lo bloquean. Cuando pasa, maplibre dispara un
-// error por cada tile y el mapa se queda en blanco.
+// Antes eran los tiles de basemaps.cartocdn.com, que se ven mejor. Dejaron
+// de servirlos gratis: hoy devuelven la imagen sellada con "API KEY
+// REQUIRED", y de ahi salia el mapa roto que se veia en pantalla. No era
+// cosa del navegador ni de la red de nadie, era el proveedor.
 //
-// OSM es el fondo que la app ya declara como suyo: sirve de reserva sin
-// depender de nada nuevo.
-const fuente = (tiles, atribucion) => ({
+// OSM es ademas el unico host de tiles que la propia app declara en su CSP
+// (next.config.mjs), asi que esto tampoco depende de un permiso nuevo. No
+// hay version @2x: se ve algo menos fino en pantallas retina, a cambio de
+// verse siempre.
+const ESTILO = {
   version: 8,
-  sources: { base: { type: "raster", tiles, tileSize: 256, attribution: atribucion } },
+  sources: {
+    base: {
+      type: "raster",
+      tiles: [
+        "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      ],
+      tileSize: 256,
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    },
+  },
   layers: [{ id: "base", type: "raster", source: "base" }],
-});
-
-const ATRIB_OSM = '© <a href="https://www.openstreetmap.org/copyright">OSM</a>';
-
-const ESTILO = fuente(
-  [
-    "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-    "https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-    "https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-    "https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-  ],
-  ATRIB_OSM + ' · © <a href="https://carto.com/">CARTO</a>'
-);
-
-const ESTILO_RESERVA = fuente(
-  [
-    "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
-  ],
-  ATRIB_OSM
-);
+};
 
 function asegurarCss() {
   if (typeof document === "undefined") return;
@@ -67,7 +59,6 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
   // Si el fondo no llega. NO es "el mapa fallo": las paradas se ven igual,
   // que es la parte que importa.
   const [sinFondo, setSinFondo] = useState(false);
-  const reservaRef = useRef(false);
   const lineaRef = useRef(null);
 
   // Solo las paradas que tienen coordenadas. Una ciudad sin geocodificar no
@@ -101,28 +92,14 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
         // El scroll del raton es para leer la pagina: el mapa vive dentro de
         // una tarjeta larga y capturarlo dejaba al usuario atrapado en el.
         mapa.scrollZoom.disable();
-        // Contabilidad del fondo. Un error de tile NO es un fallo del mapa:
-        // la version anterior tapaba con un cartel un mapa que funcionaba
-        // perfectamente, escondiendo las paradas por un tile suelto.
+        // Contabilidad del fondo, solo para poder decirlo si no llega. Un
+        // error de tile NO es un fallo del mapa: la version anterior tapaba
+        // con un cartel un mapa que funcionaba, escondiendo las paradas.
         let tilesOk = 0;
-        let tilesMal = 0;
-        mapa.on("data", (e) => {
-          if (e?.tile) tilesOk++;
-        });
+        mapa.on("data", (e) => { if (e?.tile) tilesOk++; });
         mapa.on("error", (e) => {
           const msg = e?.error?.message || "";
-          if (!/tile|fetch|load/i.test(msg) && msg) console.warn("[MapaRuta]", msg);
-          if (++tilesMal >= 4 && tilesOk === 0 && !reservaRef.current) {
-            // El fondo no viene. Se prueba con OSM antes de rendirse.
-            reservaRef.current = true;
-            tilesMal = 0;
-            try {
-              mapa.setStyle(ESTILO_RESERVA);
-              // setStyle tira las capas propias; los marcadores son DOM y
-              // sobreviven, pero la linea hay que volver a ponerla.
-              mapa.once("styledata", () => { try { lineaRef.current?.(); } catch {} });
-            } catch {}
-          }
+          if (msg && !/tile|fetch|load/i.test(msg)) console.warn("[MapaRuta]", msg);
         });
         // Si a los ocho segundos no ha entrado un solo tile, se dice, pero
         // debajo del mapa y sin tapar nada.
