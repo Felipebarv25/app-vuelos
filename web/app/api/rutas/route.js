@@ -37,6 +37,10 @@ function sanearParadas(x) {
   return x.slice(0, TOPE_PARADAS).map((p) => ({
     ciudad: String(p?.ciudad || "").slice(0, 80),
     pais: String(p?.pais || "").slice(0, 80),
+    // El NOMBRE del pais tambien se guarda. No estaba, y el catalogo de costo
+    // de vida se indexa por nombre: al recargar un viaje de la nube, todas sus
+    // ciudades caian a la media global en vez de a su costo real.
+    paisNombre: String(p?.paisNombre || "").slice(0, 80),
     iata: /^[A-Za-z]{3}$/.test(p?.iata || "") ? String(p.iata).toUpperCase() : "",
     lat: Number.isFinite(Number(p?.lat)) ? Number(p.lat) : null,
     lon: Number.isFinite(Number(p?.lon)) ? Number(p.lon) : null,

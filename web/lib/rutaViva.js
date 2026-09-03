@@ -15,6 +15,7 @@
 import { DESTINOS_PRESUPUESTO, REPARTO_DIARIO } from "./presupuesto";
 import { PAISES_ORIGEN } from "./paisesOrigen";
 import { hayCruceDeAgua } from "./masasTierra";
+import { nombrePaisMostrar } from "./paisesNombres";
 import { costoTramoReal } from "./tramos";
 
 // --- Geometría --------------------------------------------------------------
@@ -89,7 +90,19 @@ export function costoDiario(ciudad, pais, region = null) {
  * vez de a US$170.
  */
 function nombreDePais(p) {
-  return p?.paisNombre || p?.pais || "";
+  if (p?.paisNombre) return p.paisNombre;
+  const cc = String(p?.pais || "");
+  // Si lo que hay es un ISO de dos letras, se traduce. El catalogo curado y la
+  // tabla de tramos se indexan por NOMBRE ("Reino Unido", no "GB"), y una
+  // parada que llega con solo el ISO no casa con nada: el costo diario de
+  // TODAS sus ciudades caia a la media global.
+  //
+  // Pasaba con cualquier viaje guardado en la nube, porque sanearParadas() no
+  // persistia paisNombre. Madrid se cobraba a la media mundial en vez de a lo
+  // que cuesta Madrid. Es el mismo error que ya documenta el comentario de
+  // abajo, por otra puerta.
+  if (/^[A-Za-z]{2}$/.test(cc)) return nombrePaisMostrar(cc.toUpperCase(), "es") || cc;
+  return cc;
 }
 
 /** Coordenadas desde el catálogo curado. null si toca geocodificar. */
