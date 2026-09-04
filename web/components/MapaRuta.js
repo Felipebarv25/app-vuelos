@@ -310,7 +310,14 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
     <div className="relative">
       <div
         ref={ref}
-        style={{ height: alto }}
+        // El mar TAMBIEN en el contenedor, no solo en la capa del mapa.
+        //
+        // La capa de fondo cubre lo que pinta maplibre, pero con la vista
+        // inclinada queda un triangulo por encima del horizonte que el canvas
+        // no pinta, y ahi se veia el blanco de la pagina. Pintando el div se
+        // acaba el problema venga de donde venga: del zoom, del pitch o de que
+        // los tiles tarden.
+        style={{ height: alto, backgroundColor: "#a8d8ea" }}
         className="w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700"
       />
       {/* Si el fondo no llega se dice DEBAJO, nunca encima. El cartel que
