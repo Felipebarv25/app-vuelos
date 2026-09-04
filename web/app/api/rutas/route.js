@@ -93,6 +93,7 @@ export function migrarRuta(r) {
     v: 2,
     pasaporte: r.pasaporte || "CO",
     nivel: r.nivel || "medio",
+    fechaIda: r.fechaIda || "",
     monedaVista: r.monedaVista || "COP",
     presupuesto: sanearPresupuesto(r.presupuesto),
     mesInicio: r.mesInicio || (r.fechaInicio ? String(r.fechaInicio).slice(0, 7) : ""),
@@ -208,6 +209,10 @@ export async function POST(req) {
     // Nivel de gasto: el mismo viaje da tres presupuestos muy distintos, asi
     // que es parte de la identidad del viaje y no un ajuste de sesion.
     nivel: ["mochilero", "medio", "comodo"].includes(body?.nivel) ? body.nivel : "medio",
+    // Dia exacto de salida, opcional y dentro del mes. El mes sigue mandando
+    // para el calculo; esto solo afina el precio del vuelo y las fechas por
+    // parada cuando el viajero ya lo sabe.
+    fechaIda: /^\d{4}-\d{2}-\d{2}$/.test(body?.fechaIda || "") ? body.fechaIda : "",
     presupuesto: sanearPresupuesto(body?.presupuesto),
 
     creada: Number(body?.creada) || Date.now(),

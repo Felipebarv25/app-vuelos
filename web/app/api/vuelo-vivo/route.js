@@ -48,7 +48,20 @@ async function consultar(origen, destino, mes, token, marker) {
   url.searchParams.set("currency", "usd");
   url.searchParams.set("sorting", "price");
   url.searchParams.set("one_way", "false");
-  url.searchParams.set("limit", "1");
+  // TREINTA, no una.
+  //
+  // Se pedia limit=1: la tarifa mas barata del mes y nada mas. Pero la misma
+  // llamada puede traer hasta 30 salidas del mes CON SU FECHA, y eso es
+  // exactamente lo que hace falta para dos cosas que faltaban:
+  //
+  //   · cotizar un rango de fechas concreto (se filtra la lista, no se
+  //     consulta 15 veces)
+  //   · recomendar cuando salir mas barato dentro del mes
+  //
+  // Cuesta lo mismo en cuota — una llamada es una llamada — y evita las ~15
+  // consultas por tramo que haria falta si se pidiera dia por dia. El detector
+  // ya usaba limit=30 por este motivo; aqui se habia quedado en 1.
+  url.searchParams.set("limit", "30");
   url.searchParams.set("token", token);
 
   try {
@@ -58,8 +71,10 @@ async function consultar(origen, destino, mes, token, marker) {
     clearTimeout(t);
     if (!r.ok) return null;
     const data = await r.json();
-    const fila = (data.data || []).find((f) => Number(f.price) > 0);
-    if (!fila) return null;
+    const filas = (data.data || []).filter((f) => Number(f.price) > 0);
+    if (!filas.length) return null;
+    // La lista viene ordenada por precio: la primera es la mas barata del mes.
+    const fila = filas[0];
     const precio = Number(fila.price);
     let link = "https://www.aviasales.com" + (fila.link || "");
     if (marker) {
@@ -85,6 +100,16 @@ async function consultar(origen, destino, mes, token, marker) {
       link,
       escalas_ida: escIda,
       escalas_vuelta: escVuelta,
+      // TODAS las salidas del mes, para poder filtrar por rango de fechas y
+      // para decir cuando sale mas barato. Se recortan a lo imprescindible:
+      // treinta filas completas por tramo hincharian la respuesta sin motivo.
+      opciones: filas.slice(0, 30).map((f) => ({
+        precio: Number(f.price),
+        ida: (f.departure_at || "").slice(0, 10),
+        vuelta: (f.return_at || "").slice(0, 10),
+        aerolinea: f.airline || "",
+        escalas: Number.isFinite(Number(f.transfers)) ? Number(f.transfers) : null,
+      })).filter((f) => f.ida),
       // Minutos de vuelo por tramo. La API los manda y aqui se descartaban,
       // igual que hacia el detector: sin ellos no se puede comparar "mas
       // barato" contra "mas rapido". Si faltan, quedan null y la tarjeta

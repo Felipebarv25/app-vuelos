@@ -197,6 +197,33 @@ export default function PlanRuta({
   // esta calibrado para "gama media" y no habia forma de decir que duermes en
   // hostal o que quieres un cuatro estrellas.
   const [nivel, setNivel] = useState(() => inicio?.nivel || NIVEL_POR_DEFECTO);
+  // FECHA EXACTA DE SALIDA, opcional y dentro del mes elegido.
+  //
+  // El mes basta para planear con meses de antelacion, pero cuando ya sabes
+  // que sales el 10 de mayo el precio deja de ser "lo mas barato del mes" y
+  // pasa a ser el de tu dia. Sigue siendo opcional a proposito: pedir la fecha
+  // exacta a quien todavia no la tiene es lo que hacia el campo viejo.
+  const [fechaIda, setFechaIda] = useState(() => inicio?.fechaIda || "");
+
+  // Suma dias a una fecha ISO y devuelve otra ISO.
+  const sumaDias = useCallback((iso, n) => {
+    const d = new Date(iso + "T00:00:00");
+    if (Number.isNaN(d.getTime())) return iso;
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  }, []);
+
+  // "12 may 2027" a partir de "2027-05-12".
+  const fmtDia = useCallback(
+    (iso) => {
+      if (!iso) return "";
+      const d = new Date(iso + "T00:00:00");
+      return Number.isNaN(d.getTime())
+        ? iso
+        : d.toLocaleDateString(lang, { day: "numeric", month: "short", year: "numeric" });
+    },
+    [lang]
+  );
   const [visas, setVisas] = useState(null);
   const [tasas, setTasas] = useState(null);
   const [overrides, setOverrides] = useState(() => inicio?.presupuesto?.overrides || {});
@@ -222,10 +249,10 @@ export default function PlanRuta({
     if (!paradas.length && !nombre && !mesInicio) { borrarLocal(uid); return; }
     escribirLocal({
       uid, id: idRuta, paradas, viajeros, nombre, mesInicio, vivos,
-      pasaporte, monedaVista, nivel,
+      pasaporte, monedaVista, nivel, fechaIda,
       presupuesto: { overrides, ajustes },
     });
-  }, [uid, paradas, viajeros, nombre, mesInicio, idRuta, vivos, overrides, ajustes, pasaporte, monedaVista, nivel]);
+  }, [uid, paradas, viajeros, nombre, mesInicio, idRuta, vivos, overrides, ajustes, pasaporte, monedaVista, nivel, fechaIda]);
 
   // Empezar otro viaje sin perder el guardado: se suelta el id para que el
   // siguiente "Guardar" cree una ruta nueva en vez de pisar la anterior.
@@ -350,11 +377,20 @@ export default function PlanRuta({
       const desde = paradasCalc[i];
       const hasta = paradasCalc[i + 1];
       const clave = `${desde.iata}-${hasta.iata}-${i}`;
-      const real = vivos[clave] || vueloDetectado(desde, hasta);
+      let real = vivos[clave] || vueloDetectado(desde, hasta);
+      // Si el viajero ya fijo el dia, el precio deja de ser "lo mas barato del
+      // mes" y pasa a ser el de SU fecha. La lista de salidas ya esta
+      // descargada, asi que esto no gasta una consulta mas.
+      if (fechaIda && real?.opciones?.length) {
+        const exacta = real.opciones.find((o) => o.ida === fechaIda);
+        if (exacta) {
+          real = { ...real, precio: exacta.precio, aerolinea: exacta.aerolinea || real.aerolinea, esDeTuFecha: true };
+        }
+      }
       out.push({ ...evaluarTramo({ desde, hasta, vueloReal: real }), desde, hasta, clave });
     }
     return out;
-  }, [paradasCalc, vivos, vueloDetectado]);
+  }, [paradasCalc, vivos, vueloDetectado, fechaIda]);
 
   // El precio de un vuelo detectado es de IDA Y VUELTA. Si el viaje cierra
   // sobre el mismo par de ciudades, el tramo de regreso ya esta pagado.
@@ -412,6 +448,30 @@ export default function PlanRuta({
         .reduce((s, c) => s + c.total, 0),
     [presupuesto]
   );
+
+  // CUANDO SALE MAS BARATO.
+  //
+  // La lista de salidas del mes ya esta descargada por la misma consulta que
+  // trajo el precio: solo hay que mirarla. Se compara la mas barata contra la
+  // fecha que el viajero tiene puesta — o contra la que se esta usando — y si
+  // la diferencia se nota, se dice.
+  const mejorFecha = useMemo(() => {
+    for (const t of tramos) {
+      const ops = vivos[t.clave]?.opciones;
+      if (!ops?.length) continue;
+      const barata = ops.reduce((a, b) => (b.precio < a.precio ? b : a), ops[0]);
+      const actual = fechaIda
+        ? ops.find((o) => o.ida === fechaIda) || { precio: t.precio, ida: fechaIda }
+        : { precio: t.precio, ida: null };
+      // Se avisa solo si el ahorro se nota: por diez dolares no vale la pena
+      // mover un viaje.
+      const ahorro = (actual.precio || 0) - barata.precio;
+      if (barata.ida && ahorro >= 40 && barata.ida !== fechaIda) {
+        return { ...barata, ahorro, tramo: `${t.desde?.ciudad} → ${t.hasta?.ciudad}` };
+      }
+    }
+    return null;
+  }, [tramos, vivos, fechaIda]);
 
   const fijarLinea = useCallback((id, monto) => {
     setOverrides((prev) => {
@@ -527,12 +587,16 @@ export default function PlanRuta({
       );
       const d = r.ok ? await r.json() : null;
       if (d?.encontrado) {
+        // Se guardan TODAS las salidas del mes, no solo la mas barata: de ahi
+        // salen el precio de tu fecha concreta y la recomendacion de cuando
+        // sale mejor. Vienen en la misma llamada, asi que no cuesta cuota.
         setVivos((v) => ({
           ...v,
           [tr.clave]: {
             precio: d.precio,
             duracion_h: d.duracion_ida ? d.duracion_ida / 60 : null,
             aerolinea: d.aerolinea,
+            opciones: Array.isArray(d.opciones) ? d.opciones : [],
           },
         }));
       } else {
@@ -559,7 +623,7 @@ export default function PlanRuta({
         headers: h,
         body: JSON.stringify({
           id: idRuta, paradas, viajeros, nombre, mesInicio,
-          pasaporte, monedaVista, nivel,
+          pasaporte, monedaVista, nivel, fechaIda,
           presupuesto: { overrides, ajustes },
         }),
       });
@@ -831,6 +895,61 @@ export default function PlanRuta({
             </label>
           </div>
 
+          {/* FECHA EXACTA, opcional. Solo tiene sentido si ya hay mes: sin el
+              no hay rango donde elegir un dia. */}
+          {mesInicio && (
+            <div className="mt-3">
+              <label className="block sm:max-w-xs">
+                <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-wider text-slate-400">
+                  {t("rutaFechaExacta")}
+                </span>
+                <input
+                  type="date"
+                  value={fechaIda}
+                  min={`${mesInicio}-01`}
+                  max={`${mesInicio}-31`}
+                  onChange={(e) => setFechaIda(e.target.value)}
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[16px] font-semibold text-marca-900 outline-none focus:border-marca-400 sm:text-[14px] dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+                />
+              </label>
+              <p className="mt-1 text-[11.5px] leading-relaxed text-slate-400">
+                {fechaIda ? t("rutaFechaExactaPuesta") : t("rutaFechaExactaAyuda")}
+              </p>
+              {fechaIda && (
+                <button
+                  type="button"
+                  onClick={() => setFechaIda("")}
+                  className="mt-1 text-[11.5px] font-semibold text-slate-500 underline underline-offset-2 hover:text-slate-700 dark:text-slate-400"
+                >
+                  {t("rutaFechaQuitar")}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* CUANDO SALE MAS BARATO. Sale de la misma consulta que trajo el
+              precio, asi que no cuesta cuota; solo aparece si el ahorro se
+              nota de verdad. */}
+          {mejorFecha && (
+            <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-900/20">
+              <div className="text-[13px] font-bold text-emerald-900 dark:text-emerald-200">
+                {t("rutaMejorFechaTit")
+                  .replace("{fecha}", fmtDia(mejorFecha.ida))
+                  .replace("{ahorro}", fmtVista(mejorFecha.ahorro))}
+              </div>
+              <p className="mt-0.5 text-[12px] leading-relaxed text-emerald-800 dark:text-emerald-300">
+                {t("rutaMejorFechaSub").replace("{tramo}", mejorFecha.tramo)}
+              </p>
+              <button
+                type="button"
+                onClick={() => { setFechaIda(mejorFecha.ida); track("ruta_fecha_barata", { fecha: mejorFecha.ida }); }}
+                className="mt-2 rounded-full bg-emerald-700 px-3.5 py-1.5 text-[12.5px] font-bold text-white transition hover:bg-emerald-800"
+              >
+                {t("rutaMejorFechaUsar")}
+              </button>
+            </div>
+          )}
+
           {/* NIVEL DE GASTO. Tres formas de hacer el mismo viaje, y no es un
               factor sobre el total: cada rubro se mueve lo suyo. El hospedaje
               cambia de categoria, la comida de sitio, el transporte de medio,
@@ -1037,7 +1156,18 @@ export default function PlanRuta({
                             fecha que dar, pero el tramo del viaje si se sabe. */}
                         {dias && (
                           <div className="text-[11.5px] font-semibold text-marca-700 dark:text-marca-300">
-                            {i === 0
+                            {/* Con dia de salida se pueden dar FECHAS de
+                                verdad; sin el, solo los dias del viaje. Cuando
+                                se paso de fecha exacta a mes hubo que renunciar
+                                a esto — ahora vuelve, pero solo cuando el dato
+                                existe de verdad. */}
+                            {fechaIda
+                              ? i === 0
+                                ? t("rutaSalesEl").replace("{fecha}", fmtDia(sumaDias(fechaIda, 0)))
+                                : t("rutaEstasDel")
+                                    .replace("{desde}", fmtDia(sumaDias(fechaIda, dias.porParada[i].desde - 1)))
+                                    .replace("{hasta}", fmtDia(sumaDias(fechaIda, dias.porParada[i].hasta - 1)))
+                              : i === 0
                               ? t("rutaDiaSalida")
                               : t("rutaDiasParada")
                                   .replace("{desde}", dias.porParada[i].desde)
