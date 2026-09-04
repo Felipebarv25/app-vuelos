@@ -9,6 +9,8 @@ import BuscadorDestinos from "@/components/BuscadorDestinos";
 import BotonVolver from "@/components/BotonVolver";
 import NavTop from "@/components/NavTop";
 import Bandera from "@/components/Bandera";
+import PrecioDual from "@/components/PrecioDual";
+import { sinAeropuerto } from "@/data/sinAeropuerto";
 
 const SITIO = "https://anduve-app.vercel.app";
 
@@ -164,14 +166,31 @@ export default function IndiceDestinos() {
                   >
                     <Bandera cc={d.iso} size={30} />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-base font-extrabold text-marca-900 group-hover:text-marca-600 dark:text-marca-300 dark:group-hover:text-marca-400">
+                      {/* line-clamp-2 y no truncate: al anadir la linea en
+                          COP la columna del precio se ensancho y a 375 px
+                          empezaron a cortarse "San Pedro de Atacama",
+                          "Ciudad de Guatemala" y "San Miguel de Allende".
+                          Que el nombre baje a una segunda linea es mejor que
+                          perderlo; la tarjeta ya tiene alturas distintas. */}
+                      <div className="line-clamp-2 text-base font-extrabold leading-tight text-marca-900 group-hover:text-marca-600 dark:text-marca-300 dark:group-hover:text-marca-400">
                         {d.ciudad}
                       </div>
                       <div className="truncate text-[12.5px] text-slate-500">{d.pais}</div>
                     </div>
-                    <div className="text-right">
+                    {/* El precio tambien en la moneda del usuario: un
+                        colombiano mirando destinos DOMESTICOS veia "US$ 120"
+                        para ir a Medellin, que es la unidad menos util
+                        posible para ese viaje. PrecioDual ya resolvia esto en
+                        la ficha del destino; faltaba en las tarjetas. */}
+                    <div className="shrink-0 text-right">
                       <div className="text-[12px] font-semibold text-slate-400">desde</div>
                       <div className="text-[14px] font-extrabold text-marca-700 dark:text-marca-300">US$ {d.vuelo}</div>
+                      <PrecioDual usd={d.vuelo} soloLocal className="text-[11px] text-slate-400" />
+                      {sinAeropuerto(d.ciudad, d.pais) && (
+                        <div className="mt-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+                          + traslado
+                        </div>
+                      )}
                     </div>
                   </Link>
                 ))}

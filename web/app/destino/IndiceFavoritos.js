@@ -8,6 +8,7 @@ import { useFavoritos } from "@/lib/favoritos";
 import { DESTINOS_SEO } from "@/lib/destinos";
 import { Icono } from "@/components/Icono";
 import Bandera from "@/components/Bandera";
+import PrecioDual from "@/components/PrecioDual";
 
 export default function IndiceFavoritos() {
   const { usuario } = useApp();
@@ -48,7 +49,10 @@ export default function IndiceFavoritos() {
               </div>
               <div className="truncate text-[12px] text-slate-500">{d.pais}</div>
             </div>
-            <div className="text-[12px] font-bold text-marca-700 dark:text-marca-400">US$ {d.vuelo}</div>
+            <div className="text-right">
+              <div className="text-[12px] font-bold text-marca-700 dark:text-marca-400">US$ {d.vuelo}</div>
+              <PrecioDual usd={d.vuelo} soloLocal className="text-[10.5px] text-slate-400" />
+            </div>
           </Link>
         ))}
       </div>

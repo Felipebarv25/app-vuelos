@@ -135,6 +135,7 @@ export default async function PaginaDestino({ params }) {
   const faqs = faqsDe(d);
   const foto = await fotoCiudad(d.ciudad, d.pais, d.lat, d.lon);
   const iata = iataDe(d.ciudad, d.pais);
+  const puerta = sinAeropuerto(d.ciudad, d.pais);
   const historial = iata ? await preciosPorMes(iata) : null;
 
   // Schema.org: ayuda a Google a entender que la página describe un destino.
@@ -298,11 +299,33 @@ export default async function PaginaDestino({ params }) {
             "no sé cuánto representa en mi moneda"). PrecioDual soloLocal
             agrega la linea "≈ X COP" bajo cada monto. */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Dato titulo="Vuelo i/v aprox." valor={`US$ ${d.vuelo}`} sub={<><PrecioDual usd={d.vuelo} soloLocal className="font-bold text-marca-700 dark:text-marca-300" /> · referencial</>} />
+          {/* Cuando no hay aeropuerto, el rotulo lo dice: el precio es el
+              del vuelo a la ciudad puerta, y el traslado va aparte. Antes
+              ponia "Vuelo i/v aprox." tambien para Guatape, que no tiene
+              aeropuerto, como si se pudiera aterrizar ahi. */}
+          <Dato
+            titulo={puerta ? `Vuelo i/v a ${puerta.via} (${puerta.iata})` : "Vuelo i/v aprox."}
+            valor={`US$ ${d.vuelo}`}
+            sub={<><PrecioDual usd={d.vuelo} soloLocal className="font-bold text-marca-700 dark:text-marca-300" /> · referencial</>}
+          />
           <Dato titulo="Costo diario aprox." valor={`US$ ${d.dia}`} sub={<><PrecioDual usd={d.dia} soloLocal className="font-bold text-marca-700 dark:text-marca-300" /> · por persona</>} />
           <Dato titulo="Días recomendados" valor={diasSugeridos} sub="ideal" />
           <Dato titulo="Presupuesto sugerido" valor={`US$ ${presupuestoSugerido}`} sub={<><PrecioDual usd={presupuestoSugerido} soloLocal className="font-bold text-marca-700 dark:text-marca-300" /> · {diasSugeridos} días, 1 persona</>} />
         </div>
+
+        {/* El aviso completo va aparte y no dentro del dato: el rotulo del
+            dato solo cabe en una linea, y lo que hay que explicar es que el
+            precio NO incluye el traslado. */}
+        {puerta && (
+          <p className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200/70 bg-amber-50/60 px-3 py-2 text-[12.5px] leading-relaxed text-amber-900 dark:border-amber-800/40 dark:bg-amber-900/20 dark:text-amber-200">
+            <span aria-hidden="true">🚗</span>
+            <span>
+              <b>{d.ciudad} no tiene aeropuerto.</b> Se vuela a {puerta.via} ({puerta.iata})
+              y se siguen unas {String(puerta.horas).replace(".", ",")} h por tierra. El precio de
+              arriba es el del vuelo; el traslado va aparte.
+            </span>
+          </p>
+        )}
       </section>
 
       {/* Banda sonora del destino: artistas locales + Top 50 + vibe. Client
@@ -611,6 +634,7 @@ export default async function PaginaDestino({ params }) {
 // Linking interno: muestra 6 destinos de la misma región (los más baratos)
 // excluyendo el actual. Refuerza la autoridad del catálogo en Google.
 import { DESTINOS_SEO } from "@/lib/destinos";
+import { sinAeropuerto } from "@/data/sinAeropuerto";
 
 function OtrosDestinos({ region, actualSlug }) {
   const otros = DESTINOS_SEO.filter((x) => x.region === region && x.slug !== actualSlug)
@@ -635,7 +659,12 @@ function OtrosDestinos({ region, actualSlug }) {
             <Bandera cc={o.iso} size={24} />
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13.5px] font-bold text-marca-900 dark:text-marca-300">{o.ciudad}</div>
-              <div className="truncate text-[11.5px] text-slate-500 dark:text-slate-400">desde US$ {o.vuelo}</div>
+              <div className="truncate text-[11.5px] text-slate-500 dark:text-slate-400">
+                desde US$ {o.vuelo}
+                {sinAeropuerto(o.ciudad, o.pais) && (
+                  <span className="ml-1 text-amber-600 dark:text-amber-400">+ traslado</span>
+                )}
+              </div>
             </div>
           </Link>
         ))}
