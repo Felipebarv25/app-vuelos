@@ -305,7 +305,26 @@ export default function SelectorAeropuerto({
     }
   }, [paisFiltro, lang, abiertoPais]);
 
-  // Click afuera cierra ambos dropdowns.
+  // Cerrar el desplegable: click afuera, Escape, foco perdido y scroll.
+  //
+  // Antes solo habia click-afuera (mousedown) y Escape, y con eso la lista se
+  // quedaba abierta si el foco se iba sin un mousedown en el documento —el
+  // teclado del movil al cerrarse, un Tab, la barra del navegador— y tambien
+  // al hacer scroll, porque es `absolute` y viaja con la pagina.
+  //
+  // Ademas iba a z-[6700]/z-[6500] contra el z-40 del header pegajoso: al
+  // bajar, la lista pasaba POR ENCIMA de la cabecera. Ahora va a z-30, debajo
+  // del header y encima del contenido; dentro de un modal (que crea su propio
+  // contexto de apilamiento) sigue funcionando igual.
+  useEffect(() => {
+    if (!abierto && !abiertoPais) return;
+    // `capture` porque el scroll real casi nunca ocurre en window: pasa en un
+    // contenedor con overflow, y sin capturar no llega aqui.
+    const onScroll = () => { setAbierto(false); setAbiertoPais(false); };
+    window.addEventListener("scroll", onScroll, true);
+    return () => window.removeEventListener("scroll", onScroll, true);
+  }, [abierto, abiertoPais]);
+
   useEffect(() => {
     function onDoc(e) {
       if (cajaAptRef.current && !cajaAptRef.current.contains(e.target)) setAbierto(false);
@@ -559,7 +578,7 @@ export default function SelectorAeropuerto({
         {abiertoPais && paisesFiltrados.length > 0 && (
           <ul
             role="listbox"
-            className="absolute left-0 right-0 top-full z-[6700] mt-1 max-h-[min(300px,45dvh)] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800"
+            className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[min(300px,45dvh)] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800"
           >
             {paisesFiltrados.map((p, i) => (
               <li
@@ -581,7 +600,7 @@ export default function SelectorAeropuerto({
           </ul>
         )}
         {abiertoPais && paisesFiltrados.length === 0 && (
-          <div className="absolute left-0 right-0 top-full z-[6700] mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] text-slate-500 shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
+          <div className="absolute left-0 right-0 top-full z-30 mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] text-slate-500 shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
             {t("aptSinPais")}
           </div>
         )}
@@ -617,7 +636,7 @@ export default function SelectorAeropuerto({
         {abierto && opciones.length > 0 && (
           <ul
             role="listbox"
-            className="absolute left-0 right-0 top-full z-[6500] mt-1 max-h-[min(300px,45dvh)] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800"
+            className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[min(300px,45dvh)] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800"
           >
             {opciones.map((o, i) =>
               o.tipo === "apt" ? (
@@ -680,7 +699,7 @@ export default function SelectorAeropuerto({
           </ul>
         )}
         {abierto && texto.length >= 2 && resultados.length === 0 && catalogo.length > 0 && (
-          <div className="absolute left-0 right-0 top-full z-[6500] mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] text-slate-500 shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
+          <div className="absolute left-0 right-0 top-full z-30 mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] text-slate-500 shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
             {paisFiltro
               ? t("aptSinAeropuertoEn").replace("{pais}", nombrePais(paisFiltro, lang))
               : t("aptSinAeropuerto")}

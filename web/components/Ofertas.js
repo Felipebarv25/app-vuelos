@@ -7,6 +7,7 @@ import AlertaPrecio from "./AlertaPrecio";
 import SelectorAeropuerto, { banderaDePais } from "./SelectorAeropuerto";
 import SelectorOrigen from "./SelectorOrigen";
 import Bandera from "./Bandera";
+import { nombreAerolinea } from "@/lib/aerolineas";
 import { PAISES_ORIGEN } from "@/lib/paisesOrigen";
 import { obtenerOfertas } from "@/lib/ofertasDatos";
 import { obtenerGeo } from "@/lib/geo";
@@ -63,26 +64,8 @@ function sinAcentos(s) {
   return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
-// Codigo IATA de aerolinea -> nombre legible. El detector guarda el codigo
-// crudo ("DM", "Y4"...) que para el usuario no significa nada (lectura 360
-// 2026-07-11: "¿qué es DM?"). Cubre las aerolineas que aparecen en rutas
-// desde los hubs trackeados; si falta alguna, se muestra el codigo tal cual.
-const AEROLINEAS = {
-  AV: "Avianca", LA: "LATAM", DM: "Arajet", JA: "JetSMART", Y4: "Volaris",
-  VB: "Viva Aerobus", AM: "Aeroméxico", CM: "Copa", P5: "Wingo", AR: "Aerolíneas Argentinas",
-  G3: "Gol", AD: "Azul", H2: "Sky Airline", AC: "Air Canada", AA: "American",
-  DL: "Delta", UA: "United", B6: "JetBlue", NK: "Spirit", F9: "Frontier",
-  IB: "Iberia", UX: "Air Europa", TP: "TAP", AF: "Air France", KL: "KLM",
-  LH: "Lufthansa", BA: "British Airways", AZ: "ITA Airways", LX: "Swiss",
-  TK: "Turkish Airlines", EK: "Emirates", QR: "Qatar Airways", ET: "Ethiopian",
-  AL: "Air Leisure", "2D": "Aero VIP",
-  FR: "Ryanair", W4: "Wizz Air", BF: "French Bee", G4: "Allegiant",
-  XL: "LATAM Ecuador", PU: "Plus Ultra", F8: "Flair", CA: "Air China", AS: "Alaska Airlines",
-};
-function nombreAerolinea(cod) {
-  const c = (cod || "").trim().toUpperCase();
-  return AEROLINEAS[c] || cod || "—";
-}
+// AEROLINEAS y nombreAerolinea se mudaron a lib/aerolineas.js: MiniOfertas
+// pinta las mismas tarjetas en el home y no podia usarlos desde aqui.
 
 // sinCabecera: la pagina /ofertas ya tiene su propio H1 con el mismo texto;
 // con esta prop el componente omite su titulo interno (se veia doble cabecera

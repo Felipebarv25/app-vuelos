@@ -1,5 +1,5 @@
 "use client";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { track } from "@/lib/track";
 import { Icono } from "./Icono";
 import DesglosePresupuesto from "./DesglosePresupuesto";
@@ -37,6 +37,17 @@ import Bandera from "@/components/Bandera";
 // vez de como modal flotante. Lo usa /mis-viajes, donde el planificador es
 // contenido de la pagina y no algo que se despliega encima de otra cosa.
 export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, inicial = null, incrustado = false }) {
+  // El foco inicial va con `preventScroll`, y por eso no puede ser autoFocus.
+  //
+  // El input llevaba `autoFocus={monto <= 0}`. React llama a focus() sin
+  // opciones, el navegador desplaza lo enfocado hasta hacerlo visible, y eso
+  // pisaba el scroll que "Ver presupuesto completo" acababa de pedir hacia
+  // #planificador: la pagina terminaba en 4644 px con el planificador en 523,
+  // asi que parecia que el boton solo cerrara el chat sin hacer nada.
+  //
+  // Sigue enfocando —el usuario puede escribir de una— pero deja de mandar en
+  // la posicion de la pagina.
+  const inputMontoRef = useRef(null);
   // Que la flecha "atrás" del navegador cierre este modal en vez de sacar al
   // usuario al pre-login. Como el componente solo se monta cuando esta abierto,
   // pasamos true fijo: el hook registra/limpia history en mount/unmount.
@@ -50,6 +61,22 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
   // monto inventado por nosotros. El campo arranca vacio con un placeholder
   // que invita a escribir; los resultados aparecen apenas hay monto > 0.
   const [monto, setMonto] = useState(inicial?.monto ?? 0);
+
+  // Una sola vez, al montar, y solo si no hay monto todavia.
+  useEffect(() => {
+    if ((inicial?.monto ?? 0) > 0) return;
+    const el = inputMontoRef.current;
+    if (!el) return;
+    try {
+      el.focus({ preventScroll: true });
+    } catch {
+      // Navegadores viejos ignoran las opciones: mejor enfocar sin la
+      // proteccion que quedarse sin foco.
+      el.focus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [moneda, setMoneda] = useState(inicial?.moneda ?? "COP");
   const [dias, setDias] = useState(10);
   // Marca si el usuario tocó los días manualmente. Mientras sea false, los
@@ -665,7 +692,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                   }}
                   onFocus={(e) => { try { e.target.select(); } catch {} }}
                   placeholder={t("presupPlaceholder")}
-                  autoFocus={monto <= 0}
+                  ref={inputMontoRef}
                   aria-label={t("presupTuPresup")}
                   className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2.5 text-[15px] outline-none focus:border-marca-500 placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-800"
                 />

@@ -34,7 +34,12 @@ export default function Asesor({ t = (k) => k, usuario, onPlanear, onAbrirPresup
   // ANTHROPIC_API_KEY en Vercel.
   const finRef = useRef(null);
 
+  // Solo con el chat ABIERTO. Sin la guarda este efecto corre en CADA render
+  // —no tiene lista de dependencias— y competia con el scroll que dispara
+  // "Ver presupuesto completo" al cerrarlo: la pagina acababa en 2896 px
+  // cuando el planificador estaba en 523, y parecia que el boton no hacia nada.
   useEffect(() => {
+    if (!abierto) return;
     finRef.current?.scrollIntoView({ behavior: "smooth" });
   });
 
@@ -200,9 +205,15 @@ function GuiaGratis({ t, usuario, onPlanear, onAbrirPresupuesto, cerrar, finRef 
       setPaso("fin");
       return;
     }
-    const lineas = ruta.ciudades.map((c, i) => `  ${i + 1}. ${c.bandera} ${c.ciudad} — ${c.diasAqui} ${t("presupRutaDias")}`).join("\n");
+    // Sin `c.bandera`: es una burbuja de texto plano, y el emoji de bandera
+    // no existe en Segoe UI Emoji, asi que en Windows se leia "1. pt Lisboa".
+    const lineas = ruta.ciudades.map((c, i) => `  ${i + 1}. ${c.ciudad} — ${c.diasAqui} ${t("presupRutaDias")}`).join("\n");
     const texto =
-      `${t("guiaAquiRuta")}\n\n${ruta.ciudades.map((c) => c.ciudad).join(" → ")}\n${lineas}\n\n` +
+    // El titular era un texto FIJO que decia "Esta ruta te cabe" incluso
+    // cuando el desglose terminaba en "Te falta US$ 9": el chat se
+    // contradecia a si mismo tres lineas mas abajo. Ahora lee la misma
+    // bandera `ruta.cabe` que usa el resto del mensaje.
+      `${ruta.cabe ? t("guiaAquiRuta") : t("guiaRutaNoCabe")}\n\n${ruta.ciudades.map((c) => c.ciudad).join(" → ")}\n${lineas}\n\n` +
       `✈️ ${t("presupVueloIntl")}: ${fmtUsd(ruta.desglose.vueloIntl)}\n` +
       `🧳 Total: ${fmtUsd(ruta.total)}  (${fmtCop(ruta.total)})\n` +
       (ruta.cabe ? `💚 ${t("presupTeSobra")} ${fmtUsd(ruta.sobra)}` : `💸 ${t("presupTeFalta")} ${fmtUsd(-ruta.sobra)}`);

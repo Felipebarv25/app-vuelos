@@ -5,11 +5,31 @@
 // selector). Una sola promesa por carga, mismo patrón que lib/geo.js.
 let _promesa = null;
 
+/**
+ * ISO-2 a partir del emoji de bandera del detector.
+ *
+ * ofertas.json trae `bandera` como emoji y NO trae el codigo de pais. El
+ * emoji no se ve en Windows —Segoe UI Emoji no incluye banderas—, asi que
+ * MiniOfertas pintaba "co Cartagena" y "ES Madrid" en el home. El emoji son
+ * dos indicadores regionales, y U+1F1E6 es la A: restando ese desfase se
+ * recuperan las dos letras sin tocar el detector ni el JSON.
+ */
+function isoDeEmoji(emoji) {
+  const cp = [...String(emoji || "")].map((c) => c.codePointAt(0));
+  if (cp.length !== 2 || cp.some((c) => c < 0x1f1e6 || c > 0x1f1ff)) return "";
+  return cp.map((c) => String.fromCharCode(c - 0x1f1e6 + 65)).join("").toLowerCase();
+}
+
 export function obtenerOfertas() {
   if (_promesa) return _promesa;
   _promesa = fetch("/ofertas.json")
     .then((r) => (r.ok ? r.json() : null))
-    .then((d) => d || { rutas: [] })
+    .then((d) => {
+      if (!d) return { rutas: [] };
+      // Se normaliza AQUI y no en cada componente: son tres consumidores y
+      // hasta ahora cada uno pintaba la bandera a su manera.
+      return { ...d, rutas: (d.rutas || []).map((r) => ({ ...r, iso: r.iso || isoDeEmoji(r.bandera) })) };
+    })
     .catch(() => ({ rutas: [] }));
   return _promesa;
 }

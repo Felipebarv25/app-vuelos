@@ -8,41 +8,107 @@
 // - datosSeoDe(d, lang) y faqsDe(d, lang) devuelven la version localizada.
 // - lang default = "es" (mercado principal).
 
-// Mejores meses por región para volar barato/clima ok (heurística general).
-const TEMPORADA_REGION = {
+// Temporada por BANDA CLIMATICA, no por continente.
+//
+// Esto era TEMPORADA_REGION, con una entrada por continente, y el resultado
+// era grave: "sudamerica" decia evitar "diciembre a febrero (verano austral,
+// alta temporada en Argentina/Chile)" y eso se le pintaba a los 31 destinos
+// tropicales del continente. En Cartagena diciembre-febrero es justo la
+// temporada SECA, la mejor epoca del ano. Lo mismo en Bogota, Medellin, Cali,
+// Santa Marta, San Andres o Cusco.
+//
+// El continente no dice nada del clima: Cartagena (10 N) y Ushuaia (55 S)
+// estaban en el mismo cajon. Lo que manda es la latitud, asi que las bandas
+// son cuatro y salen de `lat`, que todos los destinos ya traen:
+//
+//   |lat| <= 23.5 y lat >= 0  -> tropical_norte  (46 destinos)
+//   |lat| <= 23.5 y lat <  0  -> tropical_sur    (24)
+//   lat >  23.5               -> norte           (114)
+//   lat < -23.5               -> sur             (23)
+//
+// En el tropico no hay cuatro estaciones: lo que se evita es la temporada de
+// lluvias, y esa se invierte con el hemisferio. Por eso tropical_norte y
+// tropical_sur dicen cosas opuestas y las dos son correctas.
+//
+// TODO ESTO ES ORIENTATIVO y se dice asi en la interfaz. Una banda de
+// latitud no captura microclimas: la costa de Peru va al reves que el resto
+// de su banda (garua de mayo a noviembre, sol de diciembre a abril), y por
+// eso PE esta en TEMPORADA_PAIS, que pisa la banda. Ese es el sitio para
+// afinar un pais concreto sin volver a atarlo al continente.
+const TEMPORADA_BANDA = {
   es: {
-    sudamerica: { mejor: "marzo a junio y septiembre a noviembre", evitar: "diciembre a febrero (verano austral, alta temporada en Argentina/Chile)" },
-    norteamerica: { mejor: "abril a junio y septiembre a noviembre", evitar: "diciembre a enero (caro) y julio-agosto (caro en EE.UU.)" },
-    europa: { mejor: "abril, mayo, septiembre, octubre", evitar: "junio a agosto (alta temporada, todo más caro)" },
-    asia: { mejor: "noviembre a marzo (temporada seca)", evitar: "junio a octubre (monzones en muchos países)" },
-    africa: { mejor: "octubre a abril (clima más seco en el norte y el sur)", evitar: "junio a agosto (lluvias y calor extremo en algunas zonas)" },
-    oceania: { mejor: "septiembre a noviembre (primavera austral) y marzo a mayo (otoño)", evitar: "diciembre a febrero (verano caro)" },
+    tropical_norte: { mejor: "diciembre a abril (temporada seca)", evitar: "mayo a noviembre (lluvias)" },
+    tropical_norte_caribe: { mejor: "diciembre a abril (temporada seca)", evitar: "mayo a noviembre (lluvias; huracanes en el Caribe de junio a noviembre)" },
+    tropical_sur: { mejor: "mayo a septiembre (temporada seca)", evitar: "diciembre a marzo (lluvias y calor humedo)" },
+    norte: { mejor: "abril a junio y septiembre a octubre", evitar: "junio a agosto (alta temporada, todo mas caro)" },
+    sur: { mejor: "marzo a mayo y septiembre a noviembre", evitar: "diciembre a febrero (verano austral, alta temporada)" },
   },
   en: {
-    sudamerica: { mejor: "March to June and September to November", evitar: "December to February (austral summer, high season in Argentina/Chile)" },
-    norteamerica: { mejor: "April to June and September to November", evitar: "December to January (expensive) and July-August (peak US summer)" },
-    europa: { mejor: "April, May, September, October", evitar: "June to August (high season, everything is more expensive)" },
-    asia: { mejor: "November to March (dry season)", evitar: "June to October (monsoons across much of Asia)" },
-    africa: { mejor: "October to April (drier season north and south)", evitar: "June to August (rains and extreme heat in some areas)" },
-    oceania: { mejor: "September to November (austral spring) and March to May (autumn)", evitar: "December to February (peak summer)" },
+    tropical_norte: { mejor: "December to April (dry season)", evitar: "May to November (rains)" },
+    tropical_norte_caribe: { mejor: "December to April (dry season)", evitar: "May to November (rains; Caribbean hurricane season June to November)" },
+    tropical_sur: { mejor: "May to September (dry season)", evitar: "December to March (rains and humid heat)" },
+    norte: { mejor: "April to June and September to October", evitar: "June to August (high season, everything is more expensive)" },
+    sur: { mejor: "March to May and September to November", evitar: "December to February (austral summer, high season)" },
   },
   pt: {
-    sudamerica: { mejor: "março a junho e setembro a novembro", evitar: "dezembro a fevereiro (verão austral, alta temporada na Argentina/Chile)" },
-    norteamerica: { mejor: "abril a junho e setembro a novembro", evitar: "dezembro a janeiro (caro) e julho-agosto (pico do verão nos EUA)" },
-    europa: { mejor: "abril, maio, setembro, outubro", evitar: "junho a agosto (alta temporada, tudo mais caro)" },
-    asia: { mejor: "novembro a março (estação seca)", evitar: "junho a outubro (monções em grande parte da Ásia)" },
-    africa: { mejor: "outubro a abril (mais seco no norte e no sul)", evitar: "junho a agosto (chuvas e calor extremo)" },
-    oceania: { mejor: "setembro a novembro (primavera austral) e março a maio (outono)", evitar: "dezembro a fevereiro (verão de pico)" },
+    tropical_norte: { mejor: "dezembro a abril (estacao seca)", evitar: "maio a novembro (chuvas)" },
+    tropical_norte_caribe: { mejor: "dezembro a abril (estacao seca)", evitar: "maio a novembro (chuvas; furacoes no Caribe de junho a novembro)" },
+    tropical_sur: { mejor: "maio a setembro (estacao seca)", evitar: "dezembro a marco (chuvas e calor umido)" },
+    norte: { mejor: "abril a junho e setembro a outubro", evitar: "junho a agosto (alta temporada, tudo mais caro)" },
+    sur: { mejor: "marco a maio e setembro a novembro", evitar: "dezembro a fevereiro (verao austral, alta temporada)" },
   },
   fr: {
-    sudamerica: { mejor: "de mars à juin et de septembre à novembre", evitar: "de décembre à février (été austral, haute saison en Argentine/Chili)" },
-    norteamerica: { mejor: "d'avril à juin et de septembre à novembre", evitar: "de décembre à janvier (cher) et juillet-août (pic estival US)" },
-    europa: { mejor: "avril, mai, septembre, octobre", evitar: "de juin à août (haute saison, tout est plus cher)" },
-    asia: { mejor: "de novembre à mars (saison sèche)", evitar: "de juin à octobre (mousson dans une grande partie de l'Asie)" },
-    africa: { mejor: "d'octobre à avril (saison plus sèche au nord et au sud)", evitar: "de juin à août (pluies et chaleur extrême)" },
-    oceania: { mejor: "de septembre à novembre (printemps austral) et de mars à mai (automne)", evitar: "de décembre à février (été de pointe)" },
+    tropical_norte: { mejor: "de decembre a avril (saison seche)", evitar: "de mai a novembre (pluies)" },
+    tropical_norte_caribe: { mejor: "de decembre a avril (saison seche)", evitar: "de mai a novembre (pluies ; ouragans aux Caraibes de juin a novembre)" },
+    tropical_sur: { mejor: "de mai a septembre (saison seche)", evitar: "de decembre a mars (pluies et chaleur humide)" },
+    norte: { mejor: "d'avril a juin et de septembre a octobre", evitar: "de juin a aout (haute saison, tout est plus cher)" },
+    sur: { mejor: "de mars a mai et de septembre a novembre", evitar: "de decembre a fevrier (ete austral, haute saison)" },
   },
 };
+
+// Destinos cuyo clima NO sigue el de su banda. Pisa a TEMPORADA_BANDA.
+//
+// Va por SLUG y no por pais: el primer intento fue por pais y metia a Cusco
+// —que esta a 3.400 m en la sierra, con su temporada seca de mayo a
+// septiembre— en el consejo de la costa, que dice justo lo contrario. Un pais
+// puede tener dos climas opuestos; un destino, no.
+//
+// Se anaden solo con motivo escrito: esto no es un cajon de sastre.
+const TEMPORADA_DESTINO = {
+  // La costa peruana va al reves que su banda: la garua cubre Lima de mayo a
+  // noviembre y el sol sale de diciembre a abril, justo cuando el resto del
+  // tropico sur esta en lluvias. Aplica a la costa, no a la sierra ni a la
+  // selva.
+  "lima-peru": {
+    es: { mejor: "diciembre a abril (sol en la costa)", evitar: "mayo a noviembre (garua y cielo gris casi permanente)" },
+    en: { mejor: "December to April (sunny on the coast)", evitar: "May to November (near-permanent coastal fog and grey skies)" },
+    pt: { mejor: "dezembro a abril (sol no litoral)", evitar: "maio a novembro (neblina e ceu cinza quase permanente)" },
+    fr: { mejor: "de decembre a avril (soleil sur la cote)", evitar: "de mai a novembre (crachin et ciel gris quasi permanent)" },
+  },
+};
+// Paracas y Trujillo son la misma costa desertica que Lima.
+TEMPORADA_DESTINO["paracas-peru"] = TEMPORADA_DESTINO["lima-peru"];
+TEMPORADA_DESTINO["trujillo-peru"] = TEMPORADA_DESTINO["lima-peru"];
+
+/**
+ * Banda climatica de un destino a partir de su latitud.
+ *
+ * La region solo entra para una cosa: la temporada de huracanes es del
+ * Atlantico/Caribe, y meterla en la banda tropical global hacia que Bangkok
+ * avisara de huracanes caribenos.
+ */
+function bandaClima(lat, region) {
+  if (lat == null || Number.isNaN(Number(lat))) return "norte";
+  const l = Number(lat);
+  if (Math.abs(l) <= 23.5) {
+    if (l < 0) return "tropical_sur";
+    return region === "sudamerica" || region === "norteamerica"
+      ? "tropical_norte_caribe"
+      : "tropical_norte";
+  }
+  return l > 0 ? "norte" : "sur";
+}
+
 
 // Datos específicos por idioma. La estructura es la misma; cuando agregues una
 // nueva traduccion (PT, FR) solo copia el bloque y traduce los campos textuales.
@@ -792,8 +858,14 @@ export function datosSeoDe(d, lang = "es") {
   if (!d) return null;
   const langOk = DATOS_POR_LANG[lang] ? lang : "es";
   const base = DATOS_POR_LANG[langOk][d.slug] || generico(d, langOk);
-  const tempLang = TEMPORADA_REGION[langOk] || TEMPORADA_REGION.es;
-  const temp = tempLang[d.region] || {};
+  // Tres capas, gana la mas especifica: lo curado a mano para ESTE destino,
+  // luego la excepcion de su pais, y por ultimo su banda climatica. Antes
+  // solo existia la ultima y encima iba por continente.
+  const propio = TEMPORADA_DESTINO[d.slug];
+  const temp =
+    (propio && (propio[langOk] || propio.es)) ||
+    (TEMPORADA_BANDA[langOk] || TEMPORADA_BANDA.es)[bandaClima(d.lat, d.region)] ||
+    {};
   const fallbackEpoca = {
     es: "todo el año",
     en: "year-round",
@@ -803,7 +875,10 @@ export function datosSeoDe(d, lang = "es") {
   return {
     ...base,
     mejorEpoca: base.mejorEpoca || temp.mejor || fallbackEpoca,
-    evitarEpoca: temp.evitar || null,
+    // `base.evitarEpoca` faltaba en esta linea mientras que `mejorEpoca` si
+    // lo miraba: una entrada curada podia fijar su mejor epoca pero no la que
+    // hay que evitar, y se le colaba la de la plantilla.
+    evitarEpoca: base.evitarEpoca || temp.evitar || null,
   };
 }
 

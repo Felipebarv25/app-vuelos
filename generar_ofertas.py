@@ -126,6 +126,20 @@ def main():
             ida = fila.get("fecha_ida") or ""
             if ida < hoy:  # ya pasó: no es una oferta vigente
                 continue
+            # Un ida y vuelta necesita al menos una noche.
+            #
+            # La API devolvia filas con fecha_vuelta == fecha_ida y se
+            # publicaban tal cual: en produccion salio "Cali -> Cartagena, ida
+            # y vuelta, 22 feb - 22 feb", con "ida directo 1h30 / vuelta 1
+            # escala 2h45". Eso no es un viaje, es una fila mal formada, y
+            # ademas rompe el enlace de Aviasales, que codifica las dos fechas.
+            #
+            # Se descarta la FILA, no la ruta: hay muchas filas por cada
+            # (origen, destino) y mas abajo se elige la mejor entre las que
+            # quedan, asi que la ruta sigue apareciendo con una fecha valida.
+            vuelta = fila.get("fecha_vuelta") or ""
+            if not vuelta or vuelta <= ida:
+                continue
             clave = (fila["origen"], fila["destino"])
             rutas.setdefault(clave, []).append({**fila, "precio": precio})
 

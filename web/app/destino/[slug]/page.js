@@ -120,7 +120,7 @@ export default async function PaginaDestino({ params }) {
             se llega por enlace, y se veia sin marca ni navegacion. */}
         <NavTop />
         <h1 className="text-3xl font-extrabold">Destino no encontrado</h1>
-        <p className="mt-2 text-slate-600">
+        <p className="mt-2 text-slate-600 dark:text-slate-400">
           <Link href="/" className="text-marca-600 underline">Volver al inicio</Link>
         </p>
       </main>
@@ -190,10 +190,10 @@ export default async function PaginaDestino({ params }) {
       <NavTop active="destinos" />
 
       {/* Breadcrumbs + switch a otros idiomas (refuerza el signal hreflang para Google) */}
-      <nav className="mx-auto max-w-4xl px-6 pt-6 text-[13px] text-slate-500">
+      <nav className="mx-auto max-w-4xl px-6 pt-6 text-[13px] text-slate-500 dark:text-slate-400">
         <Link href="/" className="hover:text-marca-600">Inicio</Link>
         <span className="mx-1.5 text-slate-300">/</span>
-        <span className="text-slate-700">Destinos</span>
+        <span className="text-slate-700 dark:text-slate-300">Destinos</span>
         <span className="mx-1.5 text-slate-300">/</span>
         <span className="font-semibold text-marca-700 dark:text-marca-300">{nombre}</span>
         <span className="float-right space-x-2">
@@ -289,7 +289,7 @@ export default async function PaginaDestino({ params }) {
 
       {/* Descripción del destino debajo del hero */}
       <section className="mx-auto max-w-4xl px-6 pt-6">
-        <p className="text-lg leading-relaxed text-slate-600">{seo.intro}</p>
+        <p className="text-lg leading-relaxed text-slate-600 dark:text-slate-400">{seo.intro}</p>
       </section>
 
       {/* Datos clave */}
@@ -318,22 +318,22 @@ export default async function PaginaDestino({ params }) {
             <div className="text-[11px] font-bold uppercase tracking-wide text-marca-600">
               🗓️ Mejor época para viajar
             </div>
-            <div className="mt-1.5 text-base leading-relaxed text-slate-700">
+            <div className="mt-1.5 text-base leading-relaxed text-slate-700 dark:text-slate-300">
               {seo.mejorEpoca}
             </div>
             {seo.evitarEpoca && (
-              <div className="mt-2 text-[13px] text-slate-500">
+              <div className="mt-2 text-[13px] text-slate-500 dark:text-slate-400">
                 <b className="text-amber-700 dark:text-amber-300">Evita:</b> {seo.evitarEpoca}.
               </div>
             )}
           </div>
-          <div className="rounded-2xl border border-slate-100 bg-white p-5">
-            <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+          <div className="rounded-2xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               ℹ️ Datos prácticos
             </div>
-            <dl className="mt-2 grid grid-cols-1 gap-1.5 text-[14px] text-slate-600">
-              <div className="flex gap-2"><dt className="font-semibold text-slate-500">Idioma:</dt><dd>{seo.idioma}</dd></div>
-              <div className="flex gap-2"><dt className="font-semibold text-slate-500">Moneda:</dt><dd>{seo.moneda}</dd></div>
+            <dl className="mt-2 grid grid-cols-1 gap-1.5 text-[14px] text-slate-600 dark:text-slate-400">
+              <div className="flex gap-2"><dt className="font-semibold text-slate-500 dark:text-slate-400">Idioma:</dt><dd>{seo.idioma}</dd></div>
+              <div className="flex gap-2"><dt className="font-semibold text-slate-500 dark:text-slate-400">Moneda:</dt><dd>{seo.moneda}</dd></div>
             </dl>
             {seo.dato && (
               <div className="mt-3 rounded-xl bg-amber-50 p-3 text-[13px] leading-relaxed text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
@@ -350,12 +350,12 @@ export default async function PaginaDestino({ params }) {
           <h2 className="text-2xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
             Comida típica de {d.ciudad}
           </h2>
-          <p className="mt-1 text-slate-500">Platos que no te puedes perder.</p>
+          <p className="mt-1 text-slate-500 dark:text-slate-400">Platos que no te puedes perder.</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {seo.platos.map((p) => (
               <span
                 key={p}
-                className="rounded-full bg-white px-3.5 py-2 text-[14px] font-semibold text-slate-700 ring-1 ring-slate-200 dark:ring-slate-700"
+                className="rounded-full bg-white dark:bg-slate-800 px-3.5 py-2 text-[14px] font-semibold text-slate-700 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700"
               >
                 🍽️ {p}
               </span>
@@ -371,17 +371,17 @@ export default async function PaginaDestino({ params }) {
       {!historial && (
         <section className="mx-auto max-w-4xl px-6 py-6">
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-5 dark:border-slate-700 dark:bg-slate-800/60">
-            <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               🕒 Cuándo viajar más barato
             </div>
-            <p className="mt-2 text-[14px] leading-relaxed text-slate-600">
+            <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-400">
               Todavía estamos recopilando datos de precios para vuelos a{" "}
               <b className="text-marca-700 dark:text-marca-300">{d.ciudad}</b>. Nuestro
               detector consulta esta ruta cada 3 horas; en cuanto haya muestras
               suficientes verás aquí la mediana mes a mes y la mejor temporada
               para volar.
             </p>
-            <p className="mt-2 text-[12.5px] text-slate-500">
+            <p className="mt-2 text-[12.5px] text-slate-500 dark:text-slate-400">
               Mientras tanto, usa el presupuesto sugerido de arriba como referencia.
             </p>
           </div>
@@ -397,14 +397,14 @@ export default async function PaginaDestino({ params }) {
           <h2 className="text-2xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
             Los mejores lugares para visitar en {d.ciudad}
           </h2>
-          <p className="mt-1 text-slate-500">
+          <p className="mt-1 text-slate-500 dark:text-slate-400">
             Curados por relevancia (Wikipedia + visitas reales) y listos para tu itinerario.
           </p>
           <ol className="mt-4 space-y-2.5">
             {lugares.map((l, i) => (
               <li
                 key={l.nombre + i}
-                className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-suave"
+                className="flex items-start gap-3 rounded-2xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-suave"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-marca-100 text-sm font-extrabold text-marca-700 dark:bg-marca-900/40 dark:text-marca-300">
                   {i + 1}
@@ -412,7 +412,7 @@ export default async function PaginaDestino({ params }) {
                 <div>
                   <div className="font-bold text-marca-900 dark:text-marca-300">{l.nombre}</div>
                   {l.tipo && (
-                    <div className="mt-0.5 text-[12.5px] capitalize text-slate-500">
+                    <div className="mt-0.5 text-[12.5px] capitalize text-slate-500 dark:text-slate-400">
                       {l.tipo.replace(/_/g, " ")}
                     </div>
                   )}
@@ -429,11 +429,11 @@ export default async function PaginaDestino({ params }) {
           "use client") porque Next.js no deja pasar functions de server a
           client component, y aqui no necesitamos tracking ni i18n. */}
       <section className="mx-auto max-w-4xl px-6 py-6">
-        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-suave">
+        <div className="rounded-2xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-suave">
           <h2 className="text-xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
             Reserva tu viaje a {d.ciudad}
           </h2>
-          <p className="mt-1 text-[14px] text-slate-500">
+          <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-400">
             Tours, hospedaje y vuelos — todo de proveedores que
             usamos nosotros.
           </p>
@@ -447,7 +447,7 @@ export default async function PaginaDestino({ params }) {
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">🎟️</span>
               <div className="min-w-0 flex-1">
                 <div className="text-[14.5px] font-bold leading-tight">Tours y experiencias</div>
-                <div className="truncate text-[12.5px] text-slate-500">Tickets sin filas con GetYourGuide</div>
+                <div className="truncate text-[12.5px] text-slate-500 dark:text-slate-400">Tickets sin filas con GetYourGuide</div>
               </div>
               <span className="text-xl">→</span>
             </a>
@@ -460,7 +460,7 @@ export default async function PaginaDestino({ params }) {
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">🧭</span>
               <div className="min-w-0 flex-1">
                 <div className="text-[14.5px] font-bold leading-tight">Civitatis</div>
-                <div className="truncate text-[12.5px] text-slate-500">Tours en español · fuerte en LATAM</div>
+                <div className="truncate text-[12.5px] text-slate-500 dark:text-slate-400">Tours en español · fuerte en LATAM</div>
               </div>
               <span className="text-xl">→</span>
             </a>
@@ -473,7 +473,7 @@ export default async function PaginaDestino({ params }) {
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">🛏️</span>
               <div className="min-w-0 flex-1">
                 <div className="text-[14.5px] font-bold leading-tight">¿Dónde dormir?</div>
-                <div className="truncate text-[12.5px] text-slate-500">Compara Booking + más en Hotellook</div>
+                <div className="truncate text-[12.5px] text-slate-500 dark:text-slate-400">Compara Booking + más en Hotellook</div>
               </div>
               <span className="text-xl">→</span>
             </a>
@@ -486,7 +486,7 @@ export default async function PaginaDestino({ params }) {
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">✈️</span>
               <div className="min-w-0 flex-1">
                 <div className="text-[14.5px] font-bold leading-tight">Vuelos baratos</div>
-                <div className="truncate text-[12.5px] text-slate-500">Compara en Aviasales</div>
+                <div className="truncate text-[12.5px] text-slate-500 dark:text-slate-400">Compara en Aviasales</div>
               </div>
               <span className="text-xl">→</span>
             </a>
@@ -502,7 +502,7 @@ export default async function PaginaDestino({ params }) {
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">📱</span>
               <div className="min-w-0 flex-1">
                 <div className="text-[14.5px] font-bold leading-tight">eSIM para {d.pais}</div>
-                <div className="truncate text-[12.5px] text-slate-500">Datos al instante con Airalo</div>
+                <div className="truncate text-[12.5px] text-slate-500 dark:text-slate-400">Datos al instante con Airalo</div>
               </div>
               <span className="text-xl">→</span>
             </a>
@@ -517,7 +517,7 @@ export default async function PaginaDestino({ params }) {
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-suave">🛡️</span>
               <div className="min-w-0 flex-1">
                 <div className="text-[14.5px] font-bold leading-tight">Seguro de viaje</div>
-                <div className="truncate text-[12.5px] text-slate-500">Cobertura médica + cancelación</div>
+                <div className="truncate text-[12.5px] text-slate-500 dark:text-slate-400">Cobertura médica + cancelación</div>
               </div>
               <span className="text-xl">→</span>
             </a>
@@ -538,7 +538,7 @@ export default async function PaginaDestino({ params }) {
           {faqs.map((f, i) => (
             <details
               key={i}
-              className="group rounded-2xl border border-slate-100 bg-white p-4 shadow-suave open:shadow-media"
+              className="group rounded-2xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-suave open:shadow-media"
             >
               <summary className="cursor-pointer list-none text-base font-bold text-marca-900 dark:text-marca-300">
                 <span className="inline-flex items-center gap-2">
@@ -546,7 +546,7 @@ export default async function PaginaDestino({ params }) {
                   {f.q}
                 </span>
               </summary>
-              <p className="mt-2 pl-5 text-[14.5px] leading-relaxed text-slate-600">{f.a}</p>
+              <p className="mt-2 pl-5 text-[14.5px] leading-relaxed text-slate-600 dark:text-slate-400">{f.a}</p>
             </details>
           ))}
         </div>
@@ -622,7 +622,7 @@ function OtrosDestinos({ region, actualSlug }) {
       <h2 className="text-2xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
         Otros destinos cercanos
       </h2>
-      <p className="mt-1 text-slate-500">
+      <p className="mt-1 text-slate-500 dark:text-slate-400">
         Si te gusta este destino, mira también:
       </p>
       <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
@@ -630,12 +630,12 @@ function OtrosDestinos({ region, actualSlug }) {
           <Link
             key={o.slug}
             href={`/destino/${o.slug}`}
-            className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-3 transition hover:border-marca-200 hover:bg-marca-50 dark:hover:border-marca-700 dark:hover:bg-marca-900/30"
+            className="flex items-center gap-2.5 rounded-xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 transition hover:border-marca-200 hover:bg-marca-50 dark:hover:border-marca-700 dark:hover:bg-marca-900/30"
           >
             <Bandera cc={o.iso} size={24} />
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13.5px] font-bold text-marca-900 dark:text-marca-300">{o.ciudad}</div>
-              <div className="truncate text-[11.5px] text-slate-500">desde US$ {o.vuelo}</div>
+              <div className="truncate text-[11.5px] text-slate-500 dark:text-slate-400">desde US$ {o.vuelo}</div>
             </div>
           </Link>
         ))}
@@ -682,7 +682,7 @@ function CalendarioPrecios({ historial, ciudad }) {
       <h2 className="text-2xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
         ¿Cuándo es más barato volar a {ciudad}?
       </h2>
-      <p className="mt-1 text-slate-500">
+      <p className="mt-1 text-slate-500 dark:text-slate-400">
         Precio mediano de vuelo i/v por mes según nuestro detector (últimos 90 días),
         <b> saliendo desde Colombia</b> (Bogotá, Medellín, Cali o Cartagena).
       </p>
@@ -710,13 +710,13 @@ function CalendarioPrecios({ historial, ciudad }) {
         </div>
       </div>
 
-      <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-suave">
+      <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-suave">
         <table className="w-full min-w-[640px] border-collapse text-center">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/80">
-              <th className="px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">Año</th>
+            <tr className="border-b border-slate-100 dark:border-slate-700 bg-slate-50/80">
+              <th className="px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Año</th>
               {MESES_CORTO.map((m) => (
-                <th key={m} className="px-1 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">{m}</th>
+                <th key={m} className="px-1 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{m}</th>
               ))}
             </tr>
           </thead>
@@ -744,7 +744,7 @@ function CalendarioPrecios({ historial, ciudad }) {
         </table>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-4 text-[11px] text-slate-500">
+      <div className="mt-3 flex flex-wrap items-center gap-4 text-[11px] text-slate-500 dark:text-slate-400">
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded bg-emerald-100 ring-1 ring-emerald-200" /> Barato
         </span>
@@ -764,12 +764,12 @@ function CalendarioPrecios({ historial, ciudad }) {
 
 function Dato({ titulo, valor, sub }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-suave">
+    <div className="rounded-2xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-suave">
       <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
         {titulo}
       </div>
       <div className="mt-1 text-2xl font-extrabold text-marca-900 dark:text-marca-300">{valor}</div>
-      {sub && <div className="mt-0.5 text-[11.5px] text-slate-500">{sub}</div>}
+      {sub && <div className="mt-0.5 text-[11.5px] text-slate-500 dark:text-slate-400">{sub}</div>}
     </div>
   );
 }

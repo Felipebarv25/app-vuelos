@@ -429,9 +429,19 @@ export default function PaginaMisViajes() {
     [nombresViajes],
   );
 
+  // GUARDADO de verdad: viajes de una ciudad + rutas multiparada. Los
+  // `locales` son borradores sin guardar y quedan fuera a proposito.
+  //
+  // La cabecera se contradecia: decia "Cuando guardes un viaje aparecera
+  // aqui" y justo debajo pintaba siete banderas en "TUS PAISES" y el sello
+  // "SINCRONIZADO". Eran tres fuentes distintas —`viajes` para el texto,
+  // `rutas`+`locales` para las banderas y el estado de la nube para el
+  // sello— y ninguna miraba a las otras. Ahora las tres cuelgan de esto.
+  const guardados = viajes.length + rutas.length;
+
   const paisesVisitados = useMemo(
-    () => paisesDeTodos([rutas, locales]),
-    [rutas, locales]
+    () => paisesDeTodos([rutas]),
+    [rutas]
   );
 
   const viajesOrdenados = useMemo(() => {
@@ -473,12 +483,12 @@ export default function PaginaMisViajes() {
               {t("misViajesH1")}
               {/* El badge sigue al estado REAL, no a que haya sesion. Sobre la
                   banda oscura los tonos -700 no se leian: van en claro. */}
-              {!cargando && nube.sincronizado && (
+              {!cargando && guardados > 0 && nube.sincronizado && (
                 <span className="ml-3 inline-flex items-center gap-1 align-middle rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-100 ring-1 ring-white/20">
                   <Icono nombre="check" size={12} /> {t("misViajesSync")}
                 </span>
               )}
-              {!cargando && !nube.sincronizado && (
+              {!cargando && guardados > 0 && !nube.sincronizado && (
                 <span
                   title={nube.motivo === "nube-caida" ? t("misViajesSinNubeAyuda") : ""}
                   className="ml-3 inline-flex items-center gap-1 align-middle rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-100 ring-1 ring-white/20"
@@ -491,15 +501,15 @@ export default function PaginaMisViajes() {
             {/* El ancho se limita SOLO en sm+: es donde esta la ilustracion, y
                 sin el tope el contador se le metia por debajo de los pines. */}
             <p className="mt-1.5 text-[13.5px] text-white/85 sm:max-w-[62%]">
-              {viajes.length > 0
-                ? (viajes.length === 1
+              {guardados > 0
+                ? (guardados === 1
                     ? t("misViajesContador1")
                     : t("misViajesContadorN")
-                  ).replace("{n}", viajes.length)
+                  ).replace("{n}", guardados)
                 : t("misViajesVacioSub")}
             </p>
 
-            {paisesVisitados.length > 0 && (
+            {guardados > 0 && paisesVisitados.length > 0 && (
               <div className="mt-3.5 flex flex-wrap items-center gap-1.5 sm:max-w-[62%]">
                 <span className="mr-0.5 text-[10.5px] font-bold uppercase tracking-[0.14em] text-white/60">
                   {t("misViajesPaises")}
@@ -875,7 +885,19 @@ export default function PaginaMisViajes() {
           onPlanear={(q) => router.push(`/?q=${encodeURIComponent(q)}`)}
           onAbrirPresupuesto={() => {
             setModoPlan("reco");
-            document.getElementById("planificador")?.scrollIntoView({ behavior: "smooth" });
+            // En este mismo tick el planificador sigue plegado, asi que el
+            // destino del scroll deja de ser valido en cuanto React pinta el
+            // modo "reco". Hay que esperar a que la altura sea la definitiva.
+            //
+            // setTimeout y no requestAnimationFrame: rAF NO se ejecuta si la
+            // pestana esta oculta, asi que el desplazamiento no ocurria nunca
+            // para quien pulsa el boton y se cambia de pestana. setTimeout se
+            // ralentiza en segundo plano, pero llega.
+            setTimeout(() => {
+              document
+                .getElementById("planificador")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }, 80);
           }}
         />
       </div>

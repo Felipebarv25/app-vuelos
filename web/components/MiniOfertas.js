@@ -2,6 +2,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Icono } from "./Icono";
+import Bandera from "./Bandera";
+import { nombreAerolinea } from "@/lib/aerolineas";
 import { obtenerTasas } from "@/lib/fx";
 import { PAISES_ORIGEN } from "@/lib/paisesOrigen";
 import { obtenerOfertas } from "@/lib/ofertasDatos";
@@ -130,7 +132,11 @@ export default function MiniOfertas({ onPlanear, t = (k) => k, lang = "es" }) {
             <div className="flex items-center gap-2 text-[12.5px] font-semibold text-slate-500">
               <span>{origenes[r.origen] || r.origen}</span>
               <span className="text-slate-300">→</span>
-              <span>{r.bandera} {r.ciudad}</span>
+{/* PNG y no el emoji de `r.bandera`: en Windows salia "co Cartagena". */}
+              <span className="inline-flex items-center gap-1.5">
+                <Bandera cc={r.iso} size={14} />
+                {r.ciudad}
+              </span>
             </div>
             <div className="mt-2 flex items-end gap-2">
               <div className="text-[26px] font-extrabold leading-none text-marca-900 dark:text-slate-100">
@@ -154,7 +160,8 @@ export default function MiniOfertas({ onPlanear, t = (k) => k, lang = "es" }) {
               {fmtFecha(r.fecha_ida)} – {fmtFecha(r.fecha_vuelta)}
               <span className="text-slate-300">·</span>
               <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-700 dark:text-slate-400">
-                {r.aerolinea}
+                {/* El nombre, no el codigo: aqui decia "CM" y en /ofertas "Copa". */}
+                {nombreAerolinea(r.aerolinea)}
               </span>
             </div>
             <div className="mt-3 flex gap-2">
