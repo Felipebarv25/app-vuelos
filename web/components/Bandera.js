@@ -8,22 +8,27 @@
 //
 // Vivía copiado en Ofertas.js y SelectorPais.js; al agregar el tercer uso
 // (SelectorOrigen) se centralizó aquí.
+import { altoDeBandera } from "@/data/proporcionesBandera";
+
 export default function Bandera({ cc, size = 16, className = "" }) {
   if (!cc) return null;
   const lo = String(cc).toLowerCase();
-  // El alto se RESERVA con esta caja, y ademas se impone por CSS.
+  // El alto es el REAL de esta bandera, no una proporcion supuesta.
   //
-  // Antes solo iba en el atributo height, y el preflight de Tailwind
-  // (`img { height: auto }`) lo pisaba: el navegador reservaba 23 px y luego
-  // repintaba a 17,25, porque flagcdn sirve cada bandera con SU proporcion
-  // (Mexico 40x23, Suiza cuadrada, Nepal ni siquiera rectangular) y no la
-  // 4:3 que asume este calculo. Con `loading="lazy"` y 207 banderas en
-  // /destino eso son 207 repintados.
+  // Aqui hubo 4:3 a pelo (size * 0.75) y no lo es casi ninguna: de los 242
+  // paises que la app puede pintar, 109 son 3:2 y 73 son 2:1. El preflight de
+  // Tailwind (`img { height: auto }`) pisaba ese atributo, asi que el
+  // navegador reservaba un alto y repintaba en otro — 5,8 px de salto medidos
+  // en Mexico, con 207 banderas en /destino.
   //
-  // `contain` es lo que permite fijar la caja sin deformar: la bandera se
-  // dibuja dentro con su proporcion real y sobra aire arriba y abajo, en vez
-  // de estirarse a 4:3.
-  const alto = Math.round(size * 0.75);
+  // El intento intermedio fue fijar la caja a 4:3 con `object-fit: contain`.
+  // Quitaba el salto pero encogia las mas altas: Suiza, que es CUADRADA,
+  // salia a 18 px de ancho donde sus vecinas iban a 24. Con la tabla de
+  // proporciones no hay que elegir entre las dos cosas.
+  //
+  // `contain` se queda como red: si llega un cc que no esta en la tabla, la
+  // caja sera la del defecto y la bandera se ajusta dentro sin deformarse.
+  const alto = altoDeBandera(cc, size);
   // Se pide por ANCHO (w40), no por "anchoxalto".
   //
   // flagcdn solo sirve un juego cerrado de tamanos, y cada uno tiene su alto
