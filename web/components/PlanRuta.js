@@ -213,6 +213,17 @@ export default function PlanRuta({
     return d.toISOString().slice(0, 10);
   }, []);
 
+  // "mayo de 2027" a partir de "2027-05".
+  const fmtMes = useCallback(
+    (m) => {
+      const d = new Date(m + "-01T00:00:00");
+      return Number.isNaN(d.getTime())
+        ? m
+        : d.toLocaleDateString(lang, { month: "long", year: "numeric" });
+    },
+    [lang]
+  );
+
   // "12 may 2027" a partir de "2027-05-12".
   const fmtDia = useCallback(
     (iso) => {
@@ -377,20 +388,14 @@ export default function PlanRuta({
       const desde = paradasCalc[i];
       const hasta = paradasCalc[i + 1];
       const clave = `${desde.iata}-${hasta.iata}-${i}`;
-      let real = vivos[clave] || vueloDetectado(desde, hasta);
-      // Si el viajero ya fijo el dia, el precio deja de ser "lo mas barato del
-      // mes" y pasa a ser el de SU fecha. La lista de salidas ya esta
-      // descargada, asi que esto no gasta una consulta mas.
-      if (fechaIda && real?.opciones?.length) {
-        const exacta = real.opciones.find((o) => o.ida === fechaIda);
-        if (exacta) {
-          real = { ...real, precio: exacta.precio, aerolinea: exacta.aerolinea || real.aerolinea, esDeTuFecha: true };
-        }
-      }
+      // El precio del dia exacto lo trae buscarReal() cuando hay fecha puesta:
+      // la API no permite sacar el precio por dia de una lista mensual, hay
+      // que preguntar por el dia.
+      const real = vivos[clave] || vueloDetectado(desde, hasta);
       out.push({ ...evaluarTramo({ desde, hasta, vueloReal: real }), desde, hasta, clave });
     }
     return out;
-  }, [paradasCalc, vivos, vueloDetectado, fechaIda]);
+  }, [paradasCalc, vivos, vueloDetectado]);
 
   // El precio de un vuelo detectado es de IDA Y VUELTA. Si el viaje cierra
   // sobre el mismo par de ciudades, el tramo de regreso ya esta pagado.
@@ -456,22 +461,22 @@ export default function PlanRuta({
   // fecha que el viajero tiene puesta — o contra la que se esta usando — y si
   // la diferencia se nota, se dice.
   const mejorFecha = useMemo(() => {
+    if (!mesInicio) return null;
     for (const t of tramos) {
-      const ops = vivos[t.clave]?.opciones;
-      if (!ops?.length) continue;
-      const barata = ops.reduce((a, b) => (b.precio < a.precio ? b : a), ops[0]);
-      const actual = fechaIda
-        ? ops.find((o) => o.ida === fechaIda) || { precio: t.precio, ida: fechaIda }
-        : { precio: t.precio, ida: null };
-      // Se avisa solo si el ahorro se nota: por diez dolares no vale la pena
-      // mover un viaje.
-      const ahorro = (actual.precio || 0) - barata.precio;
-      if (barata.ida && ahorro >= 40 && barata.ida !== fechaIda) {
-        return { ...barata, ahorro, tramo: `${t.desde?.ciudad} → ${t.hasta?.ciudad}` };
+      const meses = vivos[t.clave]?.porMes;
+      if (!meses?.length) continue;
+      const tuyo = meses.find((m) => m.mes === mesInicio);
+      const barato = meses.reduce((a, b) => (b.precio < a.precio ? b : a), meses[0]);
+      if (!barato?.mes || barato.mes === mesInicio) continue;
+      // Se avisa solo si el ahorro se nota: por diez dolares nadie mueve un
+      // viaje de mes.
+      const ahorro = (tuyo?.precio || t.precio || 0) - barato.precio;
+      if (ahorro >= 40) {
+        return { ...barato, ahorro, tramo: `${t.desde?.ciudad} → ${t.hasta?.ciudad}` };
       }
     }
     return null;
-  }, [tramos, vivos, fechaIda]);
+  }, [tramos, vivos, mesInicio]);
 
   const fijarLinea = useCallback((id, monto) => {
     setOverrides((prev) => {
@@ -582,8 +587,11 @@ export default function PlanRuta({
     if (!tr.desde.iata || !tr.hasta.iata) return;
     setBuscando((b) => ({ ...b, [tr.clave]: true }));
     try {
+      // Si hay dia puesto se pide ESE dia: una llamada. Si no, los seis meses
+      // que el endpoint ya consultaba, de los que sale la recomendacion.
       const r = await fetch(
-        `/api/vuelo-vivo?iata=${tr.hasta.iata}&origenes=${tr.desde.iata}`
+        `/api/vuelo-vivo?iata=${tr.hasta.iata}&origenes=${tr.desde.iata}` +
+          (fechaIda ? `&fecha=${fechaIda}` : "")
       );
       const d = r.ok ? await r.json() : null;
       if (d?.encontrado) {
@@ -596,7 +604,10 @@ export default function PlanRuta({
             precio: d.precio,
             duracion_h: d.duracion_ida ? d.duracion_ida / 60 : null,
             aerolinea: d.aerolinea,
-            opciones: Array.isArray(d.opciones) ? d.opciones : [],
+            // Lo mejor de cada mes, que el endpoint ya tenia consultado y
+            // tiraba. De aqui sale "en marzo sale mas barato".
+            porMes: Array.isArray(d.porMes) ? d.porMes : [],
+            esDeTuFecha: !!d.esDeTuFecha,
           },
         }));
       } else {
@@ -934,7 +945,7 @@ export default function PlanRuta({
             <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-900/20">
               <div className="text-[13px] font-bold text-emerald-900 dark:text-emerald-200">
                 {t("rutaMejorFechaTit")
-                  .replace("{fecha}", fmtDia(mejorFecha.ida))
+                  .replace("{mes}", fmtMes(mejorFecha.mes))
                   .replace("{ahorro}", fmtVista(mejorFecha.ahorro))}
               </div>
               <p className="mt-0.5 text-[12px] leading-relaxed text-emerald-800 dark:text-emerald-300">
@@ -942,7 +953,11 @@ export default function PlanRuta({
               </p>
               <button
                 type="button"
-                onClick={() => { setFechaIda(mejorFecha.ida); track("ruta_fecha_barata", { fecha: mejorFecha.ida }); }}
+                onClick={() => {
+                  setMesInicio(mejorFecha.mes);
+                  setFechaIda("");
+                  track("ruta_mes_barato", { mes: mejorFecha.mes });
+                }}
                 className="mt-2 rounded-full bg-emerald-700 px-3.5 py-1.5 text-[12.5px] font-bold text-white transition hover:bg-emerald-800"
               >
                 {t("rutaMejorFechaUsar")}

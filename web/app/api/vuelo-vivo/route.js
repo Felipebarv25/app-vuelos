@@ -39,29 +39,29 @@ function proximosMeses(n = 6) {
   return out;
 }
 
-async function consultar(origen, destino, mes, token, marker) {
+async function consultar(origen, destino, cuando, token, marker) {
   const url = new URL(BASE);
   url.searchParams.set("origin", origen);
   url.searchParams.set("destination", destino);
-  url.searchParams.set("departure_at", mes);
-  url.searchParams.set("return_at", mes);
+  // `cuando` es un mes ("2027-05") o un dia ("2027-05-12"). La API acepta los
+  // dos en el mismo parametro: con el mes devuelve la mejor tarifa del mes,
+  // con el dia la de ese dia.
+  url.searchParams.set("departure_at", cuando);
+  url.searchParams.set("return_at", cuando.slice(0, 7));
   url.searchParams.set("currency", "usd");
   url.searchParams.set("sorting", "price");
   url.searchParams.set("one_way", "false");
-  // TREINTA, no una.
+  // limit=1 a proposito, y probado.
   //
-  // Se pedia limit=1: la tarifa mas barata del mes y nada mas. Pero la misma
-  // llamada puede traer hasta 30 salidas del mes CON SU FECHA, y eso es
-  // exactamente lo que hace falta para dos cosas que faltaban:
+  // Intente subirlo a 30 para sacar las salidas dia a dia del mes en una sola
+  // llamada. NO funciona: con `departure_at` en formato MES ("2027-05") la API
+  // devuelve UNA fila — la mas barata de ese mes — por mucho limite que pidas.
+  // Comprobado contra produccion: opciones devueltas = 1.
   //
-  //   · cotizar un rango de fechas concreto (se filtra la lista, no se
-  //     consulta 15 veces)
-  //   · recomendar cuando salir mas barato dentro del mes
-  //
-  // Cuesta lo mismo en cuota — una llamada es una llamada — y evita las ~15
-  // consultas por tramo que haria falta si se pidiera dia por dia. El detector
-  // ya usaba limit=30 por este motivo; aqui se habia quedado en 1.
-  url.searchParams.set("limit", "30");
+  // Para tener el precio de un DIA concreto hay que preguntar por ese dia
+  // (`fecha`, mas abajo), una llamada por dia. Por eso el precio exacto se
+  // pide bajo demanda y no se barre el rango entero.
+  url.searchParams.set("limit", "1");
   url.searchParams.set("token", token);
 
   try {
@@ -71,10 +71,8 @@ async function consultar(origen, destino, mes, token, marker) {
     clearTimeout(t);
     if (!r.ok) return null;
     const data = await r.json();
-    const filas = (data.data || []).filter((f) => Number(f.price) > 0);
-    if (!filas.length) return null;
-    // La lista viene ordenada por precio: la primera es la mas barata del mes.
-    const fila = filas[0];
+    const fila = (data.data || []).find((f) => Number(f.price) > 0);
+    if (!fila) return null;
     const precio = Number(fila.price);
     let link = "https://www.aviasales.com" + (fila.link || "");
     if (marker) {
@@ -95,25 +93,11 @@ async function consultar(origen, destino, mes, token, marker) {
       origen,
       destino,
       aerolinea: fila.airline || "—",
-      fecha_ida: (fila.departure_at || mes).slice(0, 10),
+      fecha_ida: (fila.departure_at || cuando).slice(0, 10),
       fecha_vuelta: (fila.return_at || "").slice(0, 10),
       link,
       escalas_ida: escIda,
       escalas_vuelta: escVuelta,
-      // TODAS las salidas del mes, para poder filtrar por rango de fechas y
-      // para decir cuando sale mas barato. Se recortan a lo imprescindible:
-      // treinta filas completas por tramo hincharian la respuesta sin motivo.
-      opciones: filas.slice(0, 30).map((f) => ({
-        precio: Number(f.price),
-        ida: (f.departure_at || "").slice(0, 10),
-        vuelta: (f.return_at || "").slice(0, 10),
-        aerolinea: f.airline || "",
-        escalas: Number.isFinite(Number(f.transfers)) ? Number(f.transfers) : null,
-      })).filter((f) => f.ida),
-      // Minutos de vuelo por tramo. La API los manda y aqui se descartaban,
-      // igual que hacia el detector: sin ellos no se puede comparar "mas
-      // barato" contra "mas rapido". Si faltan, quedan null y la tarjeta
-      // simplemente no muestra la duracion.
       duracion_ida: Number.isFinite(Number(fila.duration_to)) ? Number(fila.duration_to) : null,
       duracion_vuelta: Number.isFinite(Number(fila.duration_back)) ? Number(fila.duration_back) : null,
     };
@@ -140,6 +124,12 @@ export async function GET(req) {
     .slice(0, 3);
   const origenes = origenesParsed.length ? origenesParsed : ORIGENES_DEFAULT;
 
+  // Dia exacto, opcional. Si viene, se pregunta SOLO por ese dia: una llamada,
+  // no un barrido del rango. Barrer quince dias por tramo son quince consultas
+  // y la cuota de Travelpayouts no da para eso en cada recalculo.
+  const fecha = (searchParams.get("fecha") || "").trim();
+  const diaExacto = /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : null;
+
   const token = process.env.TRAVELPAYOUTS_TOKEN;
   if (!token) {
     return Response.json(
@@ -155,12 +145,14 @@ export async function GET(req) {
   const destinos = /^[A-Z]{3}$/.test(iata2) ? [iata, iata2] : [iata];
 
   // Combinaciones origen × destino × mes en paralelo. Tope ~36 llamadas (3 × 2 × 6).
-  const meses = proximosMeses(6);
+  // Con dia exacto se pregunta por ese dia y ya. Sin el, los proximos seis
+  // meses, que es lo que permite decir en cual sale mas barato.
+  const cuandos = diaExacto ? [diaExacto] : proximosMeses(6);
   const tareas = [];
   for (const o of origenes) {
     for (const d of destinos) {
-      for (const m of meses) {
-        tareas.push(consultar(o, d, m, token, marker));
+      for (const c of cuandos) {
+        tareas.push(consultar(o, d, c, token, marker));
       }
     }
   }
@@ -176,8 +168,25 @@ export async function GET(req) {
   resultados.sort((a, b) => a.precio - b.precio);
   const mejor = resultados[0];
 
+  // LO MEJOR DE CADA MES, que antes se tiraba.
+  //
+  // Ya se consultaban seis meses y solo se devolvia el ganador: los otros
+  // cinco resultados — pagados, en cuota ya gastada — iban a la basura. Con
+  // ellos se puede decir "en marzo sale a US$740 y en mayo a US$889", que es
+  // justo la recomendacion de cuando viajar mas barato, sin una sola llamada
+  // extra.
+  const porMes = [];
+  for (const r of resultados) {
+    const mes = (r.fecha_ida || "").slice(0, 7);
+    if (!mes) continue;
+    const ya = porMes.find((x) => x.mes === mes);
+    if (!ya) porMes.push({ mes, precio: r.precio, fecha_ida: r.fecha_ida, aerolinea: r.aerolinea });
+    else if (r.precio < ya.precio) Object.assign(ya, { precio: r.precio, fecha_ida: r.fecha_ida, aerolinea: r.aerolinea });
+  }
+  porMes.sort((a, b) => a.mes.localeCompare(b.mes));
+
   return new Response(
-    JSON.stringify({ encontrado: true, ...mejor, visto: new Date().toISOString() }),
+    JSON.stringify({ encontrado: true, ...mejor, porMes, esDeTuFecha: !!diaExacto, visto: new Date().toISOString() }),
     {
       status: 200,
       headers: {
