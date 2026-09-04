@@ -1058,6 +1058,7 @@ export default function PlanRuta({
               placeholder={t("rutaBuscarCiudad")}
               ariaLabel={t("rutaBuscarCiudad")}
               lang={lang}
+              t={t}
             />
           </div>
 

@@ -8,13 +8,18 @@ import IndiceFavoritos from "./IndiceFavoritos";
 import BuscadorDestinos from "@/components/BuscadorDestinos";
 import BotonVolver from "@/components/BotonVolver";
 import NavTop from "@/components/NavTop";
+import Bandera from "@/components/Bandera";
 
 const SITIO = "https://anduve-app.vercel.app";
 
+// Los iconos de region son GLOBOS y no banderas a proposito: Segoe UI Emoji
+// (Windows) no trae banderas, asi que Europa se veia "eu Europa". Los globos
+// si estan en la fuente. Europa comparte globo con Africa, que es literalmente
+// el mismo hemisferio.
 const REGIONES_META = {
   sudamerica: { titulo: "Sudamérica", emoji: "🌎" },
   norteamerica: { titulo: "Norte y Centroamérica", emoji: "🌎" },
-  europa: { titulo: "Europa", emoji: "🇪🇺" },
+  europa: { titulo: "Europa", emoji: "🌍" },
   asia: { titulo: "Asia", emoji: "🌏" },
   africa: { titulo: "África", emoji: "🌍" },
   oceania: { titulo: "Oceanía", emoji: "🌏" },
@@ -157,7 +162,7 @@ export default function IndiceDestinos() {
                     href={`/destino/${d.slug}`}
                     className="group flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-suave transition hover:-translate-y-0.5 hover:shadow-media"
                   >
-                    <span className="text-3xl">{d.bandera}</span>
+                    <Bandera cc={d.iso} size={30} />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-base font-extrabold text-marca-900 group-hover:text-marca-600 dark:text-marca-300 dark:group-hover:text-marca-400">
                         {d.ciudad}

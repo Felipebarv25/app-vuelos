@@ -26,6 +26,7 @@ import { PAISES_ORIGEN, PAISES_ORDEN, PAIS_DEFAULT, paisValido, nombreDeIATA } f
 import SelectorAeropuerto, { banderaDePais } from "./SelectorAeropuerto";
 import SelectorCiudad from "./SelectorCiudad";
 import { obtenerGeo } from "@/lib/geo";
+import Bandera from "@/components/Bandera";
 
 // Módulo "¿Adónde puedo ir con mi presupuesto?".
 // Dos modos:
@@ -634,6 +635,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                 onChange={elegirAeropuerto}
                 placeholder={t("presupSalesDesdePlaceholder") || "Escribe tu país y ciudad"}
                 ariaLabel={t("presupSalesDesde")}
+                t={t}
               />
               {detectorCubre ? (
                 <div className="mt-1.5 text-[11px] text-slate-500">
@@ -1005,7 +1007,7 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
                       className="flex cursor-pointer items-center gap-3"
                       onClick={() => setDetalle(detalle === llaveCiudad(d) ? null : llaveCiudad(d))}
                     >
-                      <span className="text-2xl">{d.bandera}</span>
+                      <Bandera cc={d.iso} size={24} />
                       <div className="flex-1">
                         <div className="flex items-center gap-2 font-bold">
                           {d.ciudad}
@@ -1407,7 +1409,7 @@ function RutaCard({
               {ciudades.map((c) => c.ciudad).join(" → ")}
             </div>
           </div>
-          <span className="text-2xl">{ciudades[0]?.bandera}</span>
+          <Bandera cc={ciudades[0]?.iso} size={24} />
         </div>
         <div className="mt-2 flex gap-4 text-[12.5px] text-slate-500">
           <span><b className="text-slate-700">{ciudades.length}</b> {t("presupRutaCiudades")}</span>
@@ -1452,7 +1454,7 @@ function RutaCard({
               >
                 <div className="flex-1">
                   <div className="font-bold text-slate-800 group-hover:text-marca-600">
-                    {c.bandera} {c.ciudad}
+                    <Bandera cc={c.iso} size={16} className="mr-1" />{c.ciudad}
                   </div>
                   <div className="text-xs text-slate-500">{c.pais}</div>
                 </div>

@@ -266,6 +266,29 @@ export const HUB_DESEMPATE = new Set([
 // "Tocumen", LHR es "London". Se usa para MOSTRAR y tambien para buscar, asi
 // que lo que se ve en la lista siempre se puede escribir.
 export const ETIQUETA_CIUDAD = {
+  // --- Tildes que el catalogo IATA no trae ---------------------------
+  // aeropuertos.json viene de un dataset en ASCII: TODOS los nombres van
+  // sin tildes, asi que el selector mostraba Bogota, Cucuta y Sao Paulo.
+  // No se arregla el JSON entero (6987 aeropuertos, y no hay forma de
+  // acentuar a ciegas los de medio mundo): se corrigen aqui los que este
+  // publico escribe de verdad. La busqueda normaliza sin tildes, asi que
+  // escribir bogota sigue encontrando Bogota.
+  "APO": "Apartadó",
+  "ADZ": "San Andrés",
+  "ASU": "Asunción",
+  "BOG": "Bogotá",
+  "CUC": "Cúcuta",
+  "CUN": "Cancún",
+  "GIG": "Río de Janeiro",
+  "GRU": "São Paulo",
+  "IBE": "Ibagué",
+  "MTR": "Montería",
+  "PPN": "Popayán",
+  "SJO": "San José",
+  "UIB": "Quibdó",
+  // El catalogo llama SAL Santa Clara (el municipio), pero el aeropuerto
+  // sirve a la capital y es como lo vende cualquier aerolinea.
+  "SAL": "San Salvador",
   "ARN": "Estocolmo",
   "ATH": "Atenas",
   "AUH": "Abu Dabi",

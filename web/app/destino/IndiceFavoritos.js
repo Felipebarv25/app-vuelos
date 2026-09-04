@@ -7,6 +7,7 @@ import { useApp } from "@/lib/AppContext";
 import { useFavoritos } from "@/lib/favoritos";
 import { DESTINOS_SEO } from "@/lib/destinos";
 import { Icono } from "@/components/Icono";
+import Bandera from "@/components/Bandera";
 
 export default function IndiceFavoritos() {
   const { usuario } = useApp();
@@ -40,7 +41,7 @@ export default function IndiceFavoritos() {
             href={`/destino/${d.slug}`}
             className="flex items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50/50 p-3.5 transition hover:border-rose-200 hover:bg-rose-50 dark:border-rose-900/40 dark:bg-rose-900/10 dark:hover:border-rose-800 dark:hover:bg-rose-900/20"
           >
-            <span className="text-2xl">{d.bandera}</span>
+            <Bandera cc={d.iso} size={24} />
             <div className="min-w-0 flex-1">
               <div className="truncate text-[14.5px] font-extrabold text-marca-900 dark:text-marca-300">
                 {d.ciudad}

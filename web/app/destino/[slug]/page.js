@@ -234,7 +234,7 @@ export default async function PaginaDestino({ params }) {
           )}
           <div className="relative mx-auto flex h-full max-w-4xl flex-col justify-end px-6 pb-8 pt-12 text-white">
             <div className="flex items-center gap-3 text-[13px] font-semibold uppercase tracking-[0.18em] text-white/85">
-              <span className="text-3xl">{d.bandera}</span>
+              <Bandera cc={d.iso} size={30} />
               <span>Viaja a {d.pais}</span>
             </div>
             <h1 className="mt-2 text-4xl font-extrabold tracking-tight drop-shadow-md sm:text-5xl">
@@ -261,7 +261,7 @@ export default async function PaginaDestino({ params }) {
       ) : (
         <header className="mx-auto max-w-4xl px-6 pb-6 pt-6">
           <div className="flex items-center gap-3 text-[14px] font-semibold uppercase tracking-[0.18em] text-marca-500 dark:text-marca-400">
-            <span className="text-3xl">{d.bandera}</span>
+            <Bandera cc={d.iso} size={30} />
             <span>Viaja a {d.pais}</span>
             <FavToggle slug={slug} />
           </div>
@@ -632,7 +632,7 @@ function OtrosDestinos({ region, actualSlug }) {
             href={`/destino/${o.slug}`}
             className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-3 transition hover:border-marca-200 hover:bg-marca-50 dark:hover:border-marca-700 dark:hover:bg-marca-900/30"
           >
-            <span className="text-2xl">{o.bandera}</span>
+            <Bandera cc={o.iso} size={24} />
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13.5px] font-bold text-marca-900 dark:text-marca-300">{o.ciudad}</div>
               <div className="truncate text-[11.5px] text-slate-500">desde US$ {o.vuelo}</div>

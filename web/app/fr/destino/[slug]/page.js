@@ -110,7 +110,7 @@ export default async function DestinoFr({ params }) {
           <FavToggle slug={slug} conFoto={true} />
           <div className="relative mx-auto flex h-full max-w-4xl flex-col justify-end px-6 pb-8 pt-12 text-white">
             <div className="flex items-center gap-3 text-[13px] font-semibold uppercase tracking-[0.18em] text-white/85">
-              <span className="text-3xl">{d.bandera}</span><span>Voyage à {d.pais}</span>
+              <Bandera cc={d.iso} size={30} /><span>Voyage à {d.pais}</span>
             </div>
             <h1 className="mt-2 text-4xl font-extrabold tracking-tight drop-shadow-md sm:text-5xl">Voyage à {d.ciudad}</h1>
             <Link href={`/?destino=${slug}`} className="mt-4 inline-flex w-fit items-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-base font-bold text-marca-700 shadow-marca transition hover:brightness-105">🗺️ Planifier mon voyage à {d.ciudad}</Link>
@@ -119,7 +119,7 @@ export default async function DestinoFr({ params }) {
       ) : (
         <header className="mx-auto max-w-4xl px-6 pb-6 pt-6">
           <div className="flex items-center gap-3 text-[14px] font-semibold uppercase tracking-[0.18em] text-marca-500">
-            <span className="text-3xl">{d.bandera}</span><span>Voyage à {d.pais}</span><FavToggle slug={slug} />
+            <Bandera cc={d.iso} size={30} /><span>Voyage à {d.pais}</span><FavToggle slug={slug} />
           </div>
           <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-marca-900 sm:text-5xl">Voyage à {d.ciudad}</h1>
           <Link href={`/?destino=${slug}`} className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-marca-500 to-marca-600 px-6 py-3.5 text-base font-bold text-white shadow-marca transition hover:brightness-105">🗺️ Planifier mon voyage à {d.ciudad}</Link>

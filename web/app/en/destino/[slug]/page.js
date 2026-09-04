@@ -169,7 +169,7 @@ export default async function DestinationPage({ params }) {
           <FavToggle slug={slug} conFoto={true} />
           <div className="relative mx-auto flex h-full max-w-4xl flex-col justify-end px-6 pb-8 pt-12 text-white">
             <div className="flex items-center gap-3 text-[13px] font-semibold uppercase tracking-[0.18em] text-white/85">
-              <span className="text-3xl">{d.bandera}</span>
+              <Bandera cc={d.iso} size={30} />
               <span>Travel to {d.pais}</span>
             </div>
             <h1 className="mt-2 text-4xl font-extrabold tracking-tight drop-shadow-md sm:text-5xl">
@@ -183,7 +183,7 @@ export default async function DestinationPage({ params }) {
       ) : (
         <header className="mx-auto max-w-4xl px-6 pb-6 pt-6">
           <div className="flex items-center gap-3 text-[14px] font-semibold uppercase tracking-[0.18em] text-marca-500">
-            <span className="text-3xl">{d.bandera}</span>
+            <Bandera cc={d.iso} size={30} />
             <span>Travel to {d.pais}</span>
             <FavToggle slug={slug} />
           </div>

@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { DESTINOS_SEO } from "@/lib/destinos";
 import NavTop from "@/components/NavTop";
+import Bandera from "@/components/Bandera";
 
 const SITIO = "https://anduve-app.vercel.app";
 
@@ -71,7 +72,7 @@ export default function DestinosIndexEn() {
                   href={`/en/destino/${d.slug}`}
                   className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-3 transition hover:border-marca-200 hover:bg-marca-50"
                 >
-                  <span className="text-2xl">{d.bandera}</span>
+                  <Bandera cc={d.iso} size={24} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[13.5px] font-bold text-marca-900">{d.ciudad}</div>
                     <div className="truncate text-[11.5px] text-slate-500">from US$ {d.vuelo}</div>

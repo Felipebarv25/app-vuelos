@@ -778,7 +778,7 @@ export default function PaginaMisViajes() {
                         className={`absolute inset-0 bg-gradient-to-br ${GRADS[i % GRADS.length]} transition-transform duration-500 group-hover:scale-110`}
                       />
                       <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-white">
-                        <span className="text-2xl">{d.bandera}</span>
+                        <Bandera cc={d.iso} size={24} />
                         <span className="mt-1.5 text-[14px] font-extrabold drop-shadow">
                           {d.ciudad}
                         </span>

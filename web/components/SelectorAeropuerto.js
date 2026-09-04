@@ -61,11 +61,6 @@ async function cargarCatalogo() {
 }
 
 // Normaliza para búsqueda: minúsculas + sin tildes.
-// Este componente no recibe `t`: se apana con `lang`, igual que ya hace con
-// nombrePais(cc, lang). Sus otros textos siguen en espanol a pelo
-// ("Ningun aeropuerto coincide", el placeholder) — deuda anterior a esto, no
-// la arreglo de paso para no ensanchar el cambio.
-const SIN_APT = { es: "sin aeropuerto", en: "no airport", pt: "sem aeroporto", fr: "sans aéroport" };
 
 function norm(s) {
   return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -228,8 +223,8 @@ function buscarPaises(paises, q, limite = 100) {
 // se leia literalmente "co Colombia" (reportado por el usuario viendo el
 // planificador). Dentro de un input no cabe una imagen, asi que el texto se
 // queda limpio y la bandera se dibuja superpuesta al lado.
-function etiquetaPais(codigo, lang) {
-  if (!codigo) return "Todo el mundo";
+function etiquetaPais(codigo, lang, t) {
+  if (!codigo) return t("aptTodoElMundo");
   return nombrePais(codigo, lang);
 }
 
@@ -237,8 +232,9 @@ export default function SelectorAeropuerto({
   value, // iata seleccionado (string)
   paisInicial = "", // ISO 2-letras opcional para pre-filtrar
   onChange, // (aeropuerto | null) => void
-  placeholder = "Ciudad, aeropuerto o IATA…",
+  placeholder,
   ariaLabel,
+  t = (k) => k,
   className = "",
   lang = "es",
   // filtroPais=false: modo BUSQUEDA LIBRE, sin el campo de pais y sin quedarse
@@ -305,7 +301,7 @@ export default function SelectorAeropuerto({
   // filtro (a menos que el usuario esté tipeando activamente en él).
   useEffect(() => {
     if (!abiertoPais) {
-      setTextoPais(etiquetaPais(paisFiltro, lang));
+      setTextoPais(etiquetaPais(paisFiltro, lang, t));
     }
   }, [paisFiltro, lang, abiertoPais]);
 
@@ -317,7 +313,7 @@ export default function SelectorAeropuerto({
         setAbiertoPais(false);
         // Si el usuario cerró sin elegir, revierte el texto a la etiqueta
         // del país seleccionado actual.
-        setTextoPais(etiquetaPais(paisFiltro, lang));
+        setTextoPais(etiquetaPais(paisFiltro, lang, t));
       }
     }
     document.addEventListener("mousedown", onDoc);
@@ -338,14 +334,14 @@ export default function SelectorAeropuerto({
   // está abierto y el texto no es la etiqueta del país ya elegido).
   const paisesFiltrados = useMemo(() => {
     if (!paisesDisponibles.length) return [];
-    const etiquetaActual = etiquetaPais(paisFiltro, lang);
+    const etiquetaActual = etiquetaPais(paisFiltro, lang, t);
     // Si lo que está escrito coincide con la etiqueta del país actual,
     // mostramos toda la lista (para que puedan navegar).
     // Ya no hace falta despegar emojis: etiquetaPais() devuelve solo el nombre.
     const queryReal = textoPais === etiquetaActual ? "" : textoPais.trim();
     const base = buscarPaises(paisesDisponibles, queryReal, 100);
     // Prepend "Todo el mundo" como opción explícita.
-    return [{ codigo: "", nombre: "Todo el mundo" }, ...base];
+    return [{ codigo: "", nombre: t("aptTodoElMundo") }, ...base];
   }, [paisesDisponibles, textoPais, paisFiltro, lang]);
 
   // Aeropuertos filtrados.
@@ -415,7 +411,7 @@ export default function SelectorAeropuerto({
   // --- handlers país ---
   function elegirPais(codigo) {
     setPaisFiltro(codigo);
-    setTextoPais(etiquetaPais(codigo, lang));
+    setTextoPais(etiquetaPais(codigo, lang, t));
     setAbiertoPais(false);
     setResaltadoPais(0);
 
@@ -453,7 +449,7 @@ export default function SelectorAeropuerto({
       if (p) elegirPais(p.codigo);
     } else if (e.key === "Escape") {
       setAbiertoPais(false);
-      setTextoPais(etiquetaPais(paisFiltro, lang));
+      setTextoPais(etiquetaPais(paisFiltro, lang, t));
     }
   }
 
@@ -462,7 +458,7 @@ export default function SelectorAeropuerto({
     setTexto(`${a.ciudad} (${a.iata})`);
     if (filtroPais) {
       setPaisFiltro(a.pais);
-      setTextoPais(etiquetaPais(a.pais, lang));
+      setTextoPais(etiquetaPais(a.pais, lang, t));
     }
     setAbierto(false);
     onChange?.({
@@ -532,7 +528,7 @@ export default function SelectorAeropuerto({
         {/* Bandera del pais elegido, superpuesta sobre el hueco que deja el
             padding izquierdo del input. Se oculta mientras el usuario escribe,
             para no dejar una bandera que ya no corresponde al texto. */}
-        {paisFiltro && textoPais === etiquetaPais(paisFiltro, lang) && (
+        {paisFiltro && textoPais === etiquetaPais(paisFiltro, lang, t) && (
           <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2">
             <Bandera cc={paisFiltro} size={18} />
           </span>
@@ -541,7 +537,7 @@ export default function SelectorAeropuerto({
           ref={paisInputRef}
           type="text"
           value={textoPais}
-          aria-label="País de salida"
+          aria-label={t("aptPaisSalida")}
           aria-autocomplete="list"
           aria-expanded={abiertoPais}
           autoComplete="off"
@@ -557,7 +553,7 @@ export default function SelectorAeropuerto({
           }}
           onKeyDown={onKeyPais}
           className={`w-full rounded-xl border-2 border-slate-200 bg-white py-2.5 pr-3 text-[16px] sm:text-[14px] font-semibold text-marca-900 outline-none focus:border-marca-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 ${
-            paisFiltro && textoPais === etiquetaPais(paisFiltro, lang) ? "pl-10" : "pl-3"
+            paisFiltro && textoPais === etiquetaPais(paisFiltro, lang, t) ? "pl-10" : "pl-3"
           }`}
         />
         {abiertoPais && paisesFiltrados.length > 0 && (
@@ -586,7 +582,7 @@ export default function SelectorAeropuerto({
         )}
         {abiertoPais && paisesFiltrados.length === 0 && (
           <div className="absolute left-0 right-0 top-full z-[6700] mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] text-slate-500 shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
-            Ningún país coincide
+            {t("aptSinPais")}
           </div>
         )}
       </div>
@@ -597,7 +593,11 @@ export default function SelectorAeropuerto({
           ref={inputRef}
           type="text"
           value={texto}
-          placeholder={paisFiltro ? `Buscar en ${nombrePais(paisFiltro, lang)}…` : placeholder}
+          placeholder={
+            paisFiltro
+              ? t("aptBuscarEn").replace("{pais}", nombrePais(paisFiltro, lang))
+              : placeholder || t("aptPlaceholder")
+          }
           aria-label={ariaLabel}
           aria-autocomplete="list"
           aria-expanded={abierto}
@@ -672,7 +672,7 @@ export default function SelectorAeropuerto({
                     </div>
                   </div>
                   <span className="shrink-0 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                    {SIN_APT[lang] || SIN_APT.es}
+                    {t("aptSinApt")}
                   </span>
                 </li>
               )
@@ -681,7 +681,9 @@ export default function SelectorAeropuerto({
         )}
         {abierto && texto.length >= 2 && resultados.length === 0 && catalogo.length > 0 && (
           <div className="absolute left-0 right-0 top-full z-[6500] mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] text-slate-500 shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
-            Ningún aeropuerto coincide{paisFiltro ? ` en ${nombrePais(paisFiltro, lang)}` : ""}
+            {paisFiltro
+              ? t("aptSinAeropuertoEn").replace("{pais}", nombrePais(paisFiltro, lang))
+              : t("aptSinAeropuerto")}
           </div>
         )}
       </div>

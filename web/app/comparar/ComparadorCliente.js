@@ -9,6 +9,7 @@ import { DESTINOS_SEO, nombreDestino } from "@/lib/destinos";
 import { datosSeoDe } from "@/lib/seoDestinos";
 import { Icono } from "@/components/Icono";
 import SelectorCiudad from "@/components/SelectorCiudad";
+import Bandera from "@/components/Bandera";
 
 const SLOTS = 3;
 
@@ -83,7 +84,7 @@ export default function ComparadorCliente() {
               />
               {d && (
                 <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-marca-50 p-3 dark:bg-marca-900/30">
-                  <span className="text-3xl">{d.bandera}</span>
+                  <Bandera cc={d.iso} size={30} />
                   <div className="min-w-0">
                     <div className="truncate text-base font-extrabold text-marca-900 dark:text-marca-300">
                       {d.ciudad}

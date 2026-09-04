@@ -456,6 +456,7 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
             placeholder={t("ofertasBuscarCiudad")}
             ariaLabel={t("ofertasBuscarCiudad")}
             lang={lang}
+            t={t}
           />
           {destinoSel && (
             <button

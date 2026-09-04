@@ -12,6 +12,7 @@
 // que iOS no haga zoom al enfocar, y alto de lista adaptable al teclado.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DESTINOS_PRESUPUESTO } from "@/lib/presupuesto";
+import Bandera from "@/components/Bandera";
 
 const norm = (s) =>
   (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
@@ -168,7 +169,7 @@ export default function SelectorCiudad({
                   : "text-slate-700 dark:text-slate-200"
               }`}
             >
-              <span className="text-base" aria-hidden>{d.bandera}</span>
+              <Bandera cc={d.iso} size={16} />
               <span className="truncate font-semibold">{d.ciudad}</span>
               <span className="truncate text-slate-400">· {d.pais}</span>
             </li>
