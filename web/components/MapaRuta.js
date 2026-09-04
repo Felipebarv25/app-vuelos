@@ -40,6 +40,20 @@ const ESTILO = {
   },
   layers: [
     {
+      // MAR DE FONDO, debajo de todo.
+      //
+      // Con renderWorldCopies:false — que es lo que quito el mundo triplicado
+      // — fuera de los limites del planeta no hay nada que pintar, y al alejar
+      // el zoom aparecian cunas blancas en las esquinas de arriba. Un lienzo
+      // sin pintar se lee como un fallo.
+      //
+      // El color es el del agua de OSM, para que el borde del oceano con el
+      // vacio no se note: el mapa acaba en mar y el fondo tambien es mar.
+      id: "fondo",
+      type: "background",
+      paint: { "background-color": "#a8d8ea" },
+    },
+    {
       id: "base",
       type: "raster",
       source: "base",
@@ -101,6 +115,18 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
           style: ESTILO,
           center: [puntos[0].lon, puntos[0].lat],
           zoom: 3,
+          // INCLINADO DE ENTRADA.
+          //
+          // Plano se lee como un plano; inclinado se lee como un globo, y la
+          // ruta cruzando el oceano se ve ir hacia el horizonte. El usuario lo
+          // encontro girandolo a mano y pidio que fuera asi al abrir.
+          //
+          // 48 grados y no el maximo: pasados los 55 el fondo raster se
+          // desenfoca en la distancia y el horizonte se come media tarjeta.
+          // Sigue siendo el punto de partida, no una jaula: se puede enderezar
+          // arrastrando con el boton derecho.
+          pitch: 48,
+          bearing: -12,
           cooperativeGestures: true,
           // El mundo NO se repite. Al alejar el zoom, maplibre pinta copias del
           // planeta a los lados: se veian TRES mundos con la ruta dibujada tres
@@ -206,7 +232,15 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
       if (puntos.length > 1) {
         const b = new maplibregl.LngLatBounds();
         puntos.forEach((p) => b.extend([p.lon, p.lat]));
-        mapa.fitBounds(b, { padding: 56, maxZoom: 8, duration: 600 });
+        // fitBounds conserva la inclinacion si no se le pasa otra, pero se
+        // deja explicito para que nadie la pierda sin darse cuenta.
+        mapa.fitBounds(b, {
+          padding: 56,
+          maxZoom: 8,
+          duration: 600,
+          pitch: mapa.getPitch(),
+          bearing: mapa.getBearing(),
+        });
       } else {
         mapa.flyTo({ center: [puntos[0].lon, puntos[0].lat], zoom: 5, duration: 600 });
       }

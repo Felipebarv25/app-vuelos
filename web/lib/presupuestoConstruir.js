@@ -167,7 +167,7 @@ export function construirPresupuesto({
         id: "equipaje",
         concepto:
           nv.clave === "mochilero"
-            ? "Equipaje (solo de mano)"
+            ? "Equipaje facturado (1 maleta)"
             : nv.clave === "comodo"
             ? "Equipaje facturado (2 maletas + asiento)"
             : "Equipaje facturado",
@@ -177,11 +177,11 @@ export function construirPresupuesto({
         formula:
           nv.equipaje > 0
             ? `${fmt(nv.equipaje)} ida y vuelta × ${n}`
-            : "Viajar con lo de mano, nivel mochilero",
+            : "Sin maleta facturada",
         fuente:
           nv.equipaje > 0
             ? "Base típica de equipaje facturado en vuelo de largo radio"
-            : "En el nivel mochilero no se factura maleta",
+            : "Sin equipaje facturado en este nivel",
         nota:
           nv.equipaje > 0
             ? "Si viajas solo con equipaje de mano, pon 0."
@@ -270,7 +270,7 @@ export function construirPresupuesto({
     const porNoche = Math.round(dia * REPARTO_DIARIO.hospedaje * nv.hospedaje);
     const tipoHospedaje =
       nv.clave === "mochilero"
-        ? "Hostal o dormitorio"
+        ? "Habitación privada sencilla"
         : nv.clave === "comodo"
         ? "Hotel 4-5★"
         : "Hotel 3★ o apartamento";
@@ -344,9 +344,9 @@ export function construirPresupuesto({
     // justo el que un factor unico castigaria mas.
     const detalleNivel = {
       mochilero: {
-        comida: "Mercado, comida de calle y cocinar",
-        local: "Metro y bus, sin taxis",
-        activ: "Lo gratis primero, alguna entrada",
+        comida: "Menú del día y comida local",
+        local: "Transporte público, algún taxi",
+        activ: "Lo gratis primero, con sus entradas",
       },
       medio: {
         comida: "Mezcla de restaurante y supermercado",
@@ -398,7 +398,7 @@ export function construirPresupuesto({
       formula: `${diasTotal} días × ${fmt(nv.seguroDia)} × ${n}`,
       fuente:
         nv.clave === "mochilero"
-          ? "Seguro básico: cobertura médica mínima Schengen"
+          ? "Seguro básico: cobertura médica Schengen"
           : nv.clave === "comodo"
           ? "Seguro amplio: cancelación, equipaje y cobertura alta"
           : "Base típica de seguro de viaje internacional",
@@ -418,7 +418,7 @@ export function construirPresupuesto({
       formula: `${fmt(nv.esim)} × ${n}`,
       fuente:
         nv.clave === "mochilero"
-          ? "Plan de datos mínimo, wifi donde se pueda"
+          ? "Plan de datos ajustado"
           : nv.clave === "comodo"
           ? "Plan de datos amplio, sin racionar"
           : "Base típica de plan de datos regional",

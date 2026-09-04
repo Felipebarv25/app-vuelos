@@ -253,29 +253,44 @@ export function montoUSD(linea, overrides = {}, porUsd = {}) {
 export const NIVELES = {
   mochilero: {
     clave: "mochilero",
-    // Hospedaje: dormitorio o hostal privado barato frente a un 3 estrellas.
-    hospedaje: 0.4,
-    // Comida: mercado, comida de calle y cocinar. No baja tanto como el
-    // hospedaje porque el ingrediente cuesta lo que cuesta.
-    comida: 0.55,
-    // Transporte local: metro y bus, igual que el medio pero sin taxis.
-    transporte: 0.75,
-    // Actividades: lo gratis primero, alguna entrada suelta.
-    actividades: 0.5,
+    // RECALIBRADO tras probarlo (feedback del usuario: "muy poco en hospedaje
+    // y sobre todo en alimentacion").
+    //
+    // Tenia razon, y el error era de encuadre. Los numeros de antes modelaban
+    // a un MOCHILERO literal: litera en dormitorio compartido y cocinar en el
+    // albergue. Ese viajero existe, pero es un perfil estrecho — y la etiqueta
+    // que ve el usuario dice "Economico", que casi nadie lee como "voy a
+    // dormir en litera": lo lee como "quiero gastar poco".
+    //
+    // Ahora el nivel modela a quien cuida el bolsillo pero duerme en su propio
+    // cuarto y come fuera barato. Es el perfil mayoritario del publico de esta
+    // app, y es lo que hace que la cifra sea creible en vez de inalcanzable.
+    //
+    // Habitacion privada sencilla o apartamento barato frente a un 3 estrellas.
+    // Antes 0,40, que era el precio de una litera.
+    hospedaje: 0.58,
+    // Menu del dia y comida local, no cocinar. Antes 0,55, que solo sale si
+    // compras en el super y te lo preparas: comer fuera barato cuesta mas.
+    comida: 0.7,
+    // Transporte publico, con algun taxi cuando toca.
+    transporte: 0.8,
+    // Lo gratis primero, pero sin renunciar a las entradas que valen la pena.
+    actividades: 0.6,
     // Tramos ESTIMADOS (los que no tienen precio real): bus y tren nocturno.
     tramoEstimado: 0.85,
     // Tasa turistica municipal: casi siempre escala con la categoria del hotel.
-    tasaTuristica: 0.6,
-    seguroDia: 1.5,
+    tasaTuristica: 0.75,
+    seguroDia: 1.8,
     esim: 12,
-    trasladoAeropuerto: 8,
-    lavanderiaPorCarga: 8,
-    // Equipaje: viajar con lo de mano es la norma, no un sacrificio.
-    equipaje: 0,
+    trasladoAeropuerto: 10,
+    lavanderiaPorCarga: 9,
+    // Una maleta facturada. Antes 0 — solo equipaje de mano —, que es una
+    // eleccion legitima pero no la norma de quien viaja quince dias.
+    equipaje: 40,
     // Sin mejora de clase.
     mejoraClase: 0,
     // Para filtrar el buscador de hoteles del enlace de reserva.
-    estrellas: 1,
+    estrellas: 2,
   },
   medio: {
     clave: "medio",
