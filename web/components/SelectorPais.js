@@ -55,7 +55,21 @@ function buscarPaises(query, lang) {
   return [...exactos.sort(cmp), ...prefijos.sort(cmp), ...contiene.sort(cmp)].slice(0, 30);
 }
 
-export default function SelectorPais({ value, onChange, className = "" }) {
+// `etiqueta` es la CLAVE de traduccion del rotulo, no el texto: el mismo
+// selector rotula "Precios saliendo de" en la portada y "tu pasaporte" en los
+// requisitos, y confundir esas dos cosas era justo lo que hacia leer el pais
+// de la portada y la ciudad del banner como si fueran el mismo dato.
+//
+// `tono` existe porque el boton nacio dentro del hero oscuro y se llevo el
+// blanco cableado. En RequisitosViaje, que es una tarjeta bg-white, eso
+// pintaba texto blanco sobre blanco: el nombre del pais era invisible.
+export default function SelectorPais({
+  value,
+  onChange,
+  className = "",
+  etiqueta = "selectorSaliendoDesde",
+  tono = "claro",
+}) {
   const { lang, t } = useApp();
   const [abierto, setAbierto] = useState(false);
   const [q, setQ] = useState("");
@@ -78,6 +92,12 @@ export default function SelectorPais({ value, onChange, className = "" }) {
       setTimeout(() => inputRef.current?.focus(), 0);
     }
   }, [abierto]);
+
+  const oscuro = tono === "oscuro";
+  const cTexto = oscuro
+    ? "text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
+    : "text-white/85 hover:text-white";
+  const cSuave = oscuro ? "text-slate-500 dark:text-slate-400" : "text-white/75";
 
   const resultados = useMemo(() => buscarPaises(q, lang || "es"), [q, lang]);
   const nombreActual = value ? nombrePaisMostrar(value, lang || "es") : "—";
@@ -109,20 +129,22 @@ export default function SelectorPais({ value, onChange, className = "" }) {
       <button
         type="button"
         onClick={() => setAbierto((v) => !v)}
-        className="group inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[12.5px] font-semibold text-white/85 underline-offset-2 outline-none transition hover:text-white"
+        className={`group inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[12.5px] font-semibold underline-offset-2 outline-none transition ${cTexto}`}
         aria-haspopup="listbox"
         aria-expanded={abierto}
+        aria-label={`${t(etiqueta)}: ${nombreActual}. ${t("selectorCambiar")}`}
+        title={`${t(etiqueta)} ${nombreActual} — ${t("selectorCambiar")}`}
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
           <circle cx="12" cy="10" r="3"></circle>
         </svg>
-        <span className="text-white/75">{t("selectorSaliendoDesde")}</span>
+        <span className={cSuave}>{t(etiqueta)}</span>
         <span className="inline-flex items-center gap-1.5">
           {value && <Bandera cc={value} size={18} />}
           <span className="font-bold">{nombreActual}</span>
         </span>
-        <span className="ml-0.5 text-[11.5px] font-medium text-white/75 underline-offset-2 group-hover:underline">{t("selectorCambiar")}</span>
+        <span className={`ml-0.5 text-[11.5px] font-medium underline-offset-2 group-hover:underline ${cSuave}`}>{t("selectorCambiar")}</span>
       </button>
 
       {abierto && (

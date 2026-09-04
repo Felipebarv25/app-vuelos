@@ -79,6 +79,17 @@ export default function Asesor({ t = (k) => k, usuario, onPlanear, onAbrirPresup
           )}
           <button
             onClick={() => { ocultarTip(); setAbierto(true); }}
+            /* El rotulo esta `hidden ... sm:inline`, asi que por debajo de
+               640 px este boton es un circulo con una brujula y NADA mas: sin
+               nombre accesible, sin tooltip y sin forma de saber que abre. Es
+               el unico flotante de la app y encima tapa contenido, o sea el
+               peor sitio para adivinar. El `aria-label` y el `title` van
+               siempre, tambien en escritorio: cuando el texto SI se ve, el
+               nombre accesible coincide con el visible, que es lo que pide
+               WCAG 2.5.3 (Label in Name). */
+            aria-label={t("asesorBoton")}
+            title={t("asesorBoton")}
+            aria-expanded={false}
             className={`relative flex items-center gap-2 rounded-full bg-gradient-to-r from-marca-500 to-marca-700 py-3.5 text-white shadow-[0_10px_30px_rgba(15,118,110,.45)] transition hover:brightness-110 ${tipVisible ? "animate-pulse" : ""} px-3.5 sm:px-5`}
           >
             <Icono nombre="compass" size={20} />
@@ -100,7 +111,7 @@ export default function Asesor({ t = (k) => k, usuario, onPlanear, onAbrirPresup
                     <div className="text-[11px] text-white/80">{t("asesorModoGuia")}</div>
                   </div>
                 </div>
-                <button onClick={() => setAbierto(false)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15"><Icono nombre="x" size={16} /></button>
+                <button onClick={() => setAbierto(false)} aria-label={t("cerrar")} title={t("cerrar")} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15"><Icono nombre="x" size={16} /></button>
               </div>
             </div>
 

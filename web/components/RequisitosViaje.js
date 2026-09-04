@@ -108,6 +108,7 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
               value={nacionalidad}
               onChange={(iso) => onNacionalidad?.(iso)}
               className="min-w-[190px]"
+              tono="oscuro"
             />
           </label>
 

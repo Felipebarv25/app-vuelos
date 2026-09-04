@@ -21,10 +21,14 @@ import SelectorMoneda from "@/components/SelectorMoneda";
 import SelectorPais from "@/components/SelectorPais";
 import { monedaDePais, simboloMoneda } from "@/lib/monedas";
 import CardDestino from "@/components/CardDestino";
-// MiniOfertas sigue fuera del home. Se probo devolverlo con la portada de
-// ofertas directas y no convencio: ocupaba mucho y decidia por el usuario.
-// La portada ahora son tres puertas y una de ellas lleva a /ofertas, que es
-// donde este componente vive de verdad.
+// MiniOfertas vuelve al home (2026-09), y la razon por la que salio en
+// 2026-06-29 es justo la que lo trae de vuelta: era REDUNDANTE con la entry
+// card "Vuelos baratos" de mas abajo. Lo que se quito entonces fue el lado
+// equivocado del duplicado. Las tres entry cards repetian las tres puertas
+// del hero — mismo destino, mismo CTA, tres veces la misma decision — y no
+// aportaban ni un dato. Estas tres tarjetas si: precios reales detectados
+// desde el pais del usuario. Se importa dinamico porque va bajo el pliegue
+// y pide ofertas.json.
 import { AfiliadosCiudad } from "@/components/Afiliados";
 import { listarViajesAsync, guardarViajeAsync, borrarViajeAsync } from "@/lib/viajes";
 import { LogoMarca } from "@/components/Logo";
@@ -45,6 +49,7 @@ const BottomTabBar = dynamic(() => import("@/components/BottomTabBar"), { ssr: f
 // Modales y bloques cargados sólo cuando el usuario los necesita. Salen del
 // bundle inicial (que pagan TODOS los visitantes, incluido el pre-login).
 // Cada uno se descarga al primer render condicional → mejora LCP/INP.
+const MiniOfertas = dynamic(() => import("@/components/MiniOfertas"));
 const Presupuesto = dynamic(() => import("@/components/Presupuesto"));
 const DetalleLugar = dynamic(() => import("@/components/DetalleLugar"));
 const RequisitosViaje = dynamic(() => import("@/components/RequisitosViaje"));
@@ -233,23 +238,30 @@ const PAIS_GENTILICIO = {
 // `onClick` se usa cuando la card debe disparar una accion en el cliente
 // (como abrir el modal de Presupuesto) en lugar de navegar. Si se pasa
 // onClick, renderiza como <button>; si no, como <Link>.
-function EntryCard({ href, onClick, icono, titulo, subtitulo, cta, bg }) {
-  const claseBase = "group relative block aspect-[3/4] w-full overflow-hidden rounded-xl text-left shadow-card transition hover:-translate-y-0.5 hover:shadow-modal sm:aspect-[5/6]";
+// `formato`: "alto" es la tarjeta vertical de toda la vida; "banda" es la
+// misma tarjeta tumbada, para cuando va sola y a lo ancho — una columna de
+// 3/4 en solitario queda como un hueco.
+function EntryCard({ href, onClick, icono, titulo, subtitulo, cta, bg, formato = "alto" }) {
+  const forma =
+    formato === "banda"
+      ? "h-32 sm:h-36"
+      : "aspect-[3/4] sm:aspect-[5/6]";
+  const claseBase = `group relative block w-full overflow-hidden rounded-2xl text-left shadow-card transition hover:-translate-y-0.5 hover:shadow-modal ${forma}`;
   if (onClick) {
     return (
       <button type="button" onClick={onClick} className={claseBase}>
-        {renderEntryCardBody({ bg, icono, titulo, subtitulo, cta })}
+        {renderEntryCardBody({ bg, icono, titulo, subtitulo, cta, formato })}
       </button>
     );
   }
   return (
     <Link href={href} className={claseBase}>
-      {renderEntryCardBody({ bg, icono, titulo, subtitulo, cta })}
+      {renderEntryCardBody({ bg, icono, titulo, subtitulo, cta, formato })}
     </Link>
   );
 }
 
-function renderEntryCardBody({ bg, icono, titulo, subtitulo, cta }) {
+function renderEntryCardBody({ bg, icono, titulo, subtitulo, cta, formato = "alto" }) {
   return (
     <>
       {/* Foto de fondo */}
@@ -257,23 +269,40 @@ function renderEntryCardBody({ bg, icono, titulo, subtitulo, cta }) {
         className="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-105"
         style={{ backgroundImage: `url(${bg})` }}
       />
-      {/* Overlay teal degradado: oscuro abajo (para legibilidad del título) y
-          casi transparente arriba (para que la foto se vea). En hover el
-          overlay se oscurece ligeramente. */}
-      <div className="absolute inset-0 bg-gradient-to-t from-marca-950/95 via-marca-900/60 to-marca-900/10 transition group-hover:from-marca-950" />
+      {/* Velo teal en DOS capas, y no en una.
+          La de arriba tine la foto entera para que el icono blanco tenga algo
+          detras; la de abajo es la que garantiza el contraste del titulo, y va
+          aparte porque un solo degradado tiene que elegir entre tapar la foto
+          o dejar leer el texto. Asi cada capa hace una cosa.
+          Sobre marca-950 el blanco da ~16:1 incluso con una foto clara debajo
+          (AA pide 4.5:1). */}
+      <div className="absolute inset-0 bg-gradient-to-t from-marca-950/70 via-marca-900/45 to-marca-900/30 transition group-hover:via-marca-900/55" />
+      <div
+        className={
+          formato === "banda"
+            ? "absolute inset-0 bg-gradient-to-r from-marca-950 via-marca-950/85 to-marca-950/45"
+            : "absolute inset-x-0 bottom-0 h-[62%] bg-gradient-to-t from-marca-950 via-marca-950/80 to-transparent"
+        }
+      />
       {/* Contenido */}
-      <div className="relative flex h-full flex-col justify-between p-5">
-        <div className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-white/15 text-white backdrop-blur-sm ring-1 ring-white/25">
+      <div
+        className={
+          formato === "banda"
+            ? "relative flex h-full items-center gap-3.5 p-4"
+            : "relative flex h-full flex-col justify-between p-5"
+        }
+      >
+        <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white/15 text-white backdrop-blur-sm ring-1 ring-white/25">
           <EntryIcono nombre={icono} />
         </div>
-        <div>
+        <div className={formato === "banda" ? "min-w-0 flex-1" : undefined}>
           <div className="text-[16.5px] font-extrabold leading-tight tracking-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.5)]">
             {titulo}
           </div>
-          <div className="mt-1 text-[12.5px] text-white/85 [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
+          <div className="mt-1 text-[12.5px] text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
             {subtitulo}
           </div>
-          <div className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-bold text-white transition group-hover:translate-x-0.5">
+          <div className={`${formato === "banda" ? "mt-1.5" : "mt-3"} inline-flex items-center gap-1 text-[12.5px] font-bold text-white transition group-hover:translate-x-0.5`}>
             {cta}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M13 5l7 7-7 7" />
@@ -1467,7 +1496,11 @@ export default function Home() {
                   después. Sin esto Sofía no sabía que su país afectaba lo
                   que iba a ver, y Carlos pensaba que el campo era informativo. */}
               <div className="mx-auto mt-5 flex max-w-xl items-center justify-center">
-                <SelectorPais value={paisIso} onChange={cambiarPaisManual} />
+                <SelectorPais
+                  value={paisIso}
+                  onChange={cambiarPaisManual}
+                  etiqueta="selectorPreciosDesde"
+                />
               </div>
 
               {/* TRES PUERTAS.
@@ -1728,38 +1761,32 @@ export default function Home() {
             />
           )}
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <EntryCard
-              href="/destino"
-              icono="globe"
-              titulo={t("cardDestinosTit")}
-              subtitulo={t("cardDestinosSub").replace("{n}", DESTINOS_PRESUPUESTO.length)}
-              cta={t("cardDestinosCta")}
-              bg="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=70"
-            />
-            <EntryCard
-              href="/ofertas"
-              icono="plane"
-              titulo={t("cardOfertasTit")}
-              subtitulo={t("cardOfertasSub")}
-              cta={t("cardOfertasCta")}
-              bg="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=70"
-            />
-            {/* Siempre navega a /mis-viajes, como las otras dos tarjetas.
-                Antes, si no habias guardado ningun viaje, esta NO navegaba:
-                abria el modal del planificador encima del home. Dos tarjetas
-                iguales con comportamientos distintos, y el unico caso donde
-                cambiaba era justo el del usuario nuevo. El planificador ahora
-                vive dentro de /mis-viajes. */}
-            <EntryCard
-              href="/mis-viajes"
-              icono="bookmark"
-              titulo={t("cardViajesTit")}
-              subtitulo={viajesGuardados.length > 0 ? `${viajesGuardados.length} guardado${viajesGuardados.length === 1 ? "" : "s"}` : t("cardViajesSubVacio")}
-              cta={viajesGuardados.length > 0 ? t("cardViajesCtaVer") : t("cardViajesCta")}
-              bg="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=70"
-            />
-          </div>
+          {/* PRECIOS REALES, no tres botones mas.
+              Aqui vivian tres EntryCard que llevaban a /destino, /ofertas y
+              /mis-viajes: exactamente los mismos tres destinos que las tres
+              puertas del hero, doscientos pixeles mas arriba. Repetir la
+              misma decision no ayuda a decidir; lo que ayuda es ensenar lo
+              que hay detras. MiniOfertas pone tres vuelos detectados de
+              verdad, con precio, descuento y fecha, saliendo del pais del
+              usuario. */}
+          <MiniOfertas onPlanear={(q) => buscarTexto(q)} t={t} lang={lang} />
+
+          {/* La banda de /destino va aparte y NO dentro de MiniOfertas:
+              ese componente se devuelve null cuando todavia no hay ofertas
+              cargadas, y sin esta banda el explorador por presupuesto se
+              quedaria sin ninguna entrada desde el home — no es ninguna de
+              las tres puertas del hero. Ademas es la unica tarjeta con foto
+              que queda, y es la que hace que la seccion no sea toda fichas
+              blancas. */}
+          <EntryCard
+            href="/destino"
+            formato="banda"
+            icono="globe"
+            titulo={t("cardDestinosTit")}
+            subtitulo={t("cardDestinosSub").replace("{n}", DESTINOS_PRESUPUESTO.length)}
+            cta={t("cardDestinosCta")}
+            bg="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=70"
+          />
 
           {/* Chip de alertas: expone la feature en el home post-login (antes
               cero visibilidad hasta entrar a una ciudad). Se dinamica y se
@@ -1790,11 +1817,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* MiniOfertas removido del home (audit 2026-06-29): era redundante
-              con la entry card "Vuelos baratos" ubicada arriba (misma funcion,
-              mismo destino). El usuario que quiere ver ofertas ya tiene el
-              CTA en la card, no necesita ver 3 preview cards duplicadas
-              justo debajo. La ruta /ofertas conserva el dashboard completo. */}
         </div>
         </div>
       )}

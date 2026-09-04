@@ -147,28 +147,20 @@ export default function EstasEnCiudad({ t = (k) => k, onCrear, onEventos = null,
               </>
             )}
           </div>
-          {musica?.emblema && (
-            <button
-              type="button"
-              onClick={() => {
-                track("estas_en_musica", { ciudad: geo.ciudad });
-                window.open(linkSpotify(`${musica.emblema.c} ${musica.emblema.a}`), "_blank", "noopener");
-              }}
-              className="mt-1.5 inline-flex max-w-full items-center gap-1 text-[11px] text-slate-500 transition hover:text-marca-700 dark:text-slate-400 dark:hover:text-marca-300"
-            >
-              <Icono nombre="music" size={11} />
-              <span className="truncate">
-                {t("estasEnMusica")} {musica.emblema.c} — {musica.emblema.a}
-              </span>
-              <span className="shrink-0 text-[#1DB954]">▶</span>
-            </button>
-          )}
         </div>
-        <div className="flex shrink-0 flex-wrap gap-2">
+        {/* UNA accion principal, no dos.
+            "Eventos" venia con border-2 marca-600, fondo blanco y negrita:
+            el mismo peso visual que "Arma tu ruta de hoy", asi que la franja
+            hacia dos propuestas a la vez y el ojo no sabia cual era la
+            respuesta a "estas en Medellin". Ahora la primaria es la unica
+            solida y la secundaria baja a borde de 1px, peso semibold y fondo
+            translucido. Las dos conservan la misma altura (borde de 1px en
+            ambas, py-2.5) para que la fila no quede escalonada. */}
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={crearRuta}
-            className="rounded-xl bg-marca-700 px-4 py-2.5 text-[13.5px] font-bold text-white shadow-marca transition hover:bg-marca-800"
+            className="rounded-xl border border-transparent bg-marca-700 px-4 py-2.5 text-[13.5px] font-bold text-white shadow-marca transition hover:bg-marca-800"
           >
             <span className="inline-flex items-center gap-1.5">
               <Icono nombre="map" size={15} /> {t("estasEnCta")}
@@ -178,13 +170,41 @@ export default function EstasEnCiudad({ t = (k) => k, onCrear, onEventos = null,
             <button
               type="button"
               onClick={() => { track("estas_en_eventos", { ciudad: geo.ciudad }); onEventos(geo); }}
-              className="rounded-xl border-2 border-marca-600 bg-white px-4 py-2 text-[13.5px] font-bold text-marca-700 transition hover:bg-marca-50 dark:bg-slate-800 dark:text-marca-300 dark:hover:bg-slate-700"
+              className="rounded-xl border border-marca-200 bg-white/70 px-4 py-2.5 text-[13.5px] font-semibold text-marca-700 transition hover:border-marca-300 hover:bg-white dark:border-slate-600 dark:bg-slate-800/70 dark:text-marca-300 dark:hover:bg-slate-800"
             >
-              🎟️ {t("estasEnEventos")}
+              <span className="inline-flex items-center gap-1.5">
+                <Icono nombre="ticket" size={15} /> {t("estasEnEventos")}
+              </span>
             </button>
           )}
         </div>
       </div>
+
+      {/* La musica va ABAJO y fuera de la fila de decision.
+          Estaba entre el subtitulo y los botones, es decir, en medio del
+          camino de "estas aqui" -> "arma tu ruta": un quinto elemento
+          clicable dentro de la zona que solo deberia tener una accion
+          principal, y encima el unico que abre otra aplicacion. No se quita
+          porque es de lo que le da caracter a la franja; se baja a pie de
+          tarjeta, detras de una linea, que es el sitio de un adorno. */}
+      {musica?.emblema && (
+        <div className="mt-2.5 border-t border-marca-100/80 pt-2 dark:border-marca-800/60">
+          <button
+            type="button"
+            onClick={() => {
+              track("estas_en_musica", { ciudad: geo.ciudad });
+              window.open(linkSpotify(`${musica.emblema.c} ${musica.emblema.a}`), "_blank", "noopener");
+            }}
+            className="inline-flex max-w-full items-center gap-1 text-[11px] text-slate-500 transition hover:text-marca-700 dark:text-slate-400 dark:hover:text-marca-300"
+          >
+            <Icono nombre="music" size={11} />
+            <span className="truncate">
+              {t("estasEnMusica")} {musica.emblema.c} — {musica.emblema.a}
+            </span>
+            <span className="shrink-0 text-[#1DB954]">▶</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

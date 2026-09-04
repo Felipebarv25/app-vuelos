@@ -186,7 +186,7 @@ export default function MiniOfertas({ onPlanear, t = (k) => k, lang = "es" }) {
           href="/ofertas"
           className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-[13.5px] font-semibold text-marca-700 shadow-suave transition hover:border-marca-200 hover:bg-marca-50 dark:border-slate-700 dark:bg-slate-800 dark:text-marca-300 dark:hover:border-marca-700"
         >
-          Ver todas las ofertas <Icono nombre="arrowRight" size={15} />
+          {t("ofertasVerTodas")} <Icono nombre="arrowRight" size={15} />
         </Link>
       </div>
     </section>

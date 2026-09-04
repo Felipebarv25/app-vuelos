@@ -14,6 +14,7 @@ import BottomTabBar from "@/components/BottomTabBar";
 import { Icono } from "@/components/Icono";
 import Bandera from "@/components/Bandera";
 import { Logo } from "@/components/Logo";
+import IlustracionRuta from "@/components/IlustracionRuta";
 
 const Asesor = dynamic(() => import("@/components/Asesor"));
 
@@ -138,6 +139,19 @@ const paisesDe = (r) => {
   return vistos;
 };
 
+// Los paises de TODOS los itinerarios juntos, en orden de aparicion. Sale de
+// las mismas paradas que ya alimentan las banderas de cada tarjeta, asi que la
+// cabecera no cuesta ni una peticion mas.
+const paisesDeTodos = (listas) => {
+  const vistos = [];
+  for (const lista of listas) {
+    for (const r of lista || []) {
+      for (const cc of paisesDe(r)) if (!vistos.includes(cc)) vistos.push(cc);
+    }
+  }
+  return vistos;
+};
+
 function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBorrar, onDescartar }) {
   // Los viajes se planean por MES, no por dia. Se lee tambien el campo viejo
   // para que las rutas guardadas antes del cambio sigan mostrando su fecha.
@@ -219,9 +233,49 @@ function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBo
       </div>
 
       {!hayAlgo ? (
-        <p className="mt-5 rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-[13px] text-slate-500 dark:border-slate-600 dark:text-slate-400">
-          {t("listaVacia")}
-        </p>
+        /* Estado vacio que ENSENA en vez de informar.
+           Antes era una frase dentro de un recuadro punteado: describia la
+           ausencia de viajes, que es justo lo que el usuario ya sabe. Ahora
+           se pinta una tarjeta fantasma con la forma exacta de una real
+           —nombre, banderas, recorrido, mes, paradas y su boton— para que se
+           vea lo que va a salir al pulsar "Crear un viaje".
+
+           Es DECORACION y no un viaje: aria-hidden para que un lector de
+           pantalla no anuncie un itinerario a Madrid que no existe, y el
+           texto de verdad queda en el pie, que si se lee. Las ciudades son
+           nombres propios, por eso no pasan por t(). */
+        <div className="mt-5">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none select-none rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-4 opacity-70 dark:border-slate-600 dark:bg-slate-900/30"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="text-[15px] font-extrabold text-slate-400 dark:text-slate-500">
+                Medellín → Londres
+                <span className="ml-2 inline-flex items-center gap-1 align-middle opacity-60 grayscale">
+                  <Bandera cc="co" size={16} />
+                  <Bandera cc="es" size={16} />
+                  <Bandera cc="gb" size={16} />
+                </span>
+              </h3>
+            </div>
+            <p className="mt-1 truncate text-[12.5px] text-slate-400 dark:text-slate-500">
+              Medellín → Madrid → Londres
+            </p>
+            <p className="mt-1 text-[12px] text-slate-300 dark:text-slate-600">
+              {conMayuscula(
+                new Date(2027, 4, 1).toLocaleDateString(lang, { month: "short", year: "numeric" })
+              )}{" "}
+              · {t("rutasNParadas").replace("{n}", 3)}
+            </p>
+            <span className="mt-3 inline-block rounded-full bg-slate-200 px-4 py-1.5 text-[12.5px] font-bold text-slate-400 dark:bg-slate-700 dark:text-slate-500">
+              {t("misViajesAbrir")}
+            </span>
+          </div>
+          <p className="mt-2.5 text-center text-[12.5px] text-slate-500 dark:text-slate-400">
+            {t("listaVaciaEjemplo")} · {t("listaVacia")}
+          </p>
+        </div>
       ) : (
         <ul className="mt-4 grid gap-3 sm:grid-cols-2">
           {locales.map((r) => (
@@ -375,6 +429,11 @@ export default function PaginaMisViajes() {
     [nombresViajes],
   );
 
+  const paisesVisitados = useMemo(
+    () => paisesDeTodos([rutas, locales]),
+    [rutas, locales]
+  );
+
   const viajesOrdenados = useMemo(() => {
     const ord = { en_curso: 0, proximo: 1, guardado: 2, completado: 3 };
     return [...viajes].sort(
@@ -389,31 +448,49 @@ export default function PaginaMisViajes() {
       <BotonVolver />
 
       <main className="mx-auto max-w-5xl px-4 py-8 lg:px-8 lg:py-10">
-        {/* Cabecera */}
-        <div className="mb-8">
-          <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-marca-700 dark:text-marca-300">
+        {/* CABECERA. Era un titulo negro sobre gris y nada mas: la pagina
+            donde vive lo que el usuario ha construido se veia mas fria que
+            cualquier otra de la app. Ahora es la misma banda de marca que
+            lleva el banner de cada viaje por dentro (mismo degradado, misma
+            ilustracion del muneco), de modo que entrar a un viaje ya no es un
+            salto de estilo, y suma las banderas de los paises que hay en sus
+            itinerarios: el dato ya estaba en las paradas.
+
+            La ilustracion no se pinta en movil, por lo mismo que en PlanRuta:
+            a 390 px los pines caen encima del titulo. */}
+        {/* El pt-16 en movil no es capricho: la pildora flotante "Volver" se
+            posa justo encima de la esquina superior izquierda y, con la banda
+            ahi, tapaba el eyebrow y mordia la primera letra del titulo. En
+            sm+ la pildora se aparta y sobra. */}
+        <div className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-marca-800 via-marca-600 to-emerald-500 px-5 pb-6 pt-16 text-white shadow-card sm:px-7 sm:py-7">
+          <IlustracionRuta className="hidden sm:block" />
+
+          <div className="relative z-10">
+            <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70">
               {t("misViajesEyebrow")}
             </div>
-            <h1 className="mt-1 text-[28px] font-extrabold tracking-tight text-slate-900 lg:text-[34px] dark:text-slate-100">
+            <h1 className="mt-1 text-[28px] font-extrabold tracking-tight text-white lg:text-[34px]">
               {t("misViajesH1")}
-              {/* El badge sigue al estado REAL, no a que haya sesion. */}
+              {/* El badge sigue al estado REAL, no a que haya sesion. Sobre la
+                  banda oscura los tonos -700 no se leian: van en claro. */}
               {!cargando && nube.sincronizado && (
-                <span className="ml-3 inline-flex items-center gap-1 align-middle text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                <span className="ml-3 inline-flex items-center gap-1 align-middle rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-100 ring-1 ring-white/20">
                   <Icono nombre="check" size={12} /> {t("misViajesSync")}
                 </span>
               )}
               {!cargando && !nube.sincronizado && (
                 <span
                   title={nube.motivo === "nube-caida" ? t("misViajesSinNubeAyuda") : ""}
-                  className="ml-3 inline-flex items-center gap-1 align-middle text-[11px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400"
+                  className="ml-3 inline-flex items-center gap-1 align-middle rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-100 ring-1 ring-white/20"
                 >
                   <Icono nombre="alert" size={12} />{" "}
                   {nube.motivo === "nube-caida" ? t("misViajesSinNube") : t("misViajesSoloLocal")}
                 </span>
               )}
             </h1>
-            <p className="mt-1.5 text-[13.5px] text-slate-600 dark:text-slate-400">
+            {/* El ancho se limita SOLO en sm+: es donde esta la ilustracion, y
+                sin el tope el contador se le metia por debajo de los pines. */}
+            <p className="mt-1.5 text-[13.5px] text-white/85 sm:max-w-[62%]">
               {viajes.length > 0
                 ? (viajes.length === 1
                     ? t("misViajesContador1")
@@ -421,6 +498,17 @@ export default function PaginaMisViajes() {
                   ).replace("{n}", viajes.length)
                 : t("misViajesVacioSub")}
             </p>
+
+            {paisesVisitados.length > 0 && (
+              <div className="mt-3.5 flex flex-wrap items-center gap-1.5 sm:max-w-[62%]">
+                <span className="mr-0.5 text-[10.5px] font-bold uppercase tracking-[0.14em] text-white/60">
+                  {t("misViajesPaises")}
+                </span>
+                {paisesVisitados.map((cc) => (
+                  <Bandera key={cc} cc={cc} size={18} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

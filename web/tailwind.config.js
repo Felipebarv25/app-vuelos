@@ -20,6 +20,11 @@ module.exports = {
           700: "#0a4d48",
           800: "#073a36",
           900: "#052b28",
+          // 950 anadido 2026-09: page.js ya usaba from-marca-950 y bg-marca-950
+          // sin que el tono existiera en la rampa, asi que Tailwind no generaba la
+          // clase y el velo de las tarjetas se quedaba SIN base oscura justo donde
+          // va el titulo. El sintoma era "el texto no se lee sobre la foto".
+          950: "#02100f",
         },
         // Acento: coral cálido (calidez latina, para CTAs puntuales).
         // Rampa rederivada 2026-06-25 alrededor de #f4734d para alinear con
