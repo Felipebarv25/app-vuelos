@@ -1337,13 +1337,25 @@ export default function PlanRuta({
                              className="rounded-lg bg-marca-50 px-2.5 py-1 text-[12px] font-bold text-marca-700 transition hover:bg-marca-100 dark:bg-marca-900/30 dark:text-marca-300">
                             {t("rutaVerOpciones")}
                           </a>
-                          {tr.fuente !== "detectado" && tr.fuente !== "incluido" && tr.desde.iata && tr.hasta.iata && (
+                          {/* El boton tambien en los tramos con precio YA
+                              detectado, con otra etiqueta.
+                              Antes solo salia donde faltaba precio, asi que en
+                              el vuelo largo — que casi siempre viene detectado
+                              y es el que decide el presupuesto — no habia
+                              forma de pedir la comparacion de meses. Y esa
+                              comparacion es justo la que dice "en marzo te
+                              ahorras US$149". */}
+                          {tr.fuente !== "incluido" && tr.desde.iata && tr.hasta.iata && (
                             <button
                               onClick={() => buscarReal(tr)}
                               disabled={buscando[tr.clave]}
                               className="rounded-lg border border-slate-200 px-2.5 py-1 text-[12px] font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
                             >
-                              {buscando[tr.clave] ? t("rutaBuscandoReal") : t("rutaBuscarReal")}
+                              {buscando[tr.clave]
+                                ? t("rutaBuscandoReal")
+                                : tr.fuente === "detectado"
+                                ? t("rutaVerMeses")
+                                : t("rutaBuscarReal")}
                             </button>
                           )}
                         </div>
