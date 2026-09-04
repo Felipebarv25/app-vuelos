@@ -11,6 +11,18 @@
 export default function Bandera({ cc, size = 16, className = "" }) {
   if (!cc) return null;
   const lo = String(cc).toLowerCase();
+  // El alto se RESERVA con esta caja, y ademas se impone por CSS.
+  //
+  // Antes solo iba en el atributo height, y el preflight de Tailwind
+  // (`img { height: auto }`) lo pisaba: el navegador reservaba 23 px y luego
+  // repintaba a 17,25, porque flagcdn sirve cada bandera con SU proporcion
+  // (Mexico 40x23, Suiza cuadrada, Nepal ni siquiera rectangular) y no la
+  // 4:3 que asume este calculo. Con `loading="lazy"` y 207 banderas en
+  // /destino eso son 207 repintados.
+  //
+  // `contain` es lo que permite fijar la caja sin deformar: la bandera se
+  // dibuja dentro con su proporcion real y sobra aire arriba y abajo, en vez
+  // de estirarse a 4:3.
   const alto = Math.round(size * 0.75);
   // Se pide por ANCHO (w40), no por "anchoxalto".
   //
@@ -29,6 +41,7 @@ export default function Bandera({ cc, size = 16, className = "" }) {
       alt=""
       width={size}
       height={alto}
+      style={{ height: alto, objectFit: "contain" }}
       className={`inline-block rounded-[2px] align-middle ${className}`}
       loading="lazy"
       onError={(e) => { e.currentTarget.style.display = "none"; }}
