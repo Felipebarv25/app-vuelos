@@ -611,7 +611,16 @@ export default function PlanRuta({
           },
         }));
       } else {
-        setAviso(t("rutaSinVueloReal").replace("{ruta}", `${tr.desde.ciudad} → ${tr.hasta.ciudad}`));
+        // Con dia puesto, el motivo casi siempre es que NO hay tarifa en
+        // cache para ese dia concreto — no que la ruta no exista. Decir "no
+        // encontramos vuelo" ahi seria enganoso.
+        setAviso(
+          fechaIda
+            ? t("rutaSinVueloEseDia")
+                .replace("{ruta}", `${tr.desde.ciudad} → ${tr.hasta.ciudad}`)
+                .replace("{fecha}", fmtDia(fechaIda))
+            : t("rutaSinVueloReal").replace("{ruta}", `${tr.desde.ciudad} → ${tr.hasta.ciudad}`)
+        );
       }
     } catch {
       setAviso(t("rutaErrorRed"));
