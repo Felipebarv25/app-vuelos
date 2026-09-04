@@ -122,7 +122,11 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
         // con un cartel un mapa que funcionaba, escondiendo las paradas.
         let tilesOk = 0;
         mapa.on("data", (e) => {
-          if (!e?.tile) return;
+          // Con el estilo VECTORIAL este evento ya no siempre trae `e.tile`,
+          // asi que con la comprobacion vieja el aviso se quedaba puesto
+          // encima de un mapa que estaba pintando perfectamente. Se ignora
+          // solo la fuente de la propia ruta, que no es el fondo.
+          if (e?.dataType !== "source" || e?.sourceId === "ruta") return;
           // El primer tile retira el aviso. Antes lo hacia un temporizador,
           // y eso volvia a atar la verdad de lo que se ve a un plazo elegido a
           // ojo: si el mapa tardaba mas de la cuenta, el aviso se quedaba
@@ -136,7 +140,14 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
         // Si pasados diez segundos no ha entrado un solo tile, se dice, pero
         // debajo del mapa y sin tapar nada. Lo retira el propio tile cuando
         // llegue, por lento que sea.
-        setTimeout(() => { if (!cancelado) setSinFondo(tilesOk === 0); }, 10000);
+        setTimeout(() => {
+          if (cancelado) return;
+          // Dos formas de saberlo, y basta con una. El contador de eventos se
+          // ha equivocado ya dos veces al cambiar de tipo de mapa; preguntarle
+          // al propio maplibre es lo que no depende de la forma del evento.
+          const cargado = tilesOk > 0 || mapaRef.current?.areTilesLoaded?.();
+          setSinFondo(!cargado);
+        }, 10000);
       }
       const mapa = mapaRef.current;
       mapa.resize();
