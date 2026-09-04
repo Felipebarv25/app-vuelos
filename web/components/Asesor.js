@@ -216,7 +216,22 @@ function GuiaGratis({ t, usuario, onPlanear, onAbrirPresupuesto, cerrar, finRef 
       `${ruta.cabe ? t("guiaAquiRuta") : t("guiaRutaNoCabe")}\n\n${ruta.ciudades.map((c) => c.ciudad).join(" → ")}\n${lineas}\n\n` +
       `✈️ ${t("presupVueloIntl")}: ${fmtUsd(ruta.desglose.vueloIntl)}\n` +
       `🧳 Total: ${fmtUsd(ruta.total)}  (${fmtCop(ruta.total)})\n` +
-      (ruta.cabe ? `💚 ${t("presupTeSobra")} ${fmtUsd(ruta.sobra)}` : `💸 ${t("presupTeFalta")} ${fmtUsd(-ruta.sobra)}`);
+      (ruta.cabe ? `💚 ${t("presupTeSobra")} ${fmtUsd(ruta.sobra)}` : `💸 ${t("presupTeFalta")} ${fmtUsd(-ruta.sobra)}`) +
+      // Los dias que NO caben.
+      //
+      // Pedir 7 dias y recibir una ruta de 2 es un resultado legitimo cuando
+      // el presupuesto no da —con US$ 951, Lisboa se come 780 en vuelo y cada
+      // dia cuesta 90—, pero el chat lo callaba: preguntaba "cuantos dias" y
+      // luego entregaba otra cosa sin mencionarlo. Ahora lo dice y ademas da
+      // la cifra que si alcanzaria, que es lo unico accionable aqui.
+      (ruta.diasTotales < ruta.diasPedidos
+        ? `
+
+${t("guiaDiasCortos")
+            .replace(/{cubiertos}/g, ruta.diasTotales)
+            .replace(/{pedidos}/g, ruta.diasPedidos)
+            .replace(/{necesario}/g, fmtUsd(ruta.necesarioParaDiasPedidos))}`
+        : "");
     push({ de: "bot", texto, ruta });
     setPaso("resultado");
   }

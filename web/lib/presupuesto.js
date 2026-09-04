@@ -660,11 +660,36 @@ export function construirRuta({
   };
   const total = vueloIntl + saltos + totDia;
 
+  // CUANTOS DIAS SE CUBRIERON DE LOS QUE SE PIDIERON.
+  //
+  // El reparto arranca dando DIAS_MIN dias a cada ciudad y solo suma mas
+  // mientras quepan en el presupuesto, asi que pedir 7 dias y recibir 2 es un
+  // resultado NORMAL cuando la plata no da: con US$ 951 y Lisboa a US$ 780 de
+  // vuelo mas 90 al dia, dos dias ya cuestan 960. La aritmetica estaba bien.
+  //
+  // Lo que faltaba era decirlo. `diasTotales` ya se devolvia, pero nadie lo
+  // comparaba con lo pedido, asi que el chat contestaba "7 dias" y entregaba
+  // una ruta de 2 sin una palabra. Con `diasPedidos` al lado, quien pinta
+  // puede avisar, y `necesarioParaDiasPedidos` convierte el callejon sin
+  // salida en un numero accionable: cuanto haria falta de verdad.
+  const diasTotales = ruta.reduce((s, c) => s + c.diasAqui, 0);
+  const faltanDias = Math.max(0, dias - diasTotales);
+  const diaMedio = ruta.length
+    ? ruta.reduce((s, c) => s + c.dia, 0) / ruta.length
+    : 0;
+
   return {
     entrada,
     region,
     ciudades: ruta,
-    diasTotales: ruta.reduce((s, c) => s + c.diasAqui, 0),
+    diasTotales,
+    diasPedidos: dias,
+    // Estimacion: mantener esta ruta y repartir los dias que faltan al costo
+    // diario medio de sus ciudades. No es un presupuesto nuevo calculado
+    // desde cero, y por eso va redondeado a la decena.
+    necesarioParaDiasPedidos: faltanDias
+      ? Math.ceil((total + faltanDias * diaMedio * personas) / 10) * 10
+      : total,
     desglose,
     total,
     cabe: total <= presupuestoUsd,
