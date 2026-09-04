@@ -1,11 +1,27 @@
 "use client";
 import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useApp } from "@/lib/AppContext";
-import { IDIOMAS } from "@/lib/idiomas";
+import { IDIOMAS, rutaEnIdioma } from "@/lib/idiomas";
 
 export default function SelectorIdioma({ oscuro = true }) {
   const { lang, cambiarIdioma } = useApp();
   const [abierto, setAbierto] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // En las fichas de destino el idioma es parte de la RUTA, asi que elegir
+  // aqui tiene que navegar. Sin esto, estando en /en/destino/madrid-espana y
+  // eligiendo "Español" solo cambiaba la cabecera: el contenido, que lo pinta
+  // el servidor desde /en, seguia en ingles. El mismo desajuste de antes, al
+  // reves. En el resto del sitio no hay contrapartida de ruta y se queda como
+  // estaba: cambio en cliente y ya.
+  function elegir(cod) {
+    cambiarIdioma(cod);
+    setAbierto(false);
+    const destino = rutaEnIdioma(pathname, cod);
+    if (destino && destino !== pathname) router.push(destino);
+  }
 
   return (
     <div className="relative">
@@ -25,7 +41,7 @@ export default function SelectorIdioma({ oscuro = true }) {
             {Object.entries(IDIOMAS).map(([cod, info]) => (
               <button
                 key={cod}
-                onClick={() => { cambiarIdioma(cod); setAbierto(false); }}
+                onClick={() => elegir(cod)}
                 className={`flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-[14px] transition ${
                   lang === cod
                     ? "bg-marca-50 font-bold text-marca-700 dark:bg-marca-900/40 dark:text-marca-300"

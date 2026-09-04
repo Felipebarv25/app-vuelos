@@ -17,6 +17,7 @@ import { linkTours, linkHoteles, linkVuelos } from "@/lib/afiliados";
 import FavToggle from "../../../destino/[slug]/FavToggle";
 import NavTop from "@/components/NavTop";
 import Bandera from "@/components/Bandera";
+import { mejoresLugares } from "@/lib/relevanciaLugar";
 
 const SITIO = "https://anduve-app.vercel.app";
 
@@ -30,7 +31,15 @@ async function topLugares(slug, n = 10) {
     const p = path.join(process.cwd(), "public", "lugares", `${slug}.json`);
     const raw = await fs.readFile(p, "utf8");
     const data = JSON.parse(raw);
-    const els = (data.elements || []).filter((e) => e?.tags?.name).slice(0, n);
+    // Ordenado por relevancia, no por orden de fichero.
+    //
+    // Aqui habia un slice(0, n) a secas mientras el titulo de la seccion
+    // prometia "curados por relevancia". En Cartagena eso ponia el Estadio
+    // Once de Noviembre entre los mejores lugares por estar cuarto en el
+    // JSON. El criterio del precalculo ("tiene Wikipedia o Wikidata") separa
+    // el ruido, pero no distingue un castillo de un estadio: los dos tienen
+    // articulo.
+    const els = mejoresLugares(data.elements || [], n);
     return els.map((e) => ({
       nombre: e.tags.name,
       tipo: e.tags.tourism || e.tags.historic || e.tags.amenity || "",

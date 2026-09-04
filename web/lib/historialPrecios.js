@@ -9,6 +9,22 @@ import { promises as fs } from "fs";
 import path from "path";
 
 const CSV_PATH = path.join(process.cwd(), "..", "datos", "historial.csv");
+
+// El resumen que el detector deja DENTRO de web/public, y por tanto lo unico
+// que existe en el despliegue.
+//
+// El CSV vive en datos/ EN LA RAIZ DEL REPO, y el Root Directory de Vercel es
+// web/: en produccion ese fichero no esta, cargarBruto() no encuentra nada y
+// preciosPorMes() devolvia null para los 207 destinos. Por eso "Cuando viajar
+// mas barato" decia "todavia estamos recopilando datos" SIEMPRE, incluido
+// Madrid, que tiene 383.463 filas de historial. El detector recogia los datos
+// y la web no podia leerlos.
+//
+// historial-resumen.json ya viene agregado por mes por generar_ofertas.py, se
+// despliega con el resto de public/ y cubre las 21 rutas que el detector
+// sigue. El CSV se conserva como respaldo para desarrollo local, donde la
+// raiz del repo si esta a mano.
+const RESUMEN_PATH = path.join(process.cwd(), "public", "historial-resumen.json");
 const MESES_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
 function mediana(nums) {
@@ -73,10 +89,45 @@ async function cargarBruto(origenes) {
 
 // Devuelve para un IATA destino: { meses: [{ym, label, precio, mejor:bool}], mejor:{ym,precio,label}, peor:{...} }
 // O null si no hay datos.
+let _resumen;
+async function cargarResumen() {
+  if (_resumen !== undefined) return _resumen;
+  try {
+    _resumen = JSON.parse(await fs.readFile(RESUMEN_PATH, "utf8"))?.destinos || null;
+  } catch {
+    _resumen = null;
+  }
+  return _resumen;
+}
+
+/**
+ * Precios por mes de un IATA destino.
+ *
+ * Primero el resumen desplegado; si no esta (o no cubre esa ruta) se cae al
+ * CSV crudo, que solo existe en desarrollo.
+ */
 export async function preciosPorMes(iata, origenes = ORIGENES_POR_DEFECTO) {
   const lista = Array.isArray(origenes) && origenes.length ? origenes : ORIGENES_POR_DEFECTO;
-  const bruto = await cargarBruto(lista);
-  const porMes = bruto[iata];
+  let porMes = null;
+
+  const resumen = await cargarResumen();
+  const delResumen = resumen?.[iata]?.vuelos;
+  if (Array.isArray(delResumen) && delResumen.length) {
+    // El resumen trae una fila por (mes, origen); se agrupan por mes y se
+    // filtra por los origenes pedidos, igual que hace el lector del CSV.
+    porMes = {};
+    for (const v of delResumen) {
+      if (!v?.ym || !v?.precio) continue;
+      if (v.origen && !lista.includes(v.origen)) continue;
+      (porMes[v.ym] ||= []).push(Number(v.precio));
+    }
+    if (!Object.keys(porMes).length) porMes = null;
+  }
+
+  if (!porMes) {
+    const bruto = await cargarBruto(lista);
+    porMes = bruto[iata] || null;
+  }
   if (!porMes) return null;
 
   // Agregar por mediana y filtrar meses con muestras escasas (<2).
@@ -86,7 +137,10 @@ export async function preciosPorMes(iata, origenes = ORIGENES_POR_DEFECTO) {
       muestras: precios.length,
       precio: mediana(precios),
     }))
-    .filter((f) => f.muestras >= 2 && f.precio != null)
+    // Antes se exigian 2 muestras por mes. Con el CSV crudo eso descarta
+    // ruido; con el resumen, que ya trae UNA fila agregada por mes y origen,
+    // habria tirado meses validos. Basta que haya precio.
+    .filter((f) => f.muestras >= 1 && f.precio != null)
     .sort((a, b) => a.ym.localeCompare(b.ym));
 
   if (filas.length < 2) return null;

@@ -35,7 +35,15 @@ async function topLugares(slug, n = 10) {
     const p = path.join(process.cwd(), "public", "lugares", `${slug}.json`);
     const raw = await fs.readFile(p, "utf8");
     const data = JSON.parse(raw);
-    const els = (data.elements || []).filter((e) => e?.tags?.name).slice(0, n);
+    // Ordenado por relevancia, no por orden de fichero.
+    //
+    // Aqui habia un slice(0, n) a secas mientras el titulo de la seccion
+    // prometia "curados por relevancia". En Cartagena eso ponia el Estadio
+    // Once de Noviembre entre los mejores lugares por estar cuarto en el
+    // JSON. El criterio del precalculo ("tiene Wikipedia o Wikidata") separa
+    // el ruido, pero no distingue un castillo de un estadio: los dos tienen
+    // articulo.
+    const els = mejoresLugares(data.elements || [], n);
     return els.map((e) => ({
       nombre: e.tags.name,
       tipo: e.tags.tourism || e.tags.historic || e.tags.amenity || "",
@@ -397,12 +405,17 @@ export default async function PaginaDestino({ params }) {
             <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               🕒 Cuándo viajar más barato
             </div>
+            {/* El texto decia "todavia estamos recopilando datos... nuestro
+                detector consulta esta ruta cada 3 horas", y no era cierto:
+                el detector sigue 21 rutas, no las 207. Para las demas no hay
+                muestras acumulandose ni las habra hasta que la ruta entre en
+                su configuracion. Prometer un dato que no viene en camino es
+                peor que decir que no lo tenemos. */}
             <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-400">
-              Todavía estamos recopilando datos de precios para vuelos a{" "}
-              <b className="text-marca-700 dark:text-marca-300">{d.ciudad}</b>. Nuestro
-              detector consulta esta ruta cada 3 horas; en cuanto haya muestras
-              suficientes verás aquí la mediana mes a mes y la mejor temporada
-              para volar.
+              Nuestro detector sigue los precios de un grupo de rutas cada 3 horas,
+              y <b className="text-marca-700 dark:text-marca-300">{d.ciudad}</b> todavía
+              no está entre ellas. Cuando la añadamos verás aquí la mediana mes a mes
+              y la mejor temporada para volar.
             </p>
             <p className="mt-2 text-[12.5px] text-slate-500 dark:text-slate-400">
               Mientras tanto, usa el presupuesto sugerido de arriba como referencia.
@@ -635,6 +648,7 @@ export default async function PaginaDestino({ params }) {
 // excluyendo el actual. Refuerza la autoridad del catálogo en Google.
 import { DESTINOS_SEO } from "@/lib/destinos";
 import { sinAeropuerto } from "@/data/sinAeropuerto";
+import { mejoresLugares } from "@/lib/relevanciaLugar";
 
 function OtrosDestinos({ region, actualSlug }) {
   const otros = DESTINOS_SEO.filter((x) => x.region === region && x.slug !== actualSlug)

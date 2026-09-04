@@ -20,6 +20,15 @@ export const IATA_ALT = {
 };
 
 export const IATA_CIUDAD = {
+  // Colombia. Faltaban, y no era un detalle cosmetico: la ficha de destino
+  // pide el historial de precios con iataDe(), asi que sin entrada aqui
+  // NUNCA lo consultaba y mostraba "Todavia estamos recopilando datos" —
+  // aunque historial-resumen.json ya trae CTG, CLO, SMR y ADZ desde hace
+  // meses. El detector recogia los datos y la web no los leia.
+  "Cartagena|Colombia": "CTG",
+  "Cali|Colombia": "CLO",
+  "Santa Marta|Colombia": "SMR",
+  "San Andrés|Colombia": "ADZ",
   // Sudamérica
   "Lima|Perú": "LIM",
   "Cusco|Perú": "CUZ",

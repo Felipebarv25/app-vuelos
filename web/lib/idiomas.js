@@ -3484,12 +3484,44 @@ const T = {
 };
 
 // Idioma por defecto según el navegador del usuario.
+/**
+ * Idioma de la RUTA, si la ruta lo declara.
+ *
+ * Las fichas de destino existen en /destino, /en/destino, /pt/destino y
+ * /fr/destino. El prefijo no es decorativo: decide en que idioma llega el
+ * contenido desde el servidor.
+ */
+export function idiomaDeRuta(pathname) {
+  const m = new RegExp("^\\/(en|pt|fr)(\\/|$)").exec(String(pathname || ""));
+  return m && T[m[1]] ? m[1] : null;
+}
+
 export function idiomaInicial() {
   if (typeof window === "undefined") return "es";
+  // La URL primero. Antes solo se miraba localStorage y el navegador, asi que
+  // en /en/destino/madrid-espana el contenido llegaba en ingles y la cabecera,
+  // la navegacion y el desplegable seguian en espanol marcando "ES". Dos
+  // controles de idioma diciendo cosas distintas sobre la misma pagina.
+  const deRuta = idiomaDeRuta(window.location?.pathname);
+  if (deRuta) return deRuta;
   const guardado = localStorage.getItem("idioma");
   if (guardado && T[guardado]) return guardado;
   const nav = (navigator.language || "es").slice(0, 2);
   return T[nav] ? nav : "es";
+}
+
+/**
+ * La misma pagina en otro idioma.
+ *
+ * Solo /destino esta traducido por ruta; el resto del sitio vive en una sola
+ * URL y cambia de idioma en cliente. Devuelve null cuando no hay contrapartida
+ * y hay que quedarse donde se esta.
+ */
+export function rutaEnIdioma(pathname, lang) {
+  const p = String(pathname || "");
+  const sinPrefijo = p.replace(new RegExp("^\\/(en|pt|fr)(?=\\/|$)"), "") || "/";
+  if (!new RegExp("^\\/destino(\\/|$)").test(sinPrefijo)) return null;
+  return lang === "es" ? sinPrefijo : `/${lang}${sinPrefijo}`;
 }
 
 // Devuelve la función traductora t() para un idioma dado.
