@@ -189,7 +189,7 @@ import { cacheado, fetchRapido } from "./cache";
 import { zonasCerca, zonaComoLugar } from "./zonasNocturnas";
 import { distanciaMetros } from "./rutas";
 import { PRECALC } from "./precalcIndex";
-import { hitosParaCiudad } from "@/data/hitos-garantizados";
+import { hitosParaCiudad, mismoHito } from "@/data/hitos-garantizados";
 
 // ¿La ciudad (lat/lon) tiene lugares precalculados? Devuelve el slug del JSON
 // estático si hay una ciudad precalculada a menos de ~25 km. Así las ciudades
@@ -439,16 +439,15 @@ function procesarElementos(datos, categoria, lat, lon, limite, catNombre, precal
   if (esImperdibles) {
     const hitos = hitosParaCiudad(lat, lon);
     if (hitos) {
-      const qids = new Set(lugares.filter((l) => l.wd).map((l) => l.wd));
-      const noms = new Set(lugares.map((l) => l.nombre.toLowerCase()));
+      // Con igualdad exacta de nombre, OSM ("Castillo San Felipe") nunca
+      // casaba con esta tabla ("Castillo de San Felipe de Barajas"), asi que
+      // el hito se INYECTABA como si faltara y la ciudad acababa con el mismo
+      // sitio dos veces bajo nombres distintos. mismoHito() compara sin
+      // tildes y por contencion.
       for (const h of hitos) {
-        const yaQ = h.q && qids.has(h.q);
-        const yaN = noms.has(h.n.toLowerCase());
-        if (yaQ || yaN) {
-          const idx = lugares.findIndex((l) =>
-            (h.q && l.wd === h.q) || l.nombre.toLowerCase() === h.n.toLowerCase()
-          );
-          if (idx >= 0) lugares[idx].garantizado = true;
+        const idx = lugares.findIndex((l) => mismoHito(h, l));
+        if (idx >= 0) {
+          lugares[idx].garantizado = true;
         } else {
           lugares.push({
             id: `hito/${h.q || h.n}`,

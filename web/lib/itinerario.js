@@ -13,6 +13,32 @@ function minutosDesplazamiento(metros) {
   return Math.round(metros / 400) + 8; // ~ velocidad media puerta a puerta
 }
 
+// Categorias de comer y beber (las etiquetas que pone osm.js). No son
+// "imperdibles" y sobre todo no son con lo que se abre un dia: en Cartagena
+// el Dia 1 arrancaba con "Restaurante El Zaguan" porque el orden es
+// puramente geografico y ese local resultaba ser el punto mas cercano al
+// inicio. Un restaurante es una parada, no el motivo de salir de casa.
+const COMIDA = new Set(["Restaurante", "Café", "Bar", "Pub", "Discoteca"]);
+const esComida = (l) => COMIDA.has(l?.categoria);
+
+/**
+ * Rota las paradas de un dia para que NO abra con comida.
+ *
+ * Rota en vez de intercambiar: el orden de un dia esta calculado por cercania
+ * y un intercambio suelto lo rompe, mientras que rotar conserva la secuencia
+ * y solo cambia por donde se entra. Si el dia es todo comida se deja como
+ * esta — no hay nada mejor con que abrir.
+ */
+function abrirSinComida(paradas) {
+  if (paradas.length < 2 || !esComida(paradas[0])) return paradas;
+  // Preferimos abrir con un hito garantizado; si no hay, con lo primero que
+  // no sea comida.
+  let i = paradas.findIndex((p) => p.garantizado && !esComida(p));
+  if (i < 0) i = paradas.findIndex((p) => !esComida(p));
+  if (i <= 0) return paradas;
+  return [...paradas.slice(i), ...paradas.slice(0, i)];
+}
+
 // Construye los días del itinerario.
 // Parámetros:
 //   lugares: array con {nombre, coord, minutos, ...}
@@ -116,7 +142,17 @@ export function construirItinerario(lugares, opciones) {
     if (mejor >= 0 && mejorDist <= MAX_REUBIC) agregar(plan[mejor], lugar);
   }
 
-  return plan.slice(0, dias);
+  // Recalcular cada dia tras rotarlo: los traslados se miden desde la parada
+  // ANTERIOR, asi que cambiar por donde se entra cambia todos los tiempos.
+  const final = plan.slice(0, dias).map((d) => {
+    const orden = abrirSinComida(d.paradas);
+    if (orden === d.paradas) return d;
+    const nuevo = nuevoDia();
+    for (const p of orden) agregar(nuevo, p);
+    return nuevo;
+  });
+
+  return final;
 }
 
 // Agrega un lugar al final de un día concreto, calculando su traslado desde
