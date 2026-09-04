@@ -17,12 +17,12 @@ const CSP_DIRECTIVES = [
   // *.tile.openstreetmap.org son los tiles de los dos mapas (Mapa.js y
   // MapaRuta.js). La CSP va en Report-Only, asi que hoy nada de esto
   // bloquea, pero el dia que pase a modo real tiene que estar completo.
-  "img-src 'self' data: blob: https://images.unsplash.com https://*.unsplash.com https://upload.wikimedia.org https://commons.wikimedia.org https://*.tile.openstreetmap.org https://*.googleusercontent.com https://flagcdn.com",
+  "img-src 'self' data: blob: https://images.unsplash.com https://*.unsplash.com https://upload.wikimedia.org https://commons.wikimedia.org https://*.tile.openstreetmap.org https://tiles.openfreemap.org https://*.googleusercontent.com https://flagcdn.com",
   // Fonts: self (next/font auto-hosts) + Google Fonts CDN fallback.
   "font-src 'self' data: https://fonts.gstatic.com",
   // Conexiones (fetch/XHR/EventSource/WebSocket): self + APIs que usa
   // la app server-side y client-side.
-  "connect-src 'self' https://api.travelpayouts.com https://aviasales-api.travelpayouts.com https://*.api.travelpayouts.com https://api.exchangerate.host https://open.er-api.com https://nominatim.openstreetmap.org https://*.overpass-api.de https://overpass-api.de https://photon.komoot.io https://wwwnc.cdc.gov https://en.wikipedia.org https://es.wikipedia.org https://*.wikipedia.org https://commons.wikimedia.org https://www.wikidata.org https://*.vercel-insights.com https://va.vercel-scripts.com https://*.tile.openstreetmap.org",
+  "connect-src 'self' https://api.travelpayouts.com https://aviasales-api.travelpayouts.com https://*.api.travelpayouts.com https://api.exchangerate.host https://open.er-api.com https://nominatim.openstreetmap.org https://*.overpass-api.de https://overpass-api.de https://photon.komoot.io https://wwwnc.cdc.gov https://en.wikipedia.org https://es.wikipedia.org https://*.wikipedia.org https://commons.wikimedia.org https://www.wikidata.org https://*.vercel-insights.com https://va.vercel-scripts.com https://tiles.openfreemap.org https://*.tile.openstreetmap.org",
   // Frames: solo Google OAuth popup.
   "frame-src 'self' https://accounts.google.com",
   // Bloquea formas peligrosas que la app no usa.

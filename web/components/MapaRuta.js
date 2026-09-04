@@ -13,62 +13,32 @@
 // enfocando para cada viaje").
 import { useEffect, useRef, useState } from "react";
 
-// El fondo sale de OpenStreetMap.
+// El fondo pasa de RASTER a VECTORIAL, y de ahi salen cuatro cosas de golpe.
 //
-// Antes eran los tiles de basemaps.cartocdn.com, que se ven mejor. Dejaron
-// de servirlos gratis: hoy devuelven la imagen sellada con "API KEY
-// REQUIRED", y de ahi salia el mapa roto que se veia en pantalla. No era
-// cosa del navegador ni de la red de nadie, era el proveedor.
+// Hasta ahora eran imagenes: cada tile una foto del mapa con los nombres YA
+// pintados encima. Eso trae tres problemas que no se pueden arreglar por
+// separado, porque son el mismo:
 //
-// OSM es ademas el unico host de tiles que la propia app declara en su CSP
-// (next.config.mjs), asi que esto tampoco depende de un permiso nuevo. No
-// hay version @2x: se ve algo menos fino en pantallas retina, a cambio de
-// verse siempre.
-const ESTILO = {
-  version: 8,
-  sources: {
-    base: {
-      type: "raster",
-      tiles: [
-        "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      ],
-      tileSize: 256,
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    },
-  },
-  layers: [
-    {
-      // MAR DE FONDO, debajo de todo.
-      //
-      // Con renderWorldCopies:false — que es lo que quito el mundo triplicado
-      // — fuera de los limites del planeta no hay nada que pintar, y al alejar
-      // el zoom aparecian cunas blancas en las esquinas de arriba. Un lienzo
-      // sin pintar se lee como un fallo.
-      //
-      // El color es el del agua de OSM, para que el borde del oceano con el
-      // vacio no se note: el mapa acaba en mar y el fondo tambien es mar.
-      id: "fondo",
-      type: "background",
-      paint: { "background-color": "#a8d8ea" },
-    },
-    {
-      id: "base",
-      type: "raster",
-      source: "base",
-      // El fondo se veia apagado. OSM viene deliberadamente desaturado para
-      // que los datos encima resalten, pero aqui los datos son cuatro pines:
-      // el mapa PUEDE llevar mas color. Se sube saturacion y contraste y se
-      // aclara un punto, que es lo que le da aire de globo iluminado.
-      paint: {
-        "raster-saturation": 0.35,
-        "raster-contrast": 0.12,
-        "raster-brightness-min": 0.05,
-      },
-    },
-  ],
-};
+//   · Los nombres se ven borrosos. Es texto dentro de un bitmap; al inclinar
+//     la vista se estira como cualquier foto. No hay ajuste que lo salve.
+//   · Los nombres estan TUMBADOS sobre el suelo, porque son parte del suelo.
+//   · Los colores son los del callejero de OSM — gris y beige —, no los de un
+//     planeta: sin verde donde hay bosque ni palido donde hay desierto.
+//
+// Con tiles vectoriales el navegador dibuja el texto de verdad: nitido a
+// cualquier zoom y, por defecto, de cara a la camara aunque el mapa este
+// inclinado. Y el estilo trae lo que faltaba: relieve fisico (ne2_shaded, que
+// es Natural Earth sombreado), fronteras (boundary_2 y boundary_3) y nombres
+// de mares y oceanos (water_name).
+//
+// OpenFreeMap sirve el estilo "liberty" sin API key ni registro, que es lo que
+// lo hace viable aqui: cualquier otro proveedor vectorial decente (MapTiler,
+// Stadia, Mapbox) pide una clave.
+const ESTILO = "https://tiles.openfreemap.org/styles/liberty";
+
+// Color del agua del estilo, para el div de debajo. Ver mas abajo por que el
+// contenedor tambien se pinta.
+const MAR = "#a0c8f0";
 
 function asegurarCss() {
   if (typeof document === "undefined") return;
@@ -121,8 +91,8 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
           // ruta cruzando el oceano se ve ir hacia el horizonte. El usuario lo
           // encontro girandolo a mano y pidio que fuera asi al abrir.
           //
-          // 48 grados y no el maximo: pasados los 55 el fondo raster se
-          // desenfoca en la distancia y el horizonte se come media tarjeta.
+          // 48 grados y no el maximo: pasados los 55 el horizonte se come
+          // media tarjeta y las etiquetas del fondo se amontonan.
           // Sigue siendo el punto de partida, no una jaula: se puede enderezar
           // arrastrando con el boton derecho.
           pitch: 48,
@@ -265,6 +235,14 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
             geometry: { type: "LineString", coordinates: puntos.map((p) => [p.lon, p.lat]) },
           },
         });
+        // La linea, DEBAJO de los nombres.
+        //
+        // Por defecto una capa nueva va encima de todo, y con un estilo
+        // vectorial eso significa encima de los nombres de paises y mares:
+        // el trayecto tachaba justo el texto que se acaba de poder leer. Se
+        // inserta antes de la primera capa de simbolos.
+        const capas = mapaRef.current.getStyle()?.layers || [];
+        const primerTexto = capas.find((c) => c.type === "symbol")?.id;
         mapaRef.current.addLayer({
           id: "linea-ruta",
           type: "line",
@@ -276,7 +254,7 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
             "line-opacity": 0.8,
             "line-dasharray": [2, 1.6],
           },
-        });
+        }, primerTexto);
       };
 
       let intentos = 0;
@@ -317,7 +295,7 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
         // no pinta, y ahi se veia el blanco de la pagina. Pintando el div se
         // acaba el problema venga de donde venga: del zoom, del pitch o de que
         // los tiles tarden.
-        style={{ height: alto, backgroundColor: "#a8d8ea" }}
+        style={{ height: alto, backgroundColor: MAR }}
         className="w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700"
       />
       {/* Si el fondo no llega se dice DEBAJO, nunca encima. El cartel que
