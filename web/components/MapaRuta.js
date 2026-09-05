@@ -36,9 +36,15 @@ import { useEffect, useRef, useState } from "react";
 // Stadia, Mapbox) pide una clave.
 const ESTILO = "https://tiles.openfreemap.org/styles/liberty";
 
-// Color del agua del estilo, para el div de debajo. Ver mas abajo por que el
-// contenedor tambien se pinta.
-const MAR = "#a0c8f0";
+// Fondo del contenedor, DETRAS del globo.
+//
+// Era el azul del agua del estilo (#a0c8f0) porque con proyeccion plana el
+// mapa cubria todo el rectangulo y el color solo asomaba mientras cargaban
+// los tiles. Con el globo ya no: fuera de la esfera hay fondo de verdad, y un
+// azul de mar ahi hacia que el planeta pareciera un recorte pegado sobre otro
+// mar — el borde del agua no contrastaba con nada. Un gris muy claro y neutro
+// deja que la esfera se lea como esfera.
+const FONDO = "#eef2f7";
 
 function asegurarCss() {
   if (typeof document === "undefined") return;
@@ -95,7 +101,19 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
           // media tarjeta y las etiquetas del fondo se amontonan.
           // Sigue siendo el punto de partida, no una jaula: se puede enderezar
           // arrastrando con el boton derecho.
-          pitch: 48,
+          // GLOBO, no un plano inclinado.
+          //
+          // Antes se simulaba la esfera con pitch: el mapa seguia siendo una
+          // hoja plana vista de canto, y se notaba — la superficie terminaba
+          // en un borde recto y el conjunto se leia como un cuadro. maplibre
+          // 5 trae proyeccion de globo real, asi que el planeta es una esfera
+          // y el horizonte curva solo.
+          //
+          // Con globo, el pitch baja: la esfera ya aporta la profundidad que
+          // antes daba la inclinacion, y a 48 grados sobre una esfera el polo
+          // se va de cuadro.
+          projection: { type: "globe" },
+          pitch: 25,
           bearing: -12,
           cooperativeGestures: true,
           // El mundo NO se repite. Al alejar el zoom, maplibre pinta copias del
@@ -165,6 +183,8 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
       marcadoresRef.current = [];
 
       for (const p of puntos) {
+        const iso = String(p.pais || "").toLowerCase();
+        const conBandera = /^[a-z]{2}$/.test(iso);
         const el = document.createElement("div");
         // CHINCHE, no circulo.
         //
@@ -189,14 +209,32 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
                 <stop offset="60%" stop-color="#0f766e"/>
                 <stop offset="100%" stop-color="#08514c"/>
               </radialGradient>
+              ${conBandera ? `<clipPath id="cab${p.n}"><circle cx="${ancho / 2}" cy="${CABEZA + 2}" r="${CABEZA}"/></clipPath>` : ""}
             </defs>
             <ellipse cx="${ancho / 2 + 1}" cy="${alto - 2}" rx="4.5" ry="1.8" fill="#000" opacity="0.22"/>
             <path d="M${ancho / 2} ${CABEZA + 2} L${ancho / 2} ${alto - 3}" stroke="#c9d4d3" stroke-width="2" stroke-linecap="round"/>
             <path d="M${ancho / 2} ${CABEZA + 2} L${ancho / 2} ${alto - 3}" stroke="#8fa3a1" stroke-width="0.8" stroke-linecap="round"/>
-            <circle cx="${ancho / 2}" cy="${CABEZA + 2}" r="${CABEZA}" fill="url(#ch${p.n})" stroke="#fff" stroke-width="2"/>
-            <ellipse cx="${ancho / 2 - CABEZA * 0.32}" cy="${CABEZA + 2 - CABEZA * 0.38}" rx="${CABEZA * 0.34}" ry="${CABEZA * 0.24}" fill="#fff" opacity="0.35"/>
+            ${conBandera ? `
+              <!-- LA BANDERA DEL PAIS dentro de la cabeza.
+                   slice y no meet: la bandera LLENA el circulo en vez de
+                   dejar franjas vacias a los lados. Encima va un velo oscuro
+                   porque el numero tiene que leerse igual sobre la bandera
+                   de Japon que sobre la de Colombia, y sin el desaparecia
+                   en las claras. -->
+              <circle cx="${ancho / 2}" cy="${CABEZA + 2}" r="${CABEZA}" fill="#0f766e"/>
+              <image href="https://flagcdn.com/w80/${iso}.png" clip-path="url(#cab${p.n})"
+                     x="${ancho / 2 - CABEZA}" y="${CABEZA + 2 - CABEZA}"
+                     width="${CABEZA * 2}" height="${CABEZA * 2}"
+                     preserveAspectRatio="xMidYMid slice"/>
+              <circle cx="${ancho / 2}" cy="${CABEZA + 2}" r="${CABEZA}" fill="#000" opacity="0.34"/>
+              <circle cx="${ancho / 2}" cy="${CABEZA + 2}" r="${CABEZA}" fill="none" stroke="#fff" stroke-width="2"/>
+            ` : `
+              <circle cx="${ancho / 2}" cy="${CABEZA + 2}" r="${CABEZA}" fill="url(#ch${p.n})" stroke="#fff" stroke-width="2"/>
+              <ellipse cx="${ancho / 2 - CABEZA * 0.32}" cy="${CABEZA + 2 - CABEZA * 0.38}" rx="${CABEZA * 0.34}" ry="${CABEZA * 0.24}" fill="#fff" opacity="0.35"/>
+            `}
             <text x="${ancho / 2}" y="${CABEZA + 2}" text-anchor="middle" dominant-baseline="central"
-                  font-size="12" font-weight="800" fill="#fff" style="font-family:inherit">${p.n}</text>
+                  font-size="12" font-weight="800" fill="#fff"
+                  style="font-family:inherit;paint-order:stroke" stroke="#0b3d3a" stroke-width="2.4">${p.n}</text>
           </svg>`;
         const m = new maplibregl.Marker({ element: el, anchor: "bottom" })
           .setLngLat([p.lon, p.lat])
@@ -305,6 +343,19 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
         // La etiqueta del aeropuerto: es la que lleva el codigo IATA.
         bajar("airport", 5);
 
+        // ESCUDOS DE CARRETERA FUERA.
+        //
+        // Son los recuadros blancos con "M-40", "R-3", "M-501" que aparecen
+        // al acercarse a una ciudad. En un mapa de carretera son utiles; aqui
+        // se busca por donde pasa el viaje, no por que autovia se llega, y
+        // llenaban Madrid de cajitas encima de los nombres de barrio.
+        //
+        // Se van los ESCUDOS, no los nombres de calle: highway-name-* se
+        // queda, que es lo que si se pidio ver.
+        for (const id of ["highway-shield-non-us", "highway-shield-us-interstate", "road_shield_us"]) {
+          try { if (mapa.getLayer(id)) mapa.setLayoutProperty(id, "visibility", "none"); } catch {}
+        }
+
         try {
           if (mapa.getLayer("airport")) {
             // Coral de marca y halo blanco: el unico punto del mapa que no es
@@ -372,7 +423,7 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
         // no pinta, y ahi se veia el blanco de la pagina. Pintando el div se
         // acaba el problema venga de donde venga: del zoom, del pitch o de que
         // los tiles tarden.
-        style={{ height: alto, backgroundColor: MAR }}
+        style={{ height: alto, backgroundColor: FONDO }}
         className="w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700"
       />
       {/* Si el fondo no llega se dice DEBAJO, nunca encima. El cartel que

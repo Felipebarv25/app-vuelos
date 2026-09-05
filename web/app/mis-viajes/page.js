@@ -15,7 +15,8 @@ import { Icono } from "@/components/Icono";
 import Bandera from "@/components/Bandera";
 import { Logo } from "@/components/Logo";
 import IlustracionRuta from "@/components/IlustracionRuta";
-import Pasaporte from "@/components/Pasaporte";
+// El pasaporte se mudo a la portada: aqui abajo quedaba escondido, y un
+// medallero que hay que buscar no inspira a nadie. Vive en app/page.js.
 
 // El Asesor de viajes se retiro (2026-09-04): su flujo —region, presupuesto,
 // dias— es exactamente el del planificador "Te recomiendo la ruta" de
@@ -181,7 +182,30 @@ function recorrido(r) {
   return out;
 }
 
-function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBorrar, onDescartar }) {
+function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBorrar, onDescartar, onReordenar }) {
+  // Arrastrar para reordenar, con la API nativa de HTML5.
+  //
+  // Sin libreria: son dos manejadores y un indice, y meter una dependencia de
+  // drag-and-drop por esto habria pesado mas que la funcion. Solo se arrastran
+  // las rutas GUARDADAS; los borradores no tienen id estable en la nube y su
+  // sitio lo decide el propio hecho de estar sin guardar.
+  const [arrastrando, setArrastrando] = useState(null);
+  const [encima, setEncima] = useState(null);
+
+  function soltar(destino) {
+    if (arrastrando === null || destino === null || arrastrando === destino) {
+      setArrastrando(null);
+      setEncima(null);
+      return;
+    }
+    const copia = [...rutas];
+    const [movida] = copia.splice(arrastrando, 1);
+    copia.splice(destino, 0, movida);
+    setArrastrando(null);
+    setEncima(null);
+    onReordenar?.(copia);
+  }
+
   // Los viajes se planean por MES, no por dia. Se lee tambien el campo viejo
   // para que las rutas guardadas antes del cambio sigan mostrando su fecha.
   const fmt = (r) => {
@@ -193,8 +217,22 @@ function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBo
       : conMayuscula(d.toLocaleDateString(lang, { month: "short", year: "numeric" }));
   };
 
-  const Tarjeta = ({ r, sinGuardar }) => (
-    <li className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-marca-300 dark:border-slate-700 dark:bg-slate-800">
+  const Tarjeta = ({ r, sinGuardar, i }) => (
+    <li
+      draggable={!sinGuardar}
+      onDragStart={() => !sinGuardar && setArrastrando(i)}
+      onDragOver={(e) => { if (!sinGuardar && arrastrando !== null) { e.preventDefault(); setEncima(i); } }}
+      onDragLeave={() => setEncima((v) => (v === i ? null : v))}
+      onDrop={(e) => { e.preventDefault(); soltar(i); }}
+      onDragEnd={() => { setArrastrando(null); setEncima(null); }}
+      className={`rounded-2xl border bg-white p-4 transition dark:bg-slate-800 ${
+        !sinGuardar ? "cursor-grab active:cursor-grabbing" : ""
+      } ${
+        encima === i && arrastrando !== null && arrastrando !== i
+          ? "border-marca-500 ring-2 ring-marca-200 dark:ring-marca-800"
+          : "border-slate-200 hover:border-marca-300 dark:border-slate-700"
+      } ${arrastrando === i ? "opacity-40" : ""}`}
+    >
       <div className="flex items-start justify-between gap-2">
         <h3 className="text-[15px] font-extrabold text-slate-900 dark:text-slate-100">
           {r.nombre ||
@@ -251,6 +289,12 @@ function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBo
           </div>
           <p className="mt-0.5 max-w-lg text-[13px] text-slate-500 dark:text-slate-400">
             {t("listaViajesSub")}
+            {rutas.length > 1 && (
+              <>
+                {" "}
+                <span className="text-slate-400">{t("listaArrastrar")}</span>
+              </>
+            )}
           </p>
         </div>
         <button
@@ -310,8 +354,8 @@ function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBo
           {locales.map((r) => (
             <Tarjeta key={r.uid} r={r} sinGuardar />
           ))}
-          {rutas.map((r) => (
-            <Tarjeta key={r.id} r={r} />
+          {rutas.map((r, i) => (
+            <Tarjeta key={r.id} r={r} i={i} />
           ))}
         </ul>
       )}
@@ -426,6 +470,22 @@ export default function PaginaMisViajes() {
   // consecuencias distintas y una de ellas no se podia deshacer. Un borrador
   // es trabajo a medias: cuesta mas perderlo que confirmarlo.
   const [confirmLocal, setConfirmLocal] = useState(null);
+
+  /**
+   * Guarda el orden que el usuario dio a sus tarjetas.
+   *
+   * Se pinta ANTES de que responda el servidor: arrastrar tiene que sentirse
+   * inmediato, y si la peticion falla el orden vuelve solo en la proxima
+   * carga. Es una preferencia de vista, no un dato que se pueda perder.
+   */
+  function reordenarRutas(nuevas) {
+    setRutas(nuevas);
+    fetch("/api/rutas", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orden: nuevas.map((r) => r.id).filter(Boolean) }),
+    }).catch(() => {});
+  }
 
   async function borrarRuta(id) {
     try {
@@ -695,17 +755,12 @@ export default function PaginaMisViajes() {
                 onAbrir={(r) => setRutaAbierta(r)}
                 onBorrar={(id) => setConfirmRuta(id)}
                 onDescartar={(uid) => setConfirmLocal(uid)}
+                onReordenar={reordenarRutas}
               />
             )}
           </div>
           )}
         </section>
-
-        {/* EL PASAPORTE. Va DESPUES del planificador y ANTES de los viajes
-            guardados, que es el orden del relato: primero lo que vas a hacer,
-            luego lo que ya hiciste. Se carga aparte (su propio endpoint) para
-            que un fallo aqui no se lleve por delante la lista de viajes. */}
-        <Pasaporte t={t} lang={lang} usuario={usuario} />
 
         {viajesOrdenados.length > 0 && (
           <h2 className="mb-4 text-[17px] font-extrabold text-slate-900 dark:text-slate-100">

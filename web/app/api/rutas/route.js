@@ -30,6 +30,13 @@ function idPublico() {
 
 const kRuta = (id) => `ruta:${id}`;
 const kUsuario = (email) => `rutas:user:${email}`;
+// El orden que el viajero le dio a sus tarjetas arrastrandolas.
+//
+// Una clave aparte con la lista de ids, y no un campo `orden` dentro de cada
+// ruta: reordenar es UNA escritura de un array corto en vez de reescribir las
+// 25 rutas enteras, y una ruta compartida por enlace no arrastra la posicion
+// que ocupa en la lista de otra persona.
+const kOrden = (email) => `rutas:orden:${email}`;
 
 // Limpia lo que llega del cliente. Nunca se confía en el navegador.
 function sanearParadas(x) {
@@ -134,8 +141,57 @@ export async function GET(req) {
       rutas.push(migrarRuta(publica));
     } catch {}
   }
-  rutas.sort((a, b) => (b.actualizada || 0) - (a.actualizada || 0));
+  // Orden del usuario si lo hay; si no, la mas reciente primero.
+  //
+  // Las rutas que NO estan en la lista guardada —recien creadas despues del
+  // ultimo arrastre— van al principio y ordenadas por fecha: una ruta nueva
+  // tiene que aparecer arriba, no perdida al final por no estar en un array
+  // que se guardo antes de que existiera.
+  let orden = [];
+  try {
+    const raw = await kv(["GET", kOrden(u.email)]);
+    if (raw) orden = JSON.parse(raw) || [];
+  } catch {}
+  const pos = new Map(orden.map((id, i) => [id, i]));
+  rutas.sort((a, b) => {
+    const pa = pos.has(a.id) ? pos.get(a.id) : -1;
+    const pb = pos.has(b.id) ? pos.get(b.id) : -1;
+    if (pa !== pb) {
+      if (pa === -1) return -1;
+      if (pb === -1) return 1;
+      return pa - pb;
+    }
+    return (b.actualizada || 0) - (a.actualizada || 0);
+  });
   return Response.json({ ok: true, rutas });
+}
+
+/**
+ * Guardar el orden de las tarjetas.
+ *
+ * Solo acepta ids que sean del usuario: llega del navegador y podria traer
+ * cualquier cosa. Lo que sobra se descarta en silencio; lo que falta se
+ * resuelve solo en el GET, que pone las rutas desconocidas al principio.
+ */
+export async function PATCH(req) {
+  if (!kvActivo()) return Response.json({ ok: false, motivo: "no-storage" }, { status: 503 });
+  const u = await identificarUsuario(req);
+  if (!u) return Response.json({ ok: false, motivo: "no-auth" }, { status: 401 });
+
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ ok: false, motivo: "json" }, { status: 400 });
+  }
+
+  const suyas = new Set((await kv(["SMEMBERS", kUsuario(u.email)])) || []);
+  const orden = (Array.isArray(body?.orden) ? body.orden : [])
+    .filter((id) => typeof id === "string" && suyas.has(id))
+    .slice(0, TOPE_RUTAS);
+
+  await kv(["SET", kOrden(u.email), JSON.stringify(orden), "EX", String(TTL)]);
+  return Response.json({ ok: true, orden });
 }
 
 export async function POST(req) {

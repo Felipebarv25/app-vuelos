@@ -50,6 +50,11 @@ const BottomTabBar = dynamic(() => import("@/components/BottomTabBar"), { ssr: f
 // bundle inicial (que pagan TODOS los visitantes, incluido el pre-login).
 // Cada uno se descarga al primer render condicional → mejora LCP/INP.
 const MiniOfertas = dynamic(() => import("@/components/MiniOfertas"));
+// El pasaporte estaba dentro de /mis-viajes y ahi no lo veia nadie: habia que
+// entrar a la seccion y bajar. Un medallero que hay que buscar no cumple su
+// funcion, que es que se vea y de ganas de sumar otra bandera. Va en la
+// portada, justo debajo del bloque de ubicacion, antes de las ofertas.
+const Pasaporte = dynamic(() => import("@/components/Pasaporte"));
 const Presupuesto = dynamic(() => import("@/components/Presupuesto"));
 const DetalleLugar = dynamic(() => import("@/components/DetalleLugar"));
 const RequisitosViaje = dynamic(() => import("@/components/RequisitosViaje"));
@@ -1782,6 +1787,11 @@ export default function Home() {
               que hay detras. MiniOfertas pone tres vuelos detectados de
               verdad, con precio, descuento y fecha, saliendo del pais del
               usuario. */}
+          {/* EL MEDALLERO. Primero donde estas hoy, luego lo que ya
+              conociste, y despues a donde podrias ir: el logro va antes de la
+              oferta porque es lo que da sentido a la oferta. */}
+          <Pasaporte t={t} lang={lang} usuario={usuario} />
+
           <MiniOfertas onPlanear={(q) => buscarTexto(q)} t={t} lang={lang} />
 
           {/* La banda de /destino va aparte y NO dentro de MiniOfertas:
