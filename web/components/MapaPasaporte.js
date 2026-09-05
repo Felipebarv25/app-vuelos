@@ -24,11 +24,30 @@ import {
   TOTAL_PAISES,
 } from "@/data/mundoPaises";
 
-// Apagado: el teal de marca, muy oscurecido. No es gris neutro a proposito —
-// el mundo por descubrir sigue siendo "de Anduve", solo que sin encender.
-const APAGADO = "#123c3a";
-const BORDE = "#0b2b2a";
-const FONDO = "#08211f";
+// LA PALETA DE LA TARJETA, medida y no elegida a ojo.
+//
+// La primera version salio casi negra, y el problema de fondo no era solo que
+// fuera oscura: entre el mar (#08211f) y la tierra apagada (#123c3a) habia un
+// contraste de 1,39. Eso es NADA — la silueta de los continentes no se veia y
+// el conjunto se leia como un rectangulo negro en vez de como un mapa.
+//
+// Al aclarar aparece un intercambio: cuanto mas clara la tierra apagada,
+// mejor se lee el mundo pero MENOS resaltan los paises encendidos, que son el
+// punto de la tarjeta.
+//
+//   mar / tierra        silueta   vs pagina   Colombia sobre tierra
+//   #08211f / #123c3a     1,39      15,7            7,04     <- era negro
+//   #0e2f2c / #2c625c     2,06      13,4            4,06
+//   #123a34 / #3a7d76     2,60      11,7            2,79     <- elegido
+//   #1a4f47 / #4e9a91     2,82       8,7            1,92     <- ya no destaca
+//
+// Se toma el de 2,60: el mundo se lee, la tarjeta deja de ser un agujero
+// negro en la pagina, y lo que pierden los paises encendidos en contraste de
+// relleno se recupera con un contorno claro — un borde blanco los separa del
+// fondo tenga el fondo el tono que tenga.
+const APAGADO = "#3a7d76";
+const BORDE = "#2a5f59";
+const FONDO = "#123a34";
 
 export default function MapaPasaporte({
   paises = {},
@@ -98,8 +117,8 @@ export default function MapaPasaporte({
                 key={cc}
                 d={d}
                 fill={COLOR_PAIS[cc] || "#3fb1a8"}
-                stroke={resaltado ? "#ffffff" : "rgba(255,255,255,.35)"}
-                strokeWidth={resaltado ? 1.8 : 0.7}
+                stroke={resaltado ? "#ffffff" : "rgba(255,255,255,.75)"}
+                strokeWidth={resaltado ? 2.2 : 1.1}
                 style={{
                   cursor: onTocarPais ? "pointer" : "default",
                   transition: "filter .15s ease",
