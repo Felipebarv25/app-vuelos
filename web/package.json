@@ -3,9 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "powershell -NoProfile -ExecutionPolicy Bypass -File ../scripts/dev.ps1",
+    "dev:next": "next dev",
     "build": "next build",
     "start": "next start",
+    "build:local": "powershell -NoProfile -ExecutionPolicy Bypass -File ../scripts/dev.ps1 -Modo build",
+    "start:local": "powershell -NoProfile -ExecutionPolicy Bypass -File ../scripts/dev.ps1 -Modo start",
     "lint": "next lint"
   },
   "dependencies": {
