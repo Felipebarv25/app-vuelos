@@ -164,9 +164,26 @@ export default function MapaRuta({
             // Sin copias del mundo: al alejar se pintaban tres planetas con la
             // ruta dibujada tres veces.
             renderWorldCopies: false,
-            // La rueda hace scroll de la PAGINA salvo que se pulse ctrl/cmd.
-            // Sin esto, bajar por el itinerario cambiaba el zoom sin querer.
-            cooperativeGestures: true,
+            // GESTOS. Arrastrar tiene que mover el mapa SIEMPRE.
+            //
+            // Aqui vivia `cooperativeGestures: true` y bloqueaba justo eso.
+            // Su letra pequena, leida en el codigo de maplibre 5.24 y no
+            // supuesta:
+            //
+            //   _shouldBePrevented()  minTouches = 2  -> un dedo NO mueve el
+            //                                           mapa, hacen falta dos
+            //   wheel_zoom            exige ctrl/cmd  -> y en un trackpad el
+            //                                           gesto de arrastrar ES
+            //                                           la rueda
+            //
+            // O sea: en pantalla tactil y en trackpad el mapa se sentia
+            // trabado. Lo que se queria evitar —bajar por el itinerario y
+            // cambiar el zoom sin querer— se resuelve mas abajo con la rueda
+            // sola, sin tocar el arrastre.
+            scrollZoom: false,
+            // Un mapa plano no se gira: rotarlo solo desordena los nombres.
+            dragRotate: false,
+            touchPitch: false,
             attributionControl: { compact: true },
             // FLUIDEZ AL ACERCAR.
             //
@@ -188,6 +205,38 @@ export default function MapaRuta({
           // Un solo error de tile no significa que el mapa haya fallado; el
           // aviso sale mas abajo y solo si no llega NADA.
           mapaRef.current.on("error", () => {});
+
+          // LA RUEDA SE ENCIENDE AL USAR EL MAPA.
+          //
+          // Mientras nadie lo ha tocado, la rueda hace scroll de la PAGINA,
+          // que es lo que quiere quien va bajando por el itinerario. En
+          // cuanto se pulsa dentro del mapa pasa a hacer zoom, y al salir el
+          // puntero vuelve a ser scroll. El ARRASTRE no depende de esto en
+          // ningun momento: esa era la trampa de cooperativeGestures.
+          const cont = mapaRef.current.getContainer();
+          const rueda = (on) => {
+            try {
+              mapaRef.current?.scrollZoom[on ? "enable" : "disable"]();
+              cont.dataset.rueda = on ? "zoom" : "pagina";
+            } catch {}
+          };
+          rueda(false);
+          cont.addEventListener("pointerdown", () => rueda(true));
+          cont.addEventListener("pointerleave", () => rueda(false));
+          try { mapaRef.current.touchZoomRotate.disableRotation(); } catch {}
+
+          // Y publica donde quedo la vista. Mismo motivo que data-proyeccion:
+          // sin esto, la unica forma de saber si el mapa se deja arrastrar es
+          // mirarlo, y hay entornos donde no se puede mirar.
+          const publicarVista = () => {
+            try {
+              const c = mapaRef.current.getCenter();
+              cont.dataset.centro = c.lng.toFixed(3) + "," + c.lat.toFixed(3);
+              cont.dataset.zoom = mapaRef.current.getZoom().toFixed(2);
+            } catch {}
+          };
+          mapaRef.current.on("moveend", publicarVista);
+          publicarVista();
         }
 
         const mapa = mapaRef.current;
@@ -414,7 +463,34 @@ export default function MapaRuta({
          * que ensenar y lo que interesa es que un rio o un puerto se lea
          * limpio.
          */
-        function marConProfundidad(m2) {
+        // ---- QUE SE VEA COMO UN MAPA DE VERDAD -----------------------------
+        //
+        // El estilo traia colores de lamina escolar: mar azul primario y
+        // campo verde manzana. En vez de elegir a ojo se bajaron tiles de
+        // mapas reales y se contaron sus pixeles uno a uno:
+        //
+        //                                 hex      H     S     L    del tile
+        //   MAR   lo que habia (z8)     #4a90d9   211   65%   57%
+        //         OpenStreetMap         #aad3df   194   45%   77%     64%
+        //         CARTO Voyager         #d5e8eb   188   35%   88%     64%
+        //   VERDE lo que habia (bosque) #c2e39a    87   57%   75%
+        //         OpenStreetMap         #e4ecd4    80   39%   88%
+        //         OSM Carto (forest)    #add19e   102   36%   72%
+        //   TIERRA el fondo de Liberty  #f8f4f0    30   36%   96%
+        //         OpenStreetMap         #f2efe9    40   26%   93%   <- ya era real
+        //
+        // El patron es uno solo y se repite en las dos familias: los mapas
+        // reales no usan colores mas claros ni mas oscuros, usan colores
+        // MENOS SATURADOS. El mar estaba 20-25 puntos de saturacion por
+        // encima de cualquier mapa serio y ademas 15 grados corrido hacia el
+        // violeta; el verde, 20 puntos por encima.
+        //
+        // Y lo didactico no se pierde por bajar la saturacion —se pierde por
+        // bajar el CONTRASTE—. Ese se mantiene con el degradado de
+        // profundidad (mar hondo oscuro, plataforma clara) y con la tierra
+        // color crema, que es exactamente lo que separa costa de agua en un
+        // atlas de papel.
+        function paletaReal(m2) {
           try {
             if (m2.getLayer("water")) {
               // EL COLOR SUBE DE TONO AL ACERCARSE.
@@ -424,9 +500,10 @@ export default function MapaRuta({
               // Manzanares deja un rio casi negro. Se interpola.
               m2.setPaintProperty("water", "fill-color", [
                 "interpolate", ["linear"], ["zoom"],
-                0, "#1e5f9e",   // oceano abierto
-                8, "#4a90d9",
-                12, "#7fb0e8",  // rios y lagos de ciudad
+                0, "#3f6f8c",   // oceano abierto   H 202  S 38%
+                5, "#7ba8bf",   //                  H 196  S 35%
+                8, "#a8cddb",   // plataforma       H 196  S 42%  (el de OSM)
+                12, "#c3dee7",  // rios y lagos     H 194  S 43%
               ]);
               // La opacidad decide CUANTA batimetria se ve. Medido sobre el
               // tile real de Natural Earth (z2/1/1, 830 pixeles de oceano),
@@ -463,7 +540,30 @@ export default function MapaRuta({
               // esta capa tambien pinta la TIERRA a zoom lejano, y pasado
               // ~0.3 los continentes se vuelven chillones.
               m2.setPaintProperty("natural_earth", "raster-contrast", 0.2);
-              m2.setPaintProperty("natural_earth", "raster-saturation", 0.15);
+              // La saturacion baja de 0,15 a 0,05: aquel +0,15 estaba ahi para que
+              // la tierra no se apagara debajo de un mar muy azul. Con el mar real
+              // ya no hace falta, y de paso los continentes dejan de verse
+              // carteleados a zoom lejano.
+              m2.setPaintProperty("natural_earth", "raster-saturation", 0.05);
+            }
+
+            // VERDE SOLO DONDE HAY VEGETACION, Y APAGADO.
+            //
+            // Liberty pinta el campo entero de verde manzana al 70%: por eso
+            // el mapa se leia como una lamina de colegio. Los valores de
+            // abajo son los medidos en OpenStreetMap, que reserva el verde
+            // para bosque y parque de verdad y deja el resto en crema.
+            const pintar = (id, prop, val) => {
+              try { if (m2.getLayer(id)) m2.setPaintProperty(id, prop, val); } catch {}
+            };
+            pintar("landcover_wood", "fill-color", "rgba(173,209,158,0.55)");
+            pintar("landcover_grass", "fill-color", "rgba(198,219,182,0.9)");
+            pintar("park", "fill-color", "#dde9d2");
+            pintar("landcover_sand", "fill-color", "#f3ecd6");
+            // Los rios en linea llevaban el azul violeta de fabrica y no
+            // pegaban con el mar nuevo.
+            for (const id of ["waterway_river", "waterway_other", "waterway_tunnel"]) {
+              pintar(id, "line-color", "#a9ccdb");
             }
           } catch {}
         }
@@ -495,7 +595,7 @@ export default function MapaRuta({
             poner(id, "visibility", "none");
           }
           traducirNombres(m2, lang);
-          marConProfundidad(m2);
+          paletaReal(m2);
           // El contenedor publica lo que quedo aplicado DE VERDAD, leido de
           // vuelta del mapa. Mismo motivo que data-proyeccion: sin esto, la
           // unica forma de saber si el idioma y el mar se aplicaron es mirar
@@ -510,6 +610,7 @@ export default function MapaRuta({
               ).length
             );
             d.agua = String(m2.getPaintProperty("water", "fill-color") ?? "?");
+            d.verde = String(m2.getPaintProperty("landcover_wood", "fill-color") ?? "?");
           } catch {}
           try { lineaRef.current?.(); } catch {}
         }
