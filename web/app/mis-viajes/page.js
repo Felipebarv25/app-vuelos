@@ -15,6 +15,7 @@ import { Icono } from "@/components/Icono";
 import Bandera from "@/components/Bandera";
 import { Logo } from "@/components/Logo";
 import IlustracionRuta from "@/components/IlustracionRuta";
+import Pasaporte from "@/components/Pasaporte";
 
 // El Asesor de viajes se retiro (2026-09-04): su flujo —region, presupuesto,
 // dias— es exactamente el del planificador "Te recomiendo la ruta" de
@@ -699,6 +700,12 @@ export default function PaginaMisViajes() {
           </div>
           )}
         </section>
+
+        {/* EL PASAPORTE. Va DESPUES del planificador y ANTES de los viajes
+            guardados, que es el orden del relato: primero lo que vas a hacer,
+            luego lo que ya hiciste. Se carga aparte (su propio endpoint) para
+            que un fallo aqui no se lleve por delante la lista de viajes. */}
+        <Pasaporte t={t} lang={lang} usuario={usuario} />
 
         {viajesOrdenados.length > 0 && (
           <h2 className="mb-4 text-[17px] font-extrabold text-slate-900 dark:text-slate-100">

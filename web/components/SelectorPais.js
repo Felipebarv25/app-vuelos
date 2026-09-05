@@ -93,6 +93,7 @@ export default function SelectorPais({
     }
   }, [abierto]);
 
+  const vacio = !value;
   const oscuro = tono === "oscuro";
   const cTexto = oscuro
     ? "text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
@@ -132,19 +133,28 @@ export default function SelectorPais({
         className={`group inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[12.5px] font-semibold underline-offset-2 outline-none transition ${cTexto}`}
         aria-haspopup="listbox"
         aria-expanded={abierto}
-        aria-label={`${t(etiqueta)}: ${nombreActual}. ${t("selectorCambiar")}`}
-        title={`${t(etiqueta)} ${nombreActual} — ${t("selectorCambiar")}`}
+        aria-label={vacio ? t(etiqueta) : `${t(etiqueta)}: ${nombreActual}. ${t("selectorCambiar")}`}
+        title={vacio ? t(etiqueta) : `${t(etiqueta)} ${nombreActual} — ${t("selectorCambiar")}`}
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
           <circle cx="12" cy="10" r="3"></circle>
         </svg>
-        <span className={cSuave}>{t(etiqueta)}</span>
-        <span className="inline-flex items-center gap-1.5">
-          {value && <Bandera cc={value} size={18} />}
-          <span className="font-bold">{nombreActual}</span>
-        </span>
-        <span className={`ml-0.5 text-[11.5px] font-medium underline-offset-2 group-hover:underline ${cSuave}`}>{t("selectorCambiar")}</span>
+        <span className={vacio ? "font-bold" : cSuave}>{t(etiqueta)}</span>
+        {/* Sin valor no hay nada que "cambiar": el boton es un ANADIR, no un
+            selector con estado. Poniendolo todo salia "Anadir pais — cambiar"
+            con una raya en medio donde deberia ir el pais elegido. */}
+        {!vacio && (
+          <>
+            <span className="inline-flex items-center gap-1.5">
+              <Bandera cc={value} size={18} />
+              <span className="font-bold">{nombreActual}</span>
+            </span>
+            <span className={`ml-0.5 text-[11.5px] font-medium underline-offset-2 group-hover:underline ${cSuave}`}>
+              {t("selectorCambiar")}
+            </span>
+          </>
+        )}
       </button>
 
       {abierto && (

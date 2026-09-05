@@ -498,3 +498,16 @@ html[data-sesion="1"] .landing-previa {
 @media (prefers-reduced-motion: reduce) {
   .animate-bounce-suave { animation: none; }
 }
+
+/* Destello al anotar un pais nuevo en el pasaporte. Un rebote de escala y un
+   halo teal que se apaga: es el unico momento de celebracion de la app, y
+   tiene que durar poco para que no estorbe al que anota diez seguidos. */
+@keyframes popBandera {
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(28, 148, 142, .55); }
+  40%  { transform: scale(1.12); box-shadow: 0 0 0 10px rgba(28, 148, 142, 0); }
+  100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(28, 148, 142, 0); }
+}
+.animate-pop-bandera { animation: popBandera .9s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-pop-bandera { animation: none; }
+}
