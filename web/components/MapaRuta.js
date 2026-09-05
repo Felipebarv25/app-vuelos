@@ -429,18 +429,27 @@ export default function MapaRuta({
                 12, "#7fb0e8",  // rios y lagos de ciudad
               ]);
               // La opacidad decide CUANTA batimetria se ve. Medido sobre el
-              // tile real de Natural Earth (z2/1/1, 830 pixeles de oceano):
-              // el relieve tiene 73 puntos de rango de luminancia, y a 0.45
-              // de opacidad llegan 44 al resultado final, con la fosa en
-              // luminancia 135 y la plataforma en 179.
+              // tile real de Natural Earth (z2/1/1, 830 pixeles de oceano),
+              // donde el relieve tiene 73 puntos de rango de luminancia:
               //
-              // Subir mas la opacidad NO oscurece: aplana. Con 0.55 el agua
-              // tapa el relieve y el rango baja a 33, que era el problema —
-              // el mar salia palido y sin fondo.
+              //   opacidad   rango final   fosa (luminancia)
+              //     0.55         33            168     <- palido, el original
+              //     0.45         44            135
+              //     0.35         52            144     <- el de ahora
+              //
+              // Subir la opacidad NO oscurece el mar: lo APLANA. El agua es
+              // un color liso, asi que cuanto mas tapa, menos batimetria
+              // llega. El instinto de "mas azul encima para que se vea menos
+              // palido" va justo al reves.
+              //
+              // A 0.35 se gana el maximo contraste a cambio de que la parte
+              // honda quede 9 puntos mas clara que a 0.45. Es un intercambio,
+              // no una mejora en todo: elegido asi a peticion del usuario,
+              // que priorizo ver el relieve.
               m2.setPaintProperty("water", "fill-opacity", [
                 "interpolate", ["linear"], ["zoom"],
-                0, 0.45,
-                6, 0.75,
+                0, 0.35,
+                6, 0.7,
                 9, 1,
               ]);
             }
