@@ -206,13 +206,21 @@ export default function MapaRuta({
           // aviso sale mas abajo y solo si no llega NADA.
           mapaRef.current.on("error", () => {});
 
-          // LA RUEDA SE ENCIENDE AL USAR EL MAPA.
+          // EL ZOOM ES DEL MAPA, NUNCA DE LA PAGINA.
           //
-          // Mientras nadie lo ha tocado, la rueda hace scroll de la PAGINA,
-          // que es lo que quiere quien va bajando por el itinerario. En
-          // cuanto se pulsa dentro del mapa pasa a hacer zoom, y al salir el
-          // puntero vuelve a ser scroll. El ARRASTRE no depende de esto en
-          // ningun momento: esa era la trampa de cooperativeGestures.
+          // Con el puntero sobre el mapa, la rueda acerca el MAPA; al salir,
+          // vuelve a hacer scroll de la pagina. Se enciende al ENTRAR y no al
+          // pulsar: quien llega con el puntero encima y gira la rueda espera
+          // acercar lo que esta mirando, no que se le mueva la pagina.
+          //
+          // Y hay una trampa aparte, que es la que agrandaba la pantalla
+          // entera: el pellizco del trackpad y el del movil NO llegan como
+          // gesto tactil, llegan como una rueda con ctrl. maplibre solo hace
+          // preventDefault cuando su scrollZoom esta encendido (comprobado en
+          // su codigo: `wheel(e)` sale antes de tiempo si !isEnabled()), asi
+          // que en el hueco entre entrar y encenderse, el navegador se quedaba
+          // con el gesto y hacia zoom de PAGINA. El listener de abajo lo corta
+          // siempre, encendido o no.
           const cont = mapaRef.current.getContainer();
           const rueda = (on) => {
             try {
@@ -221,8 +229,20 @@ export default function MapaRuta({
             } catch {}
           };
           rueda(false);
-          cont.addEventListener("pointerdown", () => rueda(true));
+          cont.addEventListener("pointerenter", () => rueda(true));
           cont.addEventListener("pointerleave", () => rueda(false));
+          cont.addEventListener(
+            "wheel",
+            (e) => {
+              if (!e.ctrlKey && !e.metaKey) return;
+              e.preventDefault();
+              const m = mapaRef.current;
+              if (!m || m.scrollZoom.isEnabled()) return; // ya lo hace maplibre
+              const z = m.getZoom() - e.deltaY * 0.01;
+              m.setZoom(Math.min(m.getMaxZoom(), Math.max(m.getMinZoom(), z)));
+            },
+            { passive: false }
+          );
           try { mapaRef.current.touchZoomRotate.disableRotation(); } catch {}
 
           // Y publica donde quedo la vista. Mismo motivo que data-proyeccion:
@@ -500,7 +520,26 @@ export default function MapaRuta({
               // Manzanares deja un rio casi negro. Se interpola.
               m2.setPaintProperty("water", "fill-color", [
                 "interpolate", ["linear"], ["zoom"],
-                0, "#3f6f8c",   // oceano abierto   H 202  S 38%
+                // EL FONDO DEL MAR NO SIGUE LA MISMA REGLA QUE LA COSTA.
+                //
+                // Bajar la saturacion es lo correcto donde se leen calles, y
+                // ahi se queda. Pero aplicarselo tambien al oceano abierto
+                // fue un error mio: a zoom de mundo el agua va MEZCLADA al
+                // 45% sobre el relieve de Natural Earth, y esa mezcla se come
+                // el color. Medido sobre el tile real (z2/1/1, 8.003 pixeles
+                // de oceano), lo que se ve DESPUES de mezclar:
+                //
+                //   color puesto   mar resultante    S      rango de fondo
+                //   #3f6f8c          #82a3ac        20%          65
+                //   #1e5f9e          #739cb4        30%          65
+                //   #1a6bb0          #71a1bc        36%          65   <- este
+                //
+                // Un tercio del color se habia perdido por el camino: eso es
+                // exactamente lo que se ve "apagado". Se sube la saturacion
+                // del extremo hondo y NO la opacidad, que es lo que aplanaria
+                // la batimetria (el rango se queda en 65, el maximo posible).
+                0, "#1a6bb0",   // oceano abierto, ya mezclado da S 36%
+                3, "#3f83ab",   // transicion
                 5, "#7ba8bf",   //                  H 196  S 35%
                 8, "#a8cddb",   // plataforma       H 196  S 42%  (el de OSM)
                 12, "#c3dee7",  // rios y lagos     H 194  S 43%
@@ -539,12 +578,13 @@ export default function MapaRuta({
               // Un empujon al relieve para separar fosa de plataforma. Poco:
               // esta capa tambien pinta la TIERRA a zoom lejano, y pasado
               // ~0.3 los continentes se vuelven chillones.
-              m2.setPaintProperty("natural_earth", "raster-contrast", 0.2);
-              // La saturacion baja de 0,15 a 0,05: aquel +0,15 estaba ahi para que
-              // la tierra no se apagara debajo de un mar muy azul. Con el mar real
-              // ya no hace falta, y de paso los continentes dejan de verse
-              // carteleados a zoom lejano.
-              m2.setPaintProperty("natural_earth", "raster-saturation", 0.05);
+              m2.setPaintProperty("natural_earth", "raster-contrast", 0.25);
+              // La tierra a zoom de mundo ES este raster, y viene palido de
+              // origen: su luminancia media es 237 sobre 255. Bajarle la
+              // saturacion a 0,05 —como se hizo al cambiar la paleta— lo dejo
+              // sin verdes ni ocres. Vuelve a 0,22, que es donde los
+              // continentes tienen color sin llegar a cartel.
+              m2.setPaintProperty("natural_earth", "raster-saturation", 0.22);
             }
 
             // VERDE SOLO DONDE HAY VEGETACION, Y APAGADO.
