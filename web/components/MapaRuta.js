@@ -434,22 +434,23 @@ export default function MapaRuta({
               //
               //   opacidad   rango final   fosa (luminancia)
               //     0.55         33            168     <- palido, el original
-              //     0.45         44            135
-              //     0.35         52            144     <- el de ahora
+              //     0.45         44            135     <- el elegido
+              //     0.35         52            144
               //
               // Subir la opacidad NO oscurece el mar: lo APLANA. El agua es
               // un color liso, asi que cuanto mas tapa, menos batimetria
               // llega. El instinto de "mas azul encima para que se vea menos
               // palido" va justo al reves.
               //
-              // A 0.35 se gana el maximo contraste a cambio de que la parte
-              // honda quede 9 puntos mas clara que a 0.45. Es un intercambio,
-              // no una mejora en todo: elegido asi a peticion del usuario,
-              // que priorizo ver el relieve.
+              // 0.45 y no 0.35: se probaron los dos en pantalla. El 0.35 gana
+              // 8 puntos de rango pero aclara la parte honda, y a ojo pesa
+              // mas que el oceano abierto se vea PROFUNDO que exprimir el
+              // ultimo contraste con la plataforma. Si algun dia se quiere lo
+              // contrario, el numero esta aqui y la tabla dice que esperar.
               m2.setPaintProperty("water", "fill-opacity", [
                 "interpolate", ["linear"], ["zoom"],
-                0, 0.35,
-                6, 0.7,
+                0, 0.45,
+                6, 0.75,
                 9, 1,
               ]);
             }
