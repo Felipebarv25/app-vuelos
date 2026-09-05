@@ -96,6 +96,7 @@ export default function MapaRuta({
   seleccionada = null,
   // Aviso hacia la lista cuando se toca un chinche.
   onSeleccionar = null,
+  lang = "es",
   t = (k) => k,
 }) {
   const ref = useRef(null);
@@ -167,6 +168,21 @@ export default function MapaRuta({
             // Sin esto, bajar por el itinerario cambiaba el zoom sin querer.
             cooperativeGestures: true,
             attributionControl: { compact: true },
+            // FLUIDEZ AL ACERCAR.
+            //
+            // Al hacer zoom, maplibre estira el tile del nivel anterior
+            // mientras baja el nuevo: eso es lo que se ve pixelado. No se
+            // puede evitar del todo, pero si acortarlo.
+            //
+            //   fadeDuration 0     el tile nuevo aparece en cuanto llega, sin
+            //                      300 ms de fundido encima del borroso.
+            //   maxTileCacheSize   guarda mas tiles ya descargados, asi que
+            //                      volver a un nivel es instantaneo en vez de
+            //                      volver a pedirlo.
+            //   refreshExpiredTiles: false   no revalida lo que ya tiene.
+            fadeDuration: 0,
+            maxTileCacheSize: 300,
+            refreshExpiredTiles: false,
           });
           mapaRef.current.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
           // Un solo error de tile no significa que el mapa haya fallado; el
@@ -224,7 +240,18 @@ export default function MapaRuta({
           const cx = ancho / 2;
           const cy = CABEZA + 2;
 
-          el.innerHTML = `
+          // El SVG va DENTRO de otro div, y no suelto.
+          //
+          // maplibre coloca cada marcador escribiendo un `transform:
+          // translate(...)` en SU elemento. El efecto de hover escribia
+          // `transform: scale(1.15)` en ese mismo elemento y BORRABA la
+          // posicion: el chinche saltaba a la esquina superior izquierda con
+          // solo pasar el raton por encima. La escala va en el hijo, que
+          // maplibre no toca.
+          const cuerpo = document.createElement("div");
+          cuerpo.style.transition = "transform .12s ease";
+          cuerpo.style.transformOrigin = "50% 100%";
+          cuerpo.innerHTML = `
             <svg width="${ancho}" height="${altoPin}" viewBox="0 0 ${ancho} ${altoPin}" style="display:block;overflow:visible">
               <defs>
                 ${conBandera ? `<clipPath id="cab${p.n}"><circle cx="${cx}" cy="${cy}" r="${CABEZA}"/></clipPath>` : ""}
@@ -241,15 +268,15 @@ export default function MapaRuta({
                     font-size="13" font-weight="800" fill="#fff"
                     style="font-family:inherit;paint-order:stroke" stroke="#0b3d3a" stroke-width="2.4">${p.n}</text>
             </svg>`;
+          el.appendChild(cuerpo);
 
-          // Hover: crece un poco y el aro se pone en coral. No cambia de sitio.
-          el.style.transition = "transform .12s ease";
+          // Hover: crece un poco y el aro se pone en coral, sin moverse.
           el.addEventListener("mouseenter", () => {
-            el.style.transform = "scale(1.15)";
+            cuerpo.style.transform = "scale(1.15)";
             el.querySelector(".aro")?.setAttribute("stroke", "#f4734d");
           });
           el.addEventListener("mouseleave", () => {
-            el.style.transform = "";
+            cuerpo.style.transform = "";
             el.querySelector(".aro")?.setAttribute("stroke", "#fff");
           });
 
@@ -261,7 +288,18 @@ export default function MapaRuta({
           const abrir = () => {
             popupRef.current?.remove();
             const noches = Number(p.noches) || 0;
-            popupRef.current = new maplibregl.Popup({ offset: 26, closeButton: true, maxWidth: "240px" })
+            // focusAfterOpen: false.
+            //
+            // Por defecto maplibre mueve el FOCO al popup al abrirlo, y el
+            // navegador desplaza la pagina para hacer visible lo enfocado: al
+            // tocar una tarjeta del itinerario la pantalla saltaba arriba o
+            // abajo sola. Filtrar el mapa no deberia mover al usuario de sitio.
+            popupRef.current = new maplibregl.Popup({
+              offset: 26,
+              closeButton: true,
+              maxWidth: "240px",
+              focusAfterOpen: false,
+            })
               .setLngLat([p.lon, p.lat])
               .setHTML(`
                 <div style="font-family:inherit;min-width:140px">
@@ -335,6 +373,68 @@ export default function MapaRuta({
           }, primerTexto);
         };
 
+        /**
+         * Los nombres del mapa, en el idioma del usuario.
+         *
+         * El estilo liberty rotula con `name` (el nombre LOCAL: "Deutschland",
+         * "Ελλάδα") o con `name_en`. OpenMapTiles sirve ademas name:es,
+         * name:en, name:pt y name:fr, asi que basta con reescribir el
+         * text-field de las capas de simbolo pidiendo primero el idioma del
+         * usuario y cayendo al latino y al local si ese pais no lo tiene.
+         *
+         * Se tocan solo las capas cuyo text-field ya menciona `name`: las
+         * demas rotulan otra cosa (alturas, codigos) y reescribirlas las
+         * dejaria en blanco.
+         */
+        function traducirNombres(m2, idioma) {
+          const campo = [
+            "coalesce",
+            ["get", `name:${idioma}`],
+            ["get", "name:latin"],
+            ["get", "name"],
+          ];
+          for (const capa of m2.getStyle()?.layers || []) {
+            if (capa.type !== "symbol") continue;
+            const actual = capa.layout?.["text-field"];
+            if (!actual || !JSON.stringify(actual).includes("name")) continue;
+            try { m2.setLayoutProperty(capa.id, "text-field", campo); } catch {}
+          }
+        }
+
+        /**
+         * El mar con profundidad, no un azul plano.
+         *
+         * El estilo pinta el agua de un solo color liso encima del relieve de
+         * Natural Earth, que SI trae batimetria: los oceanos vienen sombreados
+         * y esa informacion quedaba tapada. Bajando la opacidad del agua a
+         * zoom lejano, el relieve asoma por debajo y aparecen solos los tonos
+         * oscuros de las fosas y los claros de la plataforma costera.
+         *
+         * Al acercarse el agua vuelve a ser opaca: ahi ya no hay batimetria
+         * que ensenar y lo que interesa es que un rio o un puerto se lea
+         * limpio.
+         */
+        function marConProfundidad(m2) {
+          try {
+            if (m2.getLayer("water")) {
+              m2.setPaintProperty("water", "fill-color", "#7fb0e8");
+              m2.setPaintProperty("water", "fill-opacity", [
+                "interpolate", ["linear"], ["zoom"],
+                0, 0.55,   // mundo: manda el relieve, se ven las fosas
+                5, 0.72,
+                8, 0.9,
+                10, 1,     // ciudad: agua limpia
+              ]);
+            }
+            if (m2.getLayer("natural_earth")) {
+              m2.setPaintProperty("natural_earth", "raster-opacity", [
+                "interpolate", ["exponential", 1.5], ["zoom"],
+                0, 1, 6, 0.35, 9, 0,
+              ]);
+            }
+          } catch {}
+        }
+
         function ajustar(m2) {
           try { m2.setProjection({ type: "mercator" }); } catch {}
           try { m2.getContainer().dataset.proyeccion = m2.getProjection()?.type || "?"; } catch {}
@@ -361,6 +461,23 @@ export default function MapaRuta({
           for (const id of ["highway-shield-non-us", "highway-shield-us-interstate", "road_shield_us"]) {
             poner(id, "visibility", "none");
           }
+          traducirNombres(m2, lang);
+          marConProfundidad(m2);
+          // El contenedor publica lo que quedo aplicado DE VERDAD, leido de
+          // vuelta del mapa. Mismo motivo que data-proyeccion: sin esto, la
+          // unica forma de saber si el idioma y el mar se aplicaron es mirar
+          // el mapa pintado, y hay entornos donde no se puede.
+          try {
+            const d = m2.getContainer().dataset;
+            d.idioma = lang;
+            d.capasTraducidas = String(
+              (m2.getStyle()?.layers || []).filter(
+                (c) => c.type === "symbol" &&
+                  JSON.stringify(c.layout?.["text-field"] || "").includes(`name:${lang}`)
+              ).length
+            );
+            d.agua = String(m2.getPaintProperty("water", "fill-color") ?? "?");
+          } catch {}
           try { lineaRef.current?.(); } catch {}
         }
 
@@ -383,7 +500,7 @@ export default function MapaRuta({
     dibujar();
     return () => { cancelado = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clave]);
+  }, [clave, lang]);
 
   // Lista -> mapa: volar a la parada elegida y abrir su ficha.
   useEffect(() => {

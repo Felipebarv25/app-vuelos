@@ -45,6 +45,7 @@ import {
 } from "@/lib/afiliados";
 import { track } from "@/lib/track";
 import { leerLocales, escribirLocal, borrarLocal, nuevoUid } from "@/lib/rutasLocales";
+import { ubicarPorIATA } from "@/lib/coordsAeropuerto";
 
 // maplibre pesa y no todo el mundo abre un viaje: se carga solo cuando hay
 // mapa que pintar.
@@ -250,6 +251,35 @@ export default function PlanRuta({
   // tarjeta. Es el numero de parada (1..n), no el indice, porque es lo que se
   // ve escrito en los dos sitios.
   const [paradaActiva, setParadaActiva] = useState(null);
+
+  // RESCATE DE COORDENADAS, sobre las paradas de verdad.
+  //
+  // Al elegir un AEROPUERTO, SelectorAeropuerto no emite lat/lon; se resuelven
+  // despues con coordsCuradas() y el geocodificador, y cuando los dos fallan
+  // —Birmingham es el caso— la parada se queda con lat:null PARA SIEMPRE.
+  // El mapa ya sabia rescatarla por su IATA, pero se lo guardaba: la parada
+  // seguia sin coordenadas en el itinerario, asi que el motor de tramos no
+  // podia estimar nada y la tarjeta decia "el tramo queda sin estimar".
+  //
+  // Ahora el rescate se hace AQUI y se escribe en `paradas`, que es lo que ven
+  // los tramos, el presupuesto y el guardado. Corre en cada cambio, asi que
+  // vale igual al abrir un viaje viejo que al anadir una parada nueva a uno ya
+  // guardado, que es justo lo que estaba roto.
+  useEffect(() => {
+    let vivo = true;
+    const faltan = paradas.some(
+      (p) => (p?.lat === null || p?.lat === undefined) && /^[A-Za-z]{3}$/.test(p?.iata || "")
+    );
+    if (!faltan) return;
+    ubicarPorIATA(paradas).then((res) => {
+      if (!vivo) return;
+      // Solo se escribe si algo cambio: sin esta comparacion el efecto se
+      // dispararia a si mismo en bucle.
+      const cambio = res.some((p, i) => p.lat !== paradas[i]?.lat);
+      if (cambio) setParadas(res);
+    });
+    return () => { vivo = false; };
+  }, [paradas]);
 
   useEffect(() => { obtenerOfertas().then(setOfertas); }, []);
   // El dataset de visas pesa 660 KB: se pide una sola vez y solo cuando el
@@ -1161,6 +1191,7 @@ export default function PlanRuta({
               textoFallo={t("rutaMapaFallo")}
               seleccionada={paradaActiva}
               onSeleccionar={setParadaActiva}
+              lang={lang}
               t={t}
             />
 
