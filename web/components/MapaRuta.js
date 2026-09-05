@@ -101,18 +101,18 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
           // media tarjeta y las etiquetas del fondo se amontonan.
           // Sigue siendo el punto de partida, no una jaula: se puede enderezar
           // arrastrando con el boton derecho.
-          // GLOBO, no un plano inclinado.
+          // El globo NO se pide aqui.
           //
-          // Antes se simulaba la esfera con pitch: el mapa seguia siendo una
-          // hoja plana vista de canto, y se notaba — la superficie terminaba
-          // en un borde recto y el conjunto se leia como un cuadro. maplibre
-          // 5 trae proyeccion de globo real, asi que el planeta es una esfera
-          // y el horizonte curva solo.
+          // El constructor de maplibre 5 no tiene opcion `projection`: se
+          // comprobo contra sus opciones por defecto y no esta. Ponerla aqui
+          // se ignora EN SILENCIO —ni error ni aviso— y el mapa se queda
+          // plano, que es exactamente lo que paso. La proyeccion se cambia
+          // con setProjection() sobre el mapa ya creado; se hace abajo, en
+          // cuanto el estilo esta cargado.
           //
-          // Con globo, el pitch baja: la esfera ya aporta la profundidad que
-          // antes daba la inclinacion, y a 48 grados sobre una esfera el polo
-          // se va de cuadro.
-          projection: { type: "globe" },
+          // El pitch baja igual: la esfera aporta la profundidad que antes
+          // daba la inclinacion, y a 48 grados sobre una esfera el polo se va
+          // de cuadro.
           pitch: 25,
           bearing: -12,
           cooperativeGestures: true,
@@ -330,6 +330,36 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
        * estaba en vez de romperse.
        */
       function ajustarDetalle(mapa) {
+        // ---- EL GLOBO ------------------------------------------------------
+        //
+        // setProjection sobre el mapa ya creado. Va aqui y no en el
+        // constructor porque ahi la opcion no existe y se ignoraba.
+        //
+        // `sky` es lo que se pinta FUERA de la esfera. Sin el, ese espacio
+        // queda del color de fondo del estilo y el planeta parece pegado
+        // sobre un rectangulo de color; con un degradado suave se lee como
+        // atmosfera y el borde de la esfera aparece.
+        try {
+          mapa.setProjection({ type: "globe" });
+          // El contenedor declara que proyeccion quedo puesta DE VERDAD.
+          //
+          // No es adorno: la opcion del constructor se ignoraba en silencio y
+          // no habia forma de notarlo sin mirar el mapa pintado, que es justo
+          // lo que aqui no se puede hacer. Con esto, comprobar si el globo
+          // esta activo es leer un atributo.
+          try {
+            mapa.getContainer().dataset.proyeccion = mapa.getProjection()?.type || "?";
+          } catch {}
+          mapa.setSky({
+            "sky-color": "#b9d9f2",
+            "sky-horizon-blend": 0.6,
+            "horizon-color": "#e8f1fa",
+            "horizon-fog-blend": 0.6,
+            "fog-color": "#f4f8fc",
+            "fog-ground-blend": 0.1,
+          });
+        } catch {}
+
         const bajar = (id, min) => {
           try { if (mapa.getLayer(id)) mapa.setLayerZoomRange(id, min, 24); } catch {}
         };
@@ -384,6 +414,22 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
           }
         } catch {}
       }
+
+      // El globo y el detalle NO esperan al sondeo de isStyleLoaded().
+      //
+      // Ese sondeo se rinde a los seis segundos, y hay entornos donde
+      // isStyleLoaded() se queda en false para siempre aunque el estilo SI
+      // haya llegado — esta documentado doce lineas mas arriba, es lo que
+      // dejaba la tarjeta en gris. Todo lo que colgaba de el se perdia ahi:
+      // los aeropuertos, los escudos y ahora la proyeccion.
+      //
+      // "style.load" es el evento canonico y llega una vez. Se usan los dos
+      // caminos porque ajustarDetalle es idempotente —pone valores, no los
+      // acumula— y entre los dos cubren el caso en que uno falle.
+      mapaRef.current.once("style.load", () => {
+        if (cancelado || !mapaRef.current) return;
+        try { ajustarDetalle(mapaRef.current); } catch {}
+      });
 
       let intentos = 0;
       const cuandoHayaEstilo = () => {
