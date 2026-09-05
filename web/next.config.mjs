@@ -61,7 +61,22 @@ const SECURITY_HEADERS = [
   { key: "X-DNS-Prefetch-Control", value: "on" },
 ];
 
+// DONDE SE ESCRIBE .next
+//
+// Este repositorio vive dentro de OneDrive, y OneDrive intenta sincronizar
+// .next mientras Next lo esta escribiendo: bloquea ficheros a medias y el
+// build se queda colgado. Por eso las compilaciones se hacian a mano en una
+// copia fuera de la carpeta sincronizada.
+//
+// Con ANDUVE_DIST_DIR se le dice a Next que escriba en otro sitio sin mover
+// el proyecto. Sin la variable, todo sigue igual que siempre (.next), asi que
+// Vercel no se entera de nada: alli no existe OneDrive ni la variable.
+//
+//   scripts/dev.ps1  la pone y lanza el servidor
+const DIST_DIR = process.env.ANDUVE_DIST_DIR || ".next";
+
 const nextConfig = {
+  distDir: DIST_DIR,
   reactStrictMode: true,
 
   async headers() {
