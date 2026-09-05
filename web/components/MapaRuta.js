@@ -417,13 +417,31 @@ export default function MapaRuta({
         function marConProfundidad(m2) {
           try {
             if (m2.getLayer("water")) {
-              m2.setPaintProperty("water", "fill-color", "#7fb0e8");
+              // EL COLOR SUBE DE TONO AL ACERCARSE.
+              //
+              // Un solo azul no sirve para las dos cosas: el oceano visto
+              // desde el mundo pide un azul hondo, y el mismo azul en el
+              // Manzanares deja un rio casi negro. Se interpola.
+              m2.setPaintProperty("water", "fill-color", [
+                "interpolate", ["linear"], ["zoom"],
+                0, "#1e5f9e",   // oceano abierto
+                8, "#4a90d9",
+                12, "#7fb0e8",  // rios y lagos de ciudad
+              ]);
+              // La opacidad decide CUANTA batimetria se ve. Medido sobre el
+              // tile real de Natural Earth (z2/1/1, 830 pixeles de oceano):
+              // el relieve tiene 73 puntos de rango de luminancia, y a 0.45
+              // de opacidad llegan 44 al resultado final, con la fosa en
+              // luminancia 135 y la plataforma en 179.
+              //
+              // Subir mas la opacidad NO oscurece: aplana. Con 0.55 el agua
+              // tapa el relieve y el rango baja a 33, que era el problema —
+              // el mar salia palido y sin fondo.
               m2.setPaintProperty("water", "fill-opacity", [
                 "interpolate", ["linear"], ["zoom"],
-                0, 0.55,   // mundo: manda el relieve, se ven las fosas
-                5, 0.72,
-                8, 0.9,
-                10, 1,     // ciudad: agua limpia
+                0, 0.45,
+                6, 0.75,
+                9, 1,
               ]);
             }
             if (m2.getLayer("natural_earth")) {
@@ -431,6 +449,11 @@ export default function MapaRuta({
                 "interpolate", ["exponential", 1.5], ["zoom"],
                 0, 1, 6, 0.35, 9, 0,
               ]);
+              // Un empujon al relieve para separar fosa de plataforma. Poco:
+              // esta capa tambien pinta la TIERRA a zoom lejano, y pasado
+              // ~0.3 los continentes se vuelven chillones.
+              m2.setPaintProperty("natural_earth", "raster-contrast", 0.2);
+              m2.setPaintProperty("natural_earth", "raster-saturation", 0.15);
             }
           } catch {}
         }
