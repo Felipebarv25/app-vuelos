@@ -31,10 +31,22 @@
 import { useRouter } from "next/navigation";
 import { Logo } from "./Logo";
 
-export default function BotonVolver({ href = null, etiqueta = "Volver", espaciar = true }) {
+/**
+ * `alVolver`: volver DENTRO de la pagina, sin navegar.
+ *
+ * Hay pantallas que cambian de vista sin cambiar de URL. En /mis-viajes, abrir
+ * un viaje sustituye la lista por el detalle y la direccion sigue siendo la
+ * misma, asi que router.back() se llevaba al usuario a la portada en vez de
+ * devolverlo a su lista: pulsaba "Volver" esperando la lista de viajes y
+ * acababa fuera de la seccion. Cuando se pasa `alVolver`, manda ese callback
+ * y el boton ademas dice A DONDE va, que es lo que faltaba para que se
+ * entendiera sin probarlo.
+ */
+export default function BotonVolver({ href = null, etiqueta = "Volver", espaciar = true, alVolver = null }) {
   const router = useRouter();
 
   function volver() {
+    if (alVolver) { alVolver(); return; }
     if (href) { router.push(href); return; }
     // Si no hay historial (link directo), ir a la home en vez de no hacer nada.
     if (typeof window !== "undefined" && window.history.length > 1) router.back();
@@ -48,16 +60,20 @@ export default function BotonVolver({ href = null, etiqueta = "Volver", espaciar
         type="button"
         onClick={volver}
         aria-label={etiqueta}
-        className="group inline-flex items-center gap-2 rounded-full bg-white/95 py-1.5 pl-2 pr-4 shadow-[0_6px_20px_rgba(15,23,42,.16)] ring-1 ring-slate-200 backdrop-blur transition hover:-translate-x-0.5 hover:shadow-[0_8px_24px_rgba(15,23,42,.22)] dark:bg-slate-800/95 dark:ring-slate-600"
+        className={`group inline-flex items-center gap-2 rounded-full py-1.5 pl-2 pr-4 shadow-[0_6px_20px_rgba(15,23,42,.16)] ring-1 backdrop-blur transition hover:-translate-x-0.5 hover:shadow-[0_8px_24px_rgba(15,23,42,.22)] ${
+          alVolver
+            ? "bg-marca-700 ring-marca-800 hover:bg-marca-800"
+            : "bg-white/95 ring-slate-200 dark:bg-slate-800/95 dark:ring-slate-600"
+        }`}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-marca-700 transition group-hover:-translate-x-0.5 dark:text-marca-300">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition group-hover:-translate-x-0.5 ${alVolver ? "text-white" : "text-marca-700 dark:text-marca-300"}`}>
           <path d="M19 12H5M12 19l-7-7 7-7" />
         </svg>
         {/* El walker mirando hacia atras (scaleX(-1)): vuelve sobre sus pasos */}
         <span className="inline-block" style={{ transform: "scaleX(-1)" }}>
           <Logo size={24} animado />
         </span>
-        <span className="text-[13px] font-bold text-marca-900 dark:text-slate-100">{etiqueta}</span>
+        <span className={`text-[13px] font-bold ${alVolver ? "text-white" : "text-marca-900 dark:text-slate-100"}`}>{etiqueta}</span>
       </button>
     </div>
     {espaciar && <div aria-hidden="true" className="h-11" />}

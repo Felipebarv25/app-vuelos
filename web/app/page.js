@@ -54,7 +54,11 @@ const Presupuesto = dynamic(() => import("@/components/Presupuesto"));
 const DetalleLugar = dynamic(() => import("@/components/DetalleLugar"));
 const RequisitosViaje = dynamic(() => import("@/components/RequisitosViaje"));
 const Paywall = dynamic(() => import("@/components/Paywall"));
-const Asesor = dynamic(() => import("@/components/Asesor"));
+// El Asesor de viajes se retiro (2026-09-04): su flujo —region, presupuesto,
+// dias— es exactamente el del planificador "Te recomiendo la ruta" de
+// /mis-viajes, que ademas deja editar el resultado. Dos puertas al mismo
+// sitio, y la del chat era la peor: no se podia ajustar nada de lo que
+// proponia. El componente sigue en components/Asesor.js por si vuelve.
 // Chip de alertas en el home post-login. Se dinamica para no engordar el
 // bundle del pre-login (audit 2026-06-29: exponer alertas antes de entrar
 // a una ciudad).
@@ -2276,16 +2280,6 @@ export default function Home() {
           <ChatViajeros ciudad={ciudad.nombre} t={t} />
         </div>
       )}
-
-      {/* Asesor de viajes (guía gratis + IA opcional, chat flotante) */}
-      <div className="print:hidden">
-        <Asesor
-          t={t}
-          usuario={usuario}
-          onPlanear={(q) => { buscarTexto(q); }}
-          onAbrirPresupuesto={() => setMostrarPresupuesto(true)}
-        />
-      </div>
 
       {/* Vista de impresión / PDF: oculta en pantalla, solo aparece al imprimir.
           Renderiza TODOS los dias del plan (no solo el visible) en formato sobrio. */}

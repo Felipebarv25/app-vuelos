@@ -18,7 +18,11 @@ import { Icono } from "@/components/Icono";
 
 // Brújula: chat flotante de marca. Solo se carga cuando hace falta (lazy)
 // para no penalizar el LCP de la ruta.
-const Asesor = dynamic(() => import("@/components/Asesor"));
+// El Asesor de viajes se retiro (2026-09-04): su flujo —region, presupuesto,
+// dias— es exactamente el del planificador "Te recomiendo la ruta" de
+// /mis-viajes, que ademas deja editar el resultado. Dos puertas al mismo
+// sitio, y la del chat era la peor: no se podia ajustar nada de lo que
+// proponia. El componente sigue en components/Asesor.js por si vuelve.
 
 // "2026-09-14" -> "septiembre 2026"
 function fmtMes(iso, lang) {
@@ -151,12 +155,6 @@ export default function PaginaOfertas() {
           onAbrirPresupuesto va al home con ?presupuesto=1 que la home lee
           para abrir el modal automaticamente. */}
       <div className="print:hidden">
-        <Asesor
-          t={t}
-          usuario={usuario}
-          onPlanear={(q) => router.push(`/?q=${encodeURIComponent(q)}`)}
-          onAbrirPresupuesto={() => router.push("/?presupuesto=1")}
-        />
       </div>
 
       <BottomTabBar />

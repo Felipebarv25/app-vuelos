@@ -16,7 +16,11 @@ import Bandera from "@/components/Bandera";
 import { Logo } from "@/components/Logo";
 import IlustracionRuta from "@/components/IlustracionRuta";
 
-const Asesor = dynamic(() => import("@/components/Asesor"));
+// El Asesor de viajes se retiro (2026-09-04): su flujo —region, presupuesto,
+// dias— es exactamente el del planificador "Te recomiendo la ruta" de
+// /mis-viajes, que ademas deja editar el resultado. Dos puertas al mismo
+// sitio, y la del chat era la peor: no se podia ajustar nada de lo que
+// proponia. El componente sigue en components/Asesor.js por si vuelve.
 
 // Los dos planificadores viven AQUI, no en un modal encima del home. Carga
 // diferida: entre los dos son ~2.000 lineas y la mayoria de las visitas a esta
@@ -152,6 +156,30 @@ const paisesDeTodos = (listas) => {
   return vistos;
 };
 
+/**
+ * El recorrido tal como se lee, sin ciudades repetidas SEGUIDAS.
+ *
+ * Las paradas guardadas si pueden repetir una ciudad, y con razon: Madrid es
+ * puerta de entrada y de salida en un viaje a Europa, y aparece al principio y
+ * al final. Lo que no significa nada es verla dos veces SEGUIDAS, y eso es lo
+ * que salia: "Medellin -> Madrid -> Madrid -> Londres -> Londres -> Liverpool".
+ * Se colapsan solo los duplicados consecutivos; los que estan separados por
+ * otra ciudad se conservan porque son escalas reales del viaje.
+ *
+ * El contador de paradas usa esta misma lista para que el numero cuadre con lo
+ * que se lee encima.
+ */
+function recorrido(r) {
+  const out = [];
+  for (const p of r?.paradas || []) {
+    const c = (p?.ciudad || "").trim();
+    if (!c) continue;
+    if (out.length && out[out.length - 1].toLowerCase() === c.toLowerCase()) continue;
+    out.push(c);
+  }
+  return out;
+}
+
 function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBorrar, onDescartar }) {
   // Los viajes se planean por MES, no por dia. Se lee tambien el campo viejo
   // para que las rutas guardadas antes del cambio sigan mostrando su fecha.
@@ -196,11 +224,11 @@ function ListaViajes({ t, lang, rutas = [], locales = [], onCrear, onAbrir, onBo
         </div>
       </div>
       <p className="mt-1 truncate text-[12.5px] text-slate-500 dark:text-slate-400">
-        {(r.paradas || []).map((p) => p.ciudad).join(" → ") || "—"}
+        {recorrido(r).join(" → ") || "—"}
       </p>
       <p className="mt-1 text-[12px] text-slate-400">
         {fmt(r)} ·{" "}
-        {t("rutasNParadas").replace("{n}", (r.paradas || []).length)}
+        {t("rutasNParadas").replace("{n}", recorrido(r).length)}
       </p>
       <button
         onClick={() => onAbrir(r)}
@@ -389,6 +417,15 @@ export default function PaginaMisViajes() {
     setLocales(leerLocales().filter((x) => !x.id));
   }
 
+  // Los BORRADORES tambien preguntan antes de irse.
+  //
+  // Las rutas guardadas ya abrian un dialogo de confirmacion, pero la misma
+  // "x" sobre un borrador llamaba a descartarLocal() y lo borraba en el acto.
+  // Desde fuera las dos tarjetas son iguales, asi que el mismo gesto tenia dos
+  // consecuencias distintas y una de ellas no se podia deshacer. Un borrador
+  // es trabajo a medias: cuesta mas perderlo que confirmarlo.
+  const [confirmLocal, setConfirmLocal] = useState(null);
+
   async function borrarRuta(id) {
     try {
       await fetch(`/api/rutas?id=${encodeURIComponent(id)}`, {
@@ -455,7 +492,13 @@ export default function PaginaMisViajes() {
   return (
     <div className="min-h-screen bg-slate-50 pb-16 dark:bg-slate-900 md:pb-0">
       <NavTop active="misviajes" />
-      <BotonVolver />
+      {/* Con un viaje abierto, "Volver" cierra el viaje y devuelve a la lista
+          en vez de salir de la seccion. La etiqueta lo dice para que no haya
+          que probarlo. */}
+      <BotonVolver
+        etiqueta={rutaAbierta ? t("rutaVolverALista") : "Volver"}
+        alVolver={rutaAbierta ? () => { setRutaAbierta(null); cargarRutas(); } : null}
+      />
 
       <main className="mx-auto max-w-5xl px-4 py-8 lg:px-8 lg:py-10">
         {/* CABECERA. Era un titulo negro sobre gris y nada mas: la pagina
@@ -580,6 +623,31 @@ export default function PaginaMisViajes() {
                 <span className="mt-1 block text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400">
                   {sub}
                 </span>
+                {/* La invitacion a tocar.
+                    Las dos tarjetas se veian como fichas informativas: nada
+                    decia que al pulsarlas se despliega el planificador, y
+                    quien no lo adivinaba se quedaba mirando. Ahora llevan un
+                    pie con la accion y una flecha que gira 180 grados al
+                    abrir, asi que ademas indica en que estado esta. */}
+                <span
+                  className={`mt-2.5 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide transition ${
+                    modoPlan === k
+                      ? "text-marca-700 dark:text-marca-300"
+                      : "text-marca-600 dark:text-marca-400"
+                  }`}
+                >
+                  {modoPlan === k ? t("planPliega") : t("planDespliega")}
+                  <svg
+                    width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                    aria-hidden="true"
+                    className={`transition-transform duration-200 ${
+                      modoPlan === k ? "rotate-180" : "animate-bounce-suave"
+                    }`}
+                  >
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </span>
               </button>
             ))}
           </div>
@@ -625,7 +693,7 @@ export default function PaginaMisViajes() {
                 onCrear={() => setRutaAbierta({ nueva: true })}
                 onAbrir={(r) => setRutaAbierta(r)}
                 onBorrar={(id) => setConfirmRuta(id)}
-                onDescartar={descartarLocal}
+                onDescartar={(uid) => setConfirmLocal(uid)}
               />
             )}
           </div>
@@ -805,6 +873,41 @@ export default function PaginaMisViajes() {
         )}
       </main>
 
+      {/* Confirmación de descarte de un BORRADOR (no guardado) */}
+      {confirmLocal && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setConfirmLocal(null)}
+        >
+          <div
+            className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-[16px] font-bold text-slate-900 dark:text-slate-100">
+              {t("misViajesConfirmDescartar")}
+            </h3>
+            <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">
+              {locales.find((x) => x.uid === confirmLocal)?.nombre ||
+                t("misViajesConfirmDescartarSub")}
+            </p>
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => setConfirmLocal(null)}
+                className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+              >
+                {t("misViajesConfirmNo")}
+              </button>
+              <button
+                onClick={() => { descartarLocal(confirmLocal); setConfirmLocal(null); }}
+                className="flex-1 rounded-lg bg-red-500 px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-red-600"
+              >
+                {t("misViajesConfirmSi")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Confirmación de borrado de una ruta multiparada */}
       {confirmRuta && (
         <div
@@ -879,27 +982,6 @@ export default function PaginaMisViajes() {
       <FooterAnduve />
 
       <div className="print:hidden">
-        <Asesor
-          t={t}
-          usuario={usuario}
-          onPlanear={(q) => router.push(`/?q=${encodeURIComponent(q)}`)}
-          onAbrirPresupuesto={() => {
-            setModoPlan("reco");
-            // En este mismo tick el planificador sigue plegado, asi que el
-            // destino del scroll deja de ser valido en cuanto React pinta el
-            // modo "reco". Hay que esperar a que la altura sea la definitiva.
-            //
-            // setTimeout y no requestAnimationFrame: rAF NO se ejecuta si la
-            // pestana esta oculta, asi que el desplazamiento no ocurria nunca
-            // para quien pulsa el boton y se cambia de pestana. setTimeout se
-            // ralentiza en segundo plano, pero llega.
-            setTimeout(() => {
-              document
-                .getElementById("planificador")
-                ?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }, 80);
-          }}
-        />
       </div>
 
       <BottomTabBar />

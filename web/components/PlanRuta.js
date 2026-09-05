@@ -705,15 +705,12 @@ export default function PlanRuta({
           <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/70">
             {t("rutaIdentidadEyebrow")}
           </div>
-          {onVolver ? (
-            <button
-              type="button"
-              onClick={onVolver}
-              className="shrink-0 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[12px] font-bold text-white transition hover:bg-white/20"
-            >
-              ← {t("rutaVolverALista")}
-            </button>
-          ) : (
+          {/* El "Volver a mis viajes" que habia aqui se quito: quedaba
+              perdido dentro del banner y duplicaba el boton flotante, que
+              ahora cierra el viaje y ademas se ve siempre al hacer scroll.
+              Dos controles para lo mismo, y el visible era el que no
+              funcionaba. */}
+          {onVolver ? null : (
             paradas.length > 0 && (
               <button
                 type="button"
