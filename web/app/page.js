@@ -52,9 +52,14 @@ const BottomTabBar = dynamic(() => import("@/components/BottomTabBar"), { ssr: f
 const MiniOfertas = dynamic(() => import("@/components/MiniOfertas"));
 // El pasaporte estaba dentro de /mis-viajes y ahi no lo veia nadie: habia que
 // entrar a la seccion y bajar. Un medallero que hay que buscar no cumple su
-// funcion, que es que se vea y de ganas de sumar otra bandera. Va en la
-// portada, justo debajo del bloque de ubicacion, antes de las ofertas.
-const Pasaporte = dynamic(() => import("@/components/Pasaporte"));
+// funcion, que es que se vea y de ganas de sumar otra bandera.
+//
+// Estuvo un tiempo como tarjeta en el cuerpo del home, y ocupaba media
+// pantalla para contar algo que casi siempre cabe en cinco banderas. Ahora
+// asoma en el borde derecho del hero —una cinta con las banderas y una
+// flecha— y el mapa entero se despliega al pulsarla. Se ve siempre, y solo
+// ocupa sitio cuando lo pides.
+const PasaporteBorde = dynamic(() => import("@/components/PasaporteBorde"));
 const Presupuesto = dynamic(() => import("@/components/Presupuesto"));
 const DetalleLugar = dynamic(() => import("@/components/DetalleLugar"));
 const RequisitosViaje = dynamic(() => import("@/components/RequisitosViaje"));
@@ -1702,6 +1707,11 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {/* El pasaporte asomado al borde. Solo en el hero: cuando se busca
+            una ciudad la cabecera se vuelve una cinta blanca de 60 px y una
+            pestana colgando de ahi no tendria donde agarrarse. */}
+        {esHero && <PasaporteBorde t={t} lang={lang} usuario={usuario} />}
       </header>
 
       {/* Banner de error. relative z-20: el panel del home tiene margen
@@ -1787,11 +1797,6 @@ export default function Home() {
               que hay detras. MiniOfertas pone tres vuelos detectados de
               verdad, con precio, descuento y fecha, saliendo del pais del
               usuario. */}
-          {/* EL MEDALLERO. Primero donde estas hoy, luego lo que ya
-              conociste, y despues a donde podrias ir: el logro va antes de la
-              oferta porque es lo que da sentido a la oferta. */}
-          <Pasaporte t={t} lang={lang} usuario={usuario} />
-
           <MiniOfertas onPlanear={(q) => buscarTexto(q)} t={t} lang={lang} />
 
           {/* La banda de /destino va aparte y NO dentro de MiniOfertas:
