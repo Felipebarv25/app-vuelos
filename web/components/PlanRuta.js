@@ -245,6 +245,11 @@ export default function PlanRuta({
   // vacío: si no, se queda con "Madrid (MAD)" escrito y encadenar la
   // siguiente parada obliga a borrar a mano.
   const [nSelector, setNSelector] = useState(0);
+  // Parada resaltada. La comparten la lista y el mapa en los dos sentidos:
+  // tocar una tarjeta vuela hasta su chinche, y tocar un chinche resalta su
+  // tarjeta. Es el numero de parada (1..n), no el indice, porque es lo que se
+  // ve escrito en los dos sitios.
+  const [paradaActiva, setParadaActiva] = useState(null);
 
   useEffect(() => { obtenerOfertas().then(setOfertas); }, []);
   // El dataset de visas pesa 660 KB: se pide una sola vez y solo cuando el
@@ -1148,7 +1153,16 @@ export default function PlanRuta({
                 Una lista de once paradas no deja ver si el recorrido tiene
                 sentido; el mapa lo ensena de un vistazo, y es lo que hace
                 evidente si conviene reordenar. */}
-            <MapaRuta paradas={paradas} alto={300} textoFallo={t("rutaMapaFallo")} />
+            {/* Mas alto que antes (300): con once paradas europeas no cabia
+                nada. En movil se queda en 300. */}
+            <MapaRuta
+              paradas={paradas}
+              alto={420}
+              textoFallo={t("rutaMapaFallo")}
+              seleccionada={paradaActiva}
+              onSeleccionar={setParadaActiva}
+              t={t}
+            />
 
 
             {/* Itinerario */}
@@ -1158,8 +1172,16 @@ export default function PlanRuta({
                 const esUltima = i === paradas.length - 1;
                 return (
                   <li key={`${p.iata}-${i}`}>
-                    {/* Parada */}
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-slate-200 bg-white p-3.5 dark:border-slate-700 dark:bg-slate-800">
+                    {/* Parada. Pulsarla lleva el mapa hasta su chinche; el
+                        borde teal marca cual es la que se esta mirando. */}
+                    <div
+                      onClick={() => setParadaActiva(i + 1)}
+                      className={`flex cursor-pointer flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border bg-white p-3.5 transition dark:bg-slate-800 ${
+                        paradaActiva === i + 1
+                          ? "border-marca-500 ring-2 ring-marca-200 dark:ring-marca-800"
+                          : "border-slate-200 hover:border-marca-300 dark:border-slate-700"
+                      }`}
+                    >
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-marca-50 text-[12px] font-bold tabular-nums text-marca-700 dark:bg-marca-900/40 dark:text-marca-300">
                         {i + 1}
                       </span>

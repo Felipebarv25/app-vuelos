@@ -1,50 +1,37 @@
 "use client";
-// Mapa de un viaje multiparada.
+// El mapa de la ruta: plano, encuadrado a tu viaje y con cada parada tocable.
 //
-// No reutiliza Mapa.js a proposito. Aquel esta hecho para la ruta de UN dia
-// dentro de UNA ciudad: rota la longitud con el scroll, abre fotos de cada
-// lugar, pinta el hotel y hace zoom 13 sobre un punto. Aqui hace falta lo
-// contrario: mirar paises enteros, numerar las paradas en el orden del viaje
-// y unirlas con una linea. Meter los dos casos en un componente habria sido
-// una lista de props excluyentes.
+// QUE CAMBIO Y POR QUE (reescritura 2026-09-05)
 //
-// El encuadre lo manda la ruta: el mapa se ajusta a las ciudades del viaje,
-// que es lo que el usuario pidio ("filtrado por la zona en la que me estoy
-// enfocando para cada viaje").
-import { useEffect, useRef, useState } from "react";
+// La version anterior era un GLOBO 3D inclinado. Se veia bien en una captura
+// y era mala para trabajar: arrastrar rotaba el planeta en vez de mover el
+// mapa, las paradas europeas se amontonaban en un punto imposible de tocar, y
+// una parada sin coordenadas simplemente no existia — Birmingham desaparecia
+// de un viaje de once paradas sin que nada lo dijera.
+//
+// Ahora manda el uso:
+//
+//   - Mercator plano. Arrastrar desplaza.
+//   - Al abrir, el mapa se encuadra SOLO a todas las paradas. Nadie deberia
+//     tener que buscar su propio viaje.
+//   - Un chinche numerado por parada, con la bandera de su pais, que se puede
+//     tocar y abre su ficha.
+//   - Las paradas que caen encima se separan en abanico en vez de taparse.
+//   - Lo que no se puede ubicar SE DICE, debajo del mapa, en vez de callarse.
 
-// El fondo pasa de RASTER a VECTORIAL, y de ahi salen cuatro cosas de golpe.
-//
-// Hasta ahora eran imagenes: cada tile una foto del mapa con los nombres YA
-// pintados encima. Eso trae tres problemas que no se pueden arreglar por
-// separado, porque son el mismo:
-//
-//   · Los nombres se ven borrosos. Es texto dentro de un bitmap; al inclinar
-//     la vista se estira como cualquier foto. No hay ajuste que lo salve.
-//   · Los nombres estan TUMBADOS sobre el suelo, porque son parte del suelo.
-//   · Los colores son los del callejero de OSM — gris y beige —, no los de un
-//     planeta: sin verde donde hay bosque ni palido donde hay desierto.
-//
-// Con tiles vectoriales el navegador dibuja el texto de verdad: nitido a
-// cualquier zoom y, por defecto, de cara a la camara aunque el mapa este
-// inclinado. Y el estilo trae lo que faltaba: relieve fisico (ne2_shaded, que
-// es Natural Earth sombreado), fronteras (boundary_2 y boundary_3) y nombres
-// de mares y oceanos (water_name).
-//
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ubicarPorIATA } from "@/lib/coordsAeropuerto";
+
 // OpenFreeMap sirve el estilo "liberty" sin API key ni registro, que es lo que
 // lo hace viable aqui: cualquier otro proveedor vectorial decente (MapTiler,
 // Stadia, Mapbox) pide una clave.
 const ESTILO = "https://tiles.openfreemap.org/styles/liberty";
 
-// Fondo del contenedor, DETRAS del globo.
-//
-// Era el azul del agua del estilo (#a0c8f0) porque con proyeccion plana el
-// mapa cubria todo el rectangulo y el color solo asomaba mientras cargaban
-// los tiles. Con el globo ya no: fuera de la esfera hay fondo de verdad, y un
-// azul de mar ahi hacia que el planeta pareciera un recorte pegado sobre otro
-// mar — el borde del agua no contrastaba con nada. Un gris muy claro y neutro
-// deja que la esfera se lea como esfera.
+// Fondo mientras cargan los tiles. Gris muy claro y no azul mar: si tarda, un
+// rectangulo azul se lee como "mapa roto en mitad del oceano".
 const FONDO = "#eef2f7";
+
+const TEAL = "#0f766e";
 
 function asegurarCss() {
   if (typeof document === "undefined") return;
@@ -57,23 +44,96 @@ function asegurarCss() {
   document.head.appendChild(link);
 }
 
-export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) {
+// OJO con Number(): Number(null) es 0 y Number("") tambien, asi que
+// Number.isFinite(Number(null)) devuelve TRUE. Una parada con lat: null
+// —que es justo el caso que este mapa tiene que detectar— pasaba el filtro y
+// reventaba despues en lat.toFixed(). Se rechaza lo vacio antes de convertir.
+const esNum = (v) =>
+  v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v));
+
+/**
+ * Separa en abanico las paradas que caerian en el mismo sitio.
+ *
+ * En un viaje europeo, Madrid, Londres y Birmingham entran en pocos pixeles al
+ * encuadrar la ruta entera, y los chinches se tapaban unos a otros: el de
+ * arriba se podia tocar y los de abajo no existian para el raton.
+ *
+ * En vez de agrupar en un cluster con un numero —que esconde el dato y obliga
+ * a un clic mas— se abren en circulo alrededor de su centro. El numero de
+ * parada sigue visible en todos, que es lo que se viene a leer, y la aguja del
+ * chinche sigue apuntando a su sitio real.
+ *
+ * @param {Array} puntos  paradas con lat/lon
+ * @param {Function} aPixel  (lng,lat) -> {x,y}
+ * @param {number} radio  distancia en px por debajo de la cual se considera choque
+ */
+function separarChoques(puntos, aPixel, radio = 34) {
+  const grupos = [];
+  for (const p of puntos) {
+    const pos = aPixel(p.lon, p.lat);
+    const g = grupos.find((x) => Math.hypot(x.x - pos.x, x.y - pos.y) < radio);
+    if (g) g.items.push(p);
+    else grupos.push({ x: pos.x, y: pos.y, items: [p] });
+  }
+  const desvios = new Map();
+  for (const g of grupos) {
+    if (g.items.length < 2) continue;
+    const r = 16 + g.items.length * 3;
+    g.items.forEach((p, i) => {
+      const ang = (2 * Math.PI * i) / g.items.length - Math.PI / 2;
+      desvios.set(p.n, [Math.cos(ang) * r, Math.sin(ang) * r]);
+    });
+  }
+  return desvios;
+}
+
+export default function MapaRuta({
+  paradas = [],
+  alto = 420,
+  textoFallo = "No pudimos cargar el mapa.",
+  // Parada resaltada desde la lista del itinerario. Al cambiar, el mapa vuela
+  // hasta ella y abre su ficha.
+  seleccionada = null,
+  // Aviso hacia la lista cuando se toca un chinche.
+  onSeleccionar = null,
+  t = (k) => k,
+}) {
   const ref = useRef(null);
   const mapaRef = useRef(null);
   const marcadoresRef = useRef([]);
-  // Si el fondo no llega. NO es "el mapa fallo": las paradas se ven igual,
-  // que es la parte que importa.
-  const [sinFondo, setSinFondo] = useState(false);
+  const popupRef = useRef(null);
   const lineaRef = useRef(null);
+  const encuadrarRef = useRef(null);
+  const [fallo, setFallo] = useState(false);
+  const [ubicadas, setUbicadas] = useState(null); // paradas ya resueltas por IATA
 
-  // Solo las paradas que tienen coordenadas. Una ciudad sin geocodificar no
-  // se puede pintar, y saltarsela es mejor que no pintar el mapa entero.
-  const puntos = paradas
-    .map((p, i) => ({ ...p, n: i + 1 }))
-    .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon));
+  // Resolver coordenadas que falten ANTES de dibujar. Es asincrono porque la
+  // tabla de aeropuertos se pide solo si hace falta.
+  useEffect(() => {
+    let vivo = true;
+    ubicarPorIATA(paradas).then((r) => { if (vivo) setUbicadas(r); });
+    return () => { vivo = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify((paradas || []).map((p) => [p.ciudad, p.iata, p.lat, p.lon]))]);
 
-  // Clave de contenido: si no cambia, no se vuelve a dibujar. Sin esto cada
-  // tecla en "noches" repintaba todos los marcadores.
+  const lista = ubicadas || paradas || [];
+
+  // El numero que se pinta es el de la parada en el ITINERARIO, no el de la
+  // lista filtrada: si la parada 4 no se puede ubicar, la siguiente sigue
+  // siendo la 5 en el mapa y en la lista.
+  const puntos = useMemo(
+    () =>
+      lista
+        .map((p, i) => ({ ...p, n: i + 1 }))
+        .filter((p) => esNum(p.lat) && esNum(p.lon))
+        .map((p) => ({ ...p, lat: Number(p.lat), lon: Number(p.lon) })),
+    [lista]
+  );
+  const sinUbicar = useMemo(
+    () => lista.map((p, i) => ({ ...p, n: i + 1 })).filter((p) => !esNum(p.lat) || !esNum(p.lon)),
+    [lista]
+  );
+
   const clave = puntos.map((p) => `${p.n}:${p.lat.toFixed(3)},${p.lon.toFixed(3)}`).join("|");
 
   useEffect(() => {
@@ -81,402 +141,307 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
 
     async function dibujar() {
       if (!ref.current || puntos.length === 0) return;
-      asegurarCss();
-      const maplibregl = (await import("maplibre-gl")).default;
-      if (cancelado || !ref.current) return;
+      try {
+        asegurarCss();
+        const maplibregl = (await import("maplibre-gl")).default;
+        if (cancelado || !ref.current) return;
 
-      if (!mapaRef.current) {
-        const mapa = new maplibregl.Map({
-          container: ref.current,
-          style: ESTILO,
-          center: [puntos[0].lon, puntos[0].lat],
-          zoom: 3,
-          // INCLINADO DE ENTRADA.
-          //
-          // Plano se lee como un plano; inclinado se lee como un globo, y la
-          // ruta cruzando el oceano se ve ir hacia el horizonte. El usuario lo
-          // encontro girandolo a mano y pidio que fuera asi al abrir.
-          //
-          // 48 grados y no el maximo: pasados los 55 el horizonte se come
-          // media tarjeta y las etiquetas del fondo se amontonan.
-          // Sigue siendo el punto de partida, no una jaula: se puede enderezar
-          // arrastrando con el boton derecho.
-          // El globo NO se pide aqui.
-          //
-          // El constructor de maplibre 5 no tiene opcion `projection`: se
-          // comprobo contra sus opciones por defecto y no esta. Ponerla aqui
-          // se ignora EN SILENCIO —ni error ni aviso— y el mapa se queda
-          // plano, que es exactamente lo que paso. La proyeccion se cambia
-          // con setProjection() sobre el mapa ya creado; se hace abajo, en
-          // cuanto el estilo esta cargado.
-          //
-          // El pitch baja igual: la esfera aporta la profundidad que antes
-          // daba la inclinacion, y a 48 grados sobre una esfera el polo se va
-          // de cuadro.
-          pitch: 25,
-          bearing: -12,
-          cooperativeGestures: true,
-          // El mundo NO se repite. Al alejar el zoom, maplibre pinta copias del
-          // planeta a los lados: se veian TRES mundos con la ruta dibujada tres
-          // veces. Con una sola copia el encuadre es el de un globo y no el de
-          // un papel pintado.
-          renderWorldCopies: false,
-        });
-        mapaRef.current = mapa;
-        mapa.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-        // Zoom con gesto cooperativo, no desactivado.
-        //
-        // Estaba desactivado del todo porque capturar el scroll dentro de una
-        // tarjeta larga deja al usuario atrapado en el mapa. Pero eso quitaba
-        // tambien el zoom, que es justo lo que hace util un mapa de ruta.
-        //
-        // maplibre trae la solucion buena: el scroll a secas pasa a la pagina
-        // y el zoom pide ctrl/cmd (o dos dedos en el trackpad), con un cartel
-        // que lo explica la primera vez.
-        mapa.scrollZoom.enable();
-        mapa.scrollZoom.setWheelZoomRate(1 / 450);
-        // Contabilidad del fondo, solo para poder decirlo si no llega. Un
-        // error de tile NO es un fallo del mapa: la version anterior tapaba
-        // con un cartel un mapa que funcionaba, escondiendo las paradas.
-        let tilesOk = 0;
-        mapa.on("data", (e) => {
-          // Con el estilo VECTORIAL este evento ya no siempre trae `e.tile`,
-          // asi que con la comprobacion vieja el aviso se quedaba puesto
-          // encima de un mapa que estaba pintando perfectamente. Se ignora
-          // solo la fuente de la propia ruta, que no es el fondo.
-          if (e?.dataType !== "source" || e?.sourceId === "ruta") return;
-          // El primer tile retira el aviso. Antes lo hacia un temporizador,
-          // y eso volvia a atar la verdad de lo que se ve a un plazo elegido a
-          // ojo: si el mapa tardaba mas de la cuenta, el aviso se quedaba
-          // puesto encima de un mapa perfectamente cargado.
-          if (tilesOk++ === 0) setSinFondo(false);
-        });
-        mapa.on("error", (e) => {
-          const msg = e?.error?.message || "";
-          if (msg && !/tile|fetch|load/i.test(msg)) console.warn("[MapaRuta]", msg);
-        });
-        // Si pasados diez segundos no ha entrado un solo tile, se dice, pero
-        // debajo del mapa y sin tapar nada. Lo retira el propio tile cuando
-        // llegue, por lento que sea.
-        setTimeout(() => {
-          if (cancelado) return;
-          // Dos formas de saberlo, y basta con una. El contador de eventos se
-          // ha equivocado ya dos veces al cambiar de tipo de mapa; preguntarle
-          // al propio maplibre es lo que no depende de la forma del evento.
-          const cargado = tilesOk > 0 || mapaRef.current?.areTilesLoaded?.();
-          setSinFondo(!cargado);
-        }, 10000);
-      }
-      const mapa = mapaRef.current;
-      mapa.resize();
-
-      // --- Lo que NO necesita el estilo: marcadores y encuadre --------------
-      //
-      // Esto va primero y sin esperar a nada, y no es un detalle de orden.
-      // El dibujado colgaba entero del evento "load" de maplibre, y donde ese
-      // evento no llega — probado: un mapa minimo en el mismo navegador se
-      // queda con isStyleLoaded()=false para siempre — la tarjeta mostraba un
-      // rectangulo gris sin una sola parada. Los marcadores y el encuadre no
-      // dependen del estilo: se pintan ya, y si el mapa base no llega al menos
-      // se ve el viaje.
-      marcadoresRef.current.forEach((m) => m.remove());
-      marcadoresRef.current = [];
-
-      for (const p of puntos) {
-        const iso = String(p.pais || "").toLowerCase();
-        const conBandera = /^[a-z]{2}$/.test(iso);
-        const el = document.createElement("div");
-        // CHINCHE, no circulo.
-        //
-        // Eran discos numerados flotando sobre el mapa: leen bien pero no
-        // dicen nada. Un chinche clavado es lo que uno hace de verdad sobre
-        // un mapa cuando marca a donde va, y de paso resuelve dos cosas que
-        // el circulo hacia mal: senala un PUNTO exacto — la aguja apunta a la
-        // coordenada, el circulo la tapaba — y da profundidad, porque tiene
-        // sombra propia y se ve apoyado en vez de pegado.
-        //
-        // La aguja va en el ancla del marcador (abajo), asi que el marcador se
-        // desplaza hacia arriba para que la punta caiga en la coordenada.
-        const CABEZA = 13;   // radio de la cabeza del chinche
-        const AGUJA = 15;    // largo de la aguja
-        const ancho = CABEZA * 2 + 4;
-        const alto = CABEZA * 2 + AGUJA + 4;
-        el.innerHTML = `
-          <svg width="${ancho}" height="${alto}" viewBox="0 0 ${ancho} ${alto}" style="display:block;overflow:visible">
-            <defs>
-              <radialGradient id="ch${p.n}" cx="35%" cy="28%" r="75%">
-                <stop offset="0%" stop-color="#2aa79b"/>
-                <stop offset="60%" stop-color="#0f766e"/>
-                <stop offset="100%" stop-color="#08514c"/>
-              </radialGradient>
-              ${conBandera ? `<clipPath id="cab${p.n}"><circle cx="${ancho / 2}" cy="${CABEZA + 2}" r="${CABEZA}"/></clipPath>` : ""}
-            </defs>
-            <ellipse cx="${ancho / 2 + 1}" cy="${alto - 2}" rx="4.5" ry="1.8" fill="#000" opacity="0.22"/>
-            <path d="M${ancho / 2} ${CABEZA + 2} L${ancho / 2} ${alto - 3}" stroke="#c9d4d3" stroke-width="2" stroke-linecap="round"/>
-            <path d="M${ancho / 2} ${CABEZA + 2} L${ancho / 2} ${alto - 3}" stroke="#8fa3a1" stroke-width="0.8" stroke-linecap="round"/>
-            ${conBandera ? `
-              <!-- LA BANDERA DEL PAIS dentro de la cabeza.
-                   slice y no meet: la bandera LLENA el circulo en vez de
-                   dejar franjas vacias a los lados. Encima va un velo oscuro
-                   porque el numero tiene que leerse igual sobre la bandera
-                   de Japon que sobre la de Colombia, y sin el desaparecia
-                   en las claras. -->
-              <circle cx="${ancho / 2}" cy="${CABEZA + 2}" r="${CABEZA}" fill="#0f766e"/>
-              <image href="https://flagcdn.com/w80/${iso}.png" clip-path="url(#cab${p.n})"
-                     x="${ancho / 2 - CABEZA}" y="${CABEZA + 2 - CABEZA}"
-                     width="${CABEZA * 2}" height="${CABEZA * 2}"
-                     preserveAspectRatio="xMidYMid slice"/>
-              <circle cx="${ancho / 2}" cy="${CABEZA + 2}" r="${CABEZA}" fill="#000" opacity="0.34"/>
-              <circle cx="${ancho / 2}" cy="${CABEZA + 2}" r="${CABEZA}" fill="none" stroke="#fff" stroke-width="2"/>
-            ` : `
-              <circle cx="${ancho / 2}" cy="${CABEZA + 2}" r="${CABEZA}" fill="url(#ch${p.n})" stroke="#fff" stroke-width="2"/>
-              <ellipse cx="${ancho / 2 - CABEZA * 0.32}" cy="${CABEZA + 2 - CABEZA * 0.38}" rx="${CABEZA * 0.34}" ry="${CABEZA * 0.24}" fill="#fff" opacity="0.35"/>
-            `}
-            <text x="${ancho / 2}" y="${CABEZA + 2}" text-anchor="middle" dominant-baseline="central"
-                  font-size="12" font-weight="800" fill="#fff"
-                  style="font-family:inherit;paint-order:stroke" stroke="#0b3d3a" stroke-width="2.4">${p.n}</text>
-          </svg>`;
-        const m = new maplibregl.Marker({ element: el, anchor: "bottom" })
-          .setLngLat([p.lon, p.lat])
-          .setPopup(
-            new maplibregl.Popup({ offset: 16, closeButton: false }).setHTML(
-              `<div style="font-weight:800;font-size:12.5px;color:#052b28">${p.n}. ${p.ciudad}</div>` +
-                (p.iata ? `<div style="font-size:11px;color:#64748b">${p.iata}</div>` : "")
-            )
-          )
-          .addTo(mapa);
-        marcadoresRef.current.push(m);
-      }
-
-      if (puntos.length > 1) {
-        const b = new maplibregl.LngLatBounds();
-        puntos.forEach((p) => b.extend([p.lon, p.lat]));
-        // fitBounds conserva la inclinacion si no se le pasa otra, pero se
-        // deja explicito para que nadie la pierda sin darse cuenta.
-        mapa.fitBounds(b, {
-          padding: 56,
-          maxZoom: 8,
-          duration: 600,
-          pitch: mapa.getPitch(),
-          bearing: mapa.getBearing(),
-        });
-      } else {
-        mapa.flyTo({ center: [puntos[0].lon, puntos[0].lat], zoom: 5, duration: 600 });
-      }
-
-      // --- Lo que SI necesita el estilo: la linea del recorrido -------------
-      // addSource/addLayer solo funcionan con el estilo cargado. Se intenta
-      // cuando ya lo esta y, si no, se reintenta un rato corto; si nunca
-      // llega, el mapa se queda con sus paradas y sin linea, que es mucho
-      // mejor que quedarse sin nada.
-      lineaRef.current = () => {
-        if (cancelado || !mapaRef.current) return;
-        // Preguntar antes de quitar. El try/catch no bastaba: maplibre no
-        // lanza al quitar una capa que no existe, emite un evento "error", y
-        // eso llenaba la consola de "Cannot remove non-existing layer".
-        if (mapaRef.current.getLayer("linea-ruta")) mapaRef.current.removeLayer("linea-ruta");
-        if (mapaRef.current.getSource("ruta")) mapaRef.current.removeSource("ruta");
-        if (puntos.length < 2) return;
-        mapaRef.current.addSource("ruta", {
-          type: "geojson",
-          data: {
-            type: "Feature",
-            geometry: { type: "LineString", coordinates: puntos.map((p) => [p.lon, p.lat]) },
-          },
-        });
-        // La linea, DEBAJO de los nombres.
-        //
-        // Por defecto una capa nueva va encima de todo, y con un estilo
-        // vectorial eso significa encima de los nombres de paises y mares:
-        // el trayecto tachaba justo el texto que se acaba de poder leer. Se
-        // inserta antes de la primera capa de simbolos.
-        const capas = mapaRef.current.getStyle()?.layers || [];
-        const primerTexto = capas.find((c) => c.type === "symbol")?.id;
-        mapaRef.current.addLayer({
-          id: "linea-ruta",
-          type: "line",
-          source: "ruta",
-          layout: { "line-cap": "round", "line-join": "round" },
-          paint: {
-            "line-color": "#0f766e",
-            "line-width": 2.5,
-            "line-opacity": 0.8,
-            "line-dasharray": [2, 1.6],
-          },
-        }, primerTexto);
-
-        // --- AEROPUERTOS Y LUGARES, visibles antes de tener que hacer zoom --
-        //
-        // El estilo liberty YA trae los aeropuertos, los puntos de interes y
-        // las calles; el problema es a que zoom aparecen. De fabrica:
-        //
-        //     airport (aerodrome_label)  desde zoom 10
-        //     poi_r1  (los mejor puntuados)      15
-        //     poi_r7 / poi_r20                   16 / 17
-        //
-        // Y este mapa abre encuadrando la ruta entera, que en un viaje a
-        // Europa es zoom 4. O sea que estaba todo ahi y no se veia NUNCA sin
-        // ir a buscarlo. Se bajan los umbrales y se le da color propio al
-        // aeropuerto, que es el dato que de verdad importa en un planificador
-        // de vuelos: donde se aterriza.
-        ajustarDetalle(mapaRef.current);
-      };
-
-      /**
-       * Baja los zooms minimos del estilo y resalta los aeropuertos.
-       *
-       * Todo entre try/catch y comprobando que la capa exista: si OpenFreeMap
-       * cambia el estilo y alguna deja de llamarse asi, el mapa se queda como
-       * estaba en vez de romperse.
-       */
-      function ajustarDetalle(mapa) {
-        // ---- EL GLOBO ------------------------------------------------------
-        //
-        // setProjection sobre el mapa ya creado. Va aqui y no en el
-        // constructor porque ahi la opcion no existe y se ignoraba.
-        //
-        // `sky` es lo que se pinta FUERA de la esfera. Sin el, ese espacio
-        // queda del color de fondo del estilo y el planeta parece pegado
-        // sobre un rectangulo de color; con un degradado suave se lee como
-        // atmosfera y el borde de la esfera aparece.
-        try {
-          mapa.setProjection({ type: "globe" });
-          // El contenedor declara que proyeccion quedo puesta DE VERDAD.
-          //
-          // No es adorno: la opcion del constructor se ignoraba en silencio y
-          // no habia forma de notarlo sin mirar el mapa pintado, que es justo
-          // lo que aqui no se puede hacer. Con esto, comprobar si el globo
-          // esta activo es leer un atributo.
-          try {
-            mapa.getContainer().dataset.proyeccion = mapa.getProjection()?.type || "?";
-          } catch {}
-          mapa.setSky({
-            "sky-color": "#b9d9f2",
-            "sky-horizon-blend": 0.6,
-            "horizon-color": "#e8f1fa",
-            "horizon-fog-blend": 0.6,
-            "fog-color": "#f4f8fc",
-            "fog-ground-blend": 0.1,
+        if (!mapaRef.current) {
+          mapaRef.current = new maplibregl.Map({
+            container: ref.current,
+            style: ESTILO,
+            center: [puntos[0].lon, puntos[0].lat],
+            zoom: 3,
+            // PLANO. La proyeccion de globo se retiro: era bonita y estorbaba.
+            // Arrastrar tiene que mover el mapa, no girar un planeta.
+            //
+            // maplibre 5 NO acepta `projection` en el constructor —no esta en
+            // sus opciones por defecto y se ignora en silencio—, asi que
+            // mercator se deja explicito mas abajo con setProjection().
+            minZoom: 1,
+            maxZoom: 16,
+            // Sin copias del mundo: al alejar se pintaban tres planetas con la
+            // ruta dibujada tres veces.
+            renderWorldCopies: false,
+            // La rueda hace scroll de la PAGINA salvo que se pulse ctrl/cmd.
+            // Sin esto, bajar por el itinerario cambiaba el zoom sin querer.
+            cooperativeGestures: true,
+            attributionControl: { compact: true },
           });
-        } catch {}
-
-        const bajar = (id, min) => {
-          try { if (mapa.getLayer(id)) mapa.setLayerZoomRange(id, min, 24); } catch {}
-        };
-        // Lugares de interes: los mejor puntuados desde bastante antes.
-        bajar("poi_r1", 12);
-        bajar("poi_r7", 14);
-        bajar("poi_transit", 12);
-        // El recinto y las pistas del aeropuerto, en cuanto se acerca uno.
-        bajar("aeroway_fill", 9);
-        bajar("aeroway_runway", 9);
-        // La etiqueta del aeropuerto: es la que lleva el codigo IATA.
-        bajar("airport", 5);
-
-        // ESCUDOS DE CARRETERA FUERA.
-        //
-        // Son los recuadros blancos con "M-40", "R-3", "M-501" que aparecen
-        // al acercarse a una ciudad. En un mapa de carretera son utiles; aqui
-        // se busca por donde pasa el viaje, no por que autovia se llega, y
-        // llenaban Madrid de cajitas encima de los nombres de barrio.
-        //
-        // Se van los ESCUDOS, no los nombres de calle: highway-name-* se
-        // queda, que es lo que si se pidio ver.
-        for (const id of ["highway-shield-non-us", "highway-shield-us-interstate", "road_shield_us"]) {
-          try { if (mapa.getLayer(id)) mapa.setLayoutProperty(id, "visibility", "none"); } catch {}
+          mapaRef.current.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+          // Un solo error de tile no significa que el mapa haya fallado; el
+          // aviso sale mas abajo y solo si no llega NADA.
+          mapaRef.current.on("error", () => {});
         }
 
-        try {
-          if (mapa.getLayer("airport")) {
-            // Coral de marca y halo blanco: el unico punto del mapa que no es
-            // teal ni gris, para que se encuentre de un vistazo entre los
-            // nombres de ciudad.
-            mapa.setPaintProperty("airport", "text-color", "#b8452a");
-            mapa.setPaintProperty("airport", "text-halo-color", "#ffffff");
-            mapa.setPaintProperty("airport", "text-halo-width", 1.6);
-            mapa.setLayoutProperty("airport", "text-size", 11);
-            // Que se lea el IATA aunque el nombre no quepa: "Barajas (MAD)".
-            //
-            // `to-string` en cada trozo y no solo `get`: el operador concat
-            // exige cadenas, y get devuelve un Value sin tipar. Sin la
-            // conversion maplibre puede rechazar la expresion entera, y el
-            // sintoma seria mudo — la capa se queda con su texto de siempre y
-            // parece que el cambio no se aplico.
-            const nombreLocal = ["to-string", ["coalesce", ["get", "name:es"], ["get", "name"], ""]];
-            mapa.setLayoutProperty("airport", "text-field", [
-              "case",
-              ["has", "iata"],
-              ["concat", nombreLocal, " (", ["to-string", ["get", "iata"]], ")"],
-              nombreLocal,
-            ]);
-            mapa.setLayoutProperty("airport", "text-allow-overlap", false);
-            mapa.setLayoutProperty("airport", "icon-allow-overlap", true);
+        const mapa = mapaRef.current;
+        mapa.resize();
+
+        // ---- ENCUADRE A TODA LA RUTA --------------------------------------
+        //
+        // Lo primero que se ve tiene que ser el viaje entero. Se guarda en un
+        // ref para que el boton "Ver toda la ruta" repita exactamente esto.
+        encuadrarRef.current = (duracion = 600) => {
+          if (!mapaRef.current || puntos.length === 0) return;
+          if (puntos.length === 1) {
+            mapaRef.current.easeTo({ center: [puntos[0].lon, puntos[0].lat], zoom: 6, duration: duracion });
+            return;
           }
-        } catch {}
+          const b = puntos.reduce(
+            (a, p) => [
+              Math.min(a[0], p.lon), Math.min(a[1], p.lat),
+              Math.max(a[2], p.lon), Math.max(a[3], p.lat),
+            ],
+            [180, 90, -180, -90]
+          );
+          mapaRef.current.fitBounds([[b[0], b[1]], [b[2], b[3]]], {
+            padding: 60,
+            maxZoom: 8,
+            duration: duracion,
+          });
+        };
+        encuadrarRef.current(0);
+
+        // ---- CHINCHES ------------------------------------------------------
+        marcadoresRef.current.forEach((m) => m.remove());
+        marcadoresRef.current = [];
+
+        const desvios = separarChoques(puntos, (lon, lat) => mapa.project([lon, lat]));
+
+        for (const p of puntos) {
+          const iso = String(p.pais || "").toLowerCase();
+          const conBandera = /^[a-z]{2}$/.test(iso);
+          const el = document.createElement("div");
+          el.setAttribute("role", "button");
+          el.setAttribute("tabindex", "0");
+          el.setAttribute("aria-label", `${p.n}. ${p.ciudad || ""}`);
+          el.style.cursor = "pointer";
+
+          const CABEZA = 14;
+          const AGUJA = 15;
+          const ancho = CABEZA * 2 + 4;
+          const altoPin = CABEZA * 2 + AGUJA + 4;
+          const cx = ancho / 2;
+          const cy = CABEZA + 2;
+
+          el.innerHTML = `
+            <svg width="${ancho}" height="${altoPin}" viewBox="0 0 ${ancho} ${altoPin}" style="display:block;overflow:visible">
+              <defs>
+                ${conBandera ? `<clipPath id="cab${p.n}"><circle cx="${cx}" cy="${cy}" r="${CABEZA}"/></clipPath>` : ""}
+              </defs>
+              <ellipse cx="${cx + 1}" cy="${altoPin - 2}" rx="4.5" ry="1.8" fill="#000" opacity="0.22"/>
+              <path d="M${cx} ${cy} L${cx} ${altoPin - 3}" stroke="#c9d4d3" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="${cx}" cy="${cy}" r="${CABEZA}" fill="${TEAL}"/>
+              ${conBandera ? `<image href="https://flagcdn.com/w80/${iso}.png" clip-path="url(#cab${p.n})"
+                     x="${cx - CABEZA}" y="${cy - CABEZA}" width="${CABEZA * 2}" height="${CABEZA * 2}"
+                     preserveAspectRatio="xMidYMid slice"/>
+              <circle cx="${cx}" cy="${cy}" r="${CABEZA}" fill="#000" opacity="0.34"/>` : ""}
+              <circle class="aro" cx="${cx}" cy="${cy}" r="${CABEZA}" fill="none" stroke="#fff" stroke-width="2"/>
+              <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
+                    font-size="13" font-weight="800" fill="#fff"
+                    style="font-family:inherit;paint-order:stroke" stroke="#0b3d3a" stroke-width="2.4">${p.n}</text>
+            </svg>`;
+
+          // Hover: crece un poco y el aro se pone en coral. No cambia de sitio.
+          el.style.transition = "transform .12s ease";
+          el.addEventListener("mouseenter", () => {
+            el.style.transform = "scale(1.15)";
+            el.querySelector(".aro")?.setAttribute("stroke", "#f4734d");
+          });
+          el.addEventListener("mouseleave", () => {
+            el.style.transform = "";
+            el.querySelector(".aro")?.setAttribute("stroke", "#fff");
+          });
+
+          const [dx, dy] = desvios.get(p.n) || [0, 0];
+          const m = new maplibregl.Marker({ element: el, anchor: "bottom", offset: [dx, dy] })
+            .setLngLat([p.lon, p.lat])
+            .addTo(mapa);
+
+          const abrir = () => {
+            popupRef.current?.remove();
+            const noches = Number(p.noches) || 0;
+            popupRef.current = new maplibregl.Popup({ offset: 26, closeButton: true, maxWidth: "240px" })
+              .setLngLat([p.lon, p.lat])
+              .setHTML(`
+                <div style="font-family:inherit;min-width:140px">
+                  <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#0f766e">
+                    ${t("mapaParada")} ${p.n}
+                  </div>
+                  <div style="font-size:15px;font-weight:800;color:#0b3d3a;margin-top:2px">
+                    ${(p.ciudad || "").replace(/</g, "&lt;")}
+                  </div>
+                  ${p.iata ? `<div style="font-size:12px;color:#64748b;margin-top:1px">${p.iata}</div>` : ""}
+                  ${noches ? `<div style="font-size:12.5px;color:#334155;margin-top:4px">${noches} ${t("mapaNoches")}</div>` : ""}
+                  ${p.ubicadaPorIATA ? `<div style="font-size:11px;color:#94a3b8;margin-top:4px">${t("mapaUbicadaPorIATA")}</div>` : ""}
+                </div>`)
+              .addTo(mapa);
+            onSeleccionar?.(p.n);
+          };
+          el.addEventListener("click", abrir);
+          el.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); abrir(); }
+          });
+
+          m._anduve = { n: p.n, abrir, lon: p.lon, lat: p.lat };
+          marcadoresRef.current.push(m);
+        }
+
+        // ---- LINEA DE LA RUTA ---------------------------------------------
+        //
+        // Une las paradas EN ORDEN de itinerario. Las que no se pudieron
+        // ubicar se saltan sin cortar el resto: la linea sigue contando el
+        // viaje aunque a una parada le falte su coordenada.
+        lineaRef.current = () => {
+          if (cancelado || !mapaRef.current) return;
+          const m2 = mapaRef.current;
+          for (const id of ["linea-ruta", "linea-flechas"]) {
+            if (m2.getLayer(id)) m2.removeLayer(id);
+          }
+          if (m2.getSource("ruta")) m2.removeSource("ruta");
+          if (puntos.length < 2) return;
+
+          m2.addSource("ruta", {
+            type: "geojson",
+            data: {
+              type: "Feature",
+              geometry: { type: "LineString", coordinates: puntos.map((p) => [p.lon, p.lat]) },
+            },
+          });
+          // Debajo de los nombres: una capa nueva va encima de todo, y con un
+          // estilo vectorial eso significa tachar el texto del mapa.
+          const primerTexto = (m2.getStyle()?.layers || []).find((c) => c.type === "symbol")?.id;
+          m2.addLayer({
+            id: "linea-ruta",
+            type: "line",
+            source: "ruta",
+            layout: { "line-cap": "round", "line-join": "round" },
+            paint: { "line-color": TEAL, "line-width": 3, "line-opacity": 0.85 },
+          }, primerTexto);
+          // Flechas de sentido, para que se lea hacia donde va el viaje.
+          m2.addLayer({
+            id: "linea-flechas",
+            type: "symbol",
+            source: "ruta",
+            layout: {
+              "symbol-placement": "line",
+              "symbol-spacing": 90,
+              "text-field": "▶",
+              "text-size": 11,
+              "text-keep-upright": false,
+              "text-allow-overlap": true,
+            },
+            paint: { "text-color": TEAL, "text-halo-color": "#fff", "text-halo-width": 1.4 },
+          }, primerTexto);
+        };
+
+        function ajustar(m2) {
+          try { m2.setProjection({ type: "mercator" }); } catch {}
+          try { m2.getContainer().dataset.proyeccion = m2.getProjection()?.type || "?"; } catch {}
+          const poner = (id, prop, val) => {
+            try { if (m2.getLayer(id)) m2.setLayoutProperty(id, prop, val); } catch {};
+          };
+          const zoomDesde = (id, min) => {
+            try { if (m2.getLayer(id)) m2.setLayerZoomRange(id, min, 24); } catch {};
+          };
+          // Aeropuertos y lugares antes de tener que buscarlos.
+          zoomDesde("airport", 5);
+          zoomDesde("poi_r1", 12);
+          zoomDesde("aeroway_fill", 9);
+          zoomDesde("aeroway_runway", 9);
+          try {
+            if (m2.getLayer("airport")) {
+              m2.setPaintProperty("airport", "text-color", "#b8452a");
+              m2.setPaintProperty("airport", "text-halo-color", "#ffffff");
+              m2.setPaintProperty("airport", "text-halo-width", 1.6);
+            }
+          } catch {}
+          // Escudos de carretera fuera: recuadros con "M-40" tapando barrios.
+          // Los NOMBRES de calle se quedan.
+          for (const id of ["highway-shield-non-us", "highway-shield-us-interstate", "road_shield_us"]) {
+            poner(id, "visibility", "none");
+          }
+          try { lineaRef.current?.(); } catch {}
+        }
+
+        // Dos caminos al mismo sitio: el evento canonico y un sondeo corto.
+        // isStyleLoaded() se queda en false para siempre en algunos entornos, y
+        // todo lo que colgaba solo de el se perdia sin avisar.
+        mapa.once("style.load", () => { if (!cancelado) ajustar(mapa); });
+        let intentos = 0;
+        const sondeo = () => {
+          if (cancelado || !mapaRef.current) return;
+          if (mapaRef.current.isStyleLoaded()) { ajustar(mapaRef.current); return; }
+          if (intentos++ < 50) setTimeout(sondeo, 120);
+        };
+        sondeo();
+      } catch {
+        if (!cancelado) setFallo(true);
       }
-
-      // El globo y el detalle NO esperan al sondeo de isStyleLoaded().
-      //
-      // Ese sondeo se rinde a los seis segundos, y hay entornos donde
-      // isStyleLoaded() se queda en false para siempre aunque el estilo SI
-      // haya llegado — esta documentado doce lineas mas arriba, es lo que
-      // dejaba la tarjeta en gris. Todo lo que colgaba de el se perdia ahi:
-      // los aeropuertos, los escudos y ahora la proyeccion.
-      //
-      // "style.load" es el evento canonico y llega una vez. Se usan los dos
-      // caminos porque ajustarDetalle es idempotente —pone valores, no los
-      // acumula— y entre los dos cubren el caso en que uno falle.
-      mapaRef.current.once("style.load", () => {
-        if (cancelado || !mapaRef.current) return;
-        try { ajustarDetalle(mapaRef.current); } catch {}
-      });
-
-      let intentos = 0;
-      const cuandoHayaEstilo = () => {
-        if (cancelado || !mapaRef.current) return;
-        if (mapaRef.current.isStyleLoaded()) { try { lineaRef.current(); } catch {} return; }
-        if (intentos++ < 50) setTimeout(cuandoHayaEstilo, 120);
-      };
-      cuandoHayaEstilo();
     }
 
     dibujar();
     return () => { cancelado = true; };
-    // `clave` resume el contenido: ver arriba.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clave]);
+
+  // Lista -> mapa: volar a la parada elegida y abrir su ficha.
+  useEffect(() => {
+    if (!seleccionada || !mapaRef.current) return;
+    const m = marcadoresRef.current.find((x) => x._anduve?.n === seleccionada);
+    if (!m) return;
+    mapaRef.current.flyTo({ center: [m._anduve.lon, m._anduve.lat], zoom: 7, duration: 700 });
+    m._anduve.abrir();
+  }, [seleccionada]);
 
   useEffect(
     () => () => {
       marcadoresRef.current.forEach((m) => m.remove());
       marcadoresRef.current = [];
+      popupRef.current?.remove();
       mapaRef.current?.remove();
       mapaRef.current = null;
     },
     []
   );
 
-  if (puntos.length === 0) return null;
+  if (lista.length === 0) return null;
 
   return (
     <div className="relative">
       <div
         ref={ref}
-        // El mar TAMBIEN en el contenedor, no solo en la capa del mapa.
-        //
-        // La capa de fondo cubre lo que pinta maplibre, pero con la vista
-        // inclinada queda un triangulo por encima del horizonte que el canvas
-        // no pinta, y ahi se veia el blanco de la pagina. Pintando el div se
-        // acaba el problema venga de donde venga: del zoom, del pitch o de que
-        // los tiles tarden.
-        style={{ height: alto, backgroundColor: FONDO }}
+        // Mas alto que antes (300): con once paradas europeas no cabia nada.
+        // En movil se queda en 300, que es lo que deja ver el mapa sin comerse
+        // la pantalla entera.
         className="w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700"
+        style={{ height: alto, backgroundColor: FONDO }}
       />
-      {/* Si el fondo no llega se dice DEBAJO, nunca encima. El cartel que
-          tapaba el mapa escondia tambien las paradas, que son lo que de
-          verdad hace falta ver. */}
-      {sinFondo && (
-        <p className="mt-1.5 text-[11.5px] leading-relaxed text-slate-400">{textoFallo}</p>
+
+      {puntos.length > 1 && (
+        <button
+          type="button"
+          onClick={() => encuadrarRef.current?.(600)}
+          className="absolute left-3 top-3 z-10 rounded-full bg-white/95 px-3 py-1.5 text-[12.5px] font-bold text-marca-800 shadow-md ring-1 ring-slate-200 backdrop-blur transition hover:bg-white dark:bg-slate-800/95 dark:text-marca-200 dark:ring-slate-600"
+        >
+          {t("mapaVerTodo")}
+        </button>
+      )}
+
+      {/* LO QUE NO SE PUDO UBICAR SE DICE.
+          Antes estas paradas desaparecian del mapa y no habia forma de saber
+          que faltaban: un viaje de once paradas dibujaba diez. */}
+      {sinUbicar.length > 0 && (
+        <div className="mt-2 rounded-xl border border-amber-200/70 bg-amber-50/60 px-3 py-2 text-[12.5px] text-amber-900 dark:border-amber-800/40 dark:bg-amber-900/20 dark:text-amber-200">
+          <b>{t("mapaSinUbicar")}</b>{" "}
+          {sinUbicar.map((p) => `${p.n}. ${p.ciudad}${p.iata ? ` (${p.iata})` : ""}`).join(" · ")}
+        </div>
+      )}
+
+      {fallo && (
+        <div className="mt-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+          {textoFallo}
+        </div>
       )}
     </div>
   );
