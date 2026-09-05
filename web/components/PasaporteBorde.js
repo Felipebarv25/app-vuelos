@@ -79,8 +79,13 @@ export default function PasaporteBorde({ t, lang = "es", usuario = null }) {
     <>
       {/* LA CINTA. Pegada al borde, sin margen a la derecha: parte de la
           gracia es que se vea CORTADA por el filo de la pantalla, que es lo
-          que promete que hay algo mas al abrirla. */}
-      <div className="absolute right-0 top-24 z-[900] print:hidden lg:top-28">
+          que promete que hay algo mas al abrirla.
+
+          A media altura del hero y no arriba: pegada a la cabecera parecia
+          parte de la barra de navegacion, y ahi compite con el chip de
+          usuario y el selector de idioma. En el centro del alto es lo unico
+          que hay en ese costado. */}
+      <div className="absolute right-0 top-1/2 z-[900] -translate-y-1/2 print:hidden">
         <button
           type="button"
           onClick={() => setAbierto(true)}
