@@ -22,9 +22,9 @@ import Bandera from "./Bandera";
 import SelectorPais from "./SelectorPais";
 import { Icono } from "./Icono";
 import { nombrePaisMostrar } from "@/lib/paisesNombres";
-import { cargarPasaporte, guardarPasaporte, contarCiudades } from "@/lib/pasaporte";
+import { cargarPasaporte, guardarPasaporte } from "@/lib/pasaporte";
+import MapaPasaporte from "./MapaPasaporte";
 
-const TOTAL_PAISES = 195; // estados miembros de la ONU
 
 const sinTildes = (s) =>
   String(s || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -115,47 +115,27 @@ export default function Pasaporte({ t, lang = "es", usuario = null }) {
 
   const n = orden.length;
   // Minimo visible: con un solo pais la barra seria medio pixel y pareceria
-  // rota. El punto es ver que se avanza, no medir con precision.
-  const pct = n ? Math.max(1.5, (n / TOTAL_PAISES) * 100) : 0;
-  const ciudades = contarCiudades(paises);
 
   return (
     <section className="mb-12">
       <div className="overflow-hidden rounded-2xl border border-marca-100 bg-white shadow-card dark:border-marca-800 dark:bg-slate-800">
-        {/* Cabecera: el numero manda */}
-        <div className="bg-gradient-to-br from-marca-800 via-marca-600 to-emerald-500 px-5 py-5 text-white sm:px-6">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div className="min-w-0">
-              <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70">
-                {t("paisesTit")}
-              </div>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-[38px] font-extrabold leading-none tabular-nums">{n}</span>
-                <span className="text-[13.5px] text-white/80">
-                  {t("paisesContador").replace("{n}", n)}
-                </span>
-              </div>
-              {ciudades > 0 && (
-                <div className="mt-1 text-[12.5px] text-white/70">
-                  {t("paisesCiudadesContador").replace("{n}", ciudades)}
-                </div>
-              )}
-            </div>
-            {/* value="" a proposito: no representa una seleccion actual sino un
-                sitio donde anadir. Se limpia solo tras cada eleccion. */}
-            <SelectorPais value="" onChange={agregarPais} etiqueta="paisesAgregar" className="shrink-0" />
-          </div>
-
-          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/20">
-            <div
-              className="h-full rounded-full bg-white/90 transition-all duration-700"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-        </div>
+        {/* EL MUNDO, apagado y encendido.
+            Sustituye a la cabecera de cifras: dice lo mismo —paises, ciudades,
+            porcentaje— y ademas ensena DONDE, que es lo que una cuadricula de
+            banderas no puede. */}
+        <MapaPasaporte
+          paises={paises}
+          lang={lang}
+          t={t}
+          activo={abierto}
+          onTocarPais={(cc) => { setAbierto(abierto === cc ? null : cc); setNueva(""); }}
+        />
 
         <div className="p-5 sm:p-6">
-          <p className="text-[13px] text-slate-500 dark:text-slate-400">{t("paisesSub")}</p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-[13px] text-slate-500 dark:text-slate-400">{t("paisesSub")}</p>
+            <SelectorPais value="" onChange={agregarPais} etiqueta="paisesAgregar" tono="oscuro" className="shrink-0" />
+          </div>
 
           {n === 0 ? (
             <p className="mt-4 rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-[13px] text-slate-500 dark:border-slate-600 dark:text-slate-400">
