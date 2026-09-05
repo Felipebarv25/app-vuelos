@@ -1,13 +1,17 @@
 "use client";
-// El pasaporte: las banderas de los paises que el viajero ya conocio.
+// El pasaporte: el mundo apagado, y encendido lo que ya conociste.
 //
 // No es un formulario, es un marcador. La diferencia manda en todas las
 // decisiones de aqui:
 //
-//   - Lo primero que se ve es el NUMERO, grande, con su barra hacia 195. Un
-//     contador que sube es lo que convierte una lista en un logro.
-//   - Las banderas van en cuadricula y a buen tamano, no en una lista de
-//     texto. Se reconocen de un vistazo y se disfrutan.
+//   - Lo primero que se ve es el MAPA con las cifras encima. Un contador que
+//     sube, y un mundo que se enciende, es lo que convierte una lista en un
+//     logro.
+//   - Los paises viven en un RIEL al costado del mapa, no en fichas debajo.
+//     Las fichas de 86 px hacian bulto: con diez paises la tarjeta se volvia
+//     una cuadricula de banderas con un mapa de sombrero. En el costado la
+//     lista acompana al mapa —que es lo mismo dicho de otra forma— y la
+//     tarjeta conserva su altura crezca lo que crezca la coleccion.
 //   - Anadir un pais dispara un destello corto en su bandera. Es el unico
 //     momento de celebracion que tiene la app y cuesta doce lineas de CSS.
 //   - Las ciudades se escriben DENTRO del pais, al tocarlo, y no en un campo
@@ -47,8 +51,8 @@ export default function Pasaporte({ t, lang = "es", usuario = null }) {
   }, [usuario]);
 
   // Orden estable: por fecha de registro y, a igualdad, alfabetico. Sin esto
-  // la cuadricula se reordenaba sola al anadir una ciudad, justo cuando el
-  // usuario esta mirando una bandera concreta.
+  // la lista se reordenaba sola al anadir una ciudad, justo cuando el usuario
+  // esta mirando una bandera concreta.
   const orden = useMemo(() => {
     if (!paises) return [];
     return Object.entries(paises)
@@ -114,13 +118,68 @@ export default function Pasaporte({ t, lang = "es", usuario = null }) {
   }
 
   const n = orden.length;
-  // Minimo visible: con un solo pais la barra seria medio pixel y pareceria
+
+  // EL RIEL. Se le pasa al mapa y se pinta dentro de su misma zona oscura: en
+  // escritorio como columna a la derecha, en movil como tira debajo. Por eso
+  // las banderas bajan de 34 px a 20: aqui la bandera identifica la fila, no
+  // es la protagonista — la protagonista es el mapa.
+  //
+  // Con scroll propio y altura tope: quien lleve cuarenta paises hace scroll
+  // dentro de la lista, no empuja media pagina hacia abajo.
+  const riel = (
+    <div className="flex h-full flex-col gap-2.5 px-5 py-4 sm:px-6 lg:p-3.5">
+      <SelectorPais
+        value=""
+        onChange={agregarPais}
+        etiqueta="paisesAgregar"
+        className="self-start lg:self-end"
+      />
+
+      {n === 0 ? (
+        <p className="text-[11.5px] leading-snug text-white/50">{t("paisesVacio")}</p>
+      ) : (
+        <div className="flex max-h-[112px] flex-wrap gap-1.5 overflow-y-auto pr-0.5 lg:max-h-[228px] lg:flex-col lg:flex-nowrap">
+          {orden.map((cc) => {
+            const activo = abierto === cc;
+            const cuantas = paises[cc]?.ciudades?.length || 0;
+            return (
+              <button
+                key={cc}
+                type="button"
+                onClick={() => {
+                  setAbierto(activo ? null : cc);
+                  setNueva("");
+                }}
+                aria-expanded={activo}
+                aria-label={`${nombrePaisMostrar(cc, lang)}${cuantas ? ` — ${cuantas}` : ""}`}
+                className={`flex shrink-0 items-center gap-2 rounded-lg py-1.5 pl-1.5 pr-2 text-left transition lg:w-full ${
+                  activo
+                    ? "bg-white/15 ring-1 ring-white/45"
+                    : "ring-1 ring-white/10 hover:bg-white/10"
+                } ${celebrando === cc ? "animate-pop-bandera" : ""}`}
+              >
+                <Bandera cc={cc} size={20} />
+                <span className="max-w-[92px] truncate text-[12px] font-semibold text-white/90 lg:max-w-none lg:flex-1">
+                  {nombrePaisMostrar(cc, lang)}
+                </span>
+                {cuantas > 0 && (
+                  <span className="rounded-full bg-white/20 px-1.5 text-[10px] font-bold leading-[16px] text-white">
+                    {cuantas}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <section className="mb-12">
       <div className="overflow-hidden rounded-2xl border border-marca-100 bg-white shadow-card dark:border-marca-800 dark:bg-slate-800">
-        {/* EL MUNDO, apagado y encendido.
-            Sustituye a la cabecera de cifras: dice lo mismo —paises, ciudades,
+        {/* EL MUNDO, apagado y encendido, con el riel de paises al costado.
+            Dice lo mismo que la vieja cabecera de cifras —paises, ciudades,
             porcentaje— y ademas ensena DONDE, que es lo que una cuadricula de
             banderas no puede. */}
         <MapaPasaporte
@@ -129,57 +188,14 @@ export default function Pasaporte({ t, lang = "es", usuario = null }) {
           t={t}
           activo={abierto}
           onTocarPais={(cc) => { setAbierto(abierto === cc ? null : cc); setNueva(""); }}
+          lateral={riel}
         />
 
-        <div className="p-5 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-[13px] text-slate-500 dark:text-slate-400">{t("paisesSub")}</p>
-            <SelectorPais value="" onChange={agregarPais} etiqueta="paisesAgregar" tono="oscuro" className="shrink-0" />
-          </div>
-
-          {n === 0 ? (
-            <p className="mt-4 rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-[13px] text-slate-500 dark:border-slate-600 dark:text-slate-400">
-              {t("paisesVacio")}
-            </p>
-          ) : (
-            <div className="mt-4 flex flex-wrap gap-2.5">
-              {orden.map((cc) => {
-                const activo = abierto === cc;
-                const cuantas = paises[cc]?.ciudades?.length || 0;
-                return (
-                  <button
-                    key={cc}
-                    type="button"
-                    onClick={() => {
-                      setAbierto(activo ? null : cc);
-                      setNueva("");
-                    }}
-                    aria-expanded={activo}
-                    aria-label={`${nombrePaisMostrar(cc, lang)}${cuantas ? ` — ${cuantas}` : ""}`}
-                    className={`relative flex w-[86px] flex-col items-center gap-1.5 rounded-xl border-2 px-2 py-2.5 transition ${
-                      activo
-                        ? "border-marca-500 bg-marca-50 dark:bg-marca-900/30"
-                        : "border-slate-200 hover:border-marca-300 dark:border-slate-700"
-                    } ${celebrando === cc ? "animate-pop-bandera" : ""}`}
-                  >
-                    <Bandera cc={cc} size={34} />
-                    <span className="w-full truncate text-[11.5px] font-semibold text-slate-700 dark:text-slate-200">
-                      {nombrePaisMostrar(cc, lang)}
-                    </span>
-                    {cuantas > 0 && (
-                      <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-marca-600 px-1 text-[10.5px] font-bold text-white">
-                        {cuantas}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Detalle del pais tocado: sus ciudades */}
-          {abierto && paises[abierto] && (
-            <div className="animar-subir mt-4 rounded-xl border border-marca-100 bg-marca-50/50 p-4 dark:border-marca-800 dark:bg-marca-900/20">
+        {/* El cuerpo blanco ya solo sirve para ESCRIBIR: el pais abierto y sus
+            ciudades. Sin nada abierto es una linea de pista, no un bloque. */}
+        {abierto && paises[abierto] ? (
+          <div className="p-5 sm:p-6">
+            <div className="animar-subir rounded-xl border border-marca-100 bg-marca-50/50 p-4 dark:border-marca-800 dark:bg-marca-900/20">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Bandera cc={abierto} size={22} />
@@ -250,8 +266,14 @@ export default function Pasaporte({ t, lang = "es", usuario = null }) {
                 </button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          n > 0 && (
+            <p className="px-5 py-3.5 text-[12.5px] text-slate-500 sm:px-6 dark:text-slate-400">
+              {t("paisesSub")}
+            </p>
+          )
+        )}
       </div>
     </section>
   );

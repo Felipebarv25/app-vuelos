@@ -55,6 +55,10 @@ export default function MapaPasaporte({
   t = (k) => k,
   onTocarPais = null,
   activo = null,
+  // Columna opcional a la derecha del mapa (en movil, una tira bajo el).
+  // Vive DENTRO de esta tarjeta y no debajo, que es lo que hacia bulto: la
+  // lista de paises y el mapa son lo mismo mirado de dos maneras.
+  lateral = null,
 }) {
   const [encima, setEncima] = useState(null);
 
@@ -75,6 +79,8 @@ export default function MapaPasaporte({
 
   return (
     <div className="overflow-hidden rounded-2xl" style={{ backgroundColor: FONDO }}>
+      <div className="lg:flex lg:items-stretch">
+      <div className="min-w-0 lg:flex-1">
       {/* --- Las cifras --- */}
       <div className="flex flex-wrap items-end justify-between gap-4 px-5 pt-5 sm:px-6">
         <div className="min-w-0">
@@ -143,7 +149,16 @@ export default function MapaPasaporte({
         )}
       </div>
 
-      {/* --- La barra --- */}
+      </div>
+
+      {lateral && (
+        <div className="border-t border-white/10 lg:w-[196px] lg:shrink-0 lg:border-l lg:border-t-0">
+          {lateral}
+        </div>
+      )}
+      </div>
+
+      {/* --- La barra (a lo ancho de la tarjeta, mapa y lista incluidos) --- */}
       <div className="px-5 pb-5 sm:px-6">
         <div className="h-1.5 overflow-hidden rounded-full bg-white/15">
           <div
