@@ -1724,7 +1724,16 @@ export default function Home() {
 
       {!ciudad && !cargando && (
         <div className="relative z-10 -mt-8 rounded-t-[32px] bg-[#f6f7fb] pt-2 print:hidden dark:bg-slate-900 lg:-mt-12">
-        <div className="animar-subir mx-auto max-w-5xl px-4 pb-4 pt-8 lg:px-8 lg:pt-12">
+        {/* UN SOLO RITMO VERTICAL para todo el cuerpo del home.
+            Cada bloque traia su propio margen y ninguno se coordinaba con los
+            demas: medido en el navegador, MiniOfertas y la banda de /destino
+            quedaban PEGADAS (0 px), la banda y el chip de alertas a 16, y la
+            cabecera sumaba el pt-8 del contenedor con el mt-10 de la seccion.
+            Se quitaron los mt- de MiniOfertas, AlertasChip y EstasEnCiudad
+            —los tres se usan solo aqui— y la separacion la decide este
+            contenedor con space-y, que es el unico sitio que ve todos los
+            bloques a la vez. */}
+        <div className="animar-subir mx-auto max-w-5xl space-y-8 px-4 pb-8 pt-8 lg:px-8 lg:pt-10">
           {/* Entry cards principales (Opción A — 2026-06-24): el home post-login
               ya no apila destinos/ofertas/fechas/viajes en scroll largo. En su
               lugar cards que llevan a cada sección con su propia URL.

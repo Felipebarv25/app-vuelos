@@ -33,7 +33,7 @@ export default function AlertasChip() {
     return (
       <Link
         href="/ofertas"
-        className="mt-4 flex items-center gap-3 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-amber-100/60 px-4 py-3 text-left transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-suave dark:border-amber-800/50 dark:from-amber-900/20 dark:to-amber-800/10"
+        className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-amber-100/60 px-4 py-3 text-left transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-suave dark:border-amber-800/50 dark:from-amber-900/20 dark:to-amber-800/10"
       >
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-400/30 text-amber-800 dark:text-amber-300">
           <Icono nombre="bell" size={17} />
@@ -54,7 +54,7 @@ export default function AlertasChip() {
   }
 
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800/50 dark:bg-emerald-900/20">
+    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800/50 dark:bg-emerald-900/20">
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-400/30 text-emerald-800 dark:text-emerald-300">
         <Icono nombre="bell" size={17} />
       </span>

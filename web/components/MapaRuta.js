@@ -266,7 +266,73 @@ export default function MapaRuta({ paradas = [], alto = 320, textoFallo = "" }) 
             "line-dasharray": [2, 1.6],
           },
         }, primerTexto);
+
+        // --- AEROPUERTOS Y LUGARES, visibles antes de tener que hacer zoom --
+        //
+        // El estilo liberty YA trae los aeropuertos, los puntos de interes y
+        // las calles; el problema es a que zoom aparecen. De fabrica:
+        //
+        //     airport (aerodrome_label)  desde zoom 10
+        //     poi_r1  (los mejor puntuados)      15
+        //     poi_r7 / poi_r20                   16 / 17
+        //
+        // Y este mapa abre encuadrando la ruta entera, que en un viaje a
+        // Europa es zoom 4. O sea que estaba todo ahi y no se veia NUNCA sin
+        // ir a buscarlo. Se bajan los umbrales y se le da color propio al
+        // aeropuerto, que es el dato que de verdad importa en un planificador
+        // de vuelos: donde se aterriza.
+        ajustarDetalle(mapaRef.current);
       };
+
+      /**
+       * Baja los zooms minimos del estilo y resalta los aeropuertos.
+       *
+       * Todo entre try/catch y comprobando que la capa exista: si OpenFreeMap
+       * cambia el estilo y alguna deja de llamarse asi, el mapa se queda como
+       * estaba en vez de romperse.
+       */
+      function ajustarDetalle(mapa) {
+        const bajar = (id, min) => {
+          try { if (mapa.getLayer(id)) mapa.setLayerZoomRange(id, min, 24); } catch {}
+        };
+        // Lugares de interes: los mejor puntuados desde bastante antes.
+        bajar("poi_r1", 12);
+        bajar("poi_r7", 14);
+        bajar("poi_transit", 12);
+        // El recinto y las pistas del aeropuerto, en cuanto se acerca uno.
+        bajar("aeroway_fill", 9);
+        bajar("aeroway_runway", 9);
+        // La etiqueta del aeropuerto: es la que lleva el codigo IATA.
+        bajar("airport", 5);
+
+        try {
+          if (mapa.getLayer("airport")) {
+            // Coral de marca y halo blanco: el unico punto del mapa que no es
+            // teal ni gris, para que se encuentre de un vistazo entre los
+            // nombres de ciudad.
+            mapa.setPaintProperty("airport", "text-color", "#b8452a");
+            mapa.setPaintProperty("airport", "text-halo-color", "#ffffff");
+            mapa.setPaintProperty("airport", "text-halo-width", 1.6);
+            mapa.setLayoutProperty("airport", "text-size", 11);
+            // Que se lea el IATA aunque el nombre no quepa: "Barajas (MAD)".
+            //
+            // `to-string` en cada trozo y no solo `get`: el operador concat
+            // exige cadenas, y get devuelve un Value sin tipar. Sin la
+            // conversion maplibre puede rechazar la expresion entera, y el
+            // sintoma seria mudo — la capa se queda con su texto de siempre y
+            // parece que el cambio no se aplico.
+            const nombreLocal = ["to-string", ["coalesce", ["get", "name:es"], ["get", "name"], ""]];
+            mapa.setLayoutProperty("airport", "text-field", [
+              "case",
+              ["has", "iata"],
+              ["concat", nombreLocal, " (", ["to-string", ["get", "iata"]], ")"],
+              nombreLocal,
+            ]);
+            mapa.setLayoutProperty("airport", "text-allow-overlap", false);
+            mapa.setLayoutProperty("airport", "icon-allow-overlap", true);
+          }
+        } catch {}
+      }
 
       let intentos = 0;
       const cuandoHayaEstilo = () => {

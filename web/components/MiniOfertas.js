@@ -91,7 +91,7 @@ export default function MiniOfertas({ onPlanear, t = (k) => k, lang = "es" }) {
   }
 
   return (
-    <section className="mt-10">
+    <section>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-marca-500">

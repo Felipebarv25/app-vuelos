@@ -103,7 +103,7 @@ export default function EstasEnCiudad({ t = (k) => k, onCrear, onEventos = null,
   }
 
   return (
-    <div className="mt-4 rounded-2xl border border-marca-100 bg-gradient-to-r from-marca-50 to-teal-50/60 px-4 py-3.5 dark:border-marca-800 dark:from-marca-900/25 dark:to-teal-900/15">
+    <div className="rounded-2xl border border-marca-100 bg-gradient-to-r from-marca-50 to-teal-50/60 px-4 py-3.5 dark:border-marca-800 dark:from-marca-900/25 dark:to-teal-900/15">
       <div className="flex flex-wrap items-center gap-3">
         <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-marca-600 text-white shadow-marca">
           <Icono nombre="pin" size={18} />
