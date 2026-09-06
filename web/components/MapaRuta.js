@@ -510,6 +510,15 @@ export default function MapaRuta({
         // profundidad (mar hondo oscuro, plataforma clara) y con la tierra
         // color crema, que es exactamente lo que separa costa de agua en un
         // atlas de papel.
+        // LO QUE NO SE TOCA: `background`.
+        //
+        // Una propuesta razonable pedia poner background en #dfe9ec "para un
+        // oceano mas creible". En ESTE estilo background no es el oceano: es
+        // la TIERRA —no hay poligono de continente, el agua se pinta encima
+        // del fondo—, asi que ese cambio no azulea el mar, azulea Europa. Se
+        // renderizo para verlo y ahi esta: los continentes salen gris hielo.
+        // El fondo se queda en el crema de Liberty, que es ademas lo que
+        // usan OSM (#f2efe9) y Voyager (#fbf8f3).
         function paletaReal(m2) {
           try {
             if (m2.getLayer("water")) {
@@ -538,11 +547,17 @@ export default function MapaRuta({
                 // exactamente lo que se ve "apagado". Se sube la saturacion
                 // del extremo hondo y NO la opacidad, que es lo que aplanaria
                 // la batimetria (el rango se queda en 65, el maximo posible).
-                0, "#1a6bb0",   // oceano abierto, ya mezclado da S 36%
-                3, "#3f83ab",   // transicion
-                5, "#7ba8bf",   //                  H 196  S 35%
-                8, "#a8cddb",   // plataforma       H 196  S 42%  (el de OSM)
-                12, "#c3dee7",  // rios y lagos     H 194  S 43%
+                // El extremo de costa se sube. Se renderizaron las cuatro
+                // paletas y se miraron: con #a8cddb —el azul medido de
+                // OpenStreetMap— el Tamesis a z12 se leia como un hueco
+                // gris, no como agua. OSM puede permitirselo porque no dibuja
+                // nada encima; aqui van la ruta y once chinches, y el mapa
+                // tiene que aguantar eso sin desaparecer.
+                0, "#1a6bb0",   // oceano abierto (mezclado sobre el relieve)
+                3, "#3f83ab",
+                5, "#5f93b8",   // continental: el que se ve en la ruta
+                9, "#7fa9c6",
+                13, "#9fc3d8",  // rios y lagos de ciudad
               ]);
               // La opacidad decide CUANTA batimetria se ve. Medido sobre el
               // tile real de Natural Earth (z2/1/1, 830 pixeles de oceano),
@@ -566,7 +581,7 @@ export default function MapaRuta({
               m2.setPaintProperty("water", "fill-opacity", [
                 "interpolate", ["linear"], ["zoom"],
                 0, 0.45,
-                6, 0.75,
+                6, 0.8,
                 9, 1,
               ]);
             }
@@ -584,7 +599,7 @@ export default function MapaRuta({
               // saturacion a 0,05 —como se hizo al cambiar la paleta— lo dejo
               // sin verdes ni ocres. Vuelve a 0,22, que es donde los
               // continentes tienen color sin llegar a cartel.
-              m2.setPaintProperty("natural_earth", "raster-saturation", 0.22);
+              m2.setPaintProperty("natural_earth", "raster-saturation", 0.25);
             }
 
             // VERDE SOLO DONDE HAY VEGETACION, Y APAGADO.
@@ -596,14 +611,20 @@ export default function MapaRuta({
             const pintar = (id, prop, val) => {
               try { if (m2.getLayer(id)) m2.setPaintProperty(id, prop, val); } catch {}
             };
-            pintar("landcover_wood", "fill-color", "rgba(173,209,158,0.55)");
-            pintar("landcover_grass", "fill-color", "rgba(198,219,182,0.9)");
-            pintar("park", "fill-color", "#dde9d2");
-            pintar("landcover_sand", "fill-color", "#f3ecd6");
+            // El verde tambien sube. Bajarlo a lo de OSM dejaba los parques
+            // de Londres como manchas de papel: reales, si, pero en un mapa
+            // de viaje el parque es justo lo que se quiere ver.
+            pintar("landcover_wood", "fill-color", "hsl(112,36%,58%)");
+            pintar("landcover_wood", "fill-opacity", 0.58);
+            pintar("landcover_grass", "fill-color", "rgb(168,205,143)");
+            pintar("landcover_grass", "fill-opacity", 0.6);
+            pintar("park", "fill-color", "#b6d69e");
+            pintar("park", "fill-opacity", 0.85);
+            pintar("landcover_sand", "fill-color", "#f0e7cc");
             // Los rios en linea llevaban el azul violeta de fabrica y no
             // pegaban con el mar nuevo.
             for (const id of ["waterway_river", "waterway_other", "waterway_tunnel"]) {
-              pintar(id, "line-color", "#a9ccdb");
+              pintar(id, "line-color", "#7fa9c6");
             }
           } catch {}
         }
