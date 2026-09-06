@@ -108,8 +108,26 @@ export default function PasaporteBorde({ t, lang = "es", usuario = null }) {
           onClick={() => setAbierto(true)}
           aria-label={`${t("paisesTit")} — ${n}`}
           aria-expanded={abierto}
-          className="group flex flex-col items-center gap-2 rounded-l-2xl border border-r-0 border-white/25 bg-black/30 py-3 pl-2.5 pr-2 text-white shadow-lg backdrop-blur-md transition hover:bg-black/45"
+          className="group flex items-stretch gap-2"
         >
+          {/* EL ROTULO. Una cinta de banderas sin explicar es un adorno: no
+              se sabe que son ni que se puede hacer con ellas. Dice dos cosas
+              distintas segun el caso, y las dos ya estaban traducidas —con
+              paises, QUE son; sin ninguno, QUE poner ahi, que es cuando de
+              verdad hace falta.
+
+              En movil solo sale cuando el pasaporte esta vacio: 150 px de
+              rotulo sobre 375 de pantalla tapan el hero, y con banderas ya
+              puestas el rotulo sobra —las banderas se explican solas. */}
+          <span
+            className={`${
+              n === 0 ? "block" : "hidden sm:block"
+            } max-w-[168px] self-center rounded-xl border border-white/20 bg-black/30 px-3 py-2 text-left text-[11.5px] font-medium leading-snug text-white/90 shadow-lg backdrop-blur-md transition group-hover:bg-black/45`}
+          >
+            {n === 0 ? t("paisesVacio") : t("paisesTit")}
+          </span>
+
+          <span className="flex flex-col items-center gap-2 rounded-l-2xl border border-r-0 border-white/25 bg-black/30 py-3 pl-2.5 pr-2 text-white shadow-lg backdrop-blur-md transition group-hover:bg-black/45">
           <span className="flex items-center gap-1 text-[11px] font-extrabold leading-none tabular-nums">
             <Icono nombre="map" size={12} />
             {n}
@@ -138,6 +156,7 @@ export default function PasaporteBorde({ t, lang = "es", usuario = null }) {
               encima, que es la manera barata de decir "esto se abre". */}
           <span className="transition-transform group-hover:-translate-x-0.5">
             <Icono nombre="chevronDown" size={16} className="rotate-90" />
+          </span>
           </span>
         </button>
       </div>
