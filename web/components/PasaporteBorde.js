@@ -86,12 +86,23 @@ export default function PasaporteBorde({ t, lang = "es", usuario = null }) {
           usuario y el selector de idioma. En el centro del alto es lo unico
           que hay en ese costado.
 
-          50vh y no top-1/2: top-1/2 centra sobre el HEADER, que mide 715 px
-          en una pantalla de 800 —y cambia con el contenido—, asi que la
-          cinta quedaba 42 px por encima del centro de verdad. Con 50vh el
-          centro de la cinta es el centro de la PANTALLA, que es lo que se
-          mira. El hero es min-h-92vh, asi que nunca se sale de el. */}
-      <div className="absolute right-0 top-[50vh] z-[900] -translate-y-1/2 print:hidden">
+          DONDE ESTA EL CENTRO. Se probaron tres anclajes y los tres se
+          reportaron mal, asi que aqui queda la razon de cada uno:
+
+            top-1/2   centro del header. El header incluye alto que no se
+                      ve, y cambia con el contenido (el buscador se
+                      despliega): quedaba 42 px arriba en 1280x800.
+            50vh      centro de la PANTALLA. Pero en ventanas altas el hero
+                      acaba antes que la ventana —690 px de hero en 900 de
+                      pantalla, medido—, asi que la cinta caia por debajo
+                      de la portada, que es contra lo que se mira.
+            45%       del hero, que es el bloque que el ojo compara. El 45
+                      y no el 50 es centro OPTICO: el centro geometrico se
+                      ve bajo, y aqui mas, porque todo el peso del hero
+                      (titulo, tarjetas, buscador) esta en la mitad de
+                      arriba. Se reporto "se ve mas abajo de la mitad"
+                      estando en el 50,0% exacto, medido. */}
+      <div className="absolute right-0 top-[45%] z-[900] -translate-y-1/2 print:hidden">
         <button
           type="button"
           onClick={() => setAbierto(true)}
