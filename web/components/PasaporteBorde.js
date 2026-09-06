@@ -84,8 +84,14 @@ export default function PasaporteBorde({ t, lang = "es", usuario = null }) {
           A media altura del hero y no arriba: pegada a la cabecera parecia
           parte de la barra de navegacion, y ahi compite con el chip de
           usuario y el selector de idioma. En el centro del alto es lo unico
-          que hay en ese costado. */}
-      <div className="absolute right-0 top-1/2 z-[900] -translate-y-1/2 print:hidden">
+          que hay en ese costado.
+
+          50vh y no top-1/2: top-1/2 centra sobre el HEADER, que mide 715 px
+          en una pantalla de 800 —y cambia con el contenido—, asi que la
+          cinta quedaba 42 px por encima del centro de verdad. Con 50vh el
+          centro de la cinta es el centro de la PANTALLA, que es lo que se
+          mira. El hero es min-h-92vh, asi que nunca se sale de el. */}
+      <div className="absolute right-0 top-[50vh] z-[900] -translate-y-1/2 print:hidden">
         <button
           type="button"
           onClick={() => setAbierto(true)}
