@@ -25,18 +25,31 @@ export function puntuarTransporte(opciones = [], { nivel = "medio", prioridad = 
     let comodidad = medio === "tren" ? 0.95 : medio === "vuelo" ? 0.78 : medio === "bus" ? 0.58 : 0.65;
     if (nivel === "mochilero" && medio === "bus") comodidad += .08;
     if (nivel === "comodo" && medio === "tren") comodidad += .03;
-    const confianza = o.fuente === "detectado" ? 1 : o.fuente === "curado" ? .85 : o.fuente === "estimado" ? .45 : .2;
+    const confianza = o.fuente === "detectado" ? 1 : o.fuente === "curado" ? .85 : o.fuente === "incluido" ? .9 : o.fuente === "estimado" ? .45 : .2;
     const score = (precio * peso.precio + tiempo * peso.tiempo + Math.min(1, comodidad) * peso.comodidad + confianza * peso.confianza) * 100;
     return { ...o, score: Math.round(score) };
   });
 
   puntuadas.sort((a, b) => b.score - a.score);
-  const mejor = puntuadas[0];
+
+  // No dejamos que una heurística estimada gane por unos pocos puntos a un
+  // dato detectado/curado. Si la opción fiable está muy cerca, es la que
+  // Anduve debe recomendar; una estimación puede seguir apareciendo como
+  // alternativa y el usuario ve claramente su baja confianza.
+  const mejorCalculada = puntuadas[0];
+  const fiables = puntuadas.filter((o) => ["detectado", "curado", "incluido"].includes(o.fuente));
+  const mejorFiable = fiables[0];
+  const mejor = mejorCalculada?.fuente === "estimado" && mejorFiable && mejorFiable.score >= mejorCalculada.score - 8
+    ? mejorFiable
+    : mejorCalculada;
+
   return puntuadas.map((o) => ({
     ...o,
     recomendado: o === mejor,
     explicacion: o === mejor
-      ? "Mejor equilibrio para este viaje según precio, tiempo, comodidad y confianza de los datos."
+      ? (o.fuente === "estimado"
+        ? "Mejor opción potencial según una estimación de precio y tiempo; conviene comprobar la tarifa real."
+        : "Mejor equilibrio para este viaje según precio, tiempo, comodidad y confianza de los datos.")
       : o.score >= 75
         ? "Alternativa muy competitiva para este viaje."
         : o.score >= 55
