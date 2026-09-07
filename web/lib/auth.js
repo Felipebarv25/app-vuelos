@@ -17,6 +17,7 @@ import { kv, kvActivo } from "./kv";
 
 const TTL_CODIGO = 60 * 10; // 10 min
 const TTL_SESION = 60 * 60 * 24 * 30; // 30 dias
+const TTL_INTENTOS_CODIGO = 60 * 15; // 15 min
 
 function randomUint32() {
   const bytes = new Uint8Array(4);
@@ -73,6 +74,21 @@ export async function consumirCodigo(email, codigo) {
   if (!guardado || String(guardado) !== String(codigo)) return false;
   await kv(["DEL", k]);
   return true;
+}
+
+// Limita intentos de verificacion para que un codigo de 6 digitos no pueda
+// probarse indefinidamente. El contador es independiente del envio de codigo.
+export async function registrarIntentoCodigo(email, max = 8) {
+  if (!kvActivo()) return true;
+  const k = `auth:codigo:intentos:${normalizarEmail(email)}`;
+  const n = await kv(["INCR", k]);
+  if (n === 1) await kv(["EXPIRE", k, String(TTL_INTENTOS_CODIGO)]);
+  return Number(n) <= max;
+}
+
+export async function limpiarIntentosCodigo(email) {
+  if (!kvActivo()) return;
+  await kv(["DEL", `auth:codigo:intentos:${normalizarEmail(email)}`]);
 }
 
 // Crea una sesion para un usuario. usuario = { email, nombre } u objeto
