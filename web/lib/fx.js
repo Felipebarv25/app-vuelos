@@ -1,51 +1,21 @@
 // Tasas de cambio en vivo. "porUsd" = cuántas unidades de moneda local equivalen
 // a 1 USD (p. ej. COP ≈ 3.600/USD). Antes estas tasas estaban "quemadas" en el
-// código (COP fijo en 4.000) y se desactualizaban con el tiempo; ahora se traen
-// de /api/fx (que consulta un feed real) y SOLO se usan estos valores como
-// respaldo si la red falla, para que la app nunca se quede sin tasas.
+// código y se desactualizaban; ahora se traen de un feed real y SOLO se usan
+// valores de respaldo si la red falla.
 
 import { cacheado } from "./cache";
 
-// Valores de respaldo orientativos (los que estaban quemados en la app).
 export const PORUSD_FALLBACK = {
-  USD: 1,
-  COP: 4000,
-  MXN: 18,
-  EUR: 0.92,
-  PEN: 3.7,
-  CLP: 950,
-  ARS: 1000,
-  BRL: 5.4,
-  UYU: 40,
-  BOB: 6.9,
-  CRC: 520,
-  CAD: 1.36,
-  CUP: 120,
-  GBP: 0.79,
-  CZK: 23,
-  HUF: 360,
-  TRY: 34,
-  JPY: 150,
-  KRW: 1350,
-  THB: 35,
-  IDR: 16000,
-  SGD: 1.35,
-  AED: 3.67,
-  CNY: 7.2,
-  INR: 84,
-  MAD: 10,
-  EGP: 49,
-  ZAR: 18,
-  AUD: 1.5,
-  NZD: 1.65,
+  USD: 1, COP: 4000, MXN: 18, EUR: 0.92, PEN: 3.7, CLP: 950, ARS: 1000,
+  BRL: 5.4, UYU: 40, BOB: 6.9, CRC: 520, CAD: 1.36, CUP: 120, GBP: 0.79,
+  CZK: 23, HUF: 360, TRY: 34, JPY: 150, KRW: 1350, THB: 35, IDR: 16000,
+  SGD: 1.35, AED: 3.67, CNY: 7.2, INR: 84, MAD: 10, EGP: 49, ZAR: 18,
+  AUD: 1.5, NZD: 1.65,
 };
 
-// Monedas que la app necesita convertir (presupuesto + costos locales por país).
 export const MONEDAS_USADAS = Object.keys(PORUSD_FALLBACK);
+const FUENTE = "https://open.er-api.com/v6/latest/USD";
 
-// Tasas en vivo desde /api/fx, cacheadas 6 h en memoria + localStorage. Si la
-// petición falla, devuelve los valores de respaldo (enVivo:false) y NO los
-// cachea, para reintentar la próxima vez.
 export async function obtenerTasas() {
   return cacheado(
     "fx:porUsd",
@@ -63,13 +33,29 @@ export async function obtenerTasas() {
         return { porUsd: PORUSD_FALLBACK, fecha: null, fuente: null, enVivo: false };
       }
     },
-    (d) => d && d.enVivo // solo cachea si vino en vivo
+    (d) => d && d.enVivo
   );
 }
 
-// USD que vale 1 unidad de la moneda (lo que el módulo de presupuesto llama
-// "aUsd"). p. ej. con COP a 3.600 → 1 COP = 1/3600 USD. Devuelve null si no se
-// conoce la moneda, para que el llamador use su propio respaldo.
+// Versión servidor: no depende de una URL relativa (/api/fx), porque las rutas
+// API se ejecutan sin contexto de navegador. Mantiene el mismo feed y respaldo.
+export async function obtenerTasasServidor() {
+  try {
+    const r = await fetch(FUENTE, { next: { revalidate: 21600 } });
+    if (!r.ok) throw new Error("er-api " + r.status);
+    const d = await r.json();
+    if (d.result !== "success" || !d.rates) throw new Error("er-api sin rates");
+    const porUsd = { USD: 1 };
+    for (const cod of MONEDAS_USADAS) {
+      const v = d.rates[cod];
+      porUsd[cod] = typeof v === "number" && v > 0 ? v : PORUSD_FALLBACK[cod];
+    }
+    return { porUsd, fecha: d.time_last_update_utc || null, fuente: "open.er-api.com", enVivo: true };
+  } catch {
+    return { porUsd: PORUSD_FALLBACK, fecha: null, fuente: "respaldo", enVivo: false };
+  }
+}
+
 export function aUsdDe(porUsd, cod) {
   const p = porUsd?.[cod];
   return p && p > 0 ? 1 / p : null;
