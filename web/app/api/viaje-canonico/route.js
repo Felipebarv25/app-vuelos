@@ -1,0 +1,104 @@
+import { evaluarTramo, detectarZigzag, ajustarIdaYVuelta } from "@/lib/rutaViva";
+import { normalizarViaje } from "@/lib/viajeCanonico";
+import { costoDiario } from "@/lib/rutaViva";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+function money(n, currency = "USD") {
+  if (n == null || !Number.isFinite(Number(n))) return null;
+  return Math.round(Number(n));
+}
+
+function construirTramos(paradas) {
+  const out = [];
+  for (let i = 0; i < paradas.length - 1; i++) {
+    const desde = paradas[i];
+    const hasta = paradas[i + 1];
+    const t = evaluarTramo({ desde, hasta });
+    out.push({
+      id: `${i}:${desde.ciudad}:${hasta.ciudad}`,
+      desde: desde.ciudad,
+      hasta: hasta.ciudad,
+      medio: t.medio,
+      precio: money(t.precio),
+      duracion_h: t.duracion_h,
+      puertaAPuerta_h: t.puertaAPuerta_h,
+      operador: t.operador,
+      fuente: t.fuente,
+      km: t.km,
+    });
+  }
+  return out;
+}
+
+function construirEstadia(paradas, nivel = "medio") {
+  const factor = nivel === "mochilero" ? 0.72 : nivel === "comodo" ? 1.35 : 1;
+  return paradas.reduce((total, p) => {
+    if (!p.noches) return total;
+    return total + (costoDiario(p.ciudad, p.paisNombre || p.pais) .usd || 0) * p.noches * factor;
+  }, 0);
+}
+
+function presupuestoResumen(viaje, tramos) {
+  const transporte = tramos.reduce((s, t) => s + (Number(t.precio) || 0), 0);
+  const estadia = construirEstadia(viaje.paradas, viaje.nivel);
+  const subtotal = transporte + estadia;
+  const contingencia = subtotal * (Number(viaje.presupuesto?.ajustes?.contingenciaPct) || 0.1);
+  const total = subtotal + contingencia;
+  const overrides = viaje.presupuesto?.overrides || {};
+  const manual = Object.values(overrides).reduce((s, v) => s + (Number(v) || 0), 0);
+  return {
+    transporte: Math.round(transporte),
+    alojamientoYVida: Math.round(estadia),
+    subtotal: Math.round(subtotal),
+    contingencia: Math.round(contingencia),
+    manual: Math.round(manual),
+    total: Math.round(total + manual),
+    moneda: "USD",
+  };
+}
+
+function recomendacionTramos(tramos) {
+  return tramos
+    .filter((t) => t.medio)
+    .map((t) => {
+      const medio = t.medio === "vuelo" ? "avión" : t.medio;
+      const confianza = t.fuente === "detectado" ? "alta" : t.fuente === "curado" ? "media" : t.fuente === "estimado" ? "baja" : "nula";
+      return {
+        id: t.id,
+        titulo: `${t.desde} → ${t.hasta}`,
+        recomendacion: `Considera ${medio}: ${t.precio != null ? `~US$${t.precio}` : "precio no disponible"} y ${t.puertaAPuerta_h != null ? `${t.puertaAPuerta_h} h puerta a puerta` : "duración no disponible"}.`,
+        confianza,
+        fuente: t.fuente,
+      };
+    });
+}
+
+export async function POST(req) {
+  let body;
+  try { body = await req.json(); } catch { return Response.json({ ok: false, motivo: "json" }, { status: 400 }); }
+
+  const viaje = normalizarViaje(body?.viaje || body, body?.origen === "legacy" ? "legacy" : "ruta");
+  if (!viaje || viaje.paradas.length < 2) {
+    return Response.json({ ok: false, motivo: "faltan-paradas" }, { status: 400 });
+  }
+
+  const tramosOriginales = construirTramos(viaje.paradas);
+  const ajustado = ajustarIdaYVuelta(tramosOriginales);
+  const presupuesto = presupuestoResumen(viaje, ajustado.tramos);
+  const zigzag = detectarZigzag(viaje.paradas, 12);
+
+  return Response.json({
+    ok: true,
+    viaje,
+    tramos: ajustado.tramos,
+    regreso: ajustado.regresoIncluido,
+    presupuesto,
+    optimizacion: zigzag,
+    recomendaciones: recomendacionTramos(ajustado.tramos),
+    generadoEn: Date.now(),
+  }, {
+    headers: { "Cache-Control": "no-store" },
+  });
+}
