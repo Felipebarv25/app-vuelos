@@ -18,20 +18,32 @@ import { kv, kvActivo } from "./kv";
 const TTL_CODIGO = 60 * 10; // 10 min
 const TTL_SESION = 60 * 60 * 24 * 30; // 30 dias
 
-// Codigo de 6 digitos como string para no perder ceros a la izquierda.
-export function generarCodigo() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+function randomUint32() {
+  const bytes = new Uint8Array(4);
+  if (typeof crypto === "undefined" || !crypto.getRandomValues) {
+    throw new Error("CSPRNG no disponible");
+  }
+  crypto.getRandomValues(bytes);
+  return ((bytes[0] * 0x1000000) + (bytes[1] * 0x10000) + (bytes[2] * 0x100) + bytes[3]) >>> 0;
 }
 
-// Token de sesion: 32 chars hex (16 bytes). Suficientemente aleatorio para
-// que no se adivine ni siquiera con fuerza bruta a este escala.
+// Codigo de 6 digitos como string para no perder ceros a la izquierda.
+// Usa rechazo para evitar el sesgo del modulo al mapear 2^32 estados a 900000.
+export function generarCodigo() {
+  const rango = 900000;
+  const limite = Math.floor(0x100000000 / rango) * rango;
+  let n;
+  do { n = randomUint32(); } while (n >= limite);
+  return String(100000 + (n % rango));
+}
+
+// Token de sesion: 32 chars hex (16 bytes) generados con CSPRNG.
 export function generarToken() {
   const bytes = new Uint8Array(16);
-  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-    crypto.getRandomValues(bytes);
-  } else {
-    for (let i = 0; i < 16; i++) bytes[i] = Math.floor(Math.random() * 256);
+  if (typeof crypto === "undefined" || !crypto.getRandomValues) {
+    throw new Error("CSPRNG no disponible");
   }
+  crypto.getRandomValues(bytes);
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
