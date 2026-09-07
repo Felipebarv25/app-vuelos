@@ -18,7 +18,7 @@ export function puntuarTransporte(opciones = [], { nivel = "medio", prioridad = 
       ? { precio: .15, tiempo: .60, comodidad: .15, confianza: .10 }
       : { precio: .35, tiempo: .35, comodidad: .20, confianza: .10 };
 
-  return validas.map((o) => {
+  const puntuadas = validas.map((o) => {
     const precio = maxP === minP ? 1 : 1 - (n(o.precio) - minP) / (maxP - minP);
     const tiempo = maxT === minT ? 1 : 1 - (n(o.puertaAPuerta_h) - minT) / (maxT - minT);
     const medio = String(o.medio || "").toLowerCase();
@@ -27,6 +27,20 @@ export function puntuarTransporte(opciones = [], { nivel = "medio", prioridad = 
     if (nivel === "comodo" && medio === "tren") comodidad += .03;
     const confianza = o.fuente === "detectado" ? 1 : o.fuente === "curado" ? .85 : o.fuente === "estimado" ? .45 : .2;
     const score = (precio * peso.precio + tiempo * peso.tiempo + Math.min(1, comodidad) * peso.comodidad + confianza * peso.confianza) * 100;
-    return { ...o, score: Math.round(score), explicacion: score >= 75 ? "Mejor equilibrio para este viaje." : score >= 55 ? "Alternativa razonable, pero con algún compromiso." : "Pierde frente a otras opciones por precio, tiempo o confianza." };
-  }).sort((a, b) => b.score - a.score);
+    return { ...o, score: Math.round(score) };
+  });
+
+  puntuadas.sort((a, b) => b.score - a.score);
+  const mejor = puntuadas[0];
+  return puntuadas.map((o) => ({
+    ...o,
+    recomendado: o === mejor,
+    explicacion: o === mejor
+      ? "Mejor equilibrio para este viaje según precio, tiempo, comodidad y confianza de los datos."
+      : o.score >= 75
+        ? "Alternativa muy competitiva para este viaje."
+        : o.score >= 55
+          ? "Alternativa razonable, pero con algún compromiso."
+          : "Pierde frente a otras opciones por precio, tiempo o confianza.",
+  }));
 }
