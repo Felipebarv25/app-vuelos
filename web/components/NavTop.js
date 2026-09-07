@@ -53,8 +53,16 @@ export default function NavTop({ active = null }) {
       event.stopPropagation();
 
       try {
+        const headers = { "Content-Type": "application/json" };
+        try {
+          const token =
+            localStorage.getItem("anduve_auth_token") ||
+            sessionStorage.getItem("anduve_auth_token");
+          if (token) headers.Authorization = `Bearer ${token}`;
+        } catch {}
+
         const r = await fetch("/api/rutas", {
-          headers: { "Content-Type": "application/json" },
+          headers,
           signal: controlador.signal,
         });
         const data = r.ok ? await r.json() : null;
