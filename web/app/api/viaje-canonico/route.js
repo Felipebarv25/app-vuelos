@@ -3,6 +3,7 @@ import { normalizarViaje } from "@/lib/viajeCanonico";
 import { costoDiario } from "@/lib/rutaViva";
 import { compararTransporte } from "@/lib/comparadorTransporte";
 import { optimizarViaje } from "@/lib/optimizadorViaje";
+import { PORUSD_FALLBACK } from "@/lib/fx";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,12 +22,10 @@ function construirTramos(paradas, viaje) {
       id: `${i}:${desde.ciudad}:${hasta.ciudad}`,
       desde: desde.ciudad,
       hasta: hasta.ciudad,
-      // La API presenta como principal la alternativa que Anduve recomienda.
-      // Los valores originales se conservan para no perder trazabilidad.
       medio: recomendada?.medio || t.medio,
       precio: money(recomendada?.precio ?? t.precio),
       precioOriginal: money(t.precio),
-      precioRecomendado: money(recomendada?.precio),
+      precioRecomendado: money(recomendada?.precio ?? t.precio),
       medioOriginal: t.medio,
       medioRecomendado: recomendada?.medio || t.medio,
       duracion_h: t.duracion_h,
@@ -58,7 +57,31 @@ function presupuestoResumen(viaje, tramos) {
   const overrides = viaje.presupuesto?.overrides || {};
   const manual = Object.values(overrides).reduce((s, v) => s + (Number(v) || 0), 0);
   const fuentes = [...new Set(tramos.map((t) => t.fuenteRecomendada).filter(Boolean))];
-  return { transporte: Math.round(transporte), alojamientoYVida: Math.round(estadia), subtotal: Math.round(subtotal), contingencia: Math.round(contingencia), manual: Math.round(manual), total: Math.round(subtotal + contingencia + manual), moneda: "USD", fuenteTransporte: fuentes.length === 1 ? fuentes[0] : "mixto" };
+  const totalUsd = Math.round(subtotal + contingencia + manual);
+  const moneda = /^[A-Z]{3}$/.test(viaje?.monedaVista || "") ? viaje.monedaVista : "USD";
+  const porUsd = PORUSD_FALLBACK;
+  const tasa = Number(porUsd[moneda]) > 0 ? Number(porUsd[moneda]) : 1;
+  const convertir = (n) => Math.round(Number(n || 0) * tasa);
+  const enVista = moneda !== "USD";
+  return {
+    transporte: Math.round(transporte),
+    alojamientoYVida: Math.round(estadia),
+    subtotal: Math.round(subtotal),
+    contingencia: Math.round(contingencia),
+    manual: Math.round(manual),
+    total: totalUsd,
+    moneda: "USD",
+    monedaVista: moneda,
+    transporteVista: convertir(transporte),
+    alojamientoYVidaVista: convertir(estadia),
+    subtotalVista: convertir(subtotal),
+    contingenciaVista: convertir(contingencia),
+    manualVista: convertir(manual),
+    totalVista: convertir(totalUsd),
+    tasaVistaPorUsd: tasa,
+    conversionEsRespaldo: enVista,
+    fuenteTransporte: fuentes.length === 1 ? fuentes[0] : "mixto",
+  };
 }
 
 function recomendacionTramos(tramos) {
