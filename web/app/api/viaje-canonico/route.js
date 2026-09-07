@@ -1,11 +1,12 @@
 import { evaluarTramo, detectarZigzag, ajustarIdaYVuelta } from "@/lib/rutaViva";
 import { normalizarViaje } from "@/lib/viajeCanonico";
 import { costoDiario } from "@/lib/rutaViva";
+import { compararTransporte } from "@/lib/comparadorTransporte";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function money(n, currency = "USD") {
+function money(n) {
   if (n == null || !Number.isFinite(Number(n))) return null;
   return Math.round(Number(n));
 }
@@ -16,6 +17,7 @@ function construirTramos(paradas) {
     const desde = paradas[i];
     const hasta = paradas[i + 1];
     const t = evaluarTramo({ desde, hasta });
+    const comparacion = compararTransporte(desde, hasta);
     out.push({
       id: `${i}:${desde.ciudad}:${hasta.ciudad}`,
       desde: desde.ciudad,
@@ -27,6 +29,7 @@ function construirTramos(paradas) {
       operador: t.operador,
       fuente: t.fuente,
       km: t.km,
+      alternativas: comparacion.alternativas,
     });
   }
   return out;
@@ -36,7 +39,7 @@ function construirEstadia(paradas, nivel = "medio") {
   const factor = nivel === "mochilero" ? 0.72 : nivel === "comodo" ? 1.35 : 1;
   return paradas.reduce((total, p) => {
     if (!p.noches) return total;
-    return total + (costoDiario(p.ciudad, p.paisNombre || p.pais) .usd || 0) * p.noches * factor;
+    return total + (costoDiario(p.ciudad, p.paisNombre || p.pais).usd || 0) * p.noches * factor;
   }, 0);
 }
 
@@ -60,29 +63,27 @@ function presupuestoResumen(viaje, tramos) {
 }
 
 function recomendacionTramos(tramos) {
-  return tramos
-    .filter((t) => t.medio)
-    .map((t) => {
-      const medio = t.medio === "vuelo" ? "avión" : t.medio;
-      const confianza = t.fuente === "detectado" ? "alta" : t.fuente === "curado" ? "media" : t.fuente === "estimado" ? "baja" : "nula";
-      return {
-        id: t.id,
-        titulo: `${t.desde} → ${t.hasta}`,
-        recomendacion: `Considera ${medio}: ${t.precio != null ? `~US$${t.precio}` : "precio no disponible"} y ${t.puertaAPuerta_h != null ? `${t.puertaAPuerta_h} h puerta a puerta` : "duración no disponible"}.`,
-        confianza,
-        fuente: t.fuente,
-      };
-    });
+  return tramos.filter((t) => t.medio).map((t) => {
+    const medio = t.medio === "vuelo" ? "avión" : t.medio;
+    const confianza = t.fuente === "detectado" ? "alta" : t.fuente === "curado" ? "media" : t.fuente === "estimado" ? "baja" : "nula";
+    const mejor = (t.alternativas || []).find((a) => a.recomendado) || t.alternativas?.[0];
+    return {
+      id: t.id,
+      titulo: `${t.desde} → ${t.hasta}`,
+      recomendacion: mejor && mejor.medio !== t.medio
+        ? `Anduve prioriza ${mejor.medio}: ~US$${mejor.precio} y ${mejor.puertaAPuerta_h} h puerta a puerta.`
+        : `Anduve prioriza ${medio}: ${t.precio != null ? `~US$${t.precio}` : "precio no disponible"} y ${t.puertaAPuerta_h != null ? `${t.puertaAPuerta_h} h puerta a puerta` : "duración no disponible"}.`,
+      confianza,
+      fuente: t.fuente,
+    };
+  });
 }
 
 export async function POST(req) {
   let body;
   try { body = await req.json(); } catch { return Response.json({ ok: false, motivo: "json" }, { status: 400 }); }
-
   const viaje = normalizarViaje(body?.viaje || body, body?.origen === "legacy" ? "legacy" : "ruta");
-  if (!viaje || viaje.paradas.length < 2) {
-    return Response.json({ ok: false, motivo: "faltan-paradas" }, { status: 400 });
-  }
+  if (!viaje || viaje.paradas.length < 2) return Response.json({ ok: false, motivo: "faltan-paradas" }, { status: 400 });
 
   const tramosOriginales = construirTramos(viaje.paradas);
   const ajustado = ajustarIdaYVuelta(tramosOriginales);
@@ -98,7 +99,5 @@ export async function POST(req) {
     optimizacion: zigzag,
     recomendaciones: recomendacionTramos(ajustado.tramos),
     generadoEn: Date.now(),
-  }, {
-    headers: { "Cache-Control": "no-store" },
-  });
+  }, { headers: { "Cache-Control": "no-store" } });
 }
