@@ -1,0 +1,33 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
+const iconoMedio = { tren: "🚆", vuelo: "✈️", bus: "🚌", ferry: "⛴️" };
+
+function money(v) { return v == null ? "—" : `US$${Number(v).toLocaleString("en-US")}`; }
+function fuente(f) { return f === "detectado" ? "Dato detectado" : f === "curado" ? "Referencia curada" : f === "estimado" ? "Estimación" : "Sin dato"; }
+
+export default function InteligenciaViaje({ ruta, analisis, decisiones }) {
+  const [abierto, setAbierto] = useState(false);
+  const [modo, setModo] = useState("transporte");
+  const eliminaciones = decisiones?.eliminar || [];
+  const mejor = decisiones?.mejorEliminacion;
+  const alternativas = useMemo(() => (analisis?.tramos || []).map((t) => ({ ...t, opciones: t.alternativas || [] })), [analisis]);
+  if (!analisis && !decisiones) return null;
+
+  return <section className="space-y-3">
+    <div className="rounded-2xl border border-violet-200 bg-violet-50 p-5 dark:border-violet-900/60 dark:bg-violet-950/20">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 flex-1"><div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-violet-700 dark:text-violet-300">Anduve Intelligence</div><h3 className="mt-1 text-[17px] font-black text-violet-950 dark:text-violet-100">No solo calculamos tu viaje. Lo cuestionamos.</h3><p className="mt-1.5 max-w-2xl text-[12.5px] leading-relaxed text-violet-900/75 dark:text-violet-100/70">Comparamos alternativas y buscamos decisiones que puedan hacer tu ruta más barata, rápida o sencilla. Las estimaciones nunca se presentan como precios confirmados.</p></div>
+        <div className="flex rounded-full bg-white/70 p-1 text-[11px] font-extrabold dark:bg-slate-800"><button onClick={() => setModo("transporte")} className={`rounded-full px-3 py-1.5 ${modo === "transporte" ? "bg-violet-700 text-white" : "text-violet-700 dark:text-violet-200"}`}>Transporte</button><button onClick={() => setModo("decisiones")} className={`rounded-full px-3 py-1.5 ${modo === "decisiones" ? "bg-violet-700 text-white" : "text-violet-700 dark:text-violet-200"}`}>Decisiones</button></div>
+      </div>
+
+      {modo === "transporte" && <div className="mt-4 space-y-3">{alternativas.map((t) => <div key={t.id} className="rounded-2xl border border-white/80 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"><div className="flex flex-wrap items-center justify-between gap-2"><div className="text-[13px] font-extrabold text-slate-900 dark:text-white">{t.desde} → {t.hasta}</div><span className="text-[10px] font-bold text-slate-400">{t.km ? `${Math.round(t.km)} km` : "distancia no disponible"}</span></div><div className="mt-3 grid gap-2 sm:grid-cols-3">{t.opciones.map((o, i) => <div key={`${o.medio}-${i}`} className={`rounded-xl border p-3 ${i === 0 ? "border-violet-300 bg-violet-50/70 dark:border-violet-800 dark:bg-violet-950/20" : "border-slate-200 dark:border-slate-700"}`}><div className="flex items-center justify-between gap-2"><span className="font-extrabold text-slate-800 dark:text-slate-100">{iconoMedio[o.medio] || "🚐"} {o.medio === "vuelo" ? "Avión" : o.medio || "Sin opción"}</span>{i === 0 && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black text-emerald-700">RECOMENDADO</span>}</div><div className="mt-2 text-[15px] font-black text-slate-900 dark:text-white">{money(o.precio)}</div><div className="text-[11px] text-slate-500">{o.puertaAPuerta_h != null ? `${o.puertaAPuerta_h} h puerta a puerta` : "Tiempo desconocido"} · {o.score != null ? `${o.score}/100` : "sin score"}</div><div className={`mt-1 text-[9.5px] font-bold ${o.fuente === "estimado" ? "text-amber-600" : "text-emerald-600"}`}>{fuente(o.fuente)}</div><p className="mt-2 text-[10.5px] leading-relaxed text-slate-500">{o.explicacion || o.nota}</p></div>)}</div></div>)}</div>}
+
+      {modo === "decisiones" && <div className="mt-4">{mejor ? <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/60 dark:bg-amber-950/20"><div className="text-[10px] font-black uppercase tracking-[0.15em] text-amber-700">Mayor impacto potencial</div><h4 className="mt-1 text-[15px] font-black text-amber-950 dark:text-amber-100">¿Qué pasa si eliminas {mejor.ciudad}?</h4><p className="mt-1.5 text-[12px] text-amber-900/75 dark:text-amber-100/70">{mejor.razon}</p><div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4"><div className="rounded-xl bg-white/80 p-3"><div className="text-[9px] font-bold text-slate-400">Ahorro potencial</div><div className="text-[15px] font-black">{money(mejor.ahorroTotalEstimado)}</div></div><div className="rounded-xl bg-white/80 p-3"><div className="text-[9px] font-bold text-slate-400">Tiempo</div><div className="text-[15px] font-black">{mejor.ahorroHoras > 0 ? `−${mejor.ahorroHoras} h` : `+${Math.abs(mejor.ahorroHoras)} h`}</div></div><div className="rounded-xl bg-white/80 p-3"><div className="text-[9px] font-bold text-slate-400">Noches</div><div className="text-[15px] font-black">{mejor.nochesLiberadas}</div></div><div className="rounded-xl bg-white/80 p-3"><div className="text-[9px] font-bold text-slate-400">Confianza</div><div className="text-[15px] font-black capitalize">{mejor.confianza}</div></div></div></div> : <div className="rounded-xl border border-slate-200 bg-white p-4 text-[12px] text-slate-500 dark:border-slate-700 dark:bg-slate-800">No hay una eliminación claramente beneficiosa con los datos disponibles.</div>}
+          {eliminaciones.length > 1 && <div className="mt-3 space-y-2">{eliminaciones.slice(1, 4).map((d) => <button key={`${d.ciudad}-${d.indice}`} onClick={() => setAbierto(abierto === d.ciudad ? false : d.ciudad)} className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white p-3 text-left dark:border-slate-700 dark:bg-slate-800"><span className="text-[12px] font-extrabold">Quitar {d.ciudad}</span><span className="text-[11px] font-bold text-slate-500">{d.ahorroTotalEstimado > 0 ? `~${money(d.ahorroTotalEstimado)} · −${d.ahorroHoras} h` : "ver impacto"}</span></button>)}</div>}
+          <p className="mt-3 text-[10.5px] text-slate-400">Estas propuestas no cambian tu ruta automáticamente. Primero te mostramos el impacto.</p>
+        </div>}
+    </div>
+  </section>;
+}
