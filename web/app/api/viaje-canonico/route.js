@@ -16,8 +16,25 @@ function construirTramos(paradas, viaje) {
     const desde = paradas[i]; const hasta = paradas[i + 1];
     const t = evaluarTramo({ desde, hasta });
     const comparacion = compararTransporte(desde, hasta, { nivel: viaje?.nivel || "medio", prioridad });
-    const recomendada = comparacion.alternativas?.find((a) => a.score != null) || comparacion.alternativas?.[0] || null;
-    out.push({ id: `${i}:${desde.ciudad}:${hasta.ciudad}`, desde: desde.ciudad, hasta: hasta.ciudad, medio: t.medio, precio: money(t.precio), precioRecomendado: money(recomendada?.precio), medioRecomendado: recomendada?.medio || t.medio, duracion_h: t.duracion_h, puertaAPuerta_h: t.puertaAPuerta_h, puertaAPuertaRecomendada_h: recomendada?.puertaAPuerta_h ?? t.puertaAPuerta_h, operador: t.operador, fuente: t.fuente, fuenteRecomendada: recomendada?.fuente || t.fuente, km: t.km, alternativas: comparacion.alternativas });
+    const recomendada = comparacion.alternativas?.find((a) => a.recomendado) || comparacion.alternativas?.[0] || null;
+    out.push({
+      id: `${i}:${desde.ciudad}:${hasta.ciudad}`,
+      desde: desde.ciudad,
+      hasta: hasta.ciudad,
+      medio: t.medio,
+      precio: money(t.precio),
+      precioRecomendado: money(recomendada?.precio),
+      medioRecomendado: recomendada?.medio || t.medio,
+      duracion_h: t.duracion_h,
+      puertaAPuerta_h: t.puertaAPuerta_h,
+      puertaAPuertaRecomendada_h: recomendada?.puertaAPuerta_h ?? t.puertaAPuerta_h,
+      operador: t.operador,
+      fuente: t.fuente,
+      fuenteRecomendada: recomendada?.fuente || t.fuente,
+      km: t.km,
+      alternativas: comparacion.alternativas,
+      recomendacionExplicacion: recomendada?.explicacion || "",
+    });
   }
   return out;
 }
@@ -40,7 +57,7 @@ function presupuestoResumen(viaje, tramos) {
 
 function recomendacionTramos(tramos) {
   return tramos.filter((t) => t.medio || t.alternativas?.length).map((t) => {
-    const mejor = (t.alternativas || []).find((a) => a.score != null) || t.alternativas?.[0];
+    const mejor = (t.alternativas || []).find((a) => a.recomendado) || t.alternativas?.[0];
     return { id: t.id, titulo: `${t.desde} → ${t.hasta}`, recomendacion: mejor ? `Anduve recomienda ${mejor.medio}: ~US$${mejor.precio} y ${mejor.puertaAPuerta_h} h puerta a puerta.` : `No hay una opción suficientemente fiable para recomendar.`, score: mejor?.score ?? null, explicacion: mejor?.explicacion || "", confianza: mejor?.fuente === "detectado" ? "alta" : mejor?.fuente === "curado" ? "media" : mejor?.fuente === "estimado" ? "baja" : "nula", fuente: mejor?.fuente || "sin_dato" };
   });
 }
