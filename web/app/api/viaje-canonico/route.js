@@ -75,10 +75,17 @@ async function presupuestoResumen(viaje, tramos) {
   };
 }
 
-function recomendacionTramos(tramos) {
+function simboloMoneda(codigo) {
+  return codigo === "EUR" ? "€" : codigo === "GBP" ? "£" : codigo === "COP" ? "$" : codigo === "USD" ? "US$" : `${codigo} `;
+}
+
+function recomendacionTramos(tramos, monedaVista = "USD", tasaVistaPorUsd = 1) {
   return tramos.filter((t) => t.medio || t.alternativas?.length).map((t) => {
     const mejor = (t.alternativas || []).find((a) => a.recomendado) || t.alternativas?.[0];
-    return { id: t.id, titulo: `${t.desde} → ${t.hasta}`, recomendacion: mejor ? `Anduve recomienda ${mejor.medio}: ~US$${mejor.precio} y ${mejor.puertaAPuerta_h} h puerta a puerta.` : `No hay una opción suficientemente fiable para recomendar.`, score: mejor?.score ?? null, explicacion: mejor?.explicacion || "", confianza: mejor?.fuente === "detectado" ? "alta" : mejor?.fuente === "curado" ? "media" : mejor?.fuente === "estimado" ? "baja" : "nula", fuente: mejor?.fuente || "sin_dato" };
+    if (!mejor) return { id: t.id, titulo: `${t.desde} → ${t.hasta}`, recomendacion: "No hay una opción suficientemente fiable para recomendar.", score: null, explicacion: "", confianza: "nula", fuente: "sin_dato" };
+    const precioVista = Math.round(Number(mejor.precio || 0) * Number(tasaVistaPorUsd || 1));
+    const precioTexto = monedaVista === "USD" ? `US$${mejor.precio}` : `${simboloMoneda(monedaVista)}${precioVista.toLocaleString("es-CO")}`;
+    return { id: t.id, titulo: `${t.desde} → ${t.hasta}`, recomendacion: `Anduve recomienda ${mejor.medio}: ~${precioTexto} y ${mejor.puertaAPuerta_h} h puerta a puerta.`, score: mejor?.score ?? null, explicacion: mejor?.explicacion || "", confianza: mejor?.fuente === "detectado" ? "alta" : mejor?.fuente === "curado" ? "media" : mejor?.fuente === "estimado" ? "baja" : "nula", fuente: mejor?.fuente || "sin_dato" };
   });
 }
 
@@ -91,5 +98,5 @@ export async function POST(req) {
   const presupuesto = await presupuestoResumen(viaje, ajustado.tramos);
   const zigzag = detectarZigzag(viaje.paradas, 12);
   const optimizacion = optimizarViaje(viaje.paradas);
-  return Response.json({ ok: true, viaje, tramos: ajustado.tramos, regreso: ajustado.regresoIncluido, presupuesto, optimizacion: { ...zigzag, orden: optimizacion }, recomendaciones: recomendacionTramos(ajustado.tramos), generadoEn: Date.now() }, { headers: { "Cache-Control": "no-store" } });
+  return Response.json({ ok: true, viaje, tramos: ajustado.tramos, regreso: ajustado.regresoIncluido, presupuesto, optimizacion: { ...zigzag, orden: optimizacion }, recomendaciones: recomendacionTramos(ajustado.tramos, presupuesto.monedaVista, presupuesto.tasaVistaPorUsd), generadoEn: Date.now() }, { headers: { "Cache-Control": "no-store" } });
 }
