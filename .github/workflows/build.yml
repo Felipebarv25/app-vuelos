@@ -1,0 +1,66 @@
+# Compila la app en cada push y en cada PR.
+#
+# POR QUE EXISTE
+#
+# La rama sprint1-mi-viaje acumulo 59 commits y ni uno compilaba: dos errores
+# de sintaxis estaban commiteados, y encima el salto a Next 15 rompia dos
+# reglas nuevas. Se descubrio dias despues, mirando por que fallaba Vercel.
+# El historial lo cuenta solo: "fix: eliminar lockfile corrupto para
+# regenerarlo en build", "fix: restaurar lockfile", tres "chore: retirar
+# workflow temporal" — se estuvo iterando CONTRA el despliegue en vez de
+# compilar antes de empujar.
+#
+# Esto lo corta: si no compila, se ve aqui en dos minutos y no en el
+# despliegue.
+#
+# POR QUE paths-ignore
+#
+# El detector de vuelos pushea a main cada 3 horas y solo toca datos
+# (datos/**, ofertas.json, historial-resumen.json). Compilar en cada uno de
+# esos commits serian ~8 builds diarios que no prueban nada, y los minutos de
+# Actions se pagan. Un cambio de datos no puede romper la compilacion.
+
+name: build
+
+on:
+  push:
+    paths-ignore:
+      - "datos/**"
+      - "web/public/ofertas.json"
+      - "web/public/historial-resumen.json"
+      - "**/*.md"
+  pull_request:
+  workflow_dispatch:
+
+# Si llegan dos pushes seguidos a la misma rama, solo interesa el ultimo.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # La version de Node sale de .nvmrc, que es la misma que engines.node
+      # en package.json (22.x), que es la que usa Vercel. Si se cambia una,
+      # se cambian las tres.
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # npm ci y no npm install: instala EXACTAMENTE lo del lockfile, que es
+      # lo que hace Vercel. Si aqui pasa con npm install y alli falla con
+      # npm ci, el CI no sirve para nada.
+      - name: Instalar dependencias
+        run: npm ci
+        working-directory: web
+
+      - name: Compilar
+        run: npm run build
+        working-directory: web
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
