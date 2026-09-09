@@ -185,7 +185,7 @@ export default function PlanRuta({ t = (k) => k, lang = "es", usuario = null, ru
   }, []);
   const quitar = (i) => setParadas((p) => p.filter((_, k) => k !== i));
   const mover = (i, delta) => setParadas((p) => { const j = i + delta; if (j < 0 || j >= p.length) return p; const c = [...p]; [c[i], c[j]] = [c[j], c[i]]; return c; });
-  const cambiarNoches = (i, n) => setParadas((p) => p.map((x, k) => (k === i ? { ...x, noches: Math.max(0, Number(n) || 0) } : x));
+  const cambiarNoches = (i, n) => setParadas((p) => p.map((x, k) => (k === i ? { ...x, noches: Math.max(0, Number(n) || 0) } : x)));
 
   const vueloDetectado = useCallback((desde, hasta) => { const rutas = ofertas?.rutas || []; const c = sinAcentos(hasta.ciudad); const hit = rutas.find((r) => r.origen === desde.iata && (r.destino === hasta.iata || sinAcentos(r.ciudad) === c)); if (!hit) return null; const durH = hit.duracion_ida != null ? Number(hit.duracion_ida) / 60 : null; return { precio: hit.precio, duracion_h: durH, aerolinea: hit.aerolinea }; }, [ofertas]);
   const paradasCalc = useDeferredValue(paradas);

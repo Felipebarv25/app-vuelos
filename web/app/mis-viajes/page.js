@@ -1,7 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useApp } from "@/lib/AppContext";
 import { listarViajesConEstado, borrarViajeAsync } from "@/lib/viajes";
@@ -28,7 +28,7 @@ const paisesDe=r=>{const vistos=[];for(const p of r?.paradas||[]){const cc=Strin
 const paisesDeTodos=listas=>{const vistos=[];for(const lista of listas)for(const r of lista||[])for(const cc of paisesDe(r))if(!vistos.includes(cc))vistos.push(cc);return vistos;};
 function recorrido(r){const out=[];for(const p of r?.paradas||[]){const c=(p?.ciudad||"").trim();if(!c)continue;if(out.length&&out[out.length-1].toLowerCase()===c.toLowerCase())continue;out.push(c);}return out;}
 function ListaViajes({t,lang,rutas=[],locales=[],onCrear,onAbrir,onBorrar,onDescartar,onReordenar}){const[arrastrando,setArrastrando]=useState(null);const[encima,setEncima]=useState(null);function soltar(destino){if(arrastrando===null||destino===null||arrastrando===destino){setArrastrando(null);setEncima(null);return;}const copia=[...rutas];const[movida]=copia.splice(arrastrando,1);copia.splice(destino,0,movida);setArrastrando(null);setEncima(null);onReordenar?.(copia);}const fmt=r=>{const m=String(r.mesInicio||r.fechaInicio||"").slice(0,7);if(!/^\d{4}-\d{2}$/.test(m))return t("rutasSinFecha");const d=new Date(m+"-01T00:00:00");return Number.isNaN(d.getTime())?t("rutasSinFecha"):conMayuscula(d.toLocaleDateString(lang,{month:"short",year:"numeric"}));};const Tarjeta=({r,sinGuardar,i})=><li draggable={!sinGuardar} onDragStart={()=>!sinGuardar&&setArrastrando(i)} onDragOver={e=>{if(!sinGuardar&&arrastrando!==null){e.preventDefault();setEncima(i);}}} onDragLeave={()=>setEncima(v=>v===i?null:v)} onDrop={e=>{e.preventDefault();soltar(i);}} onDragEnd={()=>{setArrastrando(null);setEncima(null);}} className={`rounded-2xl border bg-white p-4 transition dark:bg-slate-800 ${!sinGuardar?"cursor-grab active:cursor-grabbing":""} ${encima===i&&arrastrando!==null&&arrastrando!==i?"border-marca-500 ring-2 ring-marca-200 dark:ring-marca-800":"border-slate-200 hover:border-marca-300 dark:border-slate-700"} ${arrastrando===i?"opacity-40":""}`}><div className="flex items-start justify-between gap-2"><h3 className="text-[15px] font-extrabold text-slate-900 dark:text-slate-100">{r.nombre||((r.paradas||[]).length>=2?`${r.paradas[0].ciudad} → ${r.paradas[r.paradas.length-1].ciudad}`:t("rutaNombrePlaceholder"))}{paisesDe(r).length>0&&<span className="ml-2 inline-flex items-center gap-1 align-middle">{paisesDe(r).map(cc=><Bandera key={cc} cc={cc} size={16}/>)}</span>}</h3><div className="flex shrink-0 items-center gap-1.5">{sinGuardar&&<span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">{t("listaBorrador")}</span>}<button onClick={()=>sinGuardar?onDescartar(r.uid):onBorrar(r.id)} aria-label={t("misViajesEliminar")} className="rounded-full p-1 text-slate-300 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/30"><Icono nombre="x" size={14}/></button></div></div><p className="mt-1 truncate text-[12.5px] text-slate-500 dark:text-slate-400">{recorrido(r).join(" → ")||"—"}</p><p className="mt-1 text-[12px] text-slate-400">{fmt(r)} · {t("rutasNParadas").replace("{n}",recorrido(r).length)}</p><button onClick={()=>onAbrir(r)} className="mt-3 rounded-full bg-marca-700 px-4 py-1.5 text-[12.5px] font-bold text-white transition hover:bg-marca-800">{sinGuardar?t("listaSeguirEditando"):t("misViajesAbrir")}</button></li>;const hayAlgo=rutas.length>0||locales.length>0;return <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="text-[11px] font-bold uppercase tracking-[0.18em] text-marca-700 dark:text-marca-300">{t("listaViajesEyebrow")}</div><p className="mt-0.5 max-w-lg text-[13px] text-slate-500 dark:text-slate-400">{t("listaViajesSub")}{rutas.length>1&&<> <span className="text-slate-400">{t("listaArrastrar")}</span></>}</p></div><button onClick={onCrear} className="rounded-full bg-marca-700 px-4 py-2 text-[13px] font-bold text-white shadow-sm transition hover:bg-marca-800">+ {t("listaCrear")}</button></div>{!hayAlgo?<div className="mt-5"><div aria-hidden="true" className="pointer-events-none select-none rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-4 opacity-70 dark:border-slate-600 dark:bg-slate-900/30"><div className="flex items-start justify-between gap-2"><h3 className="text-[15px] font-extrabold text-slate-400 dark:text-slate-500">Medellín → Londres<span className="ml-2 inline-flex items-center gap-1 align-middle opacity-60 grayscale"><Bandera cc="co" size={16}/><Bandera cc="es" size={16}/><Bandera cc="gb" size={16}/></span></h3></div><p className="mt-1 truncate text-[12.5px] text-slate-400 dark:text-slate-500">Medellín → Madrid → Londres</p><p className="mt-1 text-[12px] text-slate-300 dark:text-slate-600">{conMayuscula(new Date(2027,4,1).toLocaleDateString(lang,{month:"short",year:"numeric"}))} · {t("rutasNParadas").replace("{n}",3)}</p><span className="mt-3 inline-block rounded-full bg-slate-200 px-4 py-1.5 text-[12.5px] font-bold text-slate-400 dark:bg-slate-700 dark:text-slate-500">{t("misViajesAbrir")}</span></div><p className="mt-2.5 text-center text-[12.5px] text-slate-500 dark:text-slate-400">{t("listaVaciaEjemplo")} · {t("listaVacia")}</p></div>:<ul className="mt-4 grid gap-3 sm:grid-cols-2">{locales.map(r=><Tarjeta key={r.uid} r={r} sinGuardar/>)}{rutas.map((r,i)=><Tarjeta key={r.id} r={r} i={i}/>)}</ul>}</div>;}
-export default function PaginaMisViajes(){const{t,lang,usuario}=useApp();const router=useRouter();const searchParams=useSearchParams();const editarId=searchParams.get("editar");const[viajes,setViajes]=useState([]);const[nube,setNube]=useState({sincronizado:false,motivo:null});const[cargando,setCargando]=useState(true);const[fotos,setFotos]=useState({});const[confirmElim,setConfirmElim]=useState(null);const[modoPlan,setModoPlan]=useState(null);const[rutas,setRutas]=useState([]);const[rutaAbierta,setRutaAbierta]=useState(null);const[confirmRuta,setConfirmRuta]=useState(null);const[locales,setLocales]=useState([]);const cargadas=useRef(new Set());
+function ContenidoMisViajes(){const{t,lang,usuario}=useApp();const router=useRouter();const searchParams=useSearchParams();const editarId=searchParams.get("editar");const[viajes,setViajes]=useState([]);const[nube,setNube]=useState({sincronizado:false,motivo:null});const[cargando,setCargando]=useState(true);const[fotos,setFotos]=useState({});const[confirmElim,setConfirmElim]=useState(null);const[modoPlan,setModoPlan]=useState(null);const[rutas,setRutas]=useState([]);const[rutaAbierta,setRutaAbierta]=useState(null);const[confirmRuta,setConfirmRuta]=useState(null);const[locales,setLocales]=useState([]);const cargadas=useRef(new Set());
 useEffect(()=>{let vivo=true;(async()=>{const r=await listarViajesConEstado(usuario);if(vivo){setViajes(r.viajes||[]);setNube({sincronizado:r.sincronizado,motivo:r.motivo});setCargando(false);}})();return()=>{vivo=false;};},[usuario]);
 useEffect(()=>{if(!viajes.length)return;let vivo=true;for(const v of viajes){const key=v.ciudad?.nombre;if(!key||cargadas.current.has(key))continue;cargadas.current.add(key);fetchFoto(key,v.ciudad?.pais||"").then(url=>{if(vivo&&url)setFotos(p=>({...p,[key]:url}));});}return()=>{vivo=false;};},[viajes]);
 function cabeceras(){const h={"Content-Type":"application/json"};try{const tk=localStorage.getItem("anduve_auth_token")||sessionStorage.getItem("anduve_auth_token");if(tk)h.Authorization=`Bearer ${tk}`;}catch{}return h;}
@@ -53,4 +53,44 @@ return <div className="min-h-screen bg-slate-50 pb-16 dark:bg-slate-900 md:pb-0"
 {confirmRuta&&<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={()=>setConfirmRuta(null)}><div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-800" onClick={e=>e.stopPropagation()}><h3 className="text-[16px] font-bold text-slate-900 dark:text-slate-100">{t("misViajesConfirmElim")}</h3><p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">{rutas.find(x=>x.id===confirmRuta)?.nombre||""}</p><div className="mt-5 flex gap-3"><button onClick={()=>setConfirmRuta(null)} className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700">{t("misViajesConfirmNo")}</button><button onClick={()=>borrarRuta(confirmRuta)} className="flex-1 rounded-lg bg-red-500 px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-red-600">{t("misViajesConfirmSi")}</button></div></div></div>}
 {confirmElim&&<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={()=>setConfirmElim(null)}><div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-800" onClick={e=>e.stopPropagation()}><div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400"><Icono nombre="trash" size={22}/></div><h3 className="text-[16px] font-bold text-slate-900 dark:text-slate-100">{t("misViajesConfirmElim")}</h3><p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">{viajes.find(x=>x.id===confirmElim)?.ciudad?.nombre||""}</p><div className="mt-5 flex gap-3"><button onClick={()=>setConfirmElim(null)} className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700">{t("misViajesConfirmNo")}</button><button onClick={confirmarEliminar} className="flex-1 rounded-lg bg-red-500 px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-red-600">{t("misViajesConfirmSi")}</button></div></div></div>}
 <FooterAnduve/><div className="print:hidden"></div><BottomTabBar/></div>;
+}
+
+// LA FRONTERA DE SUSPENSE.
+//
+// Esta pagina lee ?editar= con useSearchParams(), y ese hook no se resuelve
+// al prerenderizar: sin frontera de Suspense, Next rompe el build con
+// "useSearchParams() should be wrapped in a suspense boundary at page
+// /mis-viajes".
+//
+// Aqui la frontera SI envuelve la pagina entera, al contrario que en /ruta,
+// y es a proposito: /ruta tiene contenido indexable que merece salir en el
+// HTML del servidor, mientras que esto es una pantalla tras login cuyo
+// contenido entero llega de /api/rutas ya en el cliente. No hay nada que el
+// servidor pueda pintar aqui salvo el andamiaje.
+//
+// Lo que si se respeta es la otra mitad de la leccion de /ruta: el fallback
+// NO es `null`. Lleva la navegacion —NavTop usa usePathname, no
+// useSearchParams, asi que puede vivir fuera— y un esqueleto que se ve.
+export default function PaginaMisViajes() {
+  return (
+    <Suspense fallback={<EsqueletoMisViajes />}>
+      <ContenidoMisViajes />
+    </Suspense>
+  );
+}
+
+function EsqueletoMisViajes() {
+  return (
+    <div className="min-h-screen bg-slate-50 pb-16 dark:bg-slate-900 md:pb-0">
+      <NavTop active="misviajes" />
+      <main aria-busy="true" className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+        <div className="h-7 w-56 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <div className="h-36 animate-pulse rounded-2xl bg-white dark:bg-slate-800" />
+          <div className="h-36 animate-pulse rounded-2xl bg-white dark:bg-slate-800" />
+        </div>
+      </main>
+      <BottomTabBar />
+    </div>
+  );
 }

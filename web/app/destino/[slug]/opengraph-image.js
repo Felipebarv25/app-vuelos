@@ -4,7 +4,22 @@
 import { ImageResponse } from "next/og";
 import { getDestinoPorSlug, nombreDestino, TODOS_SLUGS } from "@/lib/destinos";
 
-export const runtime = "edge";
+// SIN runtime edge, a proposito. Next 15 prohibe que una ruta declare
+// `runtime = "edge"` y `generateStaticParams` a la vez, y falla el build
+// entero con:
+//
+//   Page "/destino/[slug]/opengraph-image" cannot use both
+//   `export const runtime = 'edge'` and export `generateStaticParams`.
+//
+// De las dos, se conserva generateStaticParams: los 207 destinos quedan
+// pre-generados en el build. La alternativa —edge y generar al primer
+// acceso— ahorra tiempo de build pero la primera peticion la hace un
+// rastreador de WhatsApp o Twitter, y esos abandonan pronto: una tarjeta
+// vacia al compartir el enlace cuesta mas que un build mas largo.
+//
+// next/og funciona igual en el runtime de Node; lo unico que se pierde es
+// el arranque en frio del edge, que aqui no importa porque la imagen ya
+// existe antes de que nadie la pida.
 export const alt = "Anduve";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
