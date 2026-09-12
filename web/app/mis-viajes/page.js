@@ -561,7 +561,7 @@ export default function PaginaMisViajes() {
         alVolver={rutaAbierta ? () => { setRutaAbierta(null); cargarRutas(); } : null}
       />
 
-      <main className="mx-auto max-w-5xl px-4 py-8 lg:px-8 lg:py-10">
+      <main className="mx-auto w-full max-w-[1800px] px-4 py-8 lg:px-10 lg:py-10">
         {/* CABECERA. Era un titulo negro sobre gris y nada mas: la pagina
             donde vive lo que el usuario ha construido se veia mas fria que
             cualquier otra de la app. Ahora es la misma banda de marca que

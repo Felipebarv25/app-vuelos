@@ -30,7 +30,7 @@ export default function PaginaComparar() {
           izquierda y sin forma de saltar a otra seccion. */}
       <NavTop active="destinos" />
       <BotonVolver href="/destino" etiqueta="Volver a destinos" />
-      <header className="mx-auto max-w-6xl px-6 pt-8">
+      <header className="mx-auto w-full max-w-[1800px] px-4 pt-8 lg:px-10">
         <div className="text-[12px] font-semibold uppercase tracking-[0.22em] text-marca-500">
           Herramienta
         </div>

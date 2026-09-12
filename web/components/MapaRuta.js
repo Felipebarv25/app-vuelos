@@ -89,7 +89,21 @@ function separarChoques(puntos, aPixel, radio = 34) {
 
 export default function MapaRuta({
   paradas = [],
-  alto = 420,
+  // ALTO RESPONSIVO, no 420 px fijos.
+  //
+  // Un numero fijo obliga a elegir entre movil y escritorio y se
+  // equivoca en los dos: 420 px se comen media pantalla de un telefono
+  // y se quedan en una franja estrecha en un monitor de 1080. Con
+  // clamp el mapa pide una proporcion de la ventana, con suelo para que
+  // nunca sea inutil y techo para que no se coma la pagina entera:
+  //
+  //   movil 812 de alto    60vh = 487  (antes 420)
+  //   portatil 900         60vh = 540
+  //   monitor 1080         60vh = 648
+  //   monitor 1440         tope = 820
+  //
+  // Es una cadena CSS y no un numero: React la pasa tal cual a height.
+  alto = "clamp(400px, 60vh, 820px)",
   textoFallo = "No pudimos cargar el mapa.",
   // Parada resaltada desde la lista del itinerario. Al cambiar, el mapa vuela
   // hasta ella y abre su ficha.
@@ -105,6 +119,7 @@ export default function MapaRuta({
   const popupRef = useRef(null);
   const lineaRef = useRef(null);
   const encuadrarRef = useRef(null);
+  const observadorRef = useRef(null);
   const [fallo, setFallo] = useState(false);
   const [ubicadas, setUbicadas] = useState(null); // paradas ya resueltas por IATA
 
@@ -261,6 +276,17 @@ export default function MapaRuta({
 
         const mapa = mapaRef.current;
         mapa.resize();
+
+        // El alto ahora es relativo a la ventana, asi que cambia al girar
+        // el movil o al arrastrar el borde. maplibre no se entera solo: si
+        // no se le avisa, sigue dibujando con el tamano viejo y el lienzo
+        // queda estirado o con una banda en blanco.
+        if (!observadorRef.current && typeof ResizeObserver !== "undefined") {
+          observadorRef.current = new ResizeObserver(() => {
+            try { mapaRef.current?.resize(); } catch {}
+          });
+          observadorRef.current.observe(ref.current);
+        }
 
         // ---- ENCUADRE A TODA LA RUTA --------------------------------------
         //
@@ -708,6 +734,8 @@ export default function MapaRuta({
 
   useEffect(
     () => () => {
+      observadorRef.current?.disconnect();
+      observadorRef.current = null;
       marcadoresRef.current.forEach((m) => m.remove());
       marcadoresRef.current = [];
       popupRef.current?.remove();

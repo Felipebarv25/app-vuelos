@@ -13,7 +13,7 @@ export default function NavTop({ active = null }) {
   const { t, darkMode, toggleDark, pro } = useApp();
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 dark:border-slate-700 dark:bg-slate-900/95">
-      <div className="mx-auto flex max-w-[1480px] items-center justify-between gap-3 px-3 py-2.5 lg:px-5">
+      <div className="mx-auto flex max-w-[1800px] items-center justify-between gap-3 px-3 py-2.5 lg:px-6">
         <Link href="/" className="flex items-center" aria-label="Anduve — inicio">
           <LogoMarca size={48} tono="marca" />
         </Link>

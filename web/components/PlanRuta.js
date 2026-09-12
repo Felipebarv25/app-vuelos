@@ -1187,7 +1187,6 @@ export default function PlanRuta({
                 nada. En movil se queda en 300. */}
             <MapaRuta
               paradas={paradas}
-              alto={420}
               textoFallo={t("rutaMapaFallo")}
               seleccionada={paradaActiva}
               onSeleccionar={setParadaActiva}

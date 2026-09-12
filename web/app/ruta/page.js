@@ -96,7 +96,7 @@ export default function PaginaRuta() {
       <NavTop active="ruta" />
       <BotonVolver />
 
-      <main className="mx-auto max-w-4xl px-4 py-8 lg:px-8 lg:py-10">
+      <main className="mx-auto w-full max-w-[1800px] px-4 py-8 lg:px-10 lg:py-10">
         {/* FUERA de la frontera de Suspense: esto es lo que ahora si llega en
             el HTML, y lo que Google puede leer. */}
         <div className="mb-7">
