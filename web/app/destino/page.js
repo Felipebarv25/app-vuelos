@@ -93,13 +93,13 @@ export default function IndiceDestinos() {
 
       <BotonVolver href="/" etiqueta="Volver al inicio" />
 
-      <nav className="mx-auto max-w-6xl px-6 pt-6 text-[13px] text-slate-500">
+      <nav className="mx-auto w-full max-w-[1800px] px-6 pt-6 text-[13px] text-slate-500">
         <Link href="/" className="hover:text-marca-600">Inicio</Link>
         <span className="mx-1.5 text-slate-300 dark:text-slate-600">/</span>
         <span className="font-semibold text-marca-700 dark:text-marca-300">Destinos</span>
       </nav>
 
-      <header className="mx-auto max-w-6xl px-6 pb-2 pt-6">
+      <header className="mx-auto w-full max-w-[1800px] px-6 pb-2 pt-6">
         <div className="text-[12px] font-semibold uppercase tracking-[0.22em] text-marca-500 dark:text-marca-400">
           Catálogo
         </div>
@@ -125,7 +125,7 @@ export default function IndiceDestinos() {
       </header>
 
       {/* Chips de salto a cada región (anchor links) */}
-      <div className="mx-auto max-w-6xl overflow-x-auto px-6 py-4">
+      <div className="mx-auto w-full max-w-[1800px] overflow-x-auto px-6 py-4">
         <div className="flex gap-2">
           {ordenRegiones
             .filter((r) => porRegion[r]?.length)
@@ -153,7 +153,7 @@ export default function IndiceDestinos() {
         .map((r) => {
           const meta = REGIONES_META[r];
           return (
-            <section key={r} id={r} className="mx-auto max-w-6xl px-6 py-6">
+            <section key={r} id={r} className="mx-auto w-full max-w-[1800px] px-6 py-6">
               <h2 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-marca-900 dark:text-marca-300">
                 <span>{meta.emoji}</span> {meta.titulo}
               </h2>
@@ -200,7 +200,7 @@ export default function IndiceDestinos() {
         })}
 
       {/* CTA final */}
-      <section className="mx-auto max-w-6xl px-6 py-10">
+      <section className="mx-auto w-full max-w-[1800px] px-6 py-10">
         <div className="rounded-3xl bg-gradient-to-br from-marca-600 via-marca-700 to-marca-900 p-8 text-white shadow-media">
           <h2 className="text-2xl font-extrabold sm:text-3xl">
             ¿No sabes adónde ir?
@@ -218,7 +218,7 @@ export default function IndiceDestinos() {
         </div>
       </section>
 
-      <footer className="mx-auto max-w-6xl px-6 pb-10 text-center text-[12px] text-slate-400">
+      <footer className="mx-auto w-full max-w-[1800px] px-6 pb-10 text-center text-[12px] text-slate-400">
         Datos de OpenStreetMap y Wikipedia · Precios orientativos en USD.
       </footer>
     </main>

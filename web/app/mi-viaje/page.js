@@ -32,7 +32,7 @@ export default function MiViajePage() {
     <div className="min-h-screen bg-slate-50 pb-20 dark:bg-slate-900 md:pb-0">
       <NavTop active="misviajes" />
 
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+      <main className="mx-auto w-full max-w-[1800px] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
         {/* Fuera de Suspense: esto no depende de la URL, asi que se renderiza
             en servidor y la pagina nunca llega en blanco. */}
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">

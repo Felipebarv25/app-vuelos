@@ -70,7 +70,7 @@ export default function PaginaOfertas() {
       <NavTop active="ofertas" />
       <BotonVolver />
 
-      <main className="mx-auto max-w-6xl px-4 py-8 lg:px-8 lg:py-10">
+      <main className="mx-auto w-full max-w-[1800px] px-4 py-8 lg:px-10 lg:py-10">
         {/* Cabecera de la seccion */}
         <div className="mb-8">
           <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-marca-700 dark:text-marca-300">

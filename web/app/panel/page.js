@@ -211,7 +211,7 @@ export default function Panel() {
 
   return (
     <div className="min-h-screen bg-[#f6f7fb] px-4 py-6 lg:px-8">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto w-full max-w-[1800px]">
         <div className="mb-5 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-marca-900">📊 Panel de métricas</h1>
