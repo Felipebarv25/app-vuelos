@@ -52,12 +52,12 @@ const n = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
 /** La confianza de un dato, de su fuente. Las mismas etiquetas de siempre. */
 export function confianzaDeFuente(fuente) {
-  if (fuente === "detectado" || fuente === "vivo") return { nivel: "alta", etiqueta: "Consultado en vivo" };
-  if (fuente === "curado") return { nivel: "media", etiqueta: "Referencia curada" };
-  if (fuente === "historico") return { nivel: "media", etiqueta: "Histórico" };
-  if (fuente === "estimado") return { nivel: "baja", etiqueta: "Estimación" };
-  if (fuente === "incluido") return { nivel: "alta", etiqueta: "Incluido en el billete" };
-  return { nivel: "nula", etiqueta: "Sin dato" };
+  if (fuente === "detectado" || fuente === "vivo") return { nivel: "alta", etiqueta: "Consultado en vivo", clave: "opEtqVivo" };
+  if (fuente === "curado") return { nivel: "media", etiqueta: "Referencia curada", clave: "iaFuenteCurado" };
+  if (fuente === "historico") return { nivel: "media", etiqueta: "Histórico", clave: "opEtqHistorico" };
+  if (fuente === "estimado") return { nivel: "baja", etiqueta: "Estimación", clave: "iaFuenteEstimado" };
+  if (fuente === "incluido") return { nivel: "alta", etiqueta: "Incluido en el billete", clave: "mvFuenteIncluido" };
+  return { nivel: "nula", etiqueta: "Sin dato", clave: "iaFuenteNinguno" };
 }
 
 /**
@@ -118,6 +118,11 @@ function oportunidadesTransporte(tramos, totalViaje, ritmo) {
       confianza: conf.nivel,
       fuente,
       fuenteEtiqueta: conf.etiqueta,
+      fuenteClave: conf.clave,
+      // Lo que la tarjeta necesita para redactar la frase ella misma, en
+      // el idioma del viajero y en SU moneda. Las cifras van en `dinero` y
+      // `horas`, que ya estaban: aqui solo va el contexto.
+      datos: { desde: t.desde, hasta: t.hasta, medioRec, medioOrig, explicacionCodigo: t.recomendacionExplicacionCodigo || null },
       ancla: "#transporte",
     });
   }
@@ -191,6 +196,8 @@ function oportunidadesEliminar(decisiones, viaje, totalViaje, ritmo) {
       confianza: conf,
       fuente: "estimado",
       fuenteEtiqueta: "Estimación",
+      fuenteClave: "iaFuenteEstimado",
+      datos: { ciudad: d.ciudad, razonCodigo: d.razonCodigo || null },
       ancla: "#decisiones",
     };
 
@@ -228,6 +235,8 @@ function oportunidadReordenar(optimizacion, totalViaje, ritmo) {
     confianza: optimizacion.zigzag?.datosFaltantes ? "baja" : "media",
     fuente: "estimado",
     fuenteEtiqueta: "Estimación",
+    fuenteClave: "iaFuenteEstimado",
+    datos: { orden },
     ancla: "#ruta",
     rutaPropuesta: (optimizacion.recomendado || []).map((p) => p.ciudad),
     rutaActual: (optimizacion.original || []).map((p) => p.ciudad),
@@ -275,6 +284,8 @@ function oportunidadOrigen(alternativa, totalViaje, ritmo) {
     confianza: "media",
     fuente: alternativa.fuente || "detectado",
     fuenteEtiqueta: confianzaDeFuente(alternativa.fuente || "detectado").etiqueta,
+    fuenteClave: confianzaDeFuente(alternativa.fuente || "detectado").clave,
+    datos: { ciudad: alternativa.ciudad, ciudadActual: alternativa.ciudadActual },
     ancla: null,
   };
 }
@@ -296,12 +307,14 @@ function analizarPresupuesto(presupuesto, tramos, paradas) {
   if (pctTransporte >= 0.5) {
     avisos.push({
       clave: "transporte-alto",
+      vars: { p: Math.round(pctTransporte * 100) },
       texto: `El ${Math.round(pctTransporte * 100)} % del coste estimado es transporte. En viajes de varias ciudades suele significar demasiados saltos.`,
     });
   }
   if (pctEstancia >= 0.55) {
     avisos.push({
       clave: "estancia-alta",
+      vars: { p: Math.round(pctEstancia * 100) },
       texto: `El ${Math.round(pctEstancia * 100)} % del coste estimado es alojamiento y día a día.`,
     });
   }
@@ -314,6 +327,7 @@ function analizarPresupuesto(presupuesto, tramos, paradas) {
   if (caro && n(caro.precioRecomendado ?? caro.precio) / total >= 0.25) {
     avisos.push({
       clave: "tramo-caro",
+      vars: { desde: caro.desde, hasta: caro.hasta, p: Math.round((n(caro.precioRecomendado ?? caro.precio) / total) * 100) },
       texto: `${caro.desde} → ${caro.hasta} concentra el ${Math.round((n(caro.precioRecomendado ?? caro.precio) / total) * 100)} % del coste total.`,
     });
   }
@@ -353,12 +367,14 @@ function detectarFaltantes(viaje, tramos) {
   if (!conVueloReal.length && estimados.length) {
     out.push({
       clave: "sin-vuelo-real",
+      vars: { n: estimados.length },
       texto: `No tenemos ningún precio de vuelo consultado en vivo, así que ${estimados.length === 1 ? "el tramo aéreo" : `los ${estimados.length} tramos estimados`} no pueden compararse con alta confianza.`,
     });
   }
   if (sinDato.length) {
     out.push({
       clave: "tramos-sin-dato",
+      vars: { n: sinDato.length },
       texto: `${sinDato.length} ${sinDato.length === 1 ? "tramo no tiene" : "tramos no tienen"} datos suficientes para recomendar un medio de transporte.`,
     });
   }
@@ -366,6 +382,7 @@ function detectarFaltantes(viaje, tramos) {
   if (sinNoches.length) {
     out.push({
       clave: "sin-noches",
+      vars: { n: sinNoches.length },
       texto: `${sinNoches.length} ${sinNoches.length === 1 ? "parada intermedia no tiene noches asignadas" : "paradas intermedias no tienen noches asignadas"}, así que su coste de estancia no entra en el total.`,
     });
   }

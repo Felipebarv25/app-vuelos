@@ -21,6 +21,7 @@
 import { useState } from "react";
 import Bandera from "./Bandera";
 import { Icono } from "./Icono";
+import { useApp } from "@/lib/AppContext";
 
 function money(v, cod) {
   if (v == null || !Number.isFinite(Number(v))) return "—";
@@ -29,13 +30,23 @@ function money(v, cod) {
 }
 
 const SEMAFORO = {
-  dentro: { emoji: "🟢", texto: "Dentro de tu presupuesto", clase: "bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-900" },
-  cerca: { emoji: "🟡", texto: "Cerca de tu presupuesto", clase: "bg-amber-50 text-amber-900 ring-amber-200 dark:bg-amber-950/30 dark:text-amber-200 dark:ring-amber-900" },
-  supera: { emoji: "🔴", texto: "Supera tu presupuesto", clase: "bg-rose-50 text-rose-900 ring-rose-200 dark:bg-rose-950/30 dark:text-rose-200 dark:ring-rose-900" },
-  "sin-presupuesto": { emoji: "⚪", texto: "Sin presupuesto fijado", clase: "bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700" },
+  dentro: { emoji: "🟢", clave: "propSemDentro", clase: "bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-900" },
+  cerca: { emoji: "🟡", clave: "propSemCerca", clase: "bg-amber-50 text-amber-900 ring-amber-200 dark:bg-amber-950/30 dark:text-amber-200 dark:ring-amber-900" },
+  supera: { emoji: "🔴", clave: "propSemSupera", clase: "bg-rose-50 text-rose-900 ring-rose-200 dark:bg-rose-950/30 dark:text-rose-200 dark:ring-rose-900" },
+  "sin-presupuesto": { emoji: "⚪", clave: "propSemSinPresupuesto", clase: "bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700" },
 };
 
+// Las regiones y las categorias de gusto ya son claves en el dato; aqui solo
+// se les pone nombre. La razon de por que se propone un viaje llega tambien
+// como codigo desde lib/propuestasViaje, para poder redactarla en el idioma
+// del viajero sin que el motor tenga que saber cual es.
+const REGION = { todas: "regionTodas", sudamerica: "regionSudamerica", norteamerica: "regionNorteamerica", europa: "regionEuropa", asia: "regionAsia", africa: "regionAfrica", oceania: "regionOceania" };
+const CULPABLE = { vuelo: "propCulpableVuelo", alojamiento: "propCulpableAlojamiento", saltos: "propCulpableSaltos", comida: "propCulpableComida" };
+const RAZON = { margen: "propRazonMargen", dias: "propRazonDias", ciudades: "propRazonCiudades", intereses: "propRazonIntereses" };
+const INTERES = { ciudad: "interesCiudad", historia: "interesHistoria", gastronomia: "interesGastronomia", playa: "interesPlaya", naturaleza: "interesNaturaleza", montana: "interesMontana", aventura: "interesAventura", nocturna: "interesNocturna", romantico: "interesRomantico", economico: "interesEconomico" };
+
 export default function PropuestaViaje({ propuesta: p, onConstruir, construyendo = false }) {
+  const { t } = useApp();
   const [abierto, setAbierto] = useState(false);
   const sem = SEMAFORO[p.presupuesto?.estado] || SEMAFORO["sin-presupuesto"];
   const cod = p.monedaVista || "USD";
@@ -48,6 +59,20 @@ export default function PropuestaViaje({ propuesta: p, onConstruir, construyendo
   // desglose fino ya vive en el presupuesto del viaje.
   const vidaDiaria = (d.comida || 0) + (d.extras || 0);
 
+  // "Porque deja margen y cubre los 12 dias que pediste": la frase se arma
+  // aqui a partir de los codigos, no llega hecha del servidor.
+  const razones = (p.razonesCodigos?.length ? p.razonesCodigos : null)
+    ?.map((r) => {
+      const clave = RAZON[r.codigo];
+      if (!clave) return null;
+      if (r.codigo === "intereses") {
+        const lista = (r.vars?.intereses || []).map((i) => (INTERES[i] ? t(INTERES[i]).toLowerCase() : i));
+        return t(clave, { intereses: lista.join(t("propRazonUnion")) });
+      }
+      return t(clave, r.vars);
+    })
+    .filter(Boolean);
+
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-marca-300 dark:border-slate-700 dark:bg-slate-800">
       <div className="p-4 sm:p-5">
@@ -58,14 +83,14 @@ export default function PropuestaViaje({ propuesta: p, onConstruir, construyendo
               {[...new Set(p.ciudades.map((c) => c.iso))].filter(Boolean).slice(0, 5).map((iso) => (
                 <Bandera key={iso} cc={String(iso).toLowerCase()} size={18} />
               ))}
-              <span className="ml-1 text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-400">{p.regionNombre}</span>
+              <span className="ml-1 text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-400">{REGION[p.region] ? t(REGION[p.region]) : p.regionNombre}</span>
             </div>
             <h3 className="mt-1.5 text-[17px] font-black leading-tight text-slate-900 dark:text-white sm:text-[19px]">
-              {p.ciudades.length} {p.ciudades.length === 1 ? "ciudad" : "ciudades"} · {p.diasTotales} {p.diasTotales === 1 ? "día" : "días"}
+              {t(p.ciudades.length === 1 ? "propCiudadUna" : "propCiudadVarias", { n: p.ciudades.length })} · {t(p.diasTotales === 1 ? "propDiaUno" : "propDiaVarios", { n: p.diasTotales })}
             </h3>
           </div>
           <div className="shrink-0 text-right">
-            <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Compatibilidad</div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">{t("propCompatibilidad")}</div>
             <div className="text-[22px] font-black leading-none text-marca-700 dark:text-marca-300">{p.compatibilidad}<span className="text-[12px] font-bold text-slate-400">/100</span></div>
           </div>
         </div>
@@ -85,46 +110,46 @@ export default function PropuestaViaje({ propuesta: p, onConstruir, construyendo
 
         {faltanDias > 0 && (
           <p className="mt-2.5 rounded-xl bg-amber-50 px-3 py-2 text-[11.5px] font-semibold text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-            Con lo que pusiste alcanzan {p.diasTotales} de los {p.diasPedidos} días. Para los {p.diasPedidos} harían falta unos {money(p.necesarioVista ?? p.necesarioParaDiasPedidos, p.necesarioVista != null ? cod : "USD")}.
+            {t("propFaltanDias", { hay: p.diasTotales, pedidos: p.diasPedidos, pedidos2: p.diasPedidos, v: money(p.necesarioVista ?? p.necesarioParaDiasPedidos, p.necesarioVista != null ? cod : "USD") })}
           </p>
         )}
 
         {/* Desglose: un viaje completo, no un billete */}
         <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[12.5px] sm:grid-cols-4">
-          <Linea icono="plane" etiqueta="Vuelo" valor={money(d.vueloIntl, codD)} />
-          <Linea icono="bed" etiqueta="Alojamiento" valor={money(d.hospedaje, codD)} />
-          <Linea icono="route" etiqueta="Transporte" valor={money((d.saltos || 0) + (d.transporte || 0), codD)} />
-          <Linea icono="utensils" etiqueta="Vida diaria" valor={money(vidaDiaria, codD)} />
+          <Linea icono="plane" etiqueta={t("propVuelo")} valor={money(d.vueloIntl, codD)} />
+          <Linea icono="bed" etiqueta={t("propAlojamiento")} valor={money(d.hospedaje, codD)} />
+          <Linea icono="route" etiqueta={t("propTransporte")} valor={money((d.saltos || 0) + (d.transporte || 0), codD)} />
+          <Linea icono="utensils" etiqueta={t("propVidaDiaria")} valor={money(vidaDiaria, codD)} />
         </div>
 
         <div className="mt-3 flex flex-wrap items-end justify-between gap-3 border-t border-slate-100 pt-3 dark:border-slate-700">
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Total estimado</div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">{t("propTotalEstimado")}</div>
             <div className="text-[24px] font-black leading-none text-slate-900 dark:text-white">{money(total, codTotal)}</div>
           </div>
           <span className={`rounded-full px-3 py-1.5 text-[11.5px] font-bold ring-1 ${sem.clase}`}>
-            {sem.emoji} {sem.texto}
+            {sem.emoji} {t(sem.clave)}
           </span>
         </div>
 
         {p.presupuesto?.estado === "dentro" && p.presupuesto.diferencia < 0 && (
           <p className="mt-2 text-[11.5px] leading-relaxed text-slate-500 dark:text-slate-400">
-            Te sobran unos {money(p.presupuesto.diferenciaVista ?? Math.abs(p.presupuesto.diferencia), p.presupuesto.diferenciaVista != null ? cod : "USD")} sobre lo que pusiste.
+            {t("propTeSobran", { v: money(p.presupuesto.diferenciaVista ?? Math.abs(p.presupuesto.diferencia), p.presupuesto.diferenciaVista != null ? cod : "USD") })}
           </p>
         )}
         {(p.presupuesto?.estado === "cerca" || p.presupuesto?.estado === "supera") && (
           <p className="mt-2 text-[11.5px] leading-relaxed text-slate-500 dark:text-slate-400">
-            Se pasa unos {money(p.presupuesto.diferenciaVista ?? p.presupuesto.diferencia, p.presupuesto.diferenciaVista != null ? cod : "USD")}
-            {p.presupuesto.culpable ? <>, sobre todo por {p.presupuesto.culpable}</> : null}.
+            {t("propSePasa", { v: money(p.presupuesto.diferenciaVista ?? p.presupuesto.diferencia, p.presupuesto.diferenciaVista != null ? cod : "USD") })}
+            {p.presupuesto.culpable ? t("propSePasaPor", { culpable: CULPABLE[p.presupuesto.culpableCodigo] ? t(CULPABLE[p.presupuesto.culpableCodigo]) : p.presupuesto.culpable }) : null}.
           </p>
         )}
 
         {/* Por que te lo enseñamos: la personalizacion no puede ser una caja negra */}
         {p.razones?.length > 0 && (
           <div className="mt-3 rounded-xl bg-marca-50 px-3 py-2.5 dark:bg-marca-900/20">
-            <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-marca-700 dark:text-marca-300">¿Por qué esta propuesta?</div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-marca-700 dark:text-marca-300">{t("propPorQue")}</div>
             <p className="mt-1 text-[12px] leading-relaxed text-marca-900/80 dark:text-marca-100/80">
-              Porque {p.razones.join(", ")}.
+              {t("propPorque", { razones: (razones?.length ? razones : p.razones).join(", ") })}
             </p>
           </div>
         )}
@@ -143,7 +168,7 @@ export default function PropuestaViaje({ propuesta: p, onConstruir, construyendo
             />
           </span>
           <span className="shrink-0 text-[11px] font-bold text-slate-500 dark:text-slate-400">
-            Confianza {p.confianza}/100
+            {t("propConfianza", { n: p.confianza })}
           </span>
           <Icono nombre="chevronDown" size={14} className={`shrink-0 text-slate-400 transition ${abierto ? "rotate-180" : ""}`} />
         </button>
@@ -151,17 +176,17 @@ export default function PropuestaViaje({ propuesta: p, onConstruir, construyendo
         {abierto && (
           <ul className="mt-2 space-y-1 text-[11.5px] text-slate-600 dark:text-slate-300">
             <li>
-              ✈️ Vuelo internacional:{" "}
+              ✈️ {t("propFteVuelo")}{" "}
               <b className={p.fuentes.vuelo === "real" ? "text-emerald-600" : "text-amber-600"}>
-                {p.fuentes.vuelo === "real" ? "precio real detectado" : "estimación del catálogo"}
+                {t(p.fuentes.vuelo === "real" ? "propFteVueloReal" : "propFteVueloEstimado")}
               </b>
             </li>
             <li>
-              🚆 Traslados entre ciudades:{" "}
-              <b className="text-sky-600">{p.fuentes.tramosCurados} con tarifa curada</b>
-              {p.fuentes.tramosAprox > 0 && <> · <b className="text-amber-600">{p.fuentes.tramosAprox} aproximados por distancia</b></>}
+              🚆 {t("propFteTraslados")}{" "}
+              <b className="text-sky-600">{t("propFteCurados", { n: p.fuentes.tramosCurados })}</b>
+              {p.fuentes.tramosAprox > 0 && <> · <b className="text-amber-600">{t("propFteAprox", { n: p.fuentes.tramosAprox })}</b></>}
             </li>
-            <li>🏨 Alojamiento y vida diaria: <b className="text-amber-600">estimación</b> por coste diario de cada ciudad</li>
+            <li>🏨 {t("propFteEstancia")} <b className="text-amber-600">{t("propFteEstimacion")}</b> {t("propFteEstanciaFin")}</li>
           </ul>
         )}
       </div>
@@ -172,7 +197,7 @@ export default function PropuestaViaje({ propuesta: p, onConstruir, construyendo
         disabled={construyendo}
         className="flex w-full items-center justify-center gap-2 bg-marca-700 px-4 py-3.5 text-[13px] font-extrabold text-white transition hover:bg-marca-800 disabled:opacity-60"
       >
-        {construyendo ? "Creando tu viaje…" : "Construir este viaje"}
+        {construyendo ? t("propCreando") : t("propConstruir")}
         {!construyendo && <Icono nombre="arrowRight" size={16} />}
       </button>
     </article>

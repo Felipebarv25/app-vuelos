@@ -42,6 +42,7 @@ function construirTramos(paradas, viaje) {
       fuenteRecomendada: recomendada?.fuente || t.fuente,
       km: t.km, alternativas: comparacion.alternativas,
       recomendacionExplicacion: recomendada?.explicacion || "",
+      recomendacionExplicacionCodigo: recomendada?.explicacionCodigo || null,
     });
   }
   return out;

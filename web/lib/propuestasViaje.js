@@ -94,16 +94,17 @@ function veredictoPresupuesto(ruta, presupuestoUsd) {
   // El culpable: la categoria que mas pesa del desglose. Decir 'te pasas
   // por X' sin decir de que obliga a adivinar donde recortar.
   const partes = [
-    ["el vuelo internacional", ruta.desglose.vueloIntl],
-    ["el alojamiento", ruta.desglose.hospedaje],
-    ["los traslados entre ciudades", ruta.desglose.saltos],
-    ["la comida y el día a día", ruta.desglose.comida + ruta.desglose.extras],
+    ["el vuelo internacional", ruta.desglose.vueloIntl, "vuelo"],
+    ["el alojamiento", ruta.desglose.hospedaje, "alojamiento"],
+    ["los traslados entre ciudades", ruta.desglose.saltos, "saltos"],
+    ["la comida y el día a día", ruta.desglose.comida + ruta.desglose.extras, "comida"],
   ].sort((a, b) => b[1] - a[1]);
 
   return {
     estado: diferencia <= margen ? "cerca" : "supera",
     diferencia,
     culpable: partes[0][0],
+    culpableCodigo: partes[0][2],
   };
 }
 /**
@@ -116,13 +117,17 @@ function veredictoPresupuesto(ruta, presupuestoUsd) {
 function compatibilidadDe(ruta, busqueda, presupuestoUsd) {
   const factores = [];
   const razones = [];
+  // Cada razon se guarda tambien como {codigo, vars}: la tarjeta la redacta
+  // en el idioma del viajero. La frase en español se conserva para quien
+  // siga consumiendo `razones` tal cual.
+  const razonesCodigos = [];
 
   // 1. Presupuesto. Es una restriccion, no una preferencia: pesa el doble.
   if (presupuestoUsd) {
     const ratio = ruta.total / presupuestoUsd;
     const v = ratio <= 1 ? 1 : pct(1 - (ratio - 1) * 2.5);
     factores.push([v, 2]);
-    if (ratio <= 0.85) razones.push("deja margen sobre tu presupuesto");
+    if (ratio <= 0.85) { razones.push("deja margen sobre tu presupuesto"); razonesCodigos.push({ codigo: "margen" }); }
   }
 
   // 2. Dias entregados frente a los pedidos. construirRuta recorta dias
@@ -130,7 +135,7 @@ function compatibilidadDe(ruta, busqueda, presupuestoUsd) {
   const faltan = Math.max(0, busqueda.dias - ruta.diasTotales);
   const tolerados = busqueda.diasFlex;
   factores.push([faltan <= tolerados ? 1 : pct(1 - (faltan - tolerados) / busqueda.dias), 1.5]);
-  if (faltan === 0) razones.push(`cubre los ${busqueda.dias} días que pediste`);
+  if (faltan === 0) { razones.push(`cubre los ${busqueda.dias} días que pediste`); razonesCodigos.push({ codigo: "dias", vars: { n: busqueda.dias } }); }
 
   // 3. Cuantas ciudades. Sin preferencia explicita, mas ciudades suma poco:
   // no todo el mundo quiere correr.
@@ -142,7 +147,7 @@ function compatibilidadDe(ruta, busqueda, presupuestoUsd) {
   } else {
     factores.push([pct((n - 1) / 4) * 0.6 + 0.4, 0.5]);
   }
-  if (n >= 4) razones.push(`recorre ${n} ciudades sin disparar los traslados`);
+  if (n >= 4) { razones.push(`recorre ${n} ciudades sin disparar los traslados`); razonesCodigos.push({ codigo: "ciudades", vars: { n } }); }
 
   // 4. Intereses. Se comparan con los tags que YA tiene cada ciudad en
   // destinosTags — el mismo diccionario que alimenta el perfil del usuario.
@@ -150,7 +155,7 @@ function compatibilidadDe(ruta, busqueda, presupuestoUsd) {
     const tags = new Set(ruta.ciudades.flatMap((c) => tagsDe(c)));
     const coinciden = busqueda.intereses.filter((i) => tags.has(i));
     factores.push([pct(coinciden.length / busqueda.intereses.length), 1.5]);
-    if (coinciden.length) razones.push(`encaja con tu interés por ${coinciden.join(" y ")}`);
+    if (coinciden.length) { razones.push(`encaja con tu interés por ${coinciden.join(" y ")}`); razonesCodigos.push({ codigo: "intereses", vars: { intereses: coinciden } }); }
   }
 
   // 5. Ritmo: kilometros por dia. Muchos km en pocos dias es un viaje
@@ -167,6 +172,7 @@ function compatibilidadDe(ruta, busqueda, presupuestoUsd) {
   return {
     puntuacion: peso ? Math.round((valor / peso) * 100) : 50,
     razones: razones.slice(0, 3),
+    razonesCodigos: razonesCodigos.slice(0, 3),
   };
 }
 
@@ -271,6 +277,7 @@ export function generarPropuestas({ busqueda, presupuestoUsd, preciosReales = {}
       presupuesto,
       compatibilidad: compat.puntuacion,
       razones: compat.razones,
+      razonesCodigos: compat.razonesCodigos,
       vueloReal: ruta.vueloRealEntrada || null,
     });
   }
