@@ -12,6 +12,17 @@
 // Este adaptador permite que la UI trabaje con UN contrato sin obligarnos a
 // migrar o borrar datos antiguos de golpe.
 
+// OJO CON ESTE NUMERO: no es la version del viaje GUARDADO.
+//
+// Lo que /api/rutas persiste en KV lleva su propio `v` —hoy v2— y su propia
+// migracion (migrarRuta). Este TRIP_SCHEMA_VERSION es la version del
+// CONTRATO que este adaptador entrega a la UI, y las dos numeraciones son
+// independientes: se puede cambiar la forma que consume Mi viaje sin tocar
+// un solo viaje guardado, que es justo la gracia de tener un adaptador.
+//
+// Estaban los dos numeros sueltos, uno en 2 y otro en 3, sin decir en
+// ninguna parte que no son lo mismo. Confundirlos lleva a 'migrar' datos
+// que no hay que migrar, o a no migrar los que si.
 export const TRIP_SCHEMA_VERSION = 3;
 
 const LIMITE_CIUDADES = 30;

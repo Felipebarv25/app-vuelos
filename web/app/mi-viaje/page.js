@@ -22,6 +22,7 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useApp } from "@/lib/AppContext";
 import Link from "next/link";
 import NavTop from "@/components/NavTop";
 import BottomTabBar from "@/components/BottomTabBar";
@@ -30,7 +31,7 @@ import MiViajeDashboard from "@/components/MiViajeDashboard";
 export default function MiViajePage() {
   return (
     <div className="min-h-screen bg-slate-50 pb-20 dark:bg-slate-900 md:pb-0">
-      <NavTop active="misviajes" />
+      <NavTop active="miviaje" />
 
       <main className="mx-auto w-full max-w-[1800px] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
         {/* Fuera de Suspense: esto no depende de la URL, asi que se renderiza
@@ -73,6 +74,7 @@ function Esqueleto() {
 }
 
 function Contenido() {
+  const { t, lang } = useApp();
   const searchParams = useSearchParams();
   const viajeId = searchParams.get("id");
   const [rutas, setRutas] = useState([]);
@@ -143,7 +145,7 @@ function Contenido() {
       )}
 
       {!cargando && !error && rutas.length > 0 && !viajeId && (
-        <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
           <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
             <div className="px-2 pb-2 text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-400">Mis viajes</div>
             <div className="space-y-1">
@@ -155,19 +157,26 @@ function Contenido() {
               ))}
             </div>
           </aside>
-          {seleccion && <MiViajeDashboard ruta={seleccion} onEditarRuta={() => { window.location.href = `/mis-viajes?editar=${encodeURIComponent(seleccion.id)}`; }} onOptimizar={() => { window.location.href = `/mis-viajes?editar=${encodeURIComponent(seleccion.id)}#planificador`; }} />}
+          {seleccion && <MiViajeDashboard ruta={seleccion} t={t} lang={lang} onOptimizar={() => { window.location.href = `/ruta?id=${encodeURIComponent(seleccion.id)}`; }} />}
         </div>
       )}
 
-      {!cargando && !error && seleccion && (
+      {/* La vista de DETALLE, solo con ?id=.
+
+          Aqui faltaba el `viajeId` y las dos ramas se cumplian a la vez sin
+          el parametro: la pagina montaba DOS tableros, con sus dos mapas,
+          dos bloques con el mismo id —HTML invalido— y el doble de consultas
+          de vuelo en vivo, que son de pago. Se veia como un tablero repetido
+          debajo del otro. */}
+      {!cargando && !error && viajeId && seleccion && (
         <div className="space-y-5">
           {viajeId && (
             <div className="flex flex-wrap items-center justify-between gap-3">
               <Link href="/mi-viaje" className="text-[12px] font-bold text-marca-700 hover:underline dark:text-marca-300">← Todos mis viajes</Link>
-              <Link href={`/mis-viajes?editar=${encodeURIComponent(seleccion.id)}`} className="rounded-full border border-slate-200 bg-white px-3.5 py-2 text-[11.5px] font-extrabold text-slate-700 hover:border-marca-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">Editar ruta</Link>
+              <Link href={`/ruta?id=${encodeURIComponent(seleccion.id)}`} className="rounded-full border border-slate-200 bg-white px-3.5 py-2 text-[11.5px] font-extrabold text-slate-700 hover:border-marca-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">Editar ruta</Link>
             </div>
           )}
-          <MiViajeDashboard ruta={seleccion} onEditarRuta={() => { window.location.href = `/mis-viajes?editar=${encodeURIComponent(seleccion.id)}`; }} onOptimizar={() => { window.location.href = `/mis-viajes?editar=${encodeURIComponent(seleccion.id)}#planificador`; }} />
+          <MiViajeDashboard ruta={seleccion} t={t} lang={lang} onOptimizar={() => { window.location.href = `/ruta?id=${encodeURIComponent(seleccion.id)}`; }} />
         </div>
       )}
     </>

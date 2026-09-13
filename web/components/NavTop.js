@@ -92,6 +92,12 @@ export default function NavTop({ active = null }) {
         <nav className="hidden items-center gap-1 md:flex">
           <NavLink href="/destino" active={active === "destinos"}>{t("navDestinos")}</NavLink>
           <NavLink href="/ofertas" active={active === "ofertas"}>{t("navOfertas")}</NavLink>
+          {/* Mi viaje va ANTES que Mi ruta y Mis viajes, y no al final:
+              es el centro del producto, no una pantalla mas. Hasta ahora no
+              estaba en la navegacion —se llegaba solo pulsando "Abrir"
+              dentro de /mis-viajes—, que es justo lo contrario de lo que
+              queremos decir. */}
+          <NavLink href="/mi-viaje" active={active === "miviaje"}>{t("navMiViaje")}</NavLink>
           <NavLink href="/ruta" active={active === "ruta"}>{t("navRuta")}</NavLink>
           <NavLink href="/mis-viajes" active={active === "misviajes"}>{t("navMisViajes")}</NavLink>
         </nav>
