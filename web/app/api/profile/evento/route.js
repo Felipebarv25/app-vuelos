@@ -25,6 +25,10 @@ const PESOS = {
   vio_destino: 0.8,
   agrego_lugar: 1.5,
   presupuesto: 0.3,
+  // Construir un viaje a partir de una propuesta es la senal mas fuerte
+  // que puede dar un usuario: no es que mirara algo, es que se lo quedo.
+  // Por eso pesa mas que agregar un lugar.
+  viaje_construido: 2,
 };
 
 // Tope de score por categoria para evitar que un usuario obsesionado con un

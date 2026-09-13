@@ -140,7 +140,10 @@ function Contenido() {
           <div className="text-5xl">🧭</div>
           <h2 className="mt-4 text-2xl font-black text-slate-900 dark:text-white">Todavía no has construido un viaje</h2>
           <p className="mx-auto mt-2 max-w-xl text-[13.5px] leading-relaxed text-slate-500 dark:text-slate-400">Empieza definiendo tus ciudades. Después iremos añadiendo vuelos, transporte, alojamiento, presupuesto, itinerario y requisitos al mismo viaje.</p>
-          <Link href="/mis-viajes" className="mt-6 inline-flex rounded-full bg-marca-700 px-5 py-3 text-[13px] font-extrabold text-white hover:bg-marca-800">Construir mi primer viaje</Link>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            <Link href="/descubrir" className="inline-flex rounded-full bg-marca-700 px-5 py-3 text-[13px] font-extrabold text-white hover:bg-marca-800">No sé a dónde ir, ayúdame</Link>
+            <Link href="/ruta" className="inline-flex rounded-full border border-slate-200 px-5 py-3 text-[13px] font-extrabold text-slate-700 hover:border-marca-300 dark:border-slate-700 dark:text-slate-200">Ya sé mis ciudades</Link>
+          </div>
         </div>
       )}
 

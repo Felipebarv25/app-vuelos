@@ -90,6 +90,10 @@ export default function NavTop({ active = null }) {
 
         {/* Nav central */}
         <nav className="hidden items-center gap-1 md:flex">
+          {/* Descubre abre la barra: es la entrada para quien NO sabe a
+              donde ir, que es casi todo el mundo. Destinos, que pide saber
+              el destino, queda detras. */}
+          <NavLink href="/descubrir" active={active === "descubrir"}>{t("navDescubre")}</NavLink>
           <NavLink href="/destino" active={active === "destinos"}>{t("navDestinos")}</NavLink>
           <NavLink href="/ofertas" active={active === "ofertas"}>{t("navOfertas")}</NavLink>
           {/* Mi viaje va ANTES que Mi ruta y Mis viajes, y no al final:
