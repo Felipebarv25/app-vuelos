@@ -51,9 +51,30 @@ export default function DescubrirPage() {
   return (
     <div className="min-h-screen bg-slate-50 pb-24 dark:bg-slate-900 md:pb-0">
       <NavTop active="descubrir" />
-      <Suspense fallback={<Esqueleto />}>
-        <Contenido />
-      </Suspense>
+      <main className="mx-auto w-full max-w-[1800px] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+        {/* FUERA de Suspense, y no por capricho.
+
+            Estaba todo dentro, asi que el servidor emitia el fallback y el
+            HTML de /descubrir llegaba con 166 caracteres: solo el menu.
+            Comprobado con curl contra produccion. Es EXACTAMENTE el fallo
+            que ya sufrio /ruta y que esta escrito en su cabecera — y aqui
+            duele mas, porque esta pagina es publica y su titular es
+            justo lo que alguien escribiria en un buscador.
+
+            Nada de esto depende de useSearchParams, asi que puede
+            renderizarse en servidor. */}
+        <div className="mb-5">
+          <div className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-marca-700 dark:text-marca-300">Descubre</div>
+          <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-900 dark:text-white">¿Qué viaje quieres hacer?</h1>
+          <p className="mt-1.5 max-w-2xl text-[13.5px] leading-relaxed text-slate-600 dark:text-slate-400">
+            Dinos cuánto tienes y cuándo puedes. Anduve arma viajes completos —ruta, transporte y presupuesto— y te dice de dónde sale cada cifra.
+          </p>
+        </div>
+
+        <Suspense fallback={<Esqueleto />}>
+          <Contenido />
+        </Suspense>
+      </main>
       <BottomTabBar />
     </div>
   );
@@ -61,10 +82,9 @@ export default function DescubrirPage() {
 
 function Esqueleto() {
   return (
-    <main aria-busy="true" className="mx-auto w-full max-w-[1800px] px-4 py-8 sm:px-6 lg:px-10">
-      <div className="h-8 w-72 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
-      <div className="mt-4 h-36 animate-pulse rounded-2xl bg-white dark:bg-slate-800" />
-    </main>
+    <div aria-busy="true">
+      <div className="h-36 animate-pulse rounded-2xl bg-white dark:bg-slate-800" />
+    </div>
   );
 }
 
@@ -188,14 +208,7 @@ function Contenido() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1800px] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
-      <div className="mb-5">
-        <div className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-marca-700 dark:text-marca-300">Descubre</div>
-        <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-900 dark:text-white">¿Qué viaje quieres hacer?</h1>
-        <p className="mt-1.5 max-w-2xl text-[13.5px] leading-relaxed text-slate-600 dark:text-slate-400">
-          Dinos cuánto tienes y cuándo puedes. Anduve arma viajes completos —ruta, transporte y presupuesto— y te dice de dónde sale cada cifra.
-        </p>
-      </div>
+    <>
 
       {/* LO ESENCIAL. Cuatro campos y a buscar. */}
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-5">
@@ -357,7 +370,7 @@ function Contenido() {
           Pon al menos cuántos días y pulsa <b>Buscar viajes</b>. El presupuesto es opcional: sin él te enseñamos qué hay.
         </p>
       )}
-    </main>
+    </>
   );
 }
 
