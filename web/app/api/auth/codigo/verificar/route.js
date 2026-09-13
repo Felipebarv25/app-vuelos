@@ -10,7 +10,9 @@ import {
   consumirCodigo,
   crearSesion,
   emailValido,
+  limpiarIntentosCodigo,
   normalizarEmail,
+  registrarIntentoCodigo,
 } from "@/lib/auth";
 
 export async function POST(req) {
@@ -28,10 +30,17 @@ export async function POST(req) {
     return Response.json({ ok: false, motivo: "datos-invalidos" }, { status: 400 });
   }
 
+  const puedeIntentar = await registrarIntentoCodigo(email, 8);
+  if (!puedeIntentar) {
+    return Response.json({ ok: false, motivo: "demasiados-intentos" }, { status: 429 });
+  }
+
   const valido = await consumirCodigo(email, codigo);
   if (!valido) {
     return Response.json({ ok: false, motivo: "codigo-incorrecto" }, { status: 401 });
   }
+
+  await limpiarIntentosCodigo(email);
 
   // Crear o recuperar el perfil del usuario. Guardamos el registro maestro
   // en user:<email> para que sirva como base del perfil personalizado en

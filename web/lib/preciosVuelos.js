@@ -51,6 +51,47 @@ function llaveDestino(ciudad, pais) {
 // ahorras Y"). `mejor` apunta a la mas barata como atajo de compatibilidad.
 // Cachea el resultado en memoria; si falla devuelve {} (el presupuesto seguira
 // usando los estimados sin romperse).
+/**
+ * Convierte el JSON crudo del detector en el mapa que consume el
+ * presupuesto. Esta SEPARADO de la carga a proposito:
+ *
+ * obtenerPreciosReales() pide /ofertas.json con una ruta relativa, y eso
+ * solo funciona en el navegador. El descubrimiento necesita los mismos
+ * precios en el SERVIDOR, donde no hay origen al que colgar una ruta
+ * relativa. En vez de reescribir el parseo en el lado servidor —dos sitios
+ * donde equivocarse—, el parseo vive aqui y cada lado trae el JSON como
+ * pueda: el cliente con fetch, el servidor leyendo el fichero de public/.
+ */
+export function construirMapaOfertas(data) {
+  const mapa = {};
+  for (const ruta of data?.rutas || []) {
+    const llave = llaveDestino(ruta.ciudad, ruta.pais);
+    const oferta = {
+      precio: ruta.precio,
+      fecha_ida: ruta.fecha_ida,
+      fecha_vuelta: ruta.fecha_vuelta,
+      link: ruta.link,
+      origen: ruta.origen,
+      visto: ruta.visto,
+      generado: data?.generado,
+      // Escalas (null = desconocido en filas viejas; entero = real). La UI
+      // las usa para "directo" / "1 escala" / "1-2 escalas" según ida/vuelta.
+      escalas_ida: ruta.escalas_ida ?? null,
+      escalas_vuelta: ruta.escalas_vuelta ?? null,
+    };
+    if (!mapa[llave]) mapa[llave] = { porOrigen: {}, mejor: null };
+    // Conserva por origen (solo la mas barata si llegan varias muestras de la misma base).
+    const anteriorMismaBase = mapa[llave].porOrigen[ruta.origen];
+    if (!anteriorMismaBase || ruta.precio < anteriorMismaBase.precio) {
+      mapa[llave].porOrigen[ruta.origen] = oferta;
+    }
+    if (!mapa[llave].mejor || oferta.precio < mapa[llave].mejor.precio) {
+      mapa[llave].mejor = oferta;
+    }
+  }
+  return mapa;
+}
+
 export async function obtenerPreciosReales() {
   if (cache) return cache;
   if (promesaEnCurso) return promesaEnCurso;
@@ -59,35 +100,8 @@ export async function obtenerPreciosReales() {
     try {
       const r = await fetch("/ofertas.json", { cache: "no-store" });
       if (!r.ok) throw new Error("ofertas.json " + r.status);
-      const data = await r.json();
-      const mapa = {};
-      for (const ruta of data.rutas || []) {
-        const llave = llaveDestino(ruta.ciudad, ruta.pais);
-        const oferta = {
-          precio: ruta.precio,
-          fecha_ida: ruta.fecha_ida,
-          fecha_vuelta: ruta.fecha_vuelta,
-          link: ruta.link,
-          origen: ruta.origen,
-          visto: ruta.visto,
-          generado: data.generado,
-          // Escalas (null = desconocido en filas viejas; entero = real). La UI
-          // las usa para "directo" / "1 escala" / "1-2 escalas" según ida/vuelta.
-          escalas_ida: ruta.escalas_ida ?? null,
-          escalas_vuelta: ruta.escalas_vuelta ?? null,
-        };
-        if (!mapa[llave]) mapa[llave] = { porOrigen: {}, mejor: null };
-        // Conserva por origen (solo la mas barata si llegan varias muestras de la misma base).
-        const anteriorMismaBase = mapa[llave].porOrigen[ruta.origen];
-        if (!anteriorMismaBase || ruta.precio < anteriorMismaBase.precio) {
-          mapa[llave].porOrigen[ruta.origen] = oferta;
-        }
-        if (!mapa[llave].mejor || oferta.precio < mapa[llave].mejor.precio) {
-          mapa[llave].mejor = oferta;
-        }
-      }
-      cache = mapa;
-      return mapa;
+      cache = construirMapaOfertas(await r.json());
+      return cache;
     } catch {
       cache = {};
       return cache;
@@ -98,7 +112,6 @@ export async function obtenerPreciosReales() {
 
   return promesaEnCurso;
 }
-
 // Helper: devuelve la oferta para el destino y origen pedidos, con fallback
 // a la mejor disponible si no hay match exacto. La logica que llama lo usa
 // para mostrar "💡 Desde X ahorras Y" comparando con `mejor`.

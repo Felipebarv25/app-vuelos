@@ -1,0 +1,102 @@
+import { evaluarTramo, detectarZigzag, ajustarIdaYVuelta } from "@/lib/rutaViva";
+import { normalizarViaje } from "@/lib/viajeCanonico";
+import { costoDiario } from "@/lib/rutaViva";
+import { compararTransporte } from "@/lib/comparadorTransporte";
+import { optimizarViaje } from "@/lib/optimizadorViaje";
+import { obtenerTasasServidor } from "@/lib/fx";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+function money(n) { return n == null || !Number.isFinite(Number(n)) ? null : Math.round(Number(n)); }
+
+function construirTramos(paradas, viaje) {
+  const out = [];
+  const prioridad = viaje?.preferencias?.prioridadTransporte || viaje?.prioridadTransporte || "equilibrado";
+  for (let i = 0; i < paradas.length - 1; i++) {
+    const desde = paradas[i]; const hasta = paradas[i + 1];
+    const t = evaluarTramo({ desde, hasta });
+    const comparacion = compararTransporte(desde, hasta, { nivel: viaje?.nivel || "medio", prioridad });
+    const recomendada = comparacion.alternativas?.find((a) => a.recomendado) || comparacion.alternativas?.[0] || null;
+    out.push({
+      id: `${i}:${desde.ciudad}:${hasta.ciudad}`,
+      desde: desde.ciudad, hasta: hasta.ciudad,
+      medio: recomendada?.medio || t.medio,
+      precio: money(recomendada?.precio ?? t.precio),
+      precioOriginal: money(t.precio),
+      precioRecomendado: money(recomendada?.precio ?? t.precio),
+      medioOriginal: t.medio, medioRecomendado: recomendada?.medio || t.medio,
+      duracion_h: t.duracion_h,
+      puertaAPuerta_h: recomendada?.puertaAPuerta_h ?? t.puertaAPuerta_h,
+      puertaAPuertaOriginal_h: t.puertaAPuerta_h,
+      puertaAPuertaRecomendada_h: recomendada?.puertaAPuerta_h ?? t.puertaAPuerta_h,
+      operador: recomendada?.operador || t.operador,
+      fuente: recomendada?.fuente || t.fuente,
+      fuenteOriginal: t.fuente,
+      fuenteRecomendada: recomendada?.fuente || t.fuente,
+      km: t.km, alternativas: comparacion.alternativas,
+      recomendacionExplicacion: recomendada?.explicacion || "",
+    });
+  }
+  return out;
+}
+
+function construirEstadia(paradas, nivel = "medio") {
+  const factor = nivel === "mochilero" ? 0.72 : nivel === "comodo" ? 1.35 : 1;
+  return paradas.reduce((total, p) => !p.noches ? total : total + (costoDiario(p.ciudad, p.paisNombre || p.pais).usd || 0) * p.noches * factor, 0);
+}
+
+async function presupuestoResumen(viaje, tramos) {
+  const transporte = tramos.reduce((s, t) => s + (Number(t.precioRecomendado ?? t.precio) || 0), 0);
+  const estadia = construirEstadia(viaje.paradas, viaje.nivel);
+  const subtotal = transporte + estadia;
+  const contingencia = subtotal * (Number(viaje.presupuesto?.ajustes?.contingenciaPct) || 0.1);
+  const overrides = viaje.presupuesto?.overrides || {};
+  const manual = Object.values(overrides).reduce((s, v) => s + (Number(v) || 0), 0);
+  const fuentes = [...new Set(tramos.map((t) => t.fuenteRecomendada).filter(Boolean))];
+  const totalUsd = Math.round(subtotal + contingencia + manual);
+  const moneda = /^[A-Z]{3}$/.test(viaje?.monedaVista || "") ? viaje.monedaVista : "USD";
+  const tasas = await obtenerTasasServidor();
+  const porUsd = tasas.porUsd || {};
+  const tasa = moneda === "USD" ? 1 : (Number(porUsd[moneda]) > 0 ? Number(porUsd[moneda]) : 1);
+  const convertir = (n) => Math.round(Number(n || 0) * tasa);
+  const enVista = moneda !== "USD";
+  return {
+    transporte: Math.round(transporte), alojamientoYVida: Math.round(estadia), subtotal: Math.round(subtotal),
+    contingencia: Math.round(contingencia), manual: Math.round(manual), total: totalUsd,
+    moneda: "USD", monedaVista: moneda,
+    transporteVista: convertir(transporte), alojamientoYVidaVista: convertir(estadia),
+    subtotalVista: convertir(subtotal), contingenciaVista: convertir(contingencia), manualVista: convertir(manual),
+    totalVista: convertir(totalUsd), tasaVistaPorUsd: tasa,
+    conversionEsRespaldo: enVista && !tasas.enVivo,
+    conversionEnVivo: Boolean(tasas.enVivo),
+    fechaTasa: tasas.fecha || null, fuenteTasa: tasas.fuente || null,
+    fuenteTransporte: fuentes.length === 1 ? fuentes[0] : "mixto",
+  };
+}
+
+function simboloMoneda(codigo) {
+  return codigo === "EUR" ? "€" : codigo === "GBP" ? "£" : codigo === "COP" ? "$" : codigo === "USD" ? "US$" : `${codigo} `;
+}
+
+function recomendacionTramos(tramos, monedaVista = "USD", tasaVistaPorUsd = 1) {
+  return tramos.filter((t) => t.medio || t.alternativas?.length).map((t) => {
+    const mejor = (t.alternativas || []).find((a) => a.recomendado) || t.alternativas?.[0];
+    if (!mejor) return { id: t.id, titulo: `${t.desde} → ${t.hasta}`, recomendacion: "No hay una opción suficientemente fiable para recomendar.", score: null, explicacion: "", confianza: "nula", fuente: "sin_dato" };
+    const precioVista = Math.round(Number(mejor.precio || 0) * Number(tasaVistaPorUsd || 1));
+    const precioTexto = monedaVista === "USD" ? `US$${mejor.precio}` : `${simboloMoneda(monedaVista)}${precioVista.toLocaleString("es-CO")}`;
+    return { id: t.id, titulo: `${t.desde} → ${t.hasta}`, recomendacion: `Anduve recomienda ${mejor.medio}: ~${precioTexto} y ${mejor.puertaAPuerta_h} h puerta a puerta.`, score: mejor?.score ?? null, explicacion: mejor?.explicacion || "", confianza: mejor?.fuente === "detectado" ? "alta" : mejor?.fuente === "curado" ? "media" : mejor?.fuente === "estimado" ? "baja" : "nula", fuente: mejor?.fuente || "sin_dato" };
+  });
+}
+
+export async function POST(req) {
+  let body; try { body = await req.json(); } catch { return Response.json({ ok: false, motivo: "json" }, { status: 400 }); }
+  const viaje = normalizarViaje(body?.viaje || body, body?.origen === "legacy" ? "legacy" : "ruta");
+  if (!viaje || viaje.paradas.length < 2) return Response.json({ ok: false, motivo: "faltan-paradas" }, { status: 400 });
+  const tramosOriginales = construirTramos(viaje.paradas, viaje);
+  const ajustado = ajustarIdaYVuelta(tramosOriginales);
+  const presupuesto = await presupuestoResumen(viaje, ajustado.tramos);
+  const zigzag = detectarZigzag(viaje.paradas, 12);
+  const optimizacion = optimizarViaje(viaje.paradas);
+  return Response.json({ ok: true, viaje, tramos: ajustado.tramos, regreso: ajustado.regresoIncluido, presupuesto, optimizacion: { ...zigzag, orden: optimizacion }, recomendaciones: recomendacionTramos(ajustado.tramos, presupuesto.monedaVista, presupuesto.tasaVistaPorUsd), generadoEn: Date.now() }, { headers: { "Cache-Control": "no-store" } });
+}

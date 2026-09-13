@@ -1599,6 +1599,26 @@ export default function Home() {
                   COLAPSADA — solo aparece el link "o busca por ciudad" para
                   los que ya saben a donde. Mantiene la entrada por ciudad
                   accesible sin competir con el CTA principal de presupuesto. */}
+              {/* LA OTRA PUERTA, y la que define el producto.
+
+                  Debajo hay un "o si ya sabes a donde" que abre el buscador
+                  de ciudad. Esta es la afirmacion contraria, y va ANTES
+                  porque es la mayoria: casi nadie llega sabiendo el destino
+                  exacto, llega sabiendo cuanto tiene y cuando puede. */}
+              <a
+                href="/descubrir"
+                className="mx-auto mt-6 flex max-w-xl items-center gap-3 rounded-2xl border border-white/25 bg-white/10 px-4 py-3.5 text-left backdrop-blur-md transition hover:bg-white/20"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white">
+                  <Icono nombre="compass" size={20} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14.5px] font-extrabold text-white">{t("heroNoSeDonde")}</span>
+                  <span className="mt-0.5 block text-[12px] text-white/75">{t("heroNoSeDondeSub")}</span>
+                </span>
+                <span className="shrink-0 text-white/80"><Icono nombre="arrowRight" size={18} /></span>
+              </a>
+
               <div className="mx-auto mt-6 flex max-w-xl items-center gap-3 text-[11px] text-white/55">
                 <span className="h-px flex-1 bg-white/15" />
                 <button
