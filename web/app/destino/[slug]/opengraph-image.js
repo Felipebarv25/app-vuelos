@@ -2,32 +2,39 @@
 // /destino/madrid-espana en WhatsApp/Twitter, se ve una tarjeta con la bandera
 // y el nombre del destino (en vez del icono cuadrado de la app).
 import { ImageResponse } from "next/og";
-import { getDestinoPorSlug, nombreDestino, TODOS_SLUGS } from "@/lib/destinos";
+import { getDestinoPorSlug, nombreDestino } from "@/lib/destinos";
 
-// SIN runtime edge, a proposito. Next 15 prohibe que una ruta declare
-// `runtime = "edge"` y `generateStaticParams` a la vez, y falla el build
-// entero con:
+// EDGE Y SIN generateStaticParams. Las dos cosas juntas no se pueden, y el
+// orden en que se descubrio importa, asi que queda escrito:
 //
-//   Page "/destino/[slug]/opengraph-image" cannot use both
-//   `export const runtime = 'edge'` and export `generateStaticParams`.
+// 1. Next 15 prohibe declarar `runtime = "edge"` y `generateStaticParams`
+//    en la misma ruta, y aborta el build entero:
 //
-// De las dos, se conserva generateStaticParams: los 207 destinos quedan
-// pre-generados en el build. La alternativa —edge y generar al primer
-// acceso— ahorra tiempo de build pero la primera peticion la hace un
-// rastreador de WhatsApp o Twitter, y esos abandonan pronto: una tarjeta
-// vacia al compartir el enlace cuesta mas que un build mas largo.
+//      Page "/destino/[slug]/opengraph-image" cannot use both
+//      `export const runtime = 'edge'` and export `generateStaticParams`.
 //
-// next/og funciona igual en el runtime de Node; lo unico que se pierde es
-// el arranque en frio del edge, que aqui no importa porque la imagen ya
-// existe antes de que nadie la pida.
+// 2. Primero se quito el edge y se conservo la pre-generacion, razonando
+//    que la primera peticion de una imagen OG la hace un rastreador de
+//    WhatsApp y esos abandonan pronto. Compilaba en local y en Vercel.
+//
+// 3. Y fallaba en CI, de forma intermitente:
+//
+//      Error occurred prerendering page "/destino/atenas-grecia/opengraph-image"
+//      [TypeError: fetch failed] { [cause]: [AggregateError: ] { code: 'ETIMEDOUT' } }
+//
+//    La causa no es nuestro codigo: @vercel/og pide
+//    https://fonts.googleapis.com/css2 para resolver la tipografia. Con
+//    generateStaticParams eso son 207 peticiones de red DURANTE EL BUILD, y
+//    basta que una se agote para tirar el despliegue.
+//
+// Un build que depende de que Google responda no es un build. Se vuelve al
+// edge y se genera al primer acceso: Vercel cachea la imagen en su CDN, asi
+// que el rastreador lento es uno por destino y una sola vez, en vez de un
+// despliegue que puede caerse cualquier martes.
+export const runtime = "edge";
 export const alt = "Anduve";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-
-// Pre-generar la imagen para cada destino (cachea en build/edge).
-export async function generateStaticParams() {
-  return TODOS_SLUGS.map((slug) => ({ slug }));
-}
 
 export default async function OgDestino({ params }) {
   const { slug } = await params;
