@@ -63,12 +63,25 @@ export function analizarDecisionesViaje(paradas = []) {
     const impacto = Math.max(0, Math.round(ahorroHoras * 10)) + Math.max(0, Math.round(Math.abs(impactoNeto) / 10));
     if (impacto < 5) continue;
 
-    let razon;
-    if (ahorroHoras >= 2 && impactoNeto >= 50) razon = `Quitar ${stop.ciudad} simplifica la ruta y puede liberar tiempo y presupuesto.`;
-    else if (ahorroHoras >= 2) razon = `Quitar ${stop.ciudad} reduce bastante el tiempo de desplazamiento.`;
-    else if (impactoNeto >= 50) razon = `Quitar ${stop.ciudad} puede liberar presupuesto para el resto del viaje.`;
-    else if (impactoNeto < 0) razon = `Quitar ${stop.ciudad} libera noches, pero aumenta el coste de transporte estimado.`;
-    else razon = `Quitar ${stop.ciudad} simplifica ligeramente el viaje.`;
+    // La razon viaja como CODIGO ademas de como frase.
+    //
+    // La frase en español se queda porque hay consumidores que la usan tal
+    // cual (lib/inteligenciaViaje la copia en `porque`). El codigo es lo que
+    // permite que el tablero la pinte en ingles, portugues o frances: el
+    // motor decide QUE decir, el componente en que idioma decirlo.
+    let razonCodigo;
+    if (ahorroHoras >= 2 && impactoNeto >= 50) razonCodigo = "simplificaYLibera";
+    else if (ahorroHoras >= 2) razonCodigo = "reduceTiempo";
+    else if (impactoNeto >= 50) razonCodigo = "liberaPresupuesto";
+    else if (impactoNeto < 0) razonCodigo = "liberaNochesPeroCuesta";
+    else razonCodigo = "simplificaPoco";
+    const razon = {
+      simplificaYLibera: `Quitar ${stop.ciudad} simplifica la ruta y puede liberar tiempo y presupuesto.`,
+      reduceTiempo: `Quitar ${stop.ciudad} reduce bastante el tiempo de desplazamiento.`,
+      liberaPresupuesto: `Quitar ${stop.ciudad} puede liberar presupuesto para el resto del viaje.`,
+      liberaNochesPeroCuesta: `Quitar ${stop.ciudad} libera noches, pero aumenta el coste de transporte estimado.`,
+      simplificaPoco: `Quitar ${stop.ciudad} simplifica ligeramente el viaje.`,
+    }[razonCodigo];
 
     eliminar.push({
       ciudad: stop.ciudad,
@@ -83,6 +96,7 @@ export function analizarDecisionesViaje(paradas = []) {
       ahorroTotalEstimado: Math.round(Math.max(0, impactoNeto)),
       ahorroHoras: Math.round(ahorroHoras * 10) / 10,
       razon,
+      razonCodigo,
       confianza: base.tramosSinDato === 0 ? "media" : "baja",
     });
   }

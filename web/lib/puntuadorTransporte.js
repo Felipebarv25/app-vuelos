@@ -43,17 +43,20 @@ export function puntuarTransporte(opciones = [], { nivel = "medio", prioridad = 
     ? mejorFiable
     : mejorCalculada;
 
-  return puntuadas.map((o) => ({
-    ...o,
-    recomendado: o === mejor,
-    explicacion: o === mejor
-      ? (o.fuente === "estimado"
-        ? "Mejor opción potencial según una estimación de precio y tiempo; conviene comprobar la tarifa real."
-        : "Mejor equilibrio para este viaje según precio, tiempo, comodidad y confianza de los datos.")
-      : o.score >= 75
-        ? "Alternativa muy competitiva para este viaje."
-        : o.score >= 55
-          ? "Alternativa razonable, pero con algún compromiso."
-          : "Pierde frente a otras opciones por precio, tiempo o confianza.",
-  }));
+  // La explicacion viaja como CODIGO ademas de como frase: la frase sigue
+  // ahi para quien la consume tal cual, y el codigo deja que el tablero la
+  // traduzca. Ver el mismo patron en lib/analizadorDecisionesViaje.
+  const FRASES = {
+    mejorEstimado: "Mejor opción potencial según una estimación de precio y tiempo; conviene comprobar la tarifa real.",
+    mejorFiable: "Mejor equilibrio para este viaje según precio, tiempo, comodidad y confianza de los datos.",
+    competitiva: "Alternativa muy competitiva para este viaje.",
+    razonable: "Alternativa razonable, pero con algún compromiso.",
+    pierde: "Pierde frente a otras opciones por precio, tiempo o confianza.",
+  };
+  return puntuadas.map((o) => {
+    const explicacionCodigo = o === mejor
+      ? (o.fuente === "estimado" ? "mejorEstimado" : "mejorFiable")
+      : o.score >= 75 ? "competitiva" : o.score >= 55 ? "razonable" : "pierde";
+    return { ...o, recomendado: o === mejor, explicacionCodigo, explicacion: FRASES[explicacionCodigo] };
+  });
 }
