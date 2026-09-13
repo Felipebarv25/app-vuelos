@@ -20,9 +20,8 @@
 // No guarda nada. Una busqueda no es un viaje: el viaje se crea cuando el
 // viajero elige una propuesta y pulsa construir, y eso lo hace /api/rutas.
 
-import path from "path";
-import { promises as fs } from "fs";
-import { construirMapaOfertas, ofertaParaOrigen } from "@/lib/preciosVuelos";
+import { ofertaParaOrigen } from "@/lib/preciosVuelos";
+import { cargarOfertasServidor } from "@/lib/ofertasServidor";
 import { llaveCiudad } from "@/lib/presupuesto";
 import { nombreDeIATA } from "@/lib/paisesOrigen";
 import { obtenerTasasServidor } from "@/lib/fx";
@@ -31,23 +30,6 @@ import { generarPropuestas, ordenar, ORDENES } from "@/lib/propuestasViaje";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-// Mismo patron que lib/historialPrecios: en el despliegue el Root Directory
-// es web/, asi que public/ofertas.json SI esta a mano. Si falla, el motor
-// sigue funcionando con los precios estimados del catalogo —peor dato, nunca
-// dato inventado— y se avisa en la respuesta.
-const OFERTAS_PATH = path.join(process.cwd(), "public", "ofertas.json");
-
-let _ofertas;
-async function cargarOfertas() {
-  if (_ofertas !== undefined) return _ofertas;
-  try {
-    _ofertas = construirMapaOfertas(JSON.parse(await fs.readFile(OFERTAS_PATH, "utf8")));
-  } catch {
-    _ofertas = {};
-  }
-  return _ofertas;
-}
 
 export async function POST(req) {
   let body = {};
@@ -61,7 +43,7 @@ export async function POST(req) {
 
   const [tasas, preciosReales] = await Promise.all([
     obtenerTasasServidor().catch(() => null),
-    cargarOfertas(),
+    cargarOfertasServidor(),
   ]);
 
   // obtenerTasasServidor devuelve { porUsd, fecha, fuente, enVivo }, no el

@@ -30,6 +30,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Icono } from "@/components/Icono";
 import Bandera from "@/components/Bandera";
 import InteligenciaViaje from "@/components/InteligenciaViaje";
+import OportunidadesViaje from "@/components/OportunidadesViaje";
 import { nombrePaisMostrar } from "@/lib/paisesNombres";
 import {
   cargarVisas,
@@ -205,14 +206,20 @@ export default function MiViajeDashboard({ ruta, lang = "es", t = (k) => k, onOp
     if (!ruta || paradas.length < 2) return;
     setAnalizando(true); setErrorAnalisis("");
     try {
-      const [r, rd] = await Promise.all([
-        fetch("/api/viaje-canonico", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ viaje: ruta, origen: "ruta" }) }),
-        fetch("/api/viaje-canonico/decisiones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ viaje: ruta, origen: "ruta" }) }),
-      ]);
-      const d = await r.json(); const dd = await rd.json();
+      // UNA peticion, no dos.
+      //
+      // Antes se pedian /api/viaje-canonico y /api/viaje-canonico/decisiones
+      // en paralelo: dos analisis del MISMO viaje, con su doble coste de
+      // servidor. El primero ya devuelve las decisiones y la inteligencia.
+      const r = await fetch("/api/viaje-canonico", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ viaje: ruta, origen: "ruta" }),
+      });
+      const d = await r.json();
       if (!r.ok || !d?.ok) throw new Error(d?.motivo || "No se pudo analizar el viaje");
       setAnalisis(d);
-      if (rd.ok && dd?.ok) setDecisiones(dd.decisiones);
+      setDecisiones(d.decisiones || null);
     } catch (e) { setErrorAnalisis(e?.message || "No pudimos analizar el viaje."); }
     finally { setAnalizando(false); }
   }, [ruta, paradas.length]);
@@ -245,6 +252,10 @@ export default function MiViajeDashboard({ ruta, lang = "es", t = (k) => k, onOp
 
     {analisis && <><div className="grid gap-3 sm:grid-cols-3"><div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"><div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-400">Coste orientativo</div><div className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{formatoMoneda(totalVista, monedaVista)}</div><div className="mt-1 text-[11px] text-slate-500">Transporte + estancia + contingencia · {monedaVista}{tasaEnVivo ? " · cambio actualizado" : monedaVista !== "USD" ? " · cambio de respaldo" : ""}</div></div><div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"><div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-400">Transporte</div><div className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{formatoMoneda(transporteVista, monedaVista)}</div><div className="mt-1 text-[11px] text-slate-500">Según datos disponibles para cada tramo</div></div><div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"><div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-400">Tiempo en ruta</div><div className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{horas.toFixed(1)} h</div><div className="mt-1 text-[11px] text-slate-500">Puerta a puerta entre ciudades · opción recomendada</div></div></div>
       <div id="transporte" className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800"><div className="flex flex-wrap items-end justify-between gap-3"><div><div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-400">Transporte</div><h3 className="mt-1 text-[17px] font-extrabold text-slate-900 dark:text-white">Cómo moverte entre tus ciudades</h3></div>{analisis.regreso?.ahorro > 0 && <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-700">Regreso incluido en el billete</span>}</div><div className="mt-4 divide-y divide-slate-100 dark:divide-slate-700">{(analisis.tramos || []).map((tr) => { const fuente = tr.fuenteRecomendada || tr.fuente; const medio = tr.medioRecomendado || tr.medio; const precio = tr.precioRecomendado ?? tr.precio; const horasTramo = tr.puertaAPuertaRecomendada_h ?? tr.puertaAPuerta_h; return <div key={tr.id} className="flex flex-col gap-2 py-3 first:pt-0 sm:flex-row sm:items-center sm:justify-between"><div><div className="text-[13px] font-extrabold text-slate-800 dark:text-slate-100">{tr.desde} → {tr.hasta}</div><div className="mt-0.5 text-[11px] text-slate-500">{medio === "vuelo" ? "Avión" : medio || "Sin opción"} · {horasTramo != null ? `${horasTramo} h puerta a puerta` : "duración desconocida"} · recomendada</div>{tr.recomendacionExplicacion && <div className="mt-1 text-[11px] leading-relaxed text-slate-500">{tr.recomendacionExplicacion}</div>}</div><div className="sm:text-right"><div className="text-[14px] font-black text-slate-900 dark:text-white">{precio === 0 && fuente === "incluido" ? "Incluido" : precio != null ? formatoMoneda(precio, "USD") : "Sin precio"}</div><div className={`text-[10px] font-bold ${confianzaClase(fuente)}`}>{fuenteTexto(fuente)}{precio != null && monedaVista !== "USD" ? " · precio del tramo en USD" : ""}</div></div></div>; })}</div></div>
+      {/* La sintesis va ANTES del detalle: primero que deberias cambiar,
+          y luego los numeros que lo sostienen. */}
+      <OportunidadesViaje inteligencia={analisis.inteligencia} presupuesto={analisis.presupuesto} />
+      <div id="decisiones" />
       <InteligenciaViaje ruta={ruta} analisis={analisis} decisiones={decisiones} />
       {analisis.optimizacion?.hayZigzag && <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/60 dark:bg-amber-900/20"><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-amber-700">Oportunidad de optimización</div><h3 className="mt-1 text-[16px] font-extrabold text-amber-950 dark:text-amber-100">Anduve detectó una ruta potencialmente mejor</h3><p className="mt-1.5 text-[12.5px] leading-relaxed text-amber-900/75 dark:text-amber-100/70">{analisis.optimizacion.mensaje || "Hay un orden alternativo que puede reducir desplazamientos."}</p></div><button type="button" onClick={onOptimizar} className="rounded-full bg-amber-800 px-4 py-2 text-[11.5px] font-extrabold text-white hover:bg-amber-900">Ver alternativa</button></div></div>}
     </>}

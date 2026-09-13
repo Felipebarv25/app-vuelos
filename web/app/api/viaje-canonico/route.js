@@ -4,6 +4,12 @@ import { costoDiario } from "@/lib/rutaViva";
 import { compararTransporte } from "@/lib/comparadorTransporte";
 import { optimizarViaje } from "@/lib/optimizadorViaje";
 import { obtenerTasasServidor } from "@/lib/fx";
+import { analizarDecisionesViaje } from "@/lib/analizadorDecisionesViaje";
+import { analizarViaje } from "@/lib/inteligenciaViaje";
+import { cargarOfertasServidor } from "@/lib/ofertasServidor";
+import { ofertaParaOrigen } from "@/lib/preciosVuelos";
+import { llaveCiudad, DESTINOS_PRESUPUESTO } from "@/lib/presupuesto";
+import { hubsDe, nombreDeIATA } from "@/lib/paisesOrigen";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -89,6 +95,75 @@ function recomendacionTramos(tramos, monedaVista = "USD", tasaVistaPorUsd = 1) {
   });
 }
 
+// Coordenadas de una ciudad del catalogo, por nombre. Sirve para medir el
+// trayecto por tierra hasta un aeropuerto alternativo con el MISMO motor de
+// tramos que usa el resto del viaje.
+function ciudadDelCatalogo(nombre) {
+  const n = String(nombre || "").trim().toLowerCase();
+  return DESTINOS_PRESUPUESTO.find((d) => d.ciudad.toLowerCase() === n) || null;
+}
+
+/**
+ * ¿Saldria mas barato desde otro aeropuerto del pais?
+ *
+ * Y la pregunta completa, que es la que casi nadie hace: ¿sigue saliendo mas
+ * barato DESPUES de pagar el traslado hasta alli y perder esas horas? Un vuelo
+ * 80 USD mas barato desde Bogota no compensa si llegar cuesta 90 y medio dia.
+ *
+ * Solo se compara dato real contra dato real: si no hay precio detectado para
+ * los dos aeropuertos, no hay comparacion que hacer y se devuelve null.
+ */
+async function origenAlternativo(viaje) {
+  const salida = viaje.paradas[0];
+  const entrada = viaje.paradas[1];
+  if (!salida?.iata || !entrada?.ciudad) return null;
+
+  const ofertas = await cargarOfertasServidor();
+  const llave = llaveCiudad({ ciudad: entrada.ciudad, pais: entrada.paisNombre || entrada.pais });
+  const actual = ofertaParaOrigen(ofertas, llave, salida.iata);
+  // Sin precio real DESDE su aeropuerto no hay contra que comparar.
+  if (!actual || actual.origen !== salida.iata) return null;
+
+  const paisSalida = String(salida.pais || "").toUpperCase();
+  const hubs = hubsDe(paisSalida).filter((h) => h.iata !== salida.iata).slice(0, 4);
+  const ciudadSalida = ciudadDelCatalogo(salida.ciudad);
+
+  let mejor = null;
+  for (const h of hubs) {
+    const o = ofertaParaOrigen(ofertas, llave, h.iata);
+    if (!o || o.origen !== h.iata || o.precio >= actual.precio) continue;
+
+    const ahorroVuelo = (actual.precio - o.precio) * (viaje.viajeros || 1);
+    // El traslado hasta ese aeropuerto, con el motor de tramos de siempre.
+    const ciudadHub = ciudadDelCatalogo(h.ciudad);
+    let costeLlegar = 0;
+    let horasExtra = 0;
+    if (ciudadSalida && ciudadHub) {
+      const t = evaluarTramo({ desde: ciudadSalida, hasta: ciudadHub });
+      // Ida y vuelta: se va y se vuelve por el mismo sitio.
+      costeLlegar = (Number(t.precio) || 0) * 2 * (viaje.viajeros || 1);
+      horasExtra = (Number(t.puertaAPuerta_h) || 0) * 2;
+    }
+    const neto = ahorroVuelo - costeLlegar;
+    if (!mejor || neto > mejor.ahorroNetoUsd) {
+      mejor = {
+        iata: h.iata,
+        ciudad: h.ciudad,
+        ciudadActual: nombreDeIATA(salida.iata),
+        ahorroVueloUsd: Math.round(ahorroVuelo),
+        costeLlegarUsd: Math.round(costeLlegar),
+        horasExtra: Number(horasExtra.toFixed(1)),
+        ahorroNetoUsd: Math.round(neto),
+        // Los dos precios vienen del detector; el traslado es estimado, y por
+        // eso la oportunidad nace con confianza media y no alta.
+        fuente: "detectado",
+        trasladoEstimado: true,
+      };
+    }
+  }
+  return mejor;
+}
+
 export async function POST(req) {
   let body; try { body = await req.json(); } catch { return Response.json({ ok: false, motivo: "json" }, { status: 400 }); }
   const viaje = normalizarViaje(body?.viaje || body, body?.origen === "legacy" ? "legacy" : "ruta");
@@ -98,5 +173,39 @@ export async function POST(req) {
   const presupuesto = await presupuestoResumen(viaje, ajustado.tramos);
   const zigzag = detectarZigzag(viaje.paradas, 12);
   const optimizacion = optimizarViaje(viaje.paradas);
-  return Response.json({ ok: true, viaje, tramos: ajustado.tramos, regreso: ajustado.regresoIncluido, presupuesto, optimizacion: { ...zigzag, orden: optimizacion }, recomendaciones: recomendacionTramos(ajustado.tramos, presupuesto.monedaVista, presupuesto.tasaVistaPorUsd), generadoEn: Date.now() }, { headers: { "Cache-Control": "no-store" } });
+
+  // Las decisiones se calculan AQUI y viajan en esta respuesta.
+  //
+  // Antes el tablero pedia /api/viaje-canonico y /api/viaje-canonico/decisiones
+  // en paralelo: dos peticiones para dos analisis del mismo viaje. El segundo
+  // endpoint se queda para quien lo use suelto, pero desde aqui ya no hace
+  // falta pedirlo.
+  const decisiones = analizarDecisionesViaje(viaje.paradas);
+  const alternativa = await origenAlternativo(viaje);
+
+  const inteligencia = analizarViaje({
+    viaje,
+    tramos: ajustado.tramos,
+    presupuesto,
+    decisiones,
+    // optimizacion.orden es lo que devuelve optimizarViaje; el objeto de
+    // fuera mezcla eso con el zigzag.
+    optimizacion,
+    origenAlternativo: alternativa,
+    gustos: body?.gustos || null,
+  });
+
+  return Response.json({
+    ok: true,
+    viaje,
+    tramos: ajustado.tramos,
+    regreso: ajustado.regresoIncluido,
+    presupuesto,
+    optimizacion: { ...zigzag, orden: optimizacion },
+    decisiones,
+    origenAlternativo: alternativa,
+    inteligencia,
+    recomendaciones: recomendacionTramos(ajustado.tramos, presupuesto.monedaVista, presupuesto.tasaVistaPorUsd),
+    generadoEn: Date.now(),
+  }, { headers: { "Cache-Control": "no-store" } });
 }
