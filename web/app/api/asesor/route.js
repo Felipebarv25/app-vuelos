@@ -5,6 +5,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { DESTINOS_PRESUPUESTO, REGIONES } from "@/lib/presupuesto";
+import { contextoDeViaje, REGLAS_ASESOR_VIAJE } from "@/lib/contextoViaje";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -54,6 +55,85 @@ CATÁLOGO DE REFERENCIA (ciudad, país, vuelo i/v aprox., costo por día aprox.)
 ${catalogoTexto()}`;
 }
 
+// EL SEGUNDO MODO DEL ASESOR: hablar de UN viaje concreto.
+//
+// Brujula (arriba) recomienda destinos a quien no sabe a donde ir. Cuando el
+// viaje ya existe la conversacion es otra —"¿me alcanza?", "¿por que tren?",
+// "¿que me falta?"— y necesita los datos de ESE viaje, no el catalogo.
+//
+// EL CONTEXTO LO ARMA EL SERVIDOR, NO EL CLIENTE
+//
+// El navegador manda DATOS, nunca el texto del prompt. Si aceptaramos la
+// prosa ya redactada, cualquiera podria mandar el system prompt que quisiera
+// y usar nuestra clave como un Claude gratis. Aqui se sanea lo que llega y
+// la frase la escribe lib/contextoViaje, que es nuestro.
+const TOPE_PARADAS = 30;
+const TOPE_TRAMOS = 30;
+const TOPE_TAREAS = 40;
+const TOPE_CONTEXTO = 12000; // caracteres
+
+const txt = (x, max = 80) => String(x ?? "").slice(0, max);
+const num = (x) => (Number.isFinite(Number(x)) ? Number(x) : null);
+
+function sanearViaje(v) {
+  if (!v || typeof v !== "object") return null;
+  const paradas = Array.isArray(v.paradas) ? v.paradas.slice(0, TOPE_PARADAS).map((p) => ({
+    ciudad: txt(p?.ciudad), pais: txt(p?.pais, 4), noches: Math.max(0, Math.min(365, Math.round(num(p?.noches) || 0))),
+  })).filter((p) => p.ciudad) : [];
+  if (paradas.length < 2) return null;
+  return {
+    paradas,
+    // El id de la ruta NO se copia: el asesor no lo necesita y no hay razon
+    // para que un identificador del viajero salga de nuestro servidor.
+    mesInicio: /^\d{4}-\d{2}$/.test(v.mesInicio || "") ? v.mesInicio : "",
+    fechaIda: /^\d{4}-\d{2}-\d{2}$/.test(v.fechaIda || "") ? v.fechaIda : "",
+    nivel: ["mochilero", "medio", "comodo"].includes(v.nivel) ? v.nivel : "medio",
+    pasaporte: /^[A-Za-z]{2}$/.test(v.pasaporte || "") ? String(v.pasaporte).toUpperCase() : "CO",
+    monedaVista: /^[A-Za-z]{3}$/.test(v.monedaVista || "") ? String(v.monedaVista).toUpperCase() : "USD",
+  };
+}
+
+function sanearAnalisis(a) {
+  if (!a || typeof a !== "object") return {};
+  const p = a.presupuesto || {};
+  return {
+    presupuesto: {
+      total: num(p.total), transporte: num(p.transporte), alojamientoYVida: num(p.alojamientoYVida),
+      contingencia: num(p.contingencia), monedaVista: txt(p.monedaVista, 3).toUpperCase() || "USD",
+      tasaVistaPorUsd: num(p.tasaVistaPorUsd) || 1, conversionEsRespaldo: Boolean(p.conversionEsRespaldo),
+    },
+    tramos: (Array.isArray(a.tramos) ? a.tramos : []).slice(0, TOPE_TRAMOS).map((t) => ({
+      desde: txt(t?.desde), hasta: txt(t?.hasta),
+      medio: txt(t?.medio, 20), medioRecomendado: txt(t?.medioRecomendado, 20),
+      precio: num(t?.precio), precioRecomendado: num(t?.precioRecomendado),
+      puertaAPuerta_h: num(t?.puertaAPuerta_h), puertaAPuertaRecomendada_h: num(t?.puertaAPuertaRecomendada_h),
+      fuente: txt(t?.fuente, 20), fuenteRecomendada: txt(t?.fuenteRecomendada, 20),
+      alternativas: (Array.isArray(t?.alternativas) ? t.alternativas : []).slice(0, 5)
+        .map((x) => ({ medio: txt(x?.medio, 20), precio: num(x?.precio) })),
+    })),
+    estadia: (Array.isArray(a.estadia) ? a.estadia : []).slice(0, TOPE_PARADAS).map((e) => ({
+      ciudad: txt(e?.ciudad), noches: Math.max(0, Math.round(num(e?.noches) || 0)),
+      diarioUsd: num(e?.diarioUsd), totalUsd: num(e?.totalUsd), fuente: txt(e?.fuente, 20),
+    })),
+    inteligencia: {
+      oportunidades: (Array.isArray(a.inteligencia?.oportunidades) ? a.inteligencia.oportunidades : []).slice(0, 5)
+        .map((o) => ({ titulo: txt(o?.titulo, 160), prioridad: txt(o?.prioridad, 10), confianza: txt(o?.confianza, 10), dinero: num(o?.dinero) })),
+      faltantes: (Array.isArray(a.inteligencia?.faltantes) ? a.inteligencia.faltantes : []).slice(0, 8)
+        .map((f) => ({ texto: txt(f?.texto, 260) })),
+    },
+  };
+}
+
+function sanearPlan(pl) {
+  if (!pl || typeof pl !== "object") return null;
+  return {
+    estadoViaje: txt(pl.estadoViaje, 30),
+    tareas: (Array.isArray(pl.tareas) ? pl.tareas : []).slice(0, TOPE_TAREAS).map((t) => ({
+      titulo: txt(t?.titulo, 160), prioridad: txt(t?.prioridad, 10), requiereAccion: Boolean(t?.requiereAccion),
+    })),
+  };
+}
+
 export async function POST(req) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -62,6 +142,7 @@ export async function POST(req) {
 
   let mensajes;
   let contextoOrigen = {};
+  let contextoViaje = null;
   try {
     const body = await req.json();
     mensajes = body.mensajes;
@@ -74,6 +155,19 @@ export async function POST(req) {
         ciudadUsuario: typeof o.ciudad === "string" ? o.ciudad.slice(0, 60) : undefined,
         iataOrigen: typeof o.iata === "string" ? o.iata.slice(0, 5).toUpperCase() : undefined,
       };
+    }
+    // Modo "mi viaje": llegan los datos, no el texto.
+    if (body.viaje && typeof body.viaje === "object") {
+      const viaje = sanearViaje(body.viaje);
+      if (viaje) {
+        const texto = contextoDeViaje({
+          viaje,
+          analisis: sanearAnalisis(body.analisis),
+          plan: sanearPlan(body.plan),
+          idioma: /^[a-z]{2}$/.test(body.idioma || "") ? body.idioma : "es",
+        });
+        if (texto) contextoViaje = texto.slice(0, TOPE_CONTEXTO);
+      }
     }
   } catch {
     return Response.json({ error: "json" }, { status: 400 });
@@ -99,9 +193,22 @@ export async function POST(req) {
   const stream = client.messages.stream({
     model: MODELO,
     max_tokens: 800, // respuestas concisas = menor costo de salida (lo más caro)
-    system: [
-      { type: "text", text: systemPrompt(contextoOrigen), cache_control: { type: "ephemeral" } },
-    ],
+    // DOS BLOQUES, y el punto de cache al final del segundo.
+    //
+    // El cache es una coincidencia de PREFIJO: cualquier byte distinto
+    // invalida todo lo que viene detras. En el modo viaje el prefijo entero
+    // —reglas + datos de ESE viaje— es estable durante la conversacion, asi
+    // que a partir del segundo mensaje se lee de cache en vez de reenviarse.
+    // Meter los datos del viaje dentro del prompt general habria roto el
+    // cache compartido del asesor de destinos en cada peticion.
+    system: contextoViaje
+      ? [
+          { type: "text", text: REGLAS_ASESOR_VIAJE },
+          { type: "text", text: contextoViaje, cache_control: { type: "ephemeral" } },
+        ]
+      : [
+          { type: "text", text: systemPrompt(contextoOrigen), cache_control: { type: "ephemeral" } },
+        ],
     messages: limpios,
   });
 

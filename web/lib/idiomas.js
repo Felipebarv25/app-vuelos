@@ -1318,6 +1318,18 @@ const T = {
     ejGuardando: "Guardando…",
     ejErrorGuardar: "No pudimos guardar ese cambio. Inténtalo otra vez.",
     ejSoloGuardados: "Guarda el viaje para que Anduve recuerde lo que ya hiciste.",
+
+    // Ejecucion del viaje (lib/ejecutorViaje, components/QueSigue)
+    avTitulo: "Pregúntale a Anduve sobre este viaje",
+    avSubtitulo: "Conoce tu ruta, tus fechas, tu presupuesto y lo que te falta. Responde con tus cifras, no con cifras inventadas.",
+    avAbrir: "Preguntar",
+    avPlaceholder: "Escribe tu pregunta sobre este viaje…",
+    avEnviar: "Enviar",
+    avPensando: "Pensando…",
+    avAviso: "Solo responde con los datos de tu viaje. No reserva nada y no inventa precios: cuando algo es una estimación, te lo dice.",
+    avQueHago: "¿Qué debería hacer ahora?",
+    avAlcanza: "¿Me alcanza el presupuesto?",
+    avPorQueMedio: "¿Por qué recomiendas ese transporte?",
   },
 
   en: {
@@ -2597,6 +2609,18 @@ const T = {
     ejGuardando: "Saving…",
     ejErrorGuardar: "We couldn't save that change. Please try again.",
     ejSoloGuardados: "Save the trip so Anduve remembers what you've already done.",
+
+    // Ejecucion del viaje (lib/ejecutorViaje, components/QueSigue)
+    avTitulo: "Ask Anduve about this trip",
+    avSubtitulo: "It knows your route, your dates, your budget and what's left to do. It answers with your figures, not made-up ones.",
+    avAbrir: "Ask",
+    avPlaceholder: "Type your question about this trip…",
+    avEnviar: "Send",
+    avPensando: "Thinking…",
+    avAviso: "It only answers from your trip's data. It books nothing and invents no prices: when a figure is an estimate, it says so.",
+    avQueHago: "What should I do now?",
+    avAlcanza: "Is my budget enough?",
+    avPorQueMedio: "Why do you recommend that transport?",
   },
 
   pt: {
@@ -3876,6 +3900,18 @@ const T = {
     ejGuardando: "Salvando…",
     ejErrorGuardar: "Não conseguimos salvar essa mudança. Tente de novo.",
     ejSoloGuardados: "Salve a viagem para que a Anduve lembre o que você já fez.",
+
+    // Ejecucion del viaje (lib/ejecutorViaje, components/QueSigue)
+    avTitulo: "Pergunte à Anduve sobre esta viagem",
+    avSubtitulo: "Conhece a sua rota, as suas datas, o seu orçamento e o que falta. Responde com os seus números, não com números inventados.",
+    avAbrir: "Perguntar",
+    avPlaceholder: "Escreva a sua pergunta sobre esta viagem…",
+    avEnviar: "Enviar",
+    avPensando: "Pensando…",
+    avAviso: "Responde apenas com os dados da sua viagem. Não reserva nada e não inventa preços: quando um número é estimativa, ele diz.",
+    avQueHago: "O que eu deveria fazer agora?",
+    avAlcanza: "O meu orçamento dá?",
+    avPorQueMedio: "Por que você recomenda esse transporte?",
   },
 
   fr: {
@@ -5156,6 +5192,18 @@ const T = {
     ejGuardando: "Enregistrement…",
     ejErrorGuardar: "Nous n'avons pas pu enregistrer ce changement. Réessayez.",
     ejSoloGuardados: "Enregistrez le voyage pour qu'Anduve retienne ce que vous avez déjà fait.",
+
+    // Ejecucion del viaje (lib/ejecutorViaje, components/QueSigue)
+    avTitulo: "Posez vos questions à Anduve sur ce voyage",
+    avSubtitulo: "Il connaît votre itinéraire, vos dates, votre budget et ce qu'il vous reste à faire. Il répond avec vos chiffres, pas des chiffres inventés.",
+    avAbrir: "Poser une question",
+    avPlaceholder: "Écrivez votre question sur ce voyage…",
+    avEnviar: "Envoyer",
+    avPensando: "Réflexion…",
+    avAviso: "Il répond uniquement à partir des données de votre voyage. Il ne réserve rien et n'invente aucun prix : quand un chiffre est une estimation, il le dit.",
+    avQueHago: "Que dois-je faire maintenant ?",
+    avAlcanza: "Mon budget suffit-il ?",
+    avPorQueMedio: "Pourquoi recommandez-vous ce transport ?",
   },
 };
 

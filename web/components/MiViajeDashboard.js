@@ -32,6 +32,7 @@ import Bandera from "@/components/Bandera";
 import InteligenciaViaje from "@/components/InteligenciaViaje";
 import OportunidadesViaje from "@/components/OportunidadesViaje";
 import QueSigue from "@/components/QueSigue";
+import AsesorViaje from "@/components/AsesorViaje";
 import BloqueAlojamiento from "@/components/BloqueAlojamiento";
 import { construirPlan } from "@/lib/ejecutorViaje";
 import { nombrePaisMostrar } from "@/lib/paisesNombres";
@@ -476,6 +477,7 @@ export default function MiViajeDashboard({ ruta, lang = "es", t = (k) => k, onOp
       <OportunidadesViaje inteligencia={analisis.inteligencia} presupuesto={analisis.presupuesto} />
       <div id="decisiones" />
       <InteligenciaViaje ruta={ruta} analisis={analisis} decisiones={decisiones} />
+      <AsesorViaje viaje={ruta} analisis={analisis} plan={plan} />
       {analisis.optimizacion?.hayZigzag && <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/60 dark:bg-amber-900/20"><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-amber-700">{t("mvOportunidadOptim")}</div><h3 className="mt-1 text-[16px] font-extrabold text-amber-950 dark:text-amber-100">{t("mvRutaMejor")}</h3><p className="mt-1.5 text-[12.5px] leading-relaxed text-amber-900/75 dark:text-amber-100/70">{analisis.optimizacion.mensaje || t("mvOrdenAlternativo")}</p></div><button type="button" onClick={onOptimizar} className="rounded-full bg-amber-800 px-4 py-2 text-[11.5px] font-extrabold text-white hover:bg-amber-900">{t("mvVerAlternativa")}</button></div></div>}
     </>}
 
