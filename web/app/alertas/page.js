@@ -23,6 +23,7 @@ import FooterAnduve from "@/components/FooterAnduve";
 import BottomTabBar from "@/components/BottomTabBar";
 import PrecioDual from "@/components/PrecioDual";
 import { Icono } from "@/components/Icono";
+import CambiosViaje, { textoAlerta } from "@/components/CambiosViaje";
 
 function fmt(n) {
   return "US$ " + Math.round(n).toLocaleString("en-US");
@@ -83,6 +84,29 @@ export default function PaginaAlertas() {
   const [resumen, setResumen] = useState(null);
   const [borrando, setBorrando] = useState(null);
 
+  // DOS COSAS DISTINTAS EN UNA MISMA PAGINA.
+  //
+  // Arriba, lo que Anduve DETECTO en tus viajes (cambios de precio, coste,
+  // tareas que se acercan). Abajo, lo que TU configuraste (avisame si Madrid
+  // baja de X). Se parecen en la palabra "alerta" y en nada mas: una la
+  // escribe el sistema y se resuelve sola, la otra la escribe el viajero y
+  // solo el la borra. Mezclarlas en una lista unica haria imposible saber
+  // cual de las dos estas mirando.
+  const [cambios, setCambios] = useState(null);
+  const [pestana, setPestana] = useState("todas");
+
+  useEffect(() => {
+    if (!usuario) return undefined;
+    let vivo = true;
+    // Sin id: los cambios de TODOS sus viajes. Solo lecturas de KV, ninguna
+    // consulta externa: abrir esta pagina no cuesta dinero.
+    fetch("/api/viaje-alertas", { headers: authHdrs(), cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (vivo) setCambios(d?.ok ? d.alertas || [] : []); })
+      .catch(() => { if (vivo) setCambios([]); });
+    return () => { vivo = false; };
+  }, [usuario]);
+
   useEffect(() => {
     let vivo = true;
     fetch("/historial-resumen.json")
@@ -121,7 +145,37 @@ export default function PaginaAlertas() {
           </p>
         </div>
 
-        {!usuario ? (
+        {/* Las pestañas filtran, no navegan: es la misma pagina y el mismo
+            estado. Solo aparecen cuando hay sesion, porque sin ella no hay
+            ni viajes ni alertas que filtrar. */}
+        {usuario && (
+          <div className="mb-5 flex min-w-0 gap-2 overflow-x-auto pb-1">
+            {[["todas", "alTabTodas"], ["precios", "alTabPrecios"], ["viaje", "alTabViaje"], ["tareas", "alTabTareas"]].map(([k, clave]) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setPestana(k)}
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-[12.5px] font-bold transition ${pestana === k ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700"}`}
+              >
+                {t(clave)}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {usuario && pestana !== "precios" && (
+          <div className="mb-6">
+            {cambios == null ? (
+              <div className="h-[92px] animate-pulse rounded-2xl bg-slate-200/70 dark:bg-slate-800" aria-busy="true" />
+            ) : (
+              <ListaCambios cambios={cambios} pestana={pestana} t={t} />
+            )}
+          </div>
+        )}
+
+        {/* La lista de alertas de precio que ya existia, intacta. */}
+        {pestana === "todas" || pestana === "precios" ? (
+        !usuario ? (
           <div className="rounded-2xl border border-slate-200 bg-white px-5 py-8 text-center dark:border-slate-700 dark:bg-slate-800">
             <p className="text-[14px] font-semibold text-slate-700 dark:text-slate-200">
               {t("alertasIdxSinSesion")}
@@ -283,11 +337,58 @@ export default function PaginaAlertas() {
               {t("alertasIdxNota")}
             </p>
           </>
-        )}
+        )
+        ) : null}
       </main>
 
       <FooterAnduve />
       <BottomTabBar />
     </div>
+  );
+}
+
+/**
+ * Los cambios detectados, filtrados por pestaña.
+ *
+ * Reutiliza el mismo redactor que el tablero (textoAlerta): una alerta no
+ * puede leerse de dos maneras distintas segun la pantalla en la que caiga.
+ */
+function ListaCambios({ cambios, pestana, t }) {
+  const money = (v) => "US$" + Math.round(Number(v) || 0).toLocaleString("en-US");
+  const activas = cambios.filter((a) => a.estado === "activa");
+  const lista = pestana === "tareas" ? activas.filter((a) => a.tipo === "tarea")
+    : pestana === "viaje" ? activas.filter((a) => a.tipo !== "tarea")
+      : activas;
+
+  if (!lista.length) {
+    return (
+      <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-[12.5px] font-bold text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-200">
+        <Icono nombre="check" size={14} /> {t("alSinCambios")}
+      </div>
+    );
+  }
+
+  const NIVEL = { importante: "🔴", atencion: "🟡", info: "🔵" };
+
+  return (
+    <ul className="space-y-2.5">
+      {lista.map((a) => {
+        const txt = textoAlerta(a, t, money);
+        return (
+          <li key={`${a.viajeId}:${a.id}`} className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+            <div className="text-[13.5px] font-extrabold leading-snug text-slate-900 dark:text-white">
+              {NIVEL[a.nivel] || "🔵"} {txt.titulo}
+            </div>
+            {txt.detalle && <p className="mt-1 text-[12px] leading-relaxed text-slate-600 dark:text-slate-300">{txt.detalle}</p>}
+            <div className="mt-1.5 text-[10.5px] text-slate-500 dark:text-slate-400">
+              {a.viajeNombre ? t("alDeViaje", { nombre: a.viajeNombre }) : null}
+            </div>
+            <Link href={`/mi-viaje?id=${encodeURIComponent(a.viajeId)}`} className="mt-2.5 inline-flex rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 ring-1 ring-slate-200 hover:ring-marca-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600">
+              {t("navMiViaje")} →
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

@@ -1,0 +1,48 @@
+name: Monitor de viajes
+
+# Vigila los viajes que alguien abrio al menos una vez y avisa cuando algo
+# cambia de verdad: el precio de un vuelo, el coste, una tarea que se acerca.
+#
+# POR QUE UN WORKFLOW APARTE Y NO UN PASO DENTRO DEL DETECTOR
+#
+# El detector es un proceso Python de ~20-40 min que escanea el catalogo entero
+# y empuja commits al repo. Esto es un POST de un segundo. Colgarlo de aquel
+# habria atado el monitoreo de viajes a su duracion, a su entorno y a sus
+# fallos. Es la misma infraestructura —GitHub Actions y el MISMO secreto
+# compartido, ALERTS_SHARED_SECRET— con su propia cadencia.
+#
+# EL COSTE
+#
+# Cada 6 h, y el endpoint atiende como mucho 8 viajes por ronda, ignora los
+# que se consultaron hace menos de 12 h y consulta 2 tramos por viaje. El techo
+# real es bajo a proposito: el problema que ya tuvimos fue justo el contrario,
+# consultar vuelos sin que nadie lo pidiera.
+on:
+  schedule:
+    - cron: "17 */6 * * *"   # minuto 17 para no chocar con el detector en punto
+  workflow_dispatch:
+
+jobs:
+  monitorear:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pedir al monitor que revise
+        env:
+          ALERTS_SHARED_SECRET: ${{ secrets.ALERTS_SHARED_SECRET }}
+        run: |
+          if [ -z "$ALERTS_SHARED_SECRET" ]; then
+            echo "Sin ALERTS_SHARED_SECRET: nada que hacer."
+            exit 0
+          fi
+          respuesta=$(curl -sS -w "\n%{http_code}" -X POST \
+            -H "X-Alert-Secret: $ALERTS_SHARED_SECRET" \
+            -H "Content-Type: application/json" \
+            https://anduve-app.vercel.app/api/viaje-alertas/monitor)
+          codigo=$(echo "$respuesta" | tail -n1)
+          cuerpo=$(echo "$respuesta" | sed '$d')
+          echo "HTTP $codigo"
+          echo "$cuerpo"
+          # Un 503 significa que KV no esta disponible; no es motivo para pintar
+          # la corrida en rojo y despertar a nadie.
+          if [ "$codigo" = "200" ] || [ "$codigo" = "503" ]; then exit 0; fi
+          exit 1

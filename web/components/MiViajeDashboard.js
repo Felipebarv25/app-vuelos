@@ -32,6 +32,7 @@ import Bandera from "@/components/Bandera";
 import InteligenciaViaje from "@/components/InteligenciaViaje";
 import OportunidadesViaje from "@/components/OportunidadesViaje";
 import QueSigue from "@/components/QueSigue";
+import CambiosViaje from "@/components/CambiosViaje";
 import AsesorViaje from "@/components/AsesorViaje";
 import BloqueAlojamiento from "@/components/BloqueAlojamiento";
 import { construirPlan } from "@/lib/ejecutorViaje";
@@ -299,6 +300,14 @@ export default function MiViajeDashboard({ ruta, lang = "es", t = (k) => k, onOp
   const [guardando, setGuardando] = useState(false);
   const [errorEjecucion, setErrorEjecucion] = useState("");
 
+  // LOS CAMBIOS DESDE LA ULTIMA VEZ.
+  //
+  // La deteccion se dispara al tener el analisis y NO consulta precios: solo
+  // compara lo que ya esta en pantalla contra la foto guardada. Las consultas
+  // de pago viven en el monitor, que corre por cron con su propio freno.
+  const [alertas, setAlertas] = useState([]);
+  const [resumenAl, setResumenAl] = useState(null);
+
   useEffect(() => {
     let vivo = true;
     cargarVisas().then((v) => vivo && setVisas(v));
@@ -417,6 +426,42 @@ export default function MiViajeDashboard({ ruta, lang = "es", t = (k) => k, onOp
       });
   }, [visas, paises, ruta?.pasaporte, lang]);
 
+  // Se detecta cuando ya hay analisis Y plan: sin el plan no se sabe que
+  // tareas siguen pendientes y las alertas de tarea saldrian mal.
+  const detectarCambiosViaje = useCallback(async (planActual) => {
+    const id = ruta?.id;
+    if (!id || !analisis || !planActual?.tareas?.length) return;
+    try {
+      const r = await fetch("/api/viaje-alertas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, analisis, plan: planActual, preciosVivos: {} }),
+      });
+      const d = await r.json();
+      if (r.ok && d?.ok) { setAlertas(d.alertas || []); setResumenAl(d.resumen || null); }
+    } catch { /* sin alertas, el tablero sigue entero */ }
+  }, [ruta?.id, analisis]);
+
+  const accionAlerta = useCallback(async (accion, alertaId) => {
+    const id = ruta?.id;
+    if (!id) return;
+    const previo = alertas;
+    // Optimista, y se revierte si el servidor dice que no.
+    setAlertas(previo.map((a) => (accion === "leer-todas" ? { ...a, leida: true }
+      : a.id !== alertaId ? a
+      : accion === "resolver" ? { ...a, estado: "resuelta" } : { ...a, leida: true })));
+    try {
+      const r = await fetch("/api/viaje-alertas", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, accion, alertaId }),
+      });
+      const d = await r.json();
+      if (r.ok && d?.ok) { setAlertas(d.alertas || []); setResumenAl(d.resumen || null); }
+      else setAlertas(previo);
+    } catch { setAlertas(previo); }
+  }, [ruta?.id, alertas]);
+
   const plan = useMemo(() => construirPlan({
     viaje: ruta,
     tramos: analisis?.tramos || [],
@@ -424,6 +469,8 @@ export default function MiViajeDashboard({ ruta, lang = "es", t = (k) => k, onOp
     requisitos: requisitosLista,
     ejecucion,
   }), [ruta, analisis, requisitosLista, ejecucion]);
+
+  useEffect(() => { detectarCambiosViaje(plan); }, [detectarCambiosViaje, plan]);
 
   // Un tramo con precio REAL es el que vino de una consulta, no de la tabla.
   const tramosReales = useMemo(
@@ -439,6 +486,20 @@ export default function MiViajeDashboard({ ruta, lang = "es", t = (k) => k, onOp
         El resto del tablero describe el viaje; esto es lo unico que pide una
         accion, asi que abre. Aparece en cuanto hay analisis: sin tramos no
         hay tareas reales que generar y el motor devuelve el plan vacio. */}
+    {/* LO QUE CAMBIO va antes incluso que "¿que sigue?": si algo se movio
+        desde la ultima visita, es lo primero que hay que saber. Cuando no
+        hay nada, es una sola linea y no estorba. */}
+    {analisis && (
+      <CambiosViaje
+        alertas={alertas}
+        resumen={resumenAl}
+        onLeer={() => accionAlerta("leer-todas")}
+        onResolver={(idAlerta) => accionAlerta("resolver", idAlerta)}
+        money={(v) => formatoMoneda(v, "USD", t)}
+        compacto
+      />
+    )}
+
     {plan.tareas.length > 0 && (
       <QueSigue
         plan={plan}
