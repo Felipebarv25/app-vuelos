@@ -21,6 +21,7 @@
 //
 //   tareas[id].estado      lo marco el viajero
 //   tramos[id].medioElegido   eligio tren donde recomendabamos avion
+//   reservas[id]              lo que el viajero apunto al reservar por su cuenta
 //
 // NO se guardan precios, ni recomendaciones, ni totales, ni el plan. Todo eso
 // sale del motor cada vez, porque cambia. Guardar un precio seria guardar una
@@ -45,7 +46,7 @@ const idValido = (x) => /^[a-f0-9]{16}$/.test(String(x || ""));
 
 /** Nada que venga del navegador se guarda sin pasar por aqui. */
 function sanear(x) {
-  const out = { v: 1, tareas: {}, tramos: {}, actualizada: Date.now() };
+  const out = { v: 1, tareas: {}, tramos: {}, reservas: {}, actualizada: Date.now() };
   if (!x || typeof x !== "object") return out;
 
   const tareas = x.tareas;
@@ -76,6 +77,37 @@ function sanear(x) {
       i++;
     }
   }
+  // LA EVIDENCIA DE RESERVA. La aporta el viajero, no Anduve.
+  //
+  // Anduve no reserva y no puede saber si alguien reservo: esto es lo que el
+  // viajero apunta cuando ya lo hizo por su cuenta. Se guarda lo minimo para
+  // que le sirva de recordatorio —con quien, que referencia, cuando, cuanto—
+  // y nada mas.
+  //
+  // No se acepta ninguna URL. Un enlace que llega del navegador y se pinta
+  // luego como un boton es una puerta abierta; y para volver al proveedor ya
+  // esta la propia accion, que construimos nosotros.
+  const reservas = x.reservas;
+  if (reservas && typeof reservas === "object") {
+    let i = 0;
+    for (const [id, r] of Object.entries(reservas)) {
+      if (i >= TOPE_TAREAS) break;
+      if (!/^[A-Za-z0-9_:.-À-ɏ ]{1,120}$/.test(id)) continue;
+      if (!r || typeof r !== "object") continue;
+      const importe = Number(r.importe);
+      out.reservas[id] = {
+        proveedor: String(r.proveedor || "").slice(0, 60),
+        referencia: String(r.referencia || "").slice(0, 60),
+        fecha: /^d{4}-d{2}-d{2}$/.test(r.fecha || "") ? r.fecha : "",
+        importe: Number.isFinite(importe) && importe >= 0 && importe <= 10000000 ? Math.round(importe) : null,
+        moneda: /^[A-Za-z]{3}$/.test(r.moneda || "") ? String(r.moneda).toUpperCase() : "",
+        nota: String(r.nota || "").slice(0, 300),
+        anotadaEn: Number(r.anotadaEn) || Date.now(),
+      };
+      i++;
+    }
+  }
+
   return out;
 }
 

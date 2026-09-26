@@ -33,6 +33,8 @@ import InteligenciaViaje from "@/components/InteligenciaViaje";
 import OportunidadesViaje from "@/components/OportunidadesViaje";
 import QueSigue from "@/components/QueSigue";
 import CambiosViaje from "@/components/CambiosViaje";
+import AccionesViaje from "@/components/AccionesViaje";
+import { construirAcciones } from "@/lib/accionesViaje";
 import AsesorViaje from "@/components/AsesorViaje";
 import BloqueAlojamiento from "@/components/BloqueAlojamiento";
 import { construirPlan } from "@/lib/ejecutorViaje";
@@ -462,6 +464,30 @@ export default function MiViajeDashboard({ ruta, lang = "es", t = (k) => k, onOp
     } catch { setAlertas(previo); }
   }, [ruta?.id, alertas]);
 
+  // LAS ACCIONES. Se calculan, no se guardan: los enlaces dependen de
+  // precios y fechas que cambian, y guardarlos seria guardar una promesa
+  // caducada. Todas salen de lib/afiliados o del enlace que devolvio el
+  // proveedor; ninguna se escribe a mano.
+  const acciones = useMemo(() => construirAcciones({
+    viaje: ruta, analisis, ejecucion, requisitos: requisitosLista,
+  }), [ruta, analisis, ejecucion, requisitosLista]);
+
+  // Anotar una reserva NO la hace Anduve: la aporta el viajero. Se guarda
+  // en la misma capa de ejecucion del Proceso 4, no en una nueva.
+  const anotarReserva = useCallback((idAccion, datos) => {
+    const base = ejecucion || { tareas: {}, tramos: {}, reservas: {} };
+    const reservas = { ...(base.reservas || {}) };
+    reservas[idAccion] = { ...datos, anotadaEn: Date.now() };
+    guardarEjecucion({ ...base, reservas });
+  }, [ejecucion, guardarEjecucion]);
+
+  const borrarReserva = useCallback((idAccion) => {
+    const base = ejecucion || { tareas: {}, tramos: {}, reservas: {} };
+    const reservas = { ...(base.reservas || {}) };
+    delete reservas[idAccion];
+    guardarEjecucion({ ...base, reservas });
+  }, [ejecucion, guardarEjecucion]);
+
   const plan = useMemo(() => construirPlan({
     viaje: ruta,
     tramos: analisis?.tramos || [],
@@ -533,6 +559,17 @@ export default function MiViajeDashboard({ ruta, lang = "es", t = (k) => k, onOp
         puedeGuardar={puedeGuardar}
         money={(v) => formatoMoneda(v, "USD", t)}
       />
+      {/* Y DESPUES DE TODO LO ANTERIOR, donde hacerlo. La recomendacion va
+          primero: esto cierra la frase, no la abre. */}
+      <AccionesViaje
+        acciones={acciones}
+        reservas={ejecucion?.reservas || {}}
+        onReservar={anotarReserva}
+        onBorrarReserva={borrarReserva}
+        puedeGuardar={puedeGuardar}
+        money={(v) => formatoMoneda(v, "USD", t)}
+      />
+
       {/* La sintesis va ANTES del detalle: primero que deberias cambiar,
           y luego los numeros que lo sostienen. */}
       <OportunidadesViaje inteligencia={analisis.inteligencia} presupuesto={analisis.presupuesto} />
