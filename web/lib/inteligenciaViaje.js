@@ -349,7 +349,9 @@ function analizarPresupuesto(presupuesto, tramos, paradas) {
  */
 function detectarFaltantes(viaje, tramos) {
   const out = [];
-  const sinDato = (tramos || []).filter((t) => !(t.fuenteRecomendada || t.fuente) || (t.fuenteRecomendada || t.fuente) === "sin_dato");
+  // "sin-datos" lo escribe rutaViva; "sin_dato" lo escribe el resto del
+  // proyecto. Comprobar solo uno dejaba este aviso sin dispararse nunca.
+  const sinDato = (tramos || []).filter((t) => { const f = t.fuenteRecomendada || t.fuente; return !f || f === "sin_dato" || f === "sin-datos"; });
   const estimados = (tramos || []).filter((t) => (t.fuenteRecomendada || t.fuente) === "estimado");
   const conVueloReal = (tramos || []).filter((t) => (t.fuenteRecomendada || t.fuente) === "detectado");
 

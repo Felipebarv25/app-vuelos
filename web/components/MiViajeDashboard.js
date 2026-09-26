@@ -31,6 +31,9 @@ import { Icono } from "@/components/Icono";
 import Bandera from "@/components/Bandera";
 import InteligenciaViaje from "@/components/InteligenciaViaje";
 import OportunidadesViaje from "@/components/OportunidadesViaje";
+import QueSigue from "@/components/QueSigue";
+import BloqueAlojamiento from "@/components/BloqueAlojamiento";
+import { construirPlan } from "@/lib/ejecutorViaje";
 import { nombrePaisMostrar } from "@/lib/paisesNombres";
 import {
   cargarVisas,
@@ -62,6 +65,9 @@ function formatoMoneda(valor, cod, t = (k) => k) { if (valor == null || !Number.
 // Tonos de la ficha de visa. Mismos colores que RequisitosViaje, para que el
 // mismo requisito no se vea de dos maneras distintas segun la pantalla.
 const MEDIO = { vuelo: "iaMedioVuelo", tren: "iaMedioTren", bus: "iaMedioBus", ferry: "iaMedioFerry" };
+const iconoMedio = { tren: "🚆", vuelo: "✈️", bus: "🚌", ferry: "⛴️" };
+// Las mismas explicaciones codificadas que traduce el panel de oportunidades.
+const CLAVE_EXPLICACION = { mejorEstimado: "iaExpMejorEstimado", mejorFiable: "iaExpMejorFiable", competitiva: "iaExpCompetitiva", razonable: "iaExpRazonable", pierde: "iaExpPierde" };
 
 const TONO = {
   emerald: "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-100",
@@ -119,14 +125,7 @@ function Bloque({ icono, titulo, subtitulo, estado = "pendiente", href, onClick,
  * El pais del propio pasaporte se salta: nadie necesita visa para volver a
  * casa, y en el viaje de referencia Colombia aparece dos veces.
  */
-function RequisitosDelViaje({ paises, pasaporte, t, lang }) {
-  const [visas, setVisas] = useState(null);
-  useEffect(() => {
-    let vivo = true;
-    cargarVisas().then((v) => vivo && setVisas(v));
-    return () => { vivo = false; };
-  }, []);
-
+function RequisitosDelViaje({ paises, pasaporte, t, lang, visas }) {
   const nacionalidad = String(pasaporte || "CO").toUpperCase();
   const destinos = useMemo(
     () => paises.map((cc) => cc.toUpperCase()).filter((cc) => cc !== nacionalidad),
@@ -188,6 +187,87 @@ function RequisitosDelViaje({ paises, pasaporte, t, lang }) {
   );
 }
 
+/**
+ * UN TRAMO, COMO ALGO QUE SE DECIDE.
+ *
+ * Antes esta fila solo informaba: "Londres → Edimburgo, tren, 4.5 h". El
+ * viajero leia la recomendacion y no tenia donde decir que si —ni donde decir
+ * que no—, asi que al volver al tablero la pantalla no recordaba nada.
+ *
+ * Ahora se puede elegir. Y elegir aqui NO reescribe la ruta:
+ *
+ *   · el orden de las ciudades no cambia
+ *   · las noches no cambian
+ *   · el viaje guardado no se toca
+ *
+ * Solo se anota "en este tramo voy en tren", en la capa de ejecucion, y se
+ * puede deshacer volviendo a la recomendacion. Cambiar la ruta de verdad
+ * sigue siendo cosa del editor, que es donde el viajero espera que pase.
+ *
+ * El precio y el tiempo que se enseñan son los de la opcion ELEGIDA, no los
+ * de la recomendada: si eliges el bus, el numero que ves es el del bus.
+ */
+function TramoOperativo({ tr, t, monedaVista, elegido, onElegir, puedeGuardar, guardando }) {
+  const opciones = (tr.alternativas || []).filter((o) => o && o.medio);
+  const dela = elegido ? opciones.find((o) => o.medio === elegido) : null;
+  const medio = dela?.medio || tr.medioRecomendado || tr.medio;
+  const fuente = dela?.fuente || tr.fuenteRecomendada || tr.fuente;
+  const precio = dela ? dela.precio : (tr.precioRecomendado ?? tr.precio);
+  const horasTramo = dela ? dela.puertaAPuerta_h : (tr.puertaAPuertaRecomendada_h ?? tr.puertaAPuerta_h);
+  const explicacion = dela
+    ? (CLAVE_EXPLICACION[dela.explicacionCodigo] ? t(CLAVE_EXPLICACION[dela.explicacionCodigo]) : dela.explicacion)
+    : (CLAVE_EXPLICACION[tr.recomendacionExplicacionCodigo] ? t(CLAVE_EXPLICACION[tr.recomendacionExplicacionCodigo]) : tr.recomendacionExplicacion);
+  // Solo hay algo que elegir cuando hay mas de una opcion real.
+  const hayQueElegir = opciones.length > 1;
+
+  return (
+    <div className="py-3 first:pt-0">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[13px] font-extrabold text-slate-800 dark:text-slate-100">{tr.desde} → {tr.hasta}</span>
+            {elegido && <span className="rounded-full bg-marca-100 px-2 py-0.5 text-[9.5px] font-black text-marca-800 dark:bg-marca-900/40 dark:text-marca-200">{t("ejMedioElegido")}</span>}
+          </div>
+          <div className="mt-0.5 text-[11px] text-slate-500">
+            {MEDIO[medio] ? t(MEDIO[medio]) : medio || t("iaMedioNinguno")} · {horasTramo != null ? t("iaPuertaAPuerta", { h: horasTramo }) : t("mvDuracionDesconocida")}
+            {!elegido && <> · {t("mvRecomendada")}</>}
+          </div>
+          {explicacion && <div className="mt-1 text-[11px] leading-relaxed text-slate-500">{explicacion}</div>}
+        </div>
+        <div className="shrink-0 sm:text-right">
+          <div className="text-[14px] font-black text-slate-900 dark:text-white">{precio === 0 && fuente === "incluido" ? t("mvIncluido") : precio != null ? formatoMoneda(precio, "USD", t) : t("mvSinPrecio")}</div>
+          <div className={`text-[10px] font-bold ${confianzaClase(fuente)}`}>{fuenteTexto(fuente, t)}{precio != null && monedaVista !== "USD" ? t("mvPrecioEnUsd") : ""}</div>
+        </div>
+      </div>
+
+      {puedeGuardar && hayQueElegir && (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          {opciones.map((o) => {
+            const activo = medio === o.medio;
+            return (
+              <button
+                key={o.medio}
+                type="button"
+                disabled={guardando}
+                onClick={() => onElegir(tr.id, activo && elegido ? null : o.medio)}
+                className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition disabled:opacity-60 ${activo ? "bg-marca-700 text-white" : "border border-slate-200 text-slate-600 hover:border-marca-300 dark:border-slate-600 dark:text-slate-300"}`}
+              >
+                {iconoMedio[o.medio] || "🚐"} {MEDIO[o.medio] ? t(MEDIO[o.medio]) : o.medio}
+                {o.precio != null && <span className="ml-1.5 font-semibold opacity-70">{formatoMoneda(o.precio, "USD", t)}</span>}
+              </button>
+            );
+          })}
+          {elegido && (
+            <button type="button" disabled={guardando} onClick={() => onElegir(tr.id, null)}
+              className="rounded-full px-2.5 py-1.5 text-[11px] font-bold text-slate-400 hover:underline disabled:opacity-60">
+              {t("ejVolverRecomendado")}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 export default function MiViajeDashboard({ ruta, lang = "es", t = (k) => k, onOptimizar }) {
   const paradas = ruta?.paradas || [];
   const ciudades = useMemo(() => ciudadesUnicas(paradas), [paradas]);
@@ -201,6 +281,85 @@ export default function MiViajeDashboard({ ruta, lang = "es", t = (k) => k, onOp
   const [decisiones, setDecisiones] = useState(null);
   const [analizando, setAnalizando] = useState(false);
   const [errorAnalisis, setErrorAnalisis] = useState("");
+
+  // LA CAPA DE EJECUCION.
+  //
+  // `ejecucion` es lo unico que el viajero ha decidido a mano: que tareas
+  // dio por hechas y que medio eligio en cada tramo. Vive en su propia clave
+  // de KV (ver app/api/ejecucion), no dentro del viaje: marcar una casilla
+  // no puede implicar reescribir la ruta entera.
+  //
+  // Si no se puede guardar —viaje sin id, sin sesion, KV caida— el panel
+  // sigue funcionando en modo lectura y lo dice, en vez de ofrecer botones
+  // que no van a recordar nada.
+  const [visas, setVisas] = useState(null);
+  const [ejecucion, setEjecucion] = useState(null);
+  const [puedeGuardar, setPuedeGuardar] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [errorEjecucion, setErrorEjecucion] = useState("");
+
+  useEffect(() => {
+    let vivo = true;
+    cargarVisas().then((v) => vivo && setVisas(v));
+    return () => { vivo = false; };
+  }, []);
+
+  useEffect(() => {
+    let vivo = true;
+    const id = ruta?.id;
+    setEjecucion(null); setPuedeGuardar(false); setErrorEjecucion("");
+    if (!id) return undefined;
+    (async () => {
+      try {
+        const r = await fetch(`/api/ejecucion?id=${encodeURIComponent(id)}`, { cache: "no-store" });
+        const d = await r.json();
+        if (!vivo) return;
+        if (r.ok && d?.ok) { setEjecucion(d.ejecucion || { tareas: {}, tramos: {} }); setPuedeGuardar(true); }
+      } catch { /* modo lectura */ }
+    })();
+    return () => { vivo = false; };
+  }, [ruta?.id]);
+
+  // Guardar es idempotente: se manda la ejecucion entera, no un parche, y
+  // el optimismo se revierte si el servidor dice que no.
+  const guardarEjecucion = useCallback(async (siguiente) => {
+    const id = ruta?.id;
+    const previo = ejecucion;
+    setEjecucion(siguiente);
+    if (!id || !puedeGuardar) return;
+    setGuardando(true); setErrorEjecucion("");
+    try {
+      const r = await fetch("/api/ejecucion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ejecucion: siguiente }),
+      });
+      const d = await r.json();
+      if (!r.ok || !d?.ok) throw new Error("ejErrorGuardar");
+      setEjecucion(d.ejecucion);
+    } catch {
+      setEjecucion(previo);
+      setErrorEjecucion("ejErrorGuardar");
+    } finally { setGuardando(false); }
+  }, [ruta?.id, ejecucion, puedeGuardar]);
+
+  const cambiarEstadoTarea = useCallback((idTarea, estado) => {
+    const base = ejecucion || { tareas: {}, tramos: {} };
+    const tareas = { ...(base.tareas || {}) };
+    if (estado === "pendiente") delete tareas[idTarea];
+    else tareas[idTarea] = { estado, actualizada: Date.now() };
+    guardarEjecucion({ ...base, tareas });
+  }, [ejecucion, guardarEjecucion]);
+
+  // Elegir un medio NO reordena ni reescribe la ruta: solo anota la eleccion
+  // de ese tramo, y se puede deshacer volviendo a la recomendacion.
+  const elegirMedio = useCallback((idTramo, medio) => {
+    const base = ejecucion || { tareas: {}, tramos: {} };
+    const tramos = { ...(base.tramos || {}) };
+    if (!medio) delete tramos[idTramo];
+    else tramos[idTramo] = { medioElegido: medio, actualizada: Date.now() };
+    guardarEjecucion({ ...base, tramos });
+  }, [ejecucion, guardarEjecucion]);
 
   // A donde se va a EDITAR. /ruta es el editor de verdad; /mis-viajes es la
   // lista. Antes desde aqui se mandaba a la lista con ?editar=, que abre el
@@ -235,6 +394,36 @@ export default function MiViajeDashboard({ ruta, lang = "es", t = (k) => k, onOp
   const totalVista = analisis?.presupuesto?.totalVista ?? analisis?.presupuesto?.total;
   const transporteVista = analisis?.presupuesto?.transporteVista ?? analisis?.presupuesto?.transporte;
   const tasaEnVivo = Boolean(analisis?.presupuesto?.conversionEnVivo);
+  // Los requisitos, ya interpretados, en la forma que espera el motor de
+  // ejecucion. Se usan las MISMAS funciones que pintan la ficha de cada pais:
+  // no hay una segunda logica de visas en el proyecto.
+  const requisitosLista = useMemo(() => {
+    const nacionalidad = String(ruta?.pasaporte || "CO").toUpperCase();
+    if (!visas) return [];
+    return paises
+      .map((cc) => cc.toUpperCase())
+      .filter((cc) => cc !== nacionalidad)
+      .map((iso) => {
+        const info = interpretarVisa(visas?.[nacionalidad]?.[iso]);
+        const autoriz = autorizacionElectronica(iso, nacionalidad);
+        return {
+          iso,
+          pais: nombrePaisMostrar(iso.toLowerCase(), lang),
+          tipo: info?.tipo || "desconocido",
+          autorizacion: autoriz?.tipo || null,
+          fiebreAmarilla: exigeFiebreAmarilla(iso),
+        };
+      });
+  }, [visas, paises, ruta?.pasaporte, lang]);
+
+  const plan = useMemo(() => construirPlan({
+    viaje: ruta,
+    tramos: analisis?.tramos || [],
+    estadia: analisis?.estadia || [],
+    requisitos: requisitosLista,
+    ejecucion,
+  }), [ruta, analisis, requisitosLista, ejecucion]);
+
   // Un tramo con precio REAL es el que vino de una consulta, no de la tabla.
   const tramosReales = useMemo(
     () => (analisis?.tramos || []).filter((tr) => (tr.fuenteRecomendada || tr.fuente) === "detectado").length,
@@ -243,6 +432,21 @@ export default function MiViajeDashboard({ ruta, lang = "es", t = (k) => k, onOp
 
   return <section className="mt-4 min-w-0 space-y-5" aria-label="Mi viaje">
     <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-marca-900 via-marca-700 to-emerald-600 p-5 text-white shadow-card sm:p-7"><div className="flex flex-wrap items-start justify-between gap-5"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-1.5">{paises.map((cc) => <Bandera key={cc} cc={cc} size={18} />)}<span className="ml-1 text-[10.5px] font-bold uppercase tracking-[0.18em] text-white/65">{t("navMiViaje")}</span></div><h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{ruta?.nombre || `${ciudades[0] || t("mvNuevoViaje")} → ${ciudades[ciudades.length - 1] || t("mvDestino")}`}</h2><p className="mt-1.5 text-[13px] text-white/75">{fmtMes(ruta?.mesInicio, lang, t)} · {t(ciudades.length === 1 ? "mvCiudadUna" : "mvCiudadVarias", { n: ciudades.length })} · {t(noches === 1 ? "mvNocheUna" : "mvNocheVarias", { n: noches })}</p><div className="mt-4 flex flex-wrap gap-2 text-[12px] font-semibold text-white/90">{ciudades.map((ciudad, i) => <span key={`${ciudad}-${i}`} className="rounded-full bg-white/10 px-2.5 py-1 ring-1 ring-white/10">{ciudad}</span>)}</div></div><a href={urlEditor} className="rounded-full bg-white px-4 py-2 text-[12.5px] font-extrabold text-marca-800 shadow-sm hover:bg-white/90">{t("mvEditarRuta")}</a></div><div className="mt-6 rounded-2xl bg-black/10 p-4 ring-1 ring-white/10"><div className="flex items-end justify-between gap-3"><div><div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-white/60">{t("mvPreparacion")}</div><div className="mt-1 text-xl font-black">{porcentaje}%</div></div><div className="text-right text-[11px] text-white/65">{t("mvSinInventar")}</div></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-white" style={{ width: `${porcentaje}%` }} /></div></div></div>
+
+    {/* "¿QUE SIGUE?" va lo primero despues de la portada.
+
+        El resto del tablero describe el viaje; esto es lo unico que pide una
+        accion, asi que abre. Aparece en cuanto hay analisis: sin tramos no
+        hay tareas reales que generar y el motor devuelve el plan vacio. */}
+    {plan.tareas.length > 0 && (
+      <QueSigue
+        plan={plan}
+        onEstado={cambiarEstadoTarea}
+        guardando={guardando}
+        puedeGuardar={puedeGuardar}
+        error={errorEjecucion}
+      />
+    )}
 
     {/* EL MAPA. Es la misma ruta de la que habla todo lo demas, y hasta ahora
         en esta pantalla solo existia como una tira de nombres de ciudad. Se
@@ -256,7 +460,17 @@ export default function MiViajeDashboard({ ruta, lang = "es", t = (k) => k, onOp
     <div className="rounded-2xl border border-marca-200 bg-marca-50 p-4 dark:border-marca-900 dark:bg-marca-900/20"><div className="flex items-start gap-3"><span className="mt-0.5 text-marca-700 dark:text-marca-300"><Icono nombre="compass" size={19} /></span><div className="min-w-0 flex-1"><h3 className="text-[14px] font-extrabold text-marca-900 dark:text-marca-100">{analizando ? t("mvAnalizandoTitulo") : t("mvAnalisisTitulo")}</h3><p className="mt-1 text-[12.5px] leading-relaxed text-marca-800/75 dark:text-marca-200/75">{t("mvAnalisisIntro")}</p></div><button type="button" onClick={analizar} disabled={analizando} className="shrink-0 rounded-full bg-marca-700 px-3.5 py-2 text-[11.5px] font-extrabold text-white disabled:opacity-60">{analizando ? t("mvAnalizandoBoton") : t("mvActualizar")}</button></div>{errorAnalisis && <p className="mt-3 text-[11.5px] font-semibold text-red-600">{t(errorAnalisis)}</p>}</div>
 
     {analisis && <><div className="grid gap-3 sm:grid-cols-3"><div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"><div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-400">{t("mvCosteOrientativo")}</div><div className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{formatoMoneda(totalVista, monedaVista, t)}</div><div className="mt-1 text-[11px] text-slate-500">{t("mvCosteDetalle", { moneda: monedaVista })}{tasaEnVivo ? t("mvCambioActualizado") : monedaVista !== "USD" ? t("mvCambioRespaldo") : ""}</div></div><div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"><div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-400">{t("mvTransporte")}</div><div className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{formatoMoneda(transporteVista, monedaVista, t)}</div><div className="mt-1 text-[11px] text-slate-500">{t("mvTransporteDetalle")}</div></div><div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"><div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-400">{t("mvTiempoRuta")}</div><div className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{horas.toFixed(1)} h</div><div className="mt-1 text-[11px] text-slate-500">{t("mvTiempoDetalle")}</div></div></div>
-      <div id="transporte" className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800"><div className="flex flex-wrap items-end justify-between gap-3"><div><div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-400">{t("mvTransporte")}</div><h3 className="mt-1 text-[17px] font-extrabold text-slate-900 dark:text-white">{t("mvComoMoverte")}</h3></div>{analisis.regreso?.ahorro > 0 && <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-700">{t("mvRegresoIncluido")}</span>}</div><div className="mt-4 divide-y divide-slate-100 dark:divide-slate-700">{(analisis.tramos || []).map((tr) => { const fuente = tr.fuenteRecomendada || tr.fuente; const medio = tr.medioRecomendado || tr.medio; const precio = tr.precioRecomendado ?? tr.precio; const horasTramo = tr.puertaAPuertaRecomendada_h ?? tr.puertaAPuerta_h; return <div key={tr.id} className="flex flex-col gap-2 py-3 first:pt-0 sm:flex-row sm:items-center sm:justify-between"><div><div className="text-[13px] font-extrabold text-slate-800 dark:text-slate-100">{tr.desde} → {tr.hasta}</div><div className="mt-0.5 text-[11px] text-slate-500">{MEDIO[medio] ? t(MEDIO[medio]) : medio || t("iaMedioNinguno")} · {horasTramo != null ? t("iaPuertaAPuerta", { h: horasTramo }) : t("mvDuracionDesconocida")} · {t("mvRecomendada")}</div>{tr.recomendacionExplicacion && <div className="mt-1 text-[11px] leading-relaxed text-slate-500">{tr.recomendacionExplicacion}</div>}</div><div className="sm:text-right"><div className="text-[14px] font-black text-slate-900 dark:text-white">{precio === 0 && fuente === "incluido" ? t("mvIncluido") : precio != null ? formatoMoneda(precio, "USD", t) : t("mvSinPrecio")}</div><div className={`text-[10px] font-bold ${confianzaClase(fuente)}`}>{fuenteTexto(fuente, t)}{precio != null && monedaVista !== "USD" ? t("mvPrecioEnUsd") : ""}</div></div></div>; })}</div></div>
+      <div id="transporte" className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800"><div className="flex flex-wrap items-end justify-between gap-3"><div><div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-400">{t("mvTransporte")}</div><h3 className="mt-1 text-[17px] font-extrabold text-slate-900 dark:text-white">{t("mvComoMoverte")}</h3></div>{analisis.regreso?.ahorro > 0 && <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-700">{t("mvRegresoIncluido")}</span>}</div><div className="mt-4 divide-y divide-slate-100 dark:divide-slate-700">{(analisis.tramos || []).map((tr) => <TramoOperativo key={tr.id} tr={tr} t={t} monedaVista={monedaVista} elegido={ejecucion?.tramos?.[tr.id]?.medioElegido || null} onElegir={elegirMedio} puedeGuardar={puedeGuardar} guardando={guardando} />)}</div></div>
+      {/* DONDE DORMIR. El presupuesto ya lo contaba, pero sumado: aqui se ve
+          ciudad por ciudad, que es como se decide. */}
+      <BloqueAlojamiento
+        estadia={analisis.estadia || []}
+        tareas={plan.tareas}
+        onEstado={cambiarEstadoTarea}
+        guardando={guardando}
+        puedeGuardar={puedeGuardar}
+        money={(v) => formatoMoneda(v, "USD", t)}
+      />
       {/* La sintesis va ANTES del detalle: primero que deberias cambiar,
           y luego los numeros que lo sostienen. */}
       <OportunidadesViaje inteligencia={analisis.inteligencia} presupuesto={analisis.presupuesto} />
@@ -265,7 +479,7 @@ export default function MiViajeDashboard({ ruta, lang = "es", t = (k) => k, onOp
       {analisis.optimizacion?.hayZigzag && <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/60 dark:bg-amber-900/20"><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-amber-700">{t("mvOportunidadOptim")}</div><h3 className="mt-1 text-[16px] font-extrabold text-amber-950 dark:text-amber-100">{t("mvRutaMejor")}</h3><p className="mt-1.5 text-[12.5px] leading-relaxed text-amber-900/75 dark:text-amber-100/70">{analisis.optimizacion.mensaje || t("mvOrdenAlternativo")}</p></div><button type="button" onClick={onOptimizar} className="rounded-full bg-amber-800 px-4 py-2 text-[11.5px] font-extrabold text-white hover:bg-amber-900">{t("mvVerAlternativa")}</button></div></div>}
     </>}
 
-    <RequisitosDelViaje paises={paises} pasaporte={ruta?.pasaporte} t={t} lang={lang} />
+    <RequisitosDelViaje paises={paises} pasaporte={ruta?.pasaporte} t={t} lang={lang} visas={visas} />
 
     {/* LOS MODULOS. Cada uno lleva ahora a donde esa decision se toma de
         verdad, o dice claramente que todavia no existe. */}

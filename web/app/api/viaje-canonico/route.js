@@ -48,9 +48,33 @@ function construirTramos(paradas, viaje) {
   return out;
 }
 
+function factorNivel(nivel) { return nivel === "mochilero" ? 0.72 : nivel === "comodo" ? 1.35 : 1; }
+
 function construirEstadia(paradas, nivel = "medio") {
-  const factor = nivel === "mochilero" ? 0.72 : nivel === "comodo" ? 1.35 : 1;
+  const factor = factorNivel(nivel);
   return paradas.reduce((total, p) => !p.noches ? total : total + (costoDiario(p.ciudad, p.paisNombre || p.pais).usd || 0) * p.noches * factor, 0);
+}
+
+// El mismo calculo, PARADA POR PARADA.
+//
+// El total de estancia ya se devolvia, pero sumado: para poder decir "en
+// Londres son 3 noches, ~US$390 estimados" hacia falta el desglose. Sale del
+// mismo costoDiario, asi que no hay una segunda verdad, y viaja con su fuente
+// para que la pantalla no presente una mediana de pais como si fuera un precio
+// de esa ciudad.
+function estadiaPorParada(paradas, nivel = "medio") {
+  const factor = factorNivel(nivel);
+  const out = [];
+  for (const p of paradas || []) {
+    const noches = Math.max(0, Math.round(Number(p?.noches) || 0));
+    if (!noches) continue;
+    const c = costoDiario(p.ciudad, p.paisNombre || p.pais);
+    const diario = Number(c?.usd) || 0;
+    const ya = out.find((x) => x.ciudad === p.ciudad);
+    if (ya) { ya.noches += noches; ya.totalUsd = Math.round(ya.diarioUsd * ya.noches); continue; }
+    out.push({ ciudad: p.ciudad, pais: p.pais || "", noches, diarioUsd: Math.round(diario * factor), totalUsd: Math.round(diario * factor * noches), fuente: c?.fuente || "sin_dato" });
+  }
+  return out;
 }
 
 async function presupuestoResumen(viaje, tramos) {
@@ -202,6 +226,7 @@ export async function POST(req) {
     tramos: ajustado.tramos,
     regreso: ajustado.regresoIncluido,
     presupuesto,
+    estadia: estadiaPorParada(viaje.paradas, viaje.nivel),
     optimizacion: { ...zigzag, orden: optimizacion },
     decisiones,
     origenAlternativo: alternativa,

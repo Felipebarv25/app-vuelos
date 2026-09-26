@@ -108,10 +108,14 @@ export default function NavTop({ active = null }) {
 
         {/* Cluster derecho */}
         <div className="flex items-center gap-2 lg:gap-3">
+          {/* A 768 px la cabecera se pasaba 53 px de la pantalla: seis enlaces,
+              el logo, el menu, el tema, el idioma Y este reclamo no caben. El
+              enlace a Pro es lo unico prescindible del grupo, asi que vuelve a
+              partir de lg. Se desbordaba en TODAS las paginas, no solo aqui. */}
           {!pro && (
             <Link
               href="/pro"
-              className="hidden text-[13px] font-bold text-amber-600 underline-offset-2 hover:underline sm:inline dark:text-amber-400"
+              className="hidden text-[13px] font-bold text-amber-600 underline-offset-2 hover:underline lg:inline dark:text-amber-400"
             >
               ★ Hazte Pro
             </Link>
@@ -142,7 +146,11 @@ function NavLink({ href, active, children, compact = false }) {
     <Link
       href={href}
       className={`whitespace-nowrap rounded-md font-medium transition ${
-        compact ? "px-2.5 py-1 text-[12.5px]" : "px-3 py-1.5 text-[13.5px]"
+        // Entre 768 y 1024 los seis enlaces mas el logo y el grupo de la
+        // derecha no caben en la fila: la cabecera se salia de la pantalla y
+        // arrastraba a TODA la pagina con ella. Se aprieta el enlace en ese
+        // tramo y se vuelve al tamaño comodo a partir de lg.
+        compact ? "px-2.5 py-1 text-[12.5px]" : "px-2 py-1.5 text-[13px] lg:px-3 lg:text-[13.5px]"
       } ${
         active
           ? "bg-marca-50 text-marca-800 dark:bg-marca-900/40 dark:text-marca-200"
