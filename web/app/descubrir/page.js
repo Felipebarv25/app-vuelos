@@ -28,6 +28,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import NavTop from "@/components/NavTop";
 import BottomTabBar from "@/components/BottomTabBar";
 import PropuestaViaje from "@/components/PropuestaViaje";
@@ -317,9 +318,28 @@ function Contenido() {
         )}
       </section>
 
+      {/* El error de sesión NO puede quedarse en una frase suelta.
+
+          Pasaba justo en el momento de conversión: el viajero rellena el
+          formulario, le gusta una propuesta, pulsa "Construir este viaje" y
+          recibe "Inicia sesión para guardar este viaje." sin botón, sin enlace
+          y —en móvil, donde la navegación superior está oculta— sin ningún
+          acceso a la cuenta en pantalla. Se le pide algo y no se le da forma
+          de hacerlo. Ahí se abandona.
+
+          El destino /?login=1 no es nuevo: es el mismo que ya usa /alertas
+          para este caso. */}
       {error && (
         <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-[13px] font-semibold text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-200">
           {t(error)}
+          {error === "dscErrorSesion" && (
+            <Link
+              href="/?login=1"
+              className="mt-3 inline-flex min-h-[40px] items-center rounded-xl bg-marca-700 px-4 text-[13px] font-bold text-white hover:bg-marca-800"
+            >
+              {t("alertasIdxSinSesionCta")}
+            </Link>
+          )}
         </div>
       )}
 
