@@ -74,6 +74,25 @@ export async function middleware(req) {
   const { pathname } = req.nextUrl;
   const ua = req.headers.get("user-agent") || "";
 
+  // 0) NUESTROS PROPIOS CRONES, ANTES QUE NADA.
+  //
+  // Esta comprobacion estaba mas abajo, dentro de la rama de /api/*, y por eso
+  // llegaba tarde: el filtro de User-Agent del paso 1 ya habia devuelto 403.
+  // El monitor de viajes (.github/workflows/monitor-viajes.yml) llama con curl,
+  // curl manda "curl/8.x", y ese patron esta en la lista negra — asi que la
+  // unica capacidad que justifica Anduve Pro, "miramos por ti mientras no
+  // estas", llevaba desde su creacion sin ejecutarse ni una vez. Cuatro de
+  // cuatro corridas en rojo con este mismo 403.
+  //
+  // El orden correcto es este: el secreto compartido es una credencial de
+  // servidor y demuestra mucho mas que un User-Agent, que el comentario de
+  // abajo ya reconoce como falsificable. Si la peticion trae el secreto bueno,
+  // es nuestra, y no hay nada que filtrar.
+  const secretAlertas = process.env.ALERTS_SHARED_SECRET;
+  if (secretAlertas && req.headers.get("x-alert-secret") === secretAlertas) {
+    return NextResponse.next();
+  }
+
   // 1) Bloqueo de User-Agents de scraping conocidos
   if (BLOCKED_UA_PATTERNS.some((re) => re.test(ua))) {
     return new NextResponse(
@@ -92,10 +111,10 @@ export async function middleware(req) {
   // esas alertas se perdian sin dejar rastro. Se identifica por el secret
   // compartido, no por IP ni User-Agent (ambos falsificables); sin secret
   // configurado esta rama no existe.
-  const secretAlertas = process.env.ALERTS_SHARED_SECRET;
-  if (secretAlertas && req.headers.get("x-alert-secret") === secretAlertas) {
-    return NextResponse.next();
-  }
+  //
+  // La comprobacion vive ahora en el paso 0, arriba del todo, porque aqui
+  // llegaba despues del filtro de User-Agent y no salvaba a quien viniera con
+  // curl. Se deja dicho aqui para que nadie la vuelva a bajar.
 
   // Detectar config específico del endpoint o usar default.
   let cfg = RATE_LIMITS.default;

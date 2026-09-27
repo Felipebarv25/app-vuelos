@@ -36,6 +36,7 @@ jobs:
           fi
           respuesta=$(curl -sS -w "\n%{http_code}" -X POST \
             -H "X-Alert-Secret: $ALERTS_SHARED_SECRET" \
+            -H "User-Agent: Anduve-Monitor/1.0" \
             -H "Content-Type: application/json" \
             https://anduve-app.vercel.app/api/viaje-alertas/monitor)
           codigo=$(echo "$respuesta" | tail -n1)
