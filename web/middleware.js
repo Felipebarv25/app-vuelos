@@ -45,8 +45,20 @@ function getClientIp(req) {
 // Llamada al REST API de Vercel KV — INCR con expiración. Si KV no
 // está configurado, retorna null y el middleware deja pasar.
 async function incrementarContador(clave, ventanaSeg) {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  // LOS DOS JUEGOS DE NOMBRES. Es el mismo fallo que ya se corrigio en
+  // /api/compartido y que aqui seguia vivo: Vercel inyecta KV_* cuando el KV se
+  // crea desde su panel, y una integracion de Upstash directa inyecta UPSTASH_*.
+  // lib/kv.js acepta ambos desde siempre; este fichero leia las variables a mano
+  // y solo miraba KV_*.
+  //
+  // La consecuencia no era un error visible, que es lo que la hacia peligrosa:
+  // sin credenciales, incrementarContador devuelve null, y arriba el codigo
+  // exige `count !== null` para bloquear. Es decir, FALLA ABIERTO en silencio y
+  // el rate limit deja de existir. Medido contra produccion antes de este
+  // cambio: 130 peticiones a /api/track en 8 segundos, las 130 con HTTP 200 y
+  // ni un solo 429, con el cupo por defecto en 90/min.
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) return null;
   try {
     // INCR + EXPIRE en pipeline para atomicidad.
