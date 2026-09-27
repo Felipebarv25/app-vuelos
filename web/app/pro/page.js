@@ -15,7 +15,7 @@ export const metadata = {
   // alertas— y ya no es lo que Pro hace. Lo primero es lo único que Anduve
   // hace solo, que es también lo primero de la lista dentro de la página.
   description:
-    "Anduve vigila tu viaje cada 6 horas y te avisa si un precio se mueve de verdad. Más viajes guardados, asesor y consultas de precio ampliados, alertas ilimitadas, PDF y compartir. Desde US$ 4.99/mes.",
+    "Anduve vigila tu viaje cada 12 horas y te avisa si un precio se mueve de verdad. Más viajes guardados, asesor y consultas de precio ampliados, alertas ilimitadas, PDF y compartir. Desde US$ 4.99/mes.",
   alternates: {
     canonical: `${SITIO}/pro`,
     languages: {
@@ -26,7 +26,7 @@ export const metadata = {
   openGraph: {
     title: "Anduve Pro",
     description:
-      "Viajes ilimitados, export PDF, alertas y más. Desde US$ 4.99/mes.",
+      "Hasta 25 viajes, export PDF, alertas ilimitadas y más. Desde US$ 4.99/mes.",
     url: `${SITIO}/pro`,
     siteName: "Anduve",
     type: "website",
@@ -48,7 +48,7 @@ const PLANES = [
     // es ahora lo único que Anduve hace SOLO, sin que nadie pulse nada: es lo
     // que de verdad justifica una suscripción.
     ventajas: [
-      "Vigilamos tu viaje cada 6 horas y te avisamos si un precio se mueve de verdad",
+      "Vigilamos tu viaje cada 12 horas y te avisamos si un precio se mueve de verdad",
       "Hasta 25 viajes guardados y sincronizados en todos tus dispositivos",
       "60 preguntas al día al asesor de tu viaje, en vez de 5",
       "120 consultas de precio real al día, en vez de 10",
@@ -133,7 +133,7 @@ export default function PaginaPro() {
               Tu viaje, sin límites.
             </h1>
             <p className="mt-3 max-w-2xl text-[17px] text-white/85">
-              Pro te da viajes ilimitados sincronizados, export PDF para llevarte tu plan
+              Pro te da hasta 25 viajes sincronizados, export PDF para llevarte tu plan
               offline, alertas de precio ilimitadas y todo el historial mes a mes.
               Construido para viajeros independientes en cualquier país.
             </p>

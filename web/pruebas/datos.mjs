@@ -76,6 +76,49 @@ for (const [etiqueta, aguja] of [["es", "cada hora"], ["en", "every hour"], ["pt
   comprobar(`ningun texto promete escaneo horario (${etiqueta})`, idiomas.includes(aguja), false);
 }
 
+// ------------------------- LO QUE SE PROMETE vs LO QUE SE HACE
+//
+// Estas pruebas no miran codigo: miran el TEXTO que ve el viajero y lo comparan
+// con lo que el sistema hace de verdad. Cada una nace de una promesa que ya
+// habia derivado de la implementacion sin que nada lo avisara.
+const { limiteDe, CAPACIDADES } = await import("@/lib/features.js");
+const { UMBRALES } = await import("@/lib/motorAlertas.js");
+const proPagina = fs.readFileSync(new URL("../app/pro/page.js", import.meta.url), "utf8");
+const monitorFuente = fs.readFileSync(new URL("../app/api/viaje-alertas/monitor/route.js", import.meta.url), "utf8");
+
+// 1. El detector NO corre cada hora ni cada 3 horas: medido son ~5,7 al dia,
+//    mediana 4,2 h y maximo 7,5 h entre corridas.
+for (const [etq, aguja] of [["es", "cada 3 horas"], ["en", "every 3 hours"], ["pt", "a cada 3 horas"], ["fr", "toutes les 3 heures"]]) {
+  comprobar("ningun texto promete deteccion cada 3 h (" + etq + ")", idiomas.includes(aguja), false);
+}
+
+// 2. "Viajes ilimitados" era falso: Pro tiene tope, y lo aplica /api/rutas.
+const topePro = limiteDe("viajes_guardados", true);
+comprobar("el catalogo declara un tope finito de viajes Pro", Number.isFinite(topePro), true);
+for (const aguja of ["Viajes ilimitados", "Unlimited saved trips", "Viagens ilimitadas sincronizadas"]) {
+  comprobar("ningun texto promete viajes ilimitados (" + aguja.slice(0, 18) + ")", idiomas.includes(aguja), false);
+}
+comprobar("la pagina /pro no promete viajes ilimitados", proPagina.toLowerCase().includes("viajes ilimitados"), false);
+comprobar("la pagina /pro dice el tope real", proPagina.includes(String(topePro)), true);
+
+// 3. Las alertas SI son ilimitadas en Pro: esa promesa debe seguir en pie.
+comprobar("alertas_precio sin tope en Pro", CAPACIDADES.alertas_precio.limite.pro, null);
+comprobar("y el texto lo puede decir", idiomas.includes("Alertas de precio ilimitadas"), true);
+
+// 4. El monitor: el cron corre cada ~6 h, pero tocaMonitorear exige que la foto
+//    anterior tenga al menos esperaMonitorMs. Ese, y no el del cron, es el
+//    intervalo que ve un viaje.
+const horasMonitor = UMBRALES.esperaMonitorMs / 3600000;
+comprobar("la espera real del monitor son 12 h", horasMonitor, 12);
+comprobar("el texto dice las mismas horas", idiomas.includes("cada " + horasMonitor + " h"), true);
+comprobar("y /pro tambien", proPagina.includes("cada " + horasMonitor + " horas"), true);
+comprobar("ningun texto dice ya cada 6 h", idiomas.includes("cada 6 h"), false);
+
+// 5. Los topes del monitor que sostienen el coste.
+comprobar("tramos vigilados por viaje", UMBRALES.tramosVigilados, 2);
+comprobar("tope de 8 viajes por ronda", monitorFuente.includes("TOPE_VIAJES_POR_RONDA = 8"), true);
+comprobar("horizonte de 280 dias", monitorFuente.includes("280"), true);
+
 console.log([...ok, ...mal].join("\n"));
 console.log(`\n${ok.length} correctas, ${mal.length} fallidas`);
 process.exit(mal.length ? 1 : 0);
