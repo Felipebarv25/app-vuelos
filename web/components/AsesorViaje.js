@@ -28,6 +28,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icono } from "@/components/Icono";
 import { useApp } from "@/lib/AppContext";
+import { track } from "@/lib/track";
 
 const MAX_MENSAJE = 500;
 
@@ -38,6 +39,8 @@ export default function AsesorViaje({ viaje, analisis, plan }) {
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
+  // Lo que el servidor dice del limite. No se calcula aqui: se recibe.
+  const [limite, setLimite] = useState(null);
   const finRef = useRef(null);
   const campoRef = useRef(null);
 
@@ -70,6 +73,16 @@ export default function AsesorViaje({ viaje, analisis, plan }) {
       });
 
       if (r.status === 503) { setError("asesorSinClave"); setMensajes(mensajes); return; }
+      // El guardia del servidor contesta con su motivo. Se traduce a algo que
+      // el viajero entienda, no a un "error" a secas: una cosa es que falte
+      // entrar a la cuenta y otra que se hayan acabado las preguntas de hoy.
+      if (r.status === 401 || r.status === 402) {
+        const d = await r.json().catch(() => ({}));
+        setLimite({ limite: d?.limite ?? null, usado: d?.usado ?? 0, motivo: d?.motivo || "limite" });
+        track("limit_reached", { capacidad: "asesor" });
+        setMensajes(mensajes);
+        return;
+      }
       if (!r.ok || !r.body) throw new Error("http");
 
       // Streaming: la respuesta se va pintando, que es la diferencia entre
@@ -176,6 +189,21 @@ export default function AsesorViaje({ viaje, analisis, plan }) {
           </form>
 
           {error && <p className="mt-2 text-[11.5px] font-semibold text-red-600">{t(error)}</p>}
+          {limite && (
+            <div className="mt-2 rounded-xl border border-dashed border-slate-300 p-3 dark:border-slate-600">
+              <p className="text-[11.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+                {limite.motivo === "no-auth"
+                  ? t("proEntrarPara")
+                  : t("proLimiteAgotado", { total: limite.limite ?? "", pro: 60 })}
+              </p>
+              {limite.motivo !== "no-auth" && (
+                <a href="/pro" onClick={() => track("pro_cta", { desde: "asesor" })}
+                  className="mt-2 inline-flex min-h-[38px] items-center rounded-full border border-slate-200 px-4 text-[11.5px] font-bold text-slate-700 hover:border-marca-300 dark:border-slate-600 dark:text-slate-200">
+                  {t("proConocer")} →
+                </a>
+              )}
+            </div>
+          )}
           <p className="mt-2 text-[10.5px] leading-relaxed text-marca-900/55 dark:text-marca-100/50">{t("avAviso")}</p>
         </>
       )}

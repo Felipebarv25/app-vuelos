@@ -15,6 +15,8 @@ export const dynamic = "force-dynamic";
 
 import { kv, kvActivo, pipeline } from "@/lib/kv";
 import { identificarUsuario } from "@/lib/identidad";
+import { isPro } from "@/lib/entitlements";
+import { limiteDe } from "@/lib/features";
 
 const TOPE_RUTAS = 25;      // por usuario
 const TOPE_OVERRIDES = 200;
@@ -222,6 +224,29 @@ export async function POST(req) {
       } catch { id = null; }
     }
   }
+  // EL LIMITE DE VIAJES, EN EL SERVIDOR.
+  //
+  // Existia solo en el boton de guardar de app/page.js: un usuario gratuito
+  // que llamara a este endpoint directamente se guardaba los 25 viajes del
+  // tope general. Un limite que solo vive en la interfaz no es un limite.
+  //
+  // Solo aplica al CREAR. Editar un viaje que ya tienes nunca se bloquea:
+  // dejar a alguien con un viaje guardado que no puede corregir seria
+  // castigarle por haberlo hecho antes de que existiera este limite.
+  if (!id) {
+    const pro = await isPro(u.email);
+    const tope = limiteDe("viajes_guardados", pro);
+    if (tope != null) {
+      const suyas = (await kv(["SMEMBERS", kUsuario(u.email)])) || [];
+      if (suyas.length >= tope) {
+        return Response.json(
+          { ok: false, motivo: pro ? "limite-pro" : "limite-free", capacidad: "viajes_guardados", limite: tope, usado: suyas.length, pro },
+          { status: 402 }
+        );
+      }
+    }
+  }
+
   if (!id) id = idPublico();
 
   const ruta = {

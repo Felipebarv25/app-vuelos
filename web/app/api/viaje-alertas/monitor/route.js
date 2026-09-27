@@ -33,6 +33,7 @@ export const maxDuration = 60;
 
 import { kv, kvActivo } from "@/lib/kv";
 import { detectarCambios, fundirAlertas, tocaMonitorear, K_VIGILADOS, UMBRALES } from "@/lib/motorAlertas";
+import { isPro } from "@/lib/entitlements";
 
 const TTL = 60 * 60 * 24 * 120;
 const TOPE_VIAJES_POR_RONDA = 8;
@@ -64,7 +65,9 @@ export async function POST(req) {
   const origen = new URL(req.url).origin;
   const ids = (await kv(["SMEMBERS", K_VIGILADOS])) || [];
 
-  const informe = { revisados: 0, consultas: 0, alertasNuevas: 0, saltados: { sinSnapshot: 0, reciente: 0, noVigente: 0, sinTramos: 0, huerfano: 0 } };
+  const informe = { revisados: 0, consultas: 0, alertasNuevas: 0, saltados: { sinSnapshot: 0, reciente: 0, noVigente: 0, sinTramos: 0, huerfano: 0, noPro: 0 } };
+  // El plan se consulta una vez por dueño, no una por viaje.
+  const planPorEmail = new Map();
 
   for (const rutaId of ids) {
     if (informe.revisados >= TOPE_VIAJES_POR_RONDA) break;
@@ -80,6 +83,19 @@ export async function POST(req) {
     try { ruta = JSON.parse(rawRuta); } catch { continue; }
 
     if (!viajeVigente(ruta, ahora)) { await kv(["SREM", K_VIGILADOS, rutaId]); informe.saltados.noVigente++; continue; }
+
+    // LA UNICA CAPACIDAD QUE ES DE PRO DE VERDAD.
+    //
+    // Todo lo demas de Anduve lo dispara el viajero: entra, mira, pulsa. Esto
+    // corre SOLO cada 6 h y gasta consultas de pago por cada viaje vigilado,
+    // para siempre. Es lo que un viajero no puede hacerse por su cuenta y lo
+    // unico cuyo coste crece sin que nadie toque nada.
+    //
+    // El corte va AQUI, en el servidor y en el cron, no en un boton: un
+    // usuario gratuito no deja de ver sus alertas —las sigue teniendo al abrir
+    // el tablero—, simplemente Anduve no se las busca mientras duerme.
+    if (!planPorEmail.has(ruta.email)) planPorEmail.set(ruta.email, await isPro(ruta.email));
+    if (!planPorEmail.get(ruta.email)) { informe.saltados.noPro++; continue; }
 
     const rawAl = await kv(["GET", kAlertas(rutaId)]);
     if (!rawAl) { informe.saltados.sinSnapshot++; continue; }

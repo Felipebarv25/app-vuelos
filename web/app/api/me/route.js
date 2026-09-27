@@ -14,6 +14,8 @@ export const runtime = "nodejs";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { leerPro, leerCreditos } from "@/lib/entitlements";
+import { usoActual } from "@/lib/guardiaPro";
+import { limiteDe } from "@/lib/features";
 import { leerSesion } from "@/lib/auth";
 
 function leerTokenEmail(req) {
@@ -57,10 +59,28 @@ export async function GET(req) {
     leerCreditos(email, "alerta"),
   ]);
 
+  // LOS LIMITES, CONTADOS POR EL SERVIDOR.
+  //
+  // La pantalla no adivina cuantas consultas le quedan al viajero: se lo dice
+  // quien lleva la cuenta. Asi "te quedan 3 de 5" es un dato, no una
+  // estimacion del navegador que cualquiera podria falsear.
+  const pro = !!proData;
+  const [usoAsesor, usoVuelos] = await Promise.all([
+    usoActual("asesor", email),
+    usoActual("vuelo_vivo", email),
+  ]);
+  const limites = {
+    asesor: { limite: limiteDe("asesor", pro), usado: usoAsesor },
+    vuelo_vivo: { limite: limiteDe("vuelo_vivo", pro), usado: usoVuelos },
+    viajes_guardados: { limite: limiteDe("viajes_guardados", pro) },
+    alertas_precio: { limite: limiteDe("alertas_precio", pro) },
+  };
+
   return Response.json({
     email,
     fuente,
-    pro: !!proData,
+    pro,
+    limites,
     plan: proData?.plan || null,
     until: proData?.until || null,
     creditos: {

@@ -1402,6 +1402,18 @@ const T = {
     acCampoReferencia: "Referencia",
     acGuardar: "Guardar",
     acCancelar: "Cancelar",
+
+    // Ejecucion del viaje (lib/ejecutorViaje, components/QueSigue)
+    proMonitorTitulo: "Anduve puede vigilar este viaje por ti",
+    proMonitorQueHace: "Ahora mismo revisamos tu viaje cuando lo abres. Con Pro lo revisamos cada seis horas aunque no entres, y te avisamos si un precio se mueve de verdad o si una tarea importante se te echa encima.",
+    proMonitorNota: "Es lo único que consume solo, sin que pulses nada: por eso es la capacidad de Pro.",
+    proConocer: "Conocer Anduve Pro",
+    proDisponibleCon: "Disponible con Anduve Pro",
+    proActivoMonitor: "Vigilando este viaje cada 6 h",
+    proLimiteAsesor: "Te quedan {n} de {total} preguntas hoy",
+    proLimiteAgotado: "Has usado tus {total} preguntas de hoy. Vuelven mañana, o pasan a {pro} con Pro.",
+    proEntrarPara: "Entra a tu cuenta para preguntar sobre este viaje.",
+    paywallMotivoMonitor: "Para que Anduve vigile tus viajes mientras no estás",
   },
 
   en: {
@@ -2765,6 +2777,18 @@ const T = {
     acCampoReferencia: "Reference",
     acGuardar: "Save",
     acCancelar: "Cancel",
+
+    // Ejecucion del viaje (lib/ejecutorViaje, components/QueSigue)
+    proMonitorTitulo: "Anduve can watch this trip for you",
+    proMonitorQueHace: "Right now we check your trip when you open it. With Pro we check it every six hours even when you don't, and tell you if a price really moves or an important task is closing in.",
+    proMonitorNota: "It's the only thing that runs on its own without you pressing anything: that's why it's the Pro capability.",
+    proConocer: "See what Anduve Pro does",
+    proDisponibleCon: "Available with Anduve Pro",
+    proActivoMonitor: "Watching this trip every 6 h",
+    proLimiteAsesor: "{n} of {total} questions left today",
+    proLimiteAgotado: "You've used your {total} questions for today. They reset tomorrow, or go up to {pro} with Pro.",
+    proEntrarPara: "Sign in to ask about this trip.",
+    paywallMotivoMonitor: "So Anduve watches your trips while you're away",
   },
 
   pt: {
@@ -4128,6 +4152,18 @@ const T = {
     acCampoReferencia: "Referência",
     acGuardar: "Salvar",
     acCancelar: "Cancelar",
+
+    // Ejecucion del viaje (lib/ejecutorViaje, components/QueSigue)
+    proMonitorTitulo: "A Anduve pode vigiar esta viagem por você",
+    proMonitorQueHace: "Agora revisamos a sua viagem quando você a abre. Com o Pro revisamos a cada seis horas mesmo sem você entrar, e avisamos se um preço se mexe de verdade ou se uma tarefa importante está chegando.",
+    proMonitorNota: "É a única coisa que consome sozinha, sem você tocar em nada: por isso é a capacidade do Pro.",
+    proConocer: "Conhecer o Anduve Pro",
+    proDisponibleCon: "Disponível com o Anduve Pro",
+    proActivoMonitor: "Vigiando esta viagem a cada 6 h",
+    proLimiteAsesor: "Restam {n} de {total} perguntas hoje",
+    proLimiteAgotado: "Você usou as suas {total} perguntas de hoje. Voltam amanhã, ou sobem para {pro} com o Pro.",
+    proEntrarPara: "Entre na sua conta para perguntar sobre esta viagem.",
+    paywallMotivoMonitor: "Para que a Anduve vigie as suas viagens enquanto você não está",
   },
 
   fr: {
@@ -5492,6 +5528,18 @@ const T = {
     acCampoReferencia: "Référence",
     acGuardar: "Enregistrer",
     acCancelar: "Annuler",
+
+    // Ejecucion del viaje (lib/ejecutorViaje, components/QueSigue)
+    proMonitorTitulo: "Anduve peut surveiller ce voyage pour vous",
+    proMonitorQueHace: "Aujourd'hui, nous vérifions votre voyage quand vous l'ouvrez. Avec Pro, nous le vérifions toutes les six heures même en votre absence, et vous prévenons si un prix bouge vraiment ou si une tâche importante approche.",
+    proMonitorNota: "C'est la seule chose qui tourne toute seule, sans que vous appuyiez sur rien : c'est pour cela qu'elle est réservée à Pro.",
+    proConocer: "Découvrir Anduve Pro",
+    proDisponibleCon: "Disponible avec Anduve Pro",
+    proActivoMonitor: "Surveillance toutes les 6 h",
+    proLimiteAsesor: "Il vous reste {n} questions sur {total} aujourd'hui",
+    proLimiteAgotado: "Vous avez utilisé vos {total} questions du jour. Elles reviennent demain, ou passent à {pro} avec Pro.",
+    proEntrarPara: "Connectez-vous pour poser des questions sur ce voyage.",
+    paywallMotivoMonitor: "Pour qu'Anduve surveille vos voyages en votre absence",
   },
 };
 

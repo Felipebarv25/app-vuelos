@@ -7,6 +7,8 @@
 
 export const maxDuration = 20;
 
+import { comprobar, anotarUso, respuestaBloqueada } from "@/lib/guardiaPro";
+
 const BASE = "https://api.travelpayouts.com/aviasales/v3/prices_for_dates";
 const ORIGENES_DEFAULT = ["BOG", "MDE"];
 const UA = "Anduve/1.0 (https://anduve-app.vercel.app)";
@@ -92,6 +94,19 @@ export async function GET(req) {
   const mes = (searchParams.get("mes") || "").trim();
   const mesSolicitado = /^\d{4}-\d{2}$/.test(mes) ? mes : null;
 
+  // EL LIMITE, SOLO PARA QUIEN TIENE CUENTA.
+  //
+  // Esta consulta es de pago y tiene cuota. Pero este endpoint tambien lo
+  // usan paginas publicas (Ofertas, el planificador), asi que exigir sesion
+  // romperia el producto para quien todavia no se ha registrado.
+  //
+  // El corte que SI se puede hacer sin romper nada es por usuario: quien ha
+  // entrado tiene un tope diario segun su plan. El trafico anonimo se queda
+  // como estaba — y queda reportado como lo que es: un hueco de coste que
+  // necesita limite por IP, y eso es infraestructura que hoy no existe.
+  const guardia = await comprobar(req, "vuelo_vivo", { requiereSesion: false });
+  if (!guardia.permitido) return respuestaBloqueada(guardia, "vuelo_vivo");
+
   const token = process.env.TRAVELPAYOUTS_TOKEN;
   if (!token) return Response.json({ error: "Servidor no configurado", motivo: "Falta TRAVELPAYOUTS_TOKEN en el entorno" }, { status: 503 });
   const marker = process.env.TRAVELPAYOUTS_MARKER || "";
@@ -104,6 +119,8 @@ export async function GET(req) {
   const tareas = [];
   for (const o of origenes) for (const d of destinos) for (const c of cuandos) tareas.push(consultar(o, d, c, token, marker));
   const resultados = (await Promise.all(tareas)).filter(Boolean);
+  if (guardia.email) anotarUso("vuelo_vivo", guardia.email);
+
   if (!resultados.length) return new Response(JSON.stringify({ encontrado: false }), { status: 200, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
 
   resultados.sort((a, b) => a.precio - b.precio);

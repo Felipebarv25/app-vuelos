@@ -6,6 +6,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { DESTINOS_PRESUPUESTO, REGIONES } from "@/lib/presupuesto";
 import { contextoDeViaje, REGLAS_ASESOR_VIAJE } from "@/lib/contextoViaje";
+import { comprobar, anotarUso, respuestaBloqueada } from "@/lib/guardiaPro";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -188,6 +189,23 @@ export async function POST(req) {
     return Response.json({ error: "formato" }, { status: 400 });
   }
 
+  // EL GUARDIA. Va aqui y no mas abajo porque a partir de la siguiente linea
+  // se gasta dinero de verdad.
+  //
+  // Este endpoint estaba ABIERTO: sin sesion, sin limite y con la clave de
+  // Anthropic detras. Cualquiera podia usarlo como un Claude gratis pagado
+  // por Anduve. Lo encontre en la auditoria y es el agujero mas caro de los
+  // que habia.
+  //
+  // El modo VIAJE exige sesion: solo lo usa el asesor del tablero, que ya
+  // necesita un viaje guardado, asi que no rompe ninguna pantalla. El modo
+  // general (la Brujula, que recomienda destinos a quien no sabe a donde ir)
+  // se deja abierto a proposito: es la puerta de entrada al producto y
+  // cerrarla seria pedirle a alguien que se registre antes de saber que es
+  // esto. Queda con su limite por usuario cuando hay sesion.
+  const guardia = await comprobar(req, "asesor", { requiereSesion: Boolean(contextoViaje) });
+  if (!guardia.permitido) return respuestaBloqueada(guardia, "asesor");
+
   const client = new Anthropic({ apiKey });
 
   const stream = client.messages.stream({
@@ -225,6 +243,9 @@ export async function POST(req) {
         controller.enqueue(encoder.encode("\n\n⚠️ Tuve un problema para responder. Intenta de nuevo."));
       } finally {
         controller.close();
+        // Se cuenta al final: si el modelo fallo antes de escribir nada, no
+        // se le descuenta un uso a nadie.
+        if (guardia.email) anotarUso("asesor", guardia.email);
       }
     },
   });

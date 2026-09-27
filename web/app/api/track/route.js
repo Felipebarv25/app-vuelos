@@ -82,6 +82,16 @@ export async function POST(req) {
     const r = rangoPresupuesto(b.usd);
     if (r) cmds.push(["ZINCRBY", "m:pres:rango", "1", r]);
     if (b.region) cmds.push(["ZINCRBY", "m:pres:region", "1", b.region]);
+  } else if (b.tipo === "pro_view" || b.tipo === "pro_cta" || b.tipo === "pro_checkout" || b.tipo === "limit_reached" || b.tipo === "feature_bloqueada") {
+    // EMBUDO DE PRO. Mismo contador de siempre, no un analytics aparte.
+    //
+    // Solo se guarda el tipo de evento y DESDE DONDE ocurrio ("monitor",
+    // "asesor"…) o QUE capacidad se topo. Nada de correos, ni ids, ni que
+    // pregunto nadie: para saber si el embudo funciona basta con contar.
+    cmds.push(["INCR", `m:pro:${b.tipo}:total`]);
+    cmds.push(["INCR", `m:pro:${b.tipo}:${d}`]);
+    const etiqueta = String(b.desde || b.capacidad || b.tipo_ || "").slice(0, 40);
+    if (etiqueta) cmds.push(["ZINCRBY", `m:pro:${b.tipo}:origen`, "1", etiqueta]);
   } else {
     return Response.json({ ok: false });
   }

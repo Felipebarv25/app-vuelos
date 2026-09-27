@@ -21,6 +21,7 @@
 
 import { Icono } from "@/components/Icono";
 import { useApp } from "@/lib/AppContext";
+import { track } from "@/lib/track";
 
 const NIVEL = {
   importante: { punto: "🔴", clase: "border-rose-200 bg-rose-50 dark:border-rose-900/60 dark:bg-rose-950/20", clave: "alNivelImportante" },
@@ -80,15 +81,50 @@ export function textoAlerta(a, t, money) {
 
 function cap(x) { const s = String(x || ""); return s.charAt(0).toUpperCase() + s.slice(1); }
 
+/**
+ * LO QUE PRO AÑADE AQUI, dicho sin vender nada.
+ *
+ * No es un popup ni un muro: el panel de cambios sigue funcionando entero
+ * para todo el mundo. Esto solo explica la diferencia real —revisarlo cuando
+ * entras frente a revisarlo cada seis horas— y deja un enlace. Si despues de
+ * leerlo alguien no lo necesita, ha entendido bien el producto.
+ */
+function Monitor({ t, pro }) {
+  if (pro) {
+    return (
+      <p className="mt-4 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+        <Icono nombre="zap" size={12} /> {t("proActivoMonitor")}
+      </p>
+    );
+  }
+  return (
+    <div className="mt-4 rounded-xl border border-dashed border-slate-300 p-3.5 dark:border-slate-600">
+      <div className="text-[12.5px] font-extrabold text-slate-800 dark:text-slate-100">{t("proMonitorTitulo")}</div>
+      <p className="mt-1 text-[11.5px] leading-relaxed text-slate-500 dark:text-slate-400">{t("proMonitorQueHace")}</p>
+      <p className="mt-1.5 text-[10.5px] leading-relaxed text-slate-400">{t("proMonitorNota")}</p>
+      <a
+        href="/pro"
+        onClick={() => track("pro_cta", { desde: "monitor" })}
+        className="mt-2.5 inline-flex min-h-[38px] items-center rounded-full border border-slate-200 px-4 text-[11.5px] font-bold text-slate-700 hover:border-marca-300 dark:border-slate-600 dark:text-slate-200"
+      >
+        {t("proConocer")} →
+      </a>
+    </div>
+  );
+}
+
 export default function CambiosViaje({ alertas = [], resumen, onLeer, onResolver, money, compacto = false }) {
-  const { t } = useApp();
+  const { t, pro } = useApp();
   const activas = alertas.filter((a) => a.estado === "activa");
 
   // Todo al dia: una linea, no un bloque.
   if (!activas.length) {
     return (
-      <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-[12.5px] font-bold text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-200">
-        <Icono nombre="check" size={14} /> {t("alTodoAlDia")}
+      <div>
+        <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-[12.5px] font-bold text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-200">
+          <Icono nombre="check" size={14} /> {t("alTodoAlDia")}
+        </div>
+        <Monitor t={t} pro={pro} />
       </div>
     );
   }
@@ -157,6 +193,8 @@ export default function CambiosViaje({ alertas = [], resumen, onLeer, onResolver
           );
         })}
       </ul>
+
+      <Monitor t={t} pro={pro} />
 
       {compacto && activas.length > lista.length && (
         <a href="/alertas" className="mt-3 inline-block text-[12px] font-bold text-marca-700 hover:underline dark:text-marca-300">

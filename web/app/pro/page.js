@@ -4,6 +4,7 @@
 // amigos/referidos directamente, (c) tiene espacio para la FAQ legal.
 import Link from "next/link";
 import ProCheckoutBoton from "./ProCheckoutBoton";
+import ProVista from "./ProVista";
 import NavTop from "@/components/NavTop";
 
 const SITIO = "https://anduve-app.vercel.app";
@@ -38,13 +39,18 @@ const PLANES = [
     ahorro: "Ahorra 60% vs mensual",
     tipo: "anual",
     destacado: true,
+    // La lista describía el Anduve de antes: viajes, PDF y alertas de precio.
+    // Desde entonces Anduve prepara el viaje, detecta cambios y responde
+    // preguntas sobre él, y nada de eso aparecía aquí. Lo primero de la lista
+    // es ahora lo único que Anduve hace SOLO, sin que nadie pulse nada: es lo
+    // que de verdad justifica una suscripción.
     ventajas: [
-      "Viajes ilimitados sincronizados en todos tus dispositivos",
-      "Export PDF para tener tu plan offline",
-      "Compartir tu viaje con un enlace público",
+      "Vigilamos tu viaje cada 6 horas y te avisamos si un precio se mueve de verdad",
+      "Hasta 25 viajes guardados y sincronizados en todos tus dispositivos",
+      "60 preguntas al día al asesor de tu viaje, en vez de 5",
+      "120 consultas de precio real al día, en vez de 10",
       "Alertas de precio ilimitadas",
-      "Historial completo de precios mes por mes",
-      "Sin anuncios",
+      "Export PDF y compartir tu viaje con un enlace público",
     ],
   },
   {
@@ -76,7 +82,7 @@ const PLANES = [
 const FAQS = [
   {
     q: "¿Necesito Pro para usar Anduve?",
-    a: "No. Lo más útil es gratis: buscar ciudades, armar itinerario, ver precios reales de vuelo desde tu aeropuerto, 1 viaje guardado, 1 alerta de precio. Pro es para quienes quieren más viajes en simultáneo, PDF, compartir y alertas ilimitadas.",
+    a: "No, y no queremos que lo necesites para entender qué es Anduve. Gratis puedes descubrir viajes, armarlos, ver qué cuestan, qué transporte conviene en cada tramo, qué te falta por preparar y qué cambiaríamos de tu ruta: eso es el producto, no una versión recortada. Gratis incluye 1 viaje guardado, 1 alerta de precio, 5 preguntas al día al asesor y 10 consultas de precio real. Pro es para cuando quieres que Anduve siga trabajando cuando tú no estás.",
   },
   {
     q: "¿Cómo pago?",
@@ -103,6 +109,8 @@ const FAQS = [
 export default function PaginaPro() {
   return (
     <main className="bg-slate-50 pb-16">
+      <ProVista />
+
       {/* Header con el logo: sin esto la pagina se veia sin marca arriba a
           la izquierda y sin salida a otra seccion. */}
       <NavTop />
