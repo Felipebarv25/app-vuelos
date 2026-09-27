@@ -29,6 +29,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Icono } from "@/components/Icono";
 import { useApp } from "@/lib/AppContext";
 import { track } from "@/lib/track";
+import { limiteDe } from "@/lib/features";
 
 const MAX_MENSAJE = 500;
 
@@ -194,7 +195,7 @@ export default function AsesorViaje({ viaje, analisis, plan }) {
               <p className="text-[11.5px] leading-relaxed text-slate-600 dark:text-slate-300">
                 {limite.motivo === "no-auth"
                   ? t("proEntrarPara")
-                  : t("proLimiteAgotado", { total: limite.limite ?? "", pro: 60 })}
+                  : t("proLimiteAgotado", { total: limite.limite ?? "", pro: limiteDe("asesor", true) })}
               </p>
               {limite.motivo !== "no-auth" && (
                 <a href="/pro" onClick={() => track("pro_cta", { desde: "asesor" })}

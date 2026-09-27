@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Icono } from "./Icono";
 import { track } from "@/lib/track";
 import { useBrowserBackClose } from "@/lib/useBrowserBack";
+import { motivoPaywall } from "@/lib/features";
 
 // Paywall modal. Se abre desde cualquier feature gateada (PDF, 2do viaje,
 // 2da alerta, grafico de precios). Muestra los 3 precios con el plan anual
@@ -65,8 +66,12 @@ export default function Paywall({
     alerta: t("paywallMotivoAlerta"),
     grafico: t("paywallMotivoGrafico"),
     compartir: t("paywallMotivoCompartir"),
+    monitor: t("paywallMotivoMonitor"),
   };
-  const motivoTexto = motivos[motivo] || motivos.guardar;
+  // Se acepta tanto el motivo de siempre como el nombre de una capacidad de
+  // features.js: quien abre el paywall no tiene que saber cual es cual.
+  const clave = motivos[motivo] ? motivo : motivoPaywall(motivo);
+  const motivoTexto = motivos[clave] || motivos.guardar;
 
   return (
     <div

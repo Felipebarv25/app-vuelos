@@ -24,6 +24,46 @@ function emailsConProAutomatico() {
   return raw.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
 }
 
+/**
+ * ¿Ya procesamos este evento del webhook?
+ *
+ * Lemon Squeezy REINTENTA cuando no le respondemos 2xx, y puede entregar el
+ * mismo evento mas de una vez. Sin esto, tres entregas de un `order_created`
+ * de un PDF sumaban TRES creditos por UNA compra: sumarCredito es un INCRBY,
+ * no un SET, asi que repetirlo no es inofensivo.
+ *
+ * SET NX es atomico: gana el primero que llega y los demas ven `false`. Con
+ * TTL de 30 dias, que cubre de sobra la ventana de reintentos de cualquier
+ * pasarela sin dejar basura eterna en KV.
+ *
+ * Si KV no esta, devolvemos false (= "no procesado") y se sigue adelante:
+ * perder una compra por no poder deduplicar seria peor que arriesgar un
+ * duplicado, y el duplicado solo afecta a los creditos.
+ */
+const TTL_EVENTO = 60 * 60 * 24 * 30;
+
+export async function eventoYaProcesado(idEvento) {
+  if (!kvActivo() || !idEvento) return false;
+  try {
+    const r = await kv(["SET", `ls:evt:${idEvento}`, "1", "NX", "EX", String(TTL_EVENTO)]);
+    // Upstash devuelve "OK" si escribio y null si la clave ya existia.
+    return r !== "OK" && r !== true;
+  } catch {
+    return false;
+  }
+}
+
+/** Cuenta una activacion de Pro. Mismo contador que /api/track, sin datos de nadie. */
+export async function contarActivacion(tipo) {
+  if (!kvActivo()) return;
+  const d = new Date().toISOString().slice(0, 10);
+  try {
+    await kv(["INCR", "m:pro:pro_activated:total"]);
+    await kv(["INCR", `m:pro:pro_activated:${d}`]);
+    if (tipo) await kv(["ZINCRBY", "m:pro:pro_activated:origen", "1", String(tipo).slice(0, 40)]);
+  } catch { /* contar nunca puede tumbar un cobro */ }
+}
+
 // Lee el registro Pro del usuario. Si no existe o expiro, devuelve null.
 export async function leerPro(email) {
   if (!email) return null;
@@ -60,6 +100,28 @@ export async function isPro(email) {
 }
 
 // Activa Pro con expiracion (suscripciones). plan: "mensual" | "anual".
+/**
+ * Marca la suscripcion como cancelada SIN quitar el acceso.
+ *
+ * Cancelar no es vencer: quien cancela el 15 de enero con periodo hasta el 1
+ * de febrero sigue siendo Pro hasta esa fecha. Lo unico que cambia es que no
+ * se va a renovar, y eso el viajero tiene derecho a verlo en su cuenta.
+ */
+export async function marcarCancelada(email, untilIso) {
+  if (!kvActivo() || !email) return false;
+  const k = `pro:${String(email).toLowerCase()}`;
+  try {
+    const raw = await kv(["GET", k]);
+    if (!raw) return false;
+    const data = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const until = untilIso || data.until || null;
+    await kv(["SET", k, JSON.stringify({ ...data, cancelada: true, until })]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function activarSuscripcion(email, plan, untilIso, productId) {
   if (!kvActivo() || !email) return false;
   const k = `pro:${String(email).toLowerCase()}`;

@@ -124,6 +124,29 @@ export function limiteDe(nombre, pro = false) {
   return pro ? cap.limite.pro : cap.limite.free;
 }
 
+/**
+ * De capacidad a motivo del paywall.
+ *
+ * El modal ya tenia su vocabulario ("guardar", "pdf", "alerta"…) y funciona;
+ * lo que faltaba era poder abrirlo diciendo el nombre de la capacidad, que es
+ * como se llaman las cosas en el resto del sistema. Este mapa es el unico
+ * sitio donde conviven los dos nombres: sin el, cada componente tendria que
+ * acordarse de traducir, que es justo como aparecen los "if (!pro)" sueltos.
+ */
+const MOTIVO_PAYWALL = {
+  viajes_guardados: "guardar",
+  exportar_pdf: "pdf",
+  alertas_precio: "alerta",
+  compartir_viaje: "compartir",
+  monitor_viaje: "monitor",
+  asesor: "monitor",
+  vuelo_vivo: "monitor",
+};
+
+export function motivoPaywall(capacidad) {
+  return MOTIVO_PAYWALL[capacidad] || capacidad || "guardar";
+}
+
 export function esSoloPro(nombre) {
   return Boolean(CAPACIDADES[nombre]?.pro);
 }

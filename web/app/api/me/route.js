@@ -83,6 +83,9 @@ export async function GET(req) {
     limites,
     plan: proData?.plan || null,
     until: proData?.until || null,
+    // Cancelada pero vigente NO es lo mismo que activa: la primera no se
+    // renovara. Solo se devuelve si la pasarela nos lo dijo.
+    cancelada: Boolean(proData?.cancelada),
     creditos: {
       pdf: creditosPdf,
       alerta: creditosAlerta,

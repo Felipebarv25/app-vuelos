@@ -30,6 +30,9 @@ import {
   activarLifetime,
   cancelarPro,
   sumarCredito,
+  marcarCancelada,
+  eventoYaProcesado,
+  contarActivacion,
 } from "@/lib/entitlements";
 
 // IDs de los productos Pro. El usuario los configura en Vercel env vars
@@ -90,6 +93,24 @@ export async function POST(req) {
     return Response.json({ ok: true, ignored: "no-email", tipo });
   }
 
+  // IDEMPOTENCIA.
+  //
+  // Lemon Squeezy reintenta cuando no recibe un 2xx, y puede entregar el mismo
+  // evento mas de una vez. Aqui no era inofensivo: `order_created` de un PDF
+  // llama a sumarCredito, que es un INCRBY, asi que tres entregas daban TRES
+  // creditos por UNA compra. Y el catch de abajo devuelve 500, que es
+  // precisamente lo que provoca el reintento.
+  //
+  // La llave combina el evento y el objeto al que se refiere. Un mismo id de
+  // suscripcion recibe varios eventos distintos a lo largo de su vida, asi que
+  // la llave no puede ser solo el id.
+  const idObjeto = String(data?.id || attrs.order_id || attrs.subscription_id || "");
+  const idEvento = idObjeto ? `${tipo}:${idObjeto}` : "";
+  if (idEvento && (await eventoYaProcesado(idEvento))) {
+    // 200 a proposito: para Lemon Squeezy esta entregado, y lo esta.
+    return Response.json({ ok: true, tipo, duplicado: true });
+  }
+
   try {
     switch (tipo) {
       case "subscription_created":
@@ -101,13 +122,19 @@ export async function POST(req) {
         if (variantId && variantId === PRODUCT_ANUAL) plan = "anual";
         if (until) {
           await activarSuscripcion(email, plan, until, variantId);
+          if (tipo === "subscription_created") await contarActivacion(plan);
         }
         break;
       }
 
       case "subscription_cancelled": {
-        // No se borra: el acceso sigue hasta el final del periodo pagado.
+        // No se borra: el acceso sigue hasta el final del periodo pagado y
         // Lemon Squeezy mandara subscription_expired al final.
+        //
+        // Pero SI se anota, porque es informacion real que la pasarela nos da
+        // y que el viajero tiene derecho a ver: "Pro activo hasta el 1 de
+        // febrero, no se renovara" es muy distinto de "Pro activo".
+        await marcarCancelada(email, attrs.ends_at || attrs.renews_at || null);
         break;
       }
 
@@ -123,6 +150,7 @@ export async function POST(req) {
         // One-time: lifetime, pdf, alerta.
         if (variantId === PRODUCT_LIFETIME) {
           await activarLifetime(email, variantId);
+          await contarActivacion("lifetime");
         } else if (variantId === PRODUCT_PDF) {
           await sumarCredito(email, "pdf", 1);
         } else if (variantId === PRODUCT_ALERTA) {
