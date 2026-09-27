@@ -1,4 +1,5 @@
 "use client";
+import { useApp } from "@/lib/AppContext";
 // Boton "Volver" universal (feedback 2026-07-11: los links de migas eran
 // pequenos y ocultos; el usuario quiere un boton llamativo y consistente en
 // todas las ventanas, con el munequito de la marca).
@@ -42,8 +43,14 @@ import { Logo } from "./Logo";
  * y el boton ademas dice A DONDE va, que es lo que faltaba para que se
  * entendiera sin probarlo.
  */
-export default function BotonVolver({ href = null, etiqueta = "Volver", espaciar = true, alVolver = null }) {
+// El texto por defecto era la cadena "Volver" escrita a mano, asi que este
+// boton —que sale en casi todas las pantallas— se quedaba en español en las
+// otras tres. Quien pase `etiqueta` sigue mandando; quien no, recibe la
+// traduccion del idioma activo.
+export default function BotonVolver({ href = null, etiqueta = null, espaciar = true, alVolver = null }) {
   const router = useRouter();
+  const { t } = useApp();
+  const texto = etiqueta || t("uiVolver");
 
   function volver() {
     if (alVolver) { alVolver(); return; }
@@ -59,7 +66,7 @@ export default function BotonVolver({ href = null, etiqueta = "Volver", espaciar
       <button
         type="button"
         onClick={volver}
-        aria-label={etiqueta}
+        aria-label={texto}
         className={`group inline-flex items-center gap-2 rounded-full py-1.5 pl-2 pr-4 shadow-[0_6px_20px_rgba(15,23,42,.16)] ring-1 backdrop-blur transition hover:-translate-x-0.5 hover:shadow-[0_8px_24px_rgba(15,23,42,.22)] ${
           alVolver
             ? "bg-marca-700 ring-marca-800 hover:bg-marca-800"
@@ -73,7 +80,7 @@ export default function BotonVolver({ href = null, etiqueta = "Volver", espaciar
         <span className="inline-block" style={{ transform: "scaleX(-1)" }}>
           <Logo size={24} animado />
         </span>
-        <span className={`text-[13px] font-bold ${alVolver ? "text-white" : "text-marca-900 dark:text-slate-100"}`}>{etiqueta}</span>
+        <span className={`text-[13px] font-bold ${alVolver ? "text-white" : "text-marca-900 dark:text-slate-100"}`}>{texto}</span>
       </button>
     </div>
     {espaciar && <div aria-hidden="true" className="h-11" />}

@@ -1414,6 +1414,9 @@ const T = {
     proLimiteAgotado: "Has usado tus {total} preguntas de hoy. Vuelven mañana, o pasan a {pro} con Pro.",
     proEntrarPara: "Entra a tu cuenta para preguntar sobre este viaje.",
     paywallMotivoMonitor: "Para que Anduve vigile tus viajes mientras no estás",
+
+    // Ejecucion del viaje (lib/ejecutorViaje, components/QueSigue)
+    uiVolver: "Volver",
   },
 
   en: {
@@ -2789,6 +2792,9 @@ const T = {
     proLimiteAgotado: "You've used your {total} questions for today. They reset tomorrow, or go up to {pro} with Pro.",
     proEntrarPara: "Sign in to ask about this trip.",
     paywallMotivoMonitor: "So Anduve watches your trips while you're away",
+
+    // Ejecucion del viaje (lib/ejecutorViaje, components/QueSigue)
+    uiVolver: "Back",
   },
 
   pt: {
@@ -4164,6 +4170,9 @@ const T = {
     proLimiteAgotado: "Você usou as suas {total} perguntas de hoje. Voltam amanhã, ou sobem para {pro} com o Pro.",
     proEntrarPara: "Entre na sua conta para perguntar sobre esta viagem.",
     paywallMotivoMonitor: "Para que a Anduve vigie as suas viagens enquanto você não está",
+
+    // Ejecucion del viaje (lib/ejecutorViaje, components/QueSigue)
+    uiVolver: "Voltar",
   },
 
   fr: {
@@ -5540,6 +5549,9 @@ const T = {
     proLimiteAgotado: "Vous avez utilisé vos {total} questions du jour. Elles reviennent demain, ou passent à {pro} avec Pro.",
     proEntrarPara: "Connectez-vous pour poser des questions sur ce voyage.",
     paywallMotivoMonitor: "Pour qu'Anduve surveille vos voyages en votre absence",
+
+    // Ejecucion del viaje (lib/ejecutorViaje, components/QueSigue)
+    uiVolver: "Retour",
   },
 };
 

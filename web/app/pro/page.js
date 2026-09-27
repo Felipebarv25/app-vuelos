@@ -11,8 +11,11 @@ const SITIO = "https://anduve-app.vercel.app";
 
 export const metadata = {
   title: "Anduve Pro · planes y precios",
+  // La descripción prometía el Pro de hace varios procesos —viajes, PDF y
+  // alertas— y ya no es lo que Pro hace. Lo primero es lo único que Anduve
+  // hace solo, que es también lo primero de la lista dentro de la página.
   description:
-    "Hazte Pro: viajes ilimitados sincronizados, export PDF, alertas de precios y compartir. Desde US$ 4.99/mes o US$ 24/año. Oferta lanzamiento Lifetime US$ 39.",
+    "Anduve vigila tu viaje cada 6 horas y te avisa si un precio se mueve de verdad. Más viajes guardados, asesor y consultas de precio ampliados, alertas ilimitadas, PDF y compartir. Desde US$ 4.99/mes.",
   alternates: {
     canonical: `${SITIO}/pro`,
     languages: {
