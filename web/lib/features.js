@@ -53,14 +53,18 @@ export const CAPACIDADES = {
   asesor: {
     pro: false,
     limite: { free: 5, pro: 60 },
+    limiteAnonimo: 12,
     ventana: "dia",
     porque: "Cada mensaje son ~US$0,009 de API. Cinco al dia dejan probarlo de verdad sin que una sola cuenta se coma el presupuesto.",
+    porqueAnonimo: "La Brujula se deja abierta a proposito (es la puerta de entrada), pero sin cuenta no hay a quien contarle los usos: el unico contador posible es la IP. Doce al dia dan para una conversacion entera de verdad; a partir de ahi ya no es alguien probando el producto.",
   },
   vuelo_vivo: {
     pro: false,
     limite: { free: 10, pro: 120 },
+    limiteAnonimo: 40,
     ventana: "dia",
     porque: "Consulta de pago con cuota. Diez al dia cubren un viaje entero de nueve tramos y sobra.",
+    porqueAnonimo: "Ofertas y el planificador la usan sin sesion, y una peticion se abre en hasta 3 origenes x 2 destinos x 6 meses = 36 consultas externas. Cuarenta al dia sobran para navegar; son el techo que impide que una IP se lleve la cuota entera.",
   },
   viajes_guardados: {
     pro: false,
@@ -96,7 +100,7 @@ export const CAPACIDADES_PRO = ["monitor_viaje", "viajes_guardados", "alertas_pr
  *
  * @returns {{permitido:boolean, motivo:string|null, limite:number|null, usado:number, restante:number|null}}
  */
-export function evaluar(nombre, { pro = false, usado = 0 } = {}) {
+export function evaluar(nombre, { pro = false, usado = 0, anonimo = false } = {}) {
   const cap = CAPACIDADES[nombre];
   if (!cap) return { permitido: false, motivo: "desconocida", limite: null, usado, restante: null };
 
@@ -104,7 +108,20 @@ export function evaluar(nombre, { pro = false, usado = 0 } = {}) {
     return { permitido: false, motivo: "solo-pro", limite: null, usado, restante: null };
   }
 
-  const limite = cap.limite ? (pro ? cap.limite.pro : cap.limite.free) : null;
+  // SIN CUENTA TAMBIEN HAY TECHO.
+  //
+  // Antes esta funcion solo sabia de "free" y "pro", asi que quien entraba sin
+  // sesion no tenia limite NINGUNO en las dos capacidades que cuestan dinero.
+  // Eso no era un descuido de la interfaz: era la unica puerta de la casa que
+  // daba a una API de pago y estaba abierta de par en par.
+  //
+  // El limite anonimo NO sustituye al de usuario: se aplica cuando no hay a
+  // quien cobrarle los usos, y se cuenta por IP. Es mas generoso que el de una
+  // cuenta gratis a proposito — quien se registra no debe salir perdiendo—,
+  // pero deja de ser infinito.
+  const limite = anonimo && cap.limiteAnonimo != null
+    ? cap.limiteAnonimo
+    : cap.limite ? (pro ? cap.limite.pro : cap.limite.free) : null;
   if (limite == null) return { permitido: true, motivo: null, limite: null, usado, restante: null };
 
   const restante = Math.max(0, limite - usado);

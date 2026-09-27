@@ -245,7 +245,10 @@ export async function POST(req) {
         controller.close();
         // Se cuenta al final: si el modelo fallo antes de escribir nada, no
         // se le descuenta un uso a nadie.
-        if (guardia.email) anotarUso("asesor", guardia.email);
+        // Se cuenta al SUJETO, que es el email si hay sesion y la IP si no.
+        // Antes era `if (guardia.email)`, asi que el trafico anonimo —el unico
+        // sin techo— era ademas el unico que no dejaba rastro de cuanto gastaba.
+        if (guardia.sujeto) anotarUso("asesor", guardia.sujeto);
       }
     },
   });

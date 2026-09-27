@@ -119,7 +119,8 @@ export async function GET(req) {
   const tareas = [];
   for (const o of origenes) for (const d of destinos) for (const c of cuandos) tareas.push(consultar(o, d, c, token, marker));
   const resultados = (await Promise.all(tareas)).filter(Boolean);
-  if (guardia.email) anotarUso("vuelo_vivo", guardia.email);
+  // Igual que en el asesor: cuenta el sujeto, tenga cuenta o no.
+  if (guardia.sujeto) anotarUso("vuelo_vivo", guardia.sujeto);
 
   if (!resultados.length) return new Response(JSON.stringify({ encontrado: false }), { status: 200, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
 

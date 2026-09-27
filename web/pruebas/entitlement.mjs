@@ -122,6 +122,27 @@ comprobar("viaje free 1/1 bloquea el 2o", evaluar("viajes_guardados", { pro: fal
 comprobar("monitor free bloqueado", evaluar("monitor_viaje", { pro: false }).motivo, "solo-pro");
 comprobar("monitor PRO permitido", evaluar("monitor_viaje", { pro: true }).permitido, true);
 
+// -------------------------------- EL TECHO DEL TRAFICO SIN CUENTA
+//
+// Era el agujero de coste del Proceso 12: sin sesion no habia limite NINGUNO
+// en las dos unicas capacidades que gastan dinero por uso.
+comprobar("asesor anonimo 11/12 pasa", evaluar("asesor", { anonimo: true, usado: 11 }).permitido, true);
+comprobar("asesor anonimo 12/12 BLOQUEA", evaluar("asesor", { anonimo: true, usado: 12 }).permitido, false);
+comprobar("  y dice que fue por limite", evaluar("asesor", { anonimo: true, usado: 12 }).motivo, "limite");
+comprobar("vuelo_vivo anonimo 40/40 BLOQUEA", evaluar("vuelo_vivo", { anonimo: true, usado: 40 }).permitido, false);
+comprobar("el anonimo NO usa el tope de free", evaluar("asesor", { anonimo: true, usado: 6 }).limite, 12);
+comprobar("con cuenta sigue mandando el tope free", evaluar("asesor", { pro: false, usado: 6 }).permitido, false);
+comprobar(
+  "toda capacidad abierta al anonimo declara su porque",
+  Object.entries(CAPACIDADES).filter(([, c]) => c.limiteAnonimo != null && !c.porqueAnonimo).map(([k]) => k),
+  []
+);
+comprobar(
+  "ninguna capacidad solo-Pro se abre al anonimo",
+  Object.entries(CAPACIDADES).filter(([, c]) => c.pro && c.limiteAnonimo != null).map(([k]) => k),
+  []
+);
+
 // -------------------------------------------------- 21. IDENTIDAD / FIRMA
 const secreto = "secreto-de-prueba";
 const cuerpo = JSON.stringify({ meta: { event_name: "order_created" }, data: { id: "1" } });
@@ -137,6 +158,19 @@ comprobar("firma correcta", verificar(cuerpo, firmaBuena), true);
 comprobar("firma manipulada", verificar(cuerpo, firmaBuena.replace(/.$/, "0")), false);
 comprobar("cuerpo manipulado", verificar(cuerpo.replace('"1"', '"2"'), firmaBuena), false);
 comprobar("sin firma", verificar(cuerpo, ""), false);
+
+// ------------------------------- EL SUJETO ANONIMO (no guarda la IP)
+const { sujetoAnonimo } = await import("../lib/sujeto.js");
+const reqCon = (h) => ({ headers: { get: (k) => h[k.toLowerCase()] ?? null } });
+
+const s1 = sujetoAnonimo(reqCon({ "x-forwarded-for": "203.0.113.7, 10.0.0.1" }));
+const s2 = sujetoAnonimo(reqCon({ "x-forwarded-for": "203.0.113.7" }));
+const s3 = sujetoAnonimo(reqCon({ "x-forwarded-for": "198.51.100.4" }));
+comprobar("la misma IP da el mismo sujeto", s1, s2);
+comprobar("otra IP da otro sujeto", s1 === s3, false);
+comprobar("el sujeto NO contiene la IP", s1.includes("203.0.113.7"), false);
+comprobar("usa x-real-ip si no hay xff", sujetoAnonimo(reqCon({ "x-real-ip": "198.51.100.4" })), s3);
+comprobar("sin cabeceras cae en un cupo comun", sujetoAnonimo(reqCon({})), "ip:desconocido");
 
 // ----------------------------------------- 13. PAYWALL POR CAPACIDAD
 comprobar("monitor_viaje abre su propio motivo", motivoPaywall("monitor_viaje"), "monitor");

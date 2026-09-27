@@ -29,27 +29,35 @@ import { kv, kvActivo } from "./kv";
 import { identificarUsuario } from "./identidad";
 import { isPro } from "./entitlements";
 import { evaluar } from "./features";
+import { sujetoAnonimo } from "./sujeto";
 
 const TTL_CONTADOR = 60 * 60 * 48;
 
 const dia = () => new Date().toISOString().slice(0, 10);
-const clave = (capacidad, email, ventana) =>
-  ventana === "dia" ? `uso:${capacidad}:${email}:${dia()}` : `uso:${capacidad}:${email}`;
+const clave = (capacidad, sujeto, ventana) =>
+  ventana === "dia" ? `uso:${capacidad}:${sujeto}:${dia()}` : `uso:${capacidad}:${sujeto}`;
 
-/** Cuantas veces lleva usada hoy. 0 si no se puede saber. */
-export async function usoActual(capacidad, email, ventana = "dia") {
-  if (!kvActivo() || !email) return 0;
+// El sujeto de conteo anonimo vive en lib/sujeto: sin dependencias, para
+// poder probarlo fuera de Next.js. Ver alli el porque del hash.
+//
+// Se IMPORTA ademas de reexportarse: `export {} from` no crea el identificador
+// local, y `comprobar` lo llama aqui abajo.
+export { sujetoAnonimo };
+
+/** Cuantas veces lleva usado hoy este sujeto (email o ip:<hash>). 0 si no se sabe. */
+export async function usoActual(capacidad, sujeto, ventana = "dia") {
+  if (!kvActivo() || !sujeto) return 0;
   try {
-    const v = await kv(["GET", clave(capacidad, email, ventana)]);
+    const v = await kv(["GET", clave(capacidad, sujeto, ventana)]);
     return Number(v) || 0;
   } catch { return 0; }
 }
 
 /** Suma uno. Se llama DESPUES de que la operacion haya salido bien. */
-export async function anotarUso(capacidad, email, ventana = "dia") {
-  if (!kvActivo() || !email) return;
+export async function anotarUso(capacidad, sujeto, ventana = "dia") {
+  if (!kvActivo() || !sujeto) return;
   try {
-    const k = clave(capacidad, email, ventana);
+    const k = clave(capacidad, sujeto, ventana);
     await kv(["INCR", k]);
     if (ventana === "dia") await kv(["EXPIRE", k, String(TTL_CONTADOR)]);
   } catch { /* contar es best-effort; nunca tumba la peticion */ }
@@ -71,16 +79,28 @@ export async function comprobar(req, capacidad, { requiereSesion = true, ventana
 
   if (!email) {
     // Sin sesion no hay a quien contarle los usos ni de quien leer el plan.
-    // Para lo que se puede usar sin cuenta, quien llama pasa requiereSesion
-    // false y asume que no habra limite por usuario.
-    if (requiereSesion) return { permitido: false, motivo: "no-auth", email: null, pro: false, anonimo: true, limite: null, usado: 0, restante: null };
-    return { permitido: true, motivo: null, email: null, pro: false, anonimo: true, limite: null, usado: 0, restante: null };
+    if (requiereSesion) return { permitido: false, motivo: "no-auth", email: null, sujeto: null, pro: false, anonimo: true, limite: null, usado: 0, restante: null };
+
+    // PERO "sin cuenta" no puede seguir significando "sin limite".
+    //
+    // Las dos capacidades que se dejan abiertas a proposito —la Brujula y la
+    // busqueda de vuelos— son justo las dos que cuestan dinero por uso, y aqui
+    // se devolvia `permitido: true` sin contar nada. La unica barrera real era
+    // el rate limit del middleware, 90 peticiones por minuto y por IP, que no
+    // es un presupuesto: es un caudal.
+    //
+    // Se cuenta por IP contra `limiteAnonimo`. Quien llama sigue sin necesitar
+    // sesion; lo que cambia es que ahora hay un techo diario.
+    const sujeto = sujetoAnonimo(req);
+    const usado = await usoActual(capacidad, sujeto, ventana);
+    const r = evaluar(capacidad, { pro: false, usado, anonimo: true });
+    return { ...r, email: null, sujeto, pro: false, anonimo: true };
   }
 
   const pro = await isPro(email);
   const usado = await usoActual(capacidad, email, ventana);
   const r = evaluar(capacidad, { pro, usado });
-  return { ...r, email, pro, anonimo: false };
+  return { ...r, email, sujeto: email, pro, anonimo: false };
 }
 
 /** La respuesta HTTP estandar cuando el guardia dice que no. */
@@ -96,6 +116,9 @@ export function respuestaBloqueada(r, capacidad) {
       limite: r.limite ?? null,
       usado: r.usado ?? 0,
       pro: r.pro ?? false,
+      // Quien llego al tope SIN cuenta necesita otro mensaje: no le sirve
+      // "hazte Pro", le sirve "entra y tendras tu propio cupo".
+      anonimo: r.anonimo ?? false,
     },
     { status: estado }
   );

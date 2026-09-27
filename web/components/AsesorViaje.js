@@ -79,7 +79,9 @@ export default function AsesorViaje({ viaje, analisis, plan }) {
       // entrar a la cuenta y otra que se hayan acabado las preguntas de hoy.
       if (r.status === 401 || r.status === 402) {
         const d = await r.json().catch(() => ({}));
-        setLimite({ limite: d?.limite ?? null, usado: d?.usado ?? 0, motivo: d?.motivo || "limite" });
+        // `anonimo` viene del servidor: si llego al tope sin cuenta, lo que
+        // hay que ofrecerle es entrar, no comprar.
+        setLimite({ limite: d?.limite ?? null, usado: d?.usado ?? 0, motivo: d?.anonimo ? "no-auth" : (d?.motivo || "limite") });
         track("limit_reached", { capacidad: "asesor" });
         setMensajes(mensajes);
         return;
