@@ -17,6 +17,44 @@ export async function cargarVisas() {
   return _cargando;
 }
 
+// --- ¿DE CUANDO SON ESTOS DATOS? -------------------------------------------
+//
+// El dataset viaja con `_meta` (ver scripts/generar-requisitos.mjs):
+// `verificado` = ultima vez que el cron comprobo la fuente, `cambiado` =
+// ultima vez que las reglas se movieron de verdad.
+//
+// Antes no habia ninguna fecha, asi que la pantalla decia "90 dias sin visa" y
+// el viajero no tenia forma de saber si eso se comprobo ayer o hace un año. Una
+// regla migratoria sin fecha es una certeza prestada: se ve igual de firme el
+// dia que se genera y catorce meses despues.
+//
+// Devuelve null si el fichero servido es anterior a este cambio; quien lo use
+// debe entonces NO afirmar frescura, no inventar una fecha.
+export function metaVisas() {
+  const m = _visas?._meta;
+  return m?.verificado ? m : null;
+}
+
+/** Dias desde la ultima verificacion. null si no consta la fecha. */
+export function diasDesdeVerificacion() {
+  const m = metaVisas();
+  if (!m) return null;
+  const t = Date.parse(m.verificado + "T00:00:00Z");
+  if (!Number.isFinite(t)) return null;
+  return Math.max(0, Math.floor((Date.now() - t) / 86400000));
+}
+
+// A partir de aqui el dato deja de poder presentarse como "al dia". Passport
+// Index se revisa cada mes; 100 dias significa que al menos tres comprobaciones
+// no llegaron, o que el fichero servido se quedo atras.
+export const DIAS_VISAS_CADUCO = 100;
+
+/** ¿Hay que avisar de que el dato migratorio puede estar desactualizado? */
+export function visasDudosas() {
+  const d = diasDesdeVerificacion();
+  return d == null || d > DIAS_VISAS_CADUCO;
+}
+
 // --- Lista de nacionalidades para el selector (ISO2 + nombre + bandera) ---
 export function listaPaises() {
   return Object.entries(PAISES_ISO).map(([cc, info]) => ({ cc, ...info }));

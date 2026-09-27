@@ -16,6 +16,9 @@ import {
   propinaClave,
   mejorEpoca,
   autorizacionElectronica,
+  metaVisas,
+  diasDesdeVerificacion,
+  visasDudosas,
 } from "@/lib/requisitos";
 import { Icono } from "./Icono";
 
@@ -127,6 +130,10 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
               <div className="mt-0.5 text-[14px] font-semibold">{t("req_desconocido")}</div>
             )}
             <div className="mt-1 text-[12px] opacity-80">{t("reqVisaNota")}</div>
+            {/* DE CUANDO ES ESTE DATO. Se pinta solo cuando `visas` ya cargo,
+                porque antes de eso no hay fecha que contar y afirmar frescura
+                sin tenerla seria justo el problema que esto corrige. */}
+            {visas && <FechaDato t={t} />}
             {/* Ficha interna completa (visa + salud + emergencias) */}
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px] font-bold">
               <a href={urlOficial} className="underline-offset-2 hover:underline">
@@ -228,6 +235,52 @@ export default function RequisitosViaje({ ciudad, nacionalidad, onNacionalidad, 
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// LA FECHA DEL DATO MIGRATORIO, dicha en voz alta.
+//
+// Tres estados, y los tres son verdad distinta:
+//   - verificado hace poco  -> se dice cuando se comprobo, y desde cuando no
+//                              cambia (son dos hechos, no uno).
+//   - verificado hace mucho -> se avisa en ambar: el dato sigue ahi, pero
+//                              Anduve ya no puede sostener que este al dia.
+//   - sin fecha             -> el fichero servido es anterior a esta mejora.
+//                              No se inventa una fecha: se dice que no se sabe.
+function FechaDato({ t }) {
+  const meta = metaVisas();
+  const dias = diasDesdeVerificacion();
+  const dudoso = visasDudosas();
+
+  if (!meta) {
+    return (
+      <div className="mt-1 text-[11.5px] font-semibold text-amber-700 dark:text-amber-400">
+        {t("reqVisaSinFecha")}
+      </div>
+    );
+  }
+
+  const fmt = (iso) => {
+    const d = new Date(iso + "T00:00:00Z");
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  };
+
+  if (dudoso) {
+    return (
+      <div className="mt-1 text-[11.5px] font-semibold text-amber-700 dark:text-amber-400">
+        {t("reqVisaCaduco").replace("{dias}", String(dias))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-1 text-[11.5px] opacity-70">
+      {t("reqVisaVerificado").replace("{fecha}", fmt(meta.verificado))}
+      {meta.cambiado && meta.cambiado !== meta.verificado
+        ? " " + t("reqVisaSinCambios").replace("{fecha}", fmt(meta.cambiado))
+        : ""}
     </div>
   );
 }

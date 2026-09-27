@@ -44,6 +44,9 @@ import {
   interpretarVisa,
   exigeFiebreAmarilla,
   autorizacionElectronica,
+  metaVisas,
+  diasDesdeVerificacion,
+  visasDudosas,
 } from "@/lib/requisitos";
 
 // Igual que en PlanRuta: maplibre no puede renderizarse en servidor.
@@ -146,6 +149,14 @@ function RequisitosDelViaje({ paises, pasaporte, t, lang, visas }) {
           <p className="mt-1 text-[12px] text-slate-500 dark:text-slate-400">
             Con pasaporte de {nombrePaisMostrar(nacionalidad.toLowerCase(), lang)} · {t("reqVisaNota")}
           </p>
+          {/* De cuando son las reglas. Mismo criterio que RequisitosViaje: si
+              no hay fecha no se afirma frescura, se dice que no se sabe. */}
+          {visas && (() => {
+            const meta = metaVisas();
+            if (!meta) return <p className="mt-1 text-[12px] font-semibold text-amber-700 dark:text-amber-400">{t("reqVisaSinFecha")}</p>;
+            if (visasDudosas()) return <p className="mt-1 text-[12px] font-semibold text-amber-700 dark:text-amber-400">{t("reqVisaCaduco").replace("{dias}", String(diasDesdeVerificacion()))}</p>;
+            return <p className="mt-1 text-[12px] text-slate-400 dark:text-slate-500">{t("reqVisaVerificado").replace("{fecha}", meta.verificado)}</p>;
+          })()}
         </div>
       </div>
 

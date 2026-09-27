@@ -32,11 +32,26 @@ function construirTramos(paradas, viaje) {
       precioOriginal: money(t.precio),
       precioRecomendado: money(recomendada?.precio ?? t.precio),
       medioOriginal: t.medio, medioRecomendado: recomendada?.medio || t.medio,
-      duracion_h: t.duracion_h,
+      // El tramo describe LA OPCION QUE SE RECOMIENDA, no la fila de partida.
+      //
+      // Estos tres campos se quedaban con los de `t` (la opcion principal) y el
+      // resultado era un tramo mestizo: medio y precio de la alternativa
+      // elegida, duracion y operador de la curada. En Edimburgo → Londres
+      // salia "Vuelo · LNER, 4,4 h" — LNER es una compañia de TREN y 4,4 h es
+      // el tiempo del tren. Atribuir un vuelo a una operadora ferroviaria no es
+      // un detalle de formato: es un proveedor inventado.
+      //
+      // Las alternativas heuristicas llegan con operador "" A PROPOSITO
+      // (comparadorTransporte no sabe quien opera lo que acaba de estimar), y
+      // el `||` convertia ese vacio honesto en el nombre de otra empresa. Con
+      // `??` / ternario el vacio se respeta: mejor sin operador que con uno falso.
+      duracion_h: recomendada ? recomendada.duracion_h ?? null : t.duracion_h,
+      duracionOriginal_h: t.duracion_h,
       puertaAPuerta_h: recomendada?.puertaAPuerta_h ?? t.puertaAPuerta_h,
       puertaAPuertaOriginal_h: t.puertaAPuerta_h,
       puertaAPuertaRecomendada_h: recomendada?.puertaAPuerta_h ?? t.puertaAPuerta_h,
-      operador: recomendada?.operador || t.operador,
+      operador: recomendada ? recomendada.operador || "" : t.operador || "",
+      operadorOriginal: t.operador || "",
       fuente: recomendada?.fuente || t.fuente,
       fuenteOriginal: t.fuente,
       fuenteRecomendada: recomendada?.fuente || t.fuente,

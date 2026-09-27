@@ -11,6 +11,9 @@ import {
   cargarVisas,
   nombrePais,
   interpretarVisa,
+  metaVisas,
+  diasDesdeVerificacion,
+  visasDudosas,
 } from "@/lib/requisitos";
 
 const COLORES = {
@@ -107,6 +110,37 @@ export default function RequisitosCliente({ destinoIso, destinoNombre }) {
               (datos abiertos). Las políticas pueden cambiar sin previo aviso —
               verifica siempre con el consulado del destino antes de comprar el vuelo.
             </p>
+            {/* DE CUANDO ES EL DATO. Esta es la superficie publica de visas (46
+                paginas prerenderizadas), la que mas gente lee y la que mas
+                parecia una certeza: la regla en grande y ninguna fecha. */}
+            {(() => {
+              const meta = metaVisas();
+              if (!meta) {
+                return (
+                  <p className="mt-2 text-[13px] font-semibold text-amber-700 dark:text-amber-400">
+                    ⚠️ Anduve no sabe de qué fecha son estas reglas. Verifícalas en la
+                    fuente oficial antes de comprar.
+                  </p>
+                );
+              }
+              if (visasDudosas()) {
+                return (
+                  <p className="mt-2 text-[13px] font-semibold text-amber-700 dark:text-amber-400">
+                    ⚠️ Anduve no ha podido comprobar estas reglas desde hace{" "}
+                    {diasDesdeVerificacion()} días. Verifícalas en la fuente oficial
+                    antes de comprar.
+                  </p>
+                );
+              }
+              return (
+                <p className="mt-2 text-[12.5px] opacity-70">
+                  Reglas comprobadas el {meta.verificado}
+                  {meta.cambiado && meta.cambiado !== meta.verificado
+                    ? `. Sin cambios desde el ${meta.cambiado}.`
+                    : "."}
+                </p>
+              );
+            })()}
           </div>
         ) : (
           <div className="text-[13px]">

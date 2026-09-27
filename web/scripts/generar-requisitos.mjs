@@ -7,7 +7,7 @@
 //     -> web/lib/paisesISO.js  =  { ISO2: { nombre, bandera } }
 //
 // Uso:  node scripts/generar-requisitos.mjs
-import { writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { writeFileSync, readFileSync, mkdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -47,8 +47,37 @@ async function main() {
     if (!pasaporte || !destino) continue;
     (visas[pasaporte] ||= {})[destino] = requisito;
   }
-  writeFileSync(join(dir, "visas.json"), JSON.stringify(visas));
-  console.log(`Visas: ${Object.keys(visas).length} pasaportes -> visas.json`);
+  // FECHA DEL DATO. Sin esto, 199 pasaportes de reglas migratorias se
+  // presentaban sin decir de cuando son, y una regla de visa es el dato mas
+  // caro de equivocar de toda la app: el viajero se entera en el mostrador.
+  //
+  // Se guardan DOS fechas porque son dos hechos distintos y confundirlos
+  // engaña en los dos sentidos:
+  //
+  //   verificado  este cron comprobo la fuente hoy. Se reescribe siempre,
+  //               incluso si nada cambio: "lo miramos" es informacion.
+  //   cambiado    la ultima vez que las REGLAS de verdad se movieron. Se
+  //               conserva del fichero anterior si el cuerpo es identico, para
+  //               no fingir un cambio que no hubo.
+  //
+  // Passport Index se mueve despacio: con solo `verificado` pareceria que el
+  // dataset se renueva cada mes, y con solo `cambiado` pareceria abandonado.
+  const cuerpo = JSON.stringify(visas);
+  const destino = join(dir, "visas.json");
+  const hoy = new Date().toISOString().slice(0, 10);
+  let cambiado = hoy;
+  try {
+    const previo = JSON.parse(readFileSync(destino, "utf8"));
+    const { _meta: metaPrevio, ...visasPrevias } = previo;
+    if (JSON.stringify(visasPrevias) === cuerpo && metaPrevio?.cambiado) cambiado = metaPrevio.cambiado;
+  } catch {
+    // No habia fichero previo (o no se puede leer): hoy es lo unico que consta.
+  }
+  writeFileSync(destino, JSON.stringify({
+    _meta: { verificado: hoy, cambiado, fuente: "passport-index-dataset (ilyankou)", pasaportes: Object.keys(visas).length },
+    ...visas,
+  }));
+  console.log(`Visas: ${Object.keys(visas).length} pasaportes -> visas.json (verificado ${hoy}, reglas sin cambios desde ${cambiado})`);
 
   // --- 2) PAÍSES (datos útiles depositados en la web, sin enlaces externos) ---
   console.log("Bajando países (REST Countries)…");
