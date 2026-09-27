@@ -173,6 +173,27 @@ async function origenAlternativo(viaje) {
     const o = ofertaParaOrigen(ofertas, llave, h.iata);
     if (!o || o.origen !== h.iata || o.precio >= actual.precio) continue;
 
+    // LOS DOS PRECIOS TIENEN QUE SER DEL MISMO MES.
+    //
+    // El detector guarda, por ruta, la mejor oferta que ha encontrado — cada
+    // una con SU fecha. En el benchmark salian MDE→MAD a US$935 para el 20 de
+    // noviembre y BOG→MAD a US$845 para el 6 de diciembre, y de restar esos dos
+    // numeros nacia un "desde Bogota ahorras US$90". No es lo mismo: es el
+    // mejor trato de noviembre contra el mejor trato de diciembre.
+    //
+    // La tarjeta que ve el viajero dice "Salir desde Bogota en vez de Medellin"
+    // con una cifra concreta y sin ninguna fecha, asi que la diferencia de mes
+    // no se ve por ningun lado. Con 8,8 horas extra y US$58 de traslado en
+    // juego, eso es empujar una decision cara con una comparacion que no se
+    // sostiene.
+    //
+    // Comparar meses distintos no tiene arreglo de redaccion: o son del mismo
+    // periodo o no hay comparacion. Cuando no lo son, no se propone nada, que
+    // es lo que este proyecto viene haciendo desde el principio con los datos
+    // que no dan para afirmar.
+    const mesDe = (f) => String(f || "").slice(0, 7);
+    if (!mesDe(actual.fecha_ida) || mesDe(o.fecha_ida) !== mesDe(actual.fecha_ida)) continue;
+
     const ahorroVuelo = (actual.precio - o.precio) * (viaje.viajeros || 1);
     // El traslado hasta ese aeropuerto, con el motor de tramos de siempre.
     const ciudadHub = ciudadDelCatalogo(h.ciudad);
@@ -198,6 +219,11 @@ async function origenAlternativo(viaje) {
         // eso la oportunidad nace con confianza media y no alta.
         fuente: "detectado",
         trasladoEstimado: true,
+        // Las fechas de las DOS ofertas que se estan comparando. Ya se sabe que
+        // son del mismo mes (el filtro de arriba), pero viajan igual para que
+        // la tarjeta pueda decirlas y para que nadie tenga que fiarse.
+        fechaActual: actual.fecha_ida || null,
+        fechaAlternativa: o.fecha_ida || null,
       };
     }
   }
