@@ -30,6 +30,25 @@ function esBot(ua) {
   return PATRON_BOT.test(ua);
 }
 
+// Los eventos de producto que SI se cuentan, ademas de los agregados de
+// arriba. Conjunto cerrado: `tipo` lo manda el cliente y una lista abierta
+// dejaria crear claves de KV sin limite.
+//
+// Se cuentan por NOMBRE y por dia, nada mas. Ni quien, ni que ciudad, ni que
+// pregunto: lo mismo que ya se hacia con el embudo de Pro.
+const EVENTOS_PRODUCTO = new Set([
+  "ruta_guardada",       // activacion: alguien guardo un viaje
+  "paywall_clic",        // intencion de compra: eligio un plan en el paywall
+  "descargar_pdf",
+  "reserva_tramo",       // salto a un proveedor desde un tramo
+  "optimizar_ruta",
+  "prueba_rapida",
+  "puerta_home",
+  "presupuesto_hero",
+  "seo_landing",
+  "entrada_region",
+]);
+
 export async function POST(req) {
   if (!kvActivo()) return Response.json({ ok: false });
 
@@ -92,6 +111,24 @@ export async function POST(req) {
     cmds.push(["INCR", `m:pro:${b.tipo}:${d}`]);
     const etiqueta = String(b.desde || b.capacidad || b.tipo_ || "").slice(0, 40);
     if (etiqueta) cmds.push(["ZINCRBY", `m:pro:${b.tipo}:origen`, "1", etiqueta]);
+  } else if (EVENTOS_PRODUCTO.has(b.tipo)) {
+    // EVENTOS QUE SE ESTABAN TIRANDO A LA BASURA.
+    //
+    // La interfaz emite 41 tipos distintos de evento; este endpoint reconocia
+    // 10. Los otros 31 caian en el `else` de abajo y se descartaban en
+    // silencio, con un 200 de vuelta para que el cliente ni se enterara.
+    //
+    // Entre los descartados estaba `ruta_guardada`, que es EL evento de
+    // activacion del producto: el momento en que alguien deja de mirar y
+    // guarda un viaje. Tambien `paywall_clic`, que es la senal de intencion de
+    // compra mas fuerte que existe aqui. Lanzar sin eso es lanzar sin saber si
+    // el lanzamiento funciono.
+    //
+    // La lista es FIJA a proposito. `b.tipo` viene del cliente, asi que aceptar
+    // cualquier cadena permitiria crear claves sin limite en KV; con un
+    // conjunto cerrado el numero de claves lo decide el codigo, no quien llame.
+    cmds.push(["INCR", `m:ev:${b.tipo}:total`]);
+    cmds.push(["INCR", `m:ev:${b.tipo}:${d}`]);
   } else {
     return Response.json({ ok: false });
   }
