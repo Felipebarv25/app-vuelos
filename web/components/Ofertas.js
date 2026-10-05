@@ -11,6 +11,9 @@ import { nombreAerolinea } from "@/lib/aerolineas";
 import { PAISES_ORIGEN } from "@/lib/paisesOrigen";
 import { obtenerOfertas } from "@/lib/ofertasDatos";
 import { obtenerGeo } from "@/lib/geo";
+import { linkVuelos, linkGoogleFlights } from "@/lib/afiliados";
+import { nombreDeIATA } from "@/lib/paisesOrigen";
+import { nombrePaisMostrar } from "@/lib/paisesNombres";
 
 // Bandera PNG via flagcdn (components/Bandera.js): los emoji de bandera (🇺🇸)
 // NO renderizan en Windows y se ven como "us" — lo que confunde al usuario
@@ -640,10 +643,45 @@ export default function Ofertas({ onPlanear, t = (k) => k, lang = "es", rango = 
             </>
           )}
 
+          {/* SIN PRECIO NO ES SIN VUELOS.
+              El proveedor de precios (Travelpayouts) solo tiene cache de las
+              rutas que la gente busca en Aviasales, asi que destinos finos
+              desde Colombia —Filadelfia, Chicago, Boston— vuelven vacios
+              aunque haya vuelos todos los dias. Decir "no encontramos vuelos"
+              y dejar ahi al viajero le hace descartar un destino que si puede
+              volar. Se dice lo que pasa de verdad y se le da la salida con los
+              mismos enlaces que la app ya usa en cada tarjeta. */}
           {!cargandoVivo && vivo && !vivo.encontrado && (
-            <p className="mt-2 text-[13px] text-slate-500 dark:text-slate-400">
-              {t("ofertasEnVivoVacio")}
-            </p>
+            <>
+              <p className="mt-2 text-[13px] text-slate-500 dark:text-slate-400">
+                {t("ofertasEnVivoVacio")}
+              </p>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                <a
+                  href={linkGoogleFlights({
+                    ciudad: destinoSel.ciudad,
+                    pais: nombrePaisMostrar(destinoSel.pais, lang) || "",
+                    origen: nombreDeIATA(hubsOrigenElegido[0]) || "Bogotá",
+                  })}
+                  target="_blank"
+                  rel="sponsored noopener"
+                  className="inline-flex min-h-[40px] items-center rounded-xl bg-marca-700 px-3.5 text-[13px] font-bold text-white transition hover:bg-marca-800"
+                >
+                  {t("presupCompararGoogle")} ↗
+                </a>
+                <a
+                  href={linkVuelos({
+                    ciudad: destinoSel.ciudad,
+                    pais: nombrePaisMostrar(destinoSel.pais, lang) || "",
+                  })}
+                  target="_blank"
+                  rel="sponsored noopener"
+                  className="inline-flex min-h-[40px] items-center rounded-xl border border-slate-200 px-3.5 text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+                >
+                  {t("ofertasVerVuelos")} ↗
+                </a>
+              </div>
+            </>
           )}
         </div>
       )}

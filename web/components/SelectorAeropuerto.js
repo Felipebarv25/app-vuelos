@@ -191,6 +191,43 @@ function buscarAeropuertos(catalogo, q, paisFiltro = "", limite = 20) {
       // el empate lo rompía el orden del catálogo y ganaba Gatwick sobre
       // Heathrow.
       if (HUB_DESEMPATE.has(a.iata)) score += 5;
+
+      // LO QUE LAS LISTAS DE ARRIBA NO PUEDEN CUBRIR.
+      //
+      // Los tres conjuntos anteriores se mantienen a mano, y eso funciona para
+      // los hubs que alguien se acordo de anadir. El catalogo tiene 6.987
+      // aeropuertos e incluye toda la aviacion general, asi que para cualquier
+      // ciudad que no este en las listas el desempate lo decidia el orden del
+      // fichero. Medido: 321 ciudades tienen mas de un aeropuerto y en 77 de
+      // ellas el internacional NO aparece primero.
+      //
+      // Lo que eso le daba al viajero:
+      //   Philadelphia -> BBX, Wings Field, aviacion general sin vuelos
+      //   Anchorage    -> EDF, base aerea de Elmendorf
+      //   Athens       -> HEW, Helenikon, CERRADO desde 2001
+      //   Arusha       -> ARK en vez de Kilimanjaro International
+      //
+      // Los cuatro devuelven "no encontramos vuelos" para siempre, y el viajero
+      // no tiene forma de saber que el problema es el aeropuerto que eligio.
+      //
+      // El catalogo no trae ningun campo que diga si hay servicio comercial.
+      // Se demota UNICAMENTE lo que es imposible como destino de un viajero:
+      // bases militares, helipuertos y bases de hidroaviones. No es una
+      // heuristica sobre si un aeropuerto es grande o pequeño —eso ya lo
+      // deciden las listas de arriba— es que a Elmendorf Air Force Base no se
+      // vuela con un billete.
+      //
+      // Se demota en vez de ocultar: quien escriba el IATA exacto lo sigue
+      // encontrando, que es lo que necesita quien de verdad busca uno de estos.
+      //
+      // NO se premia "International": lo probe y es tentador, pero hay
+      // aerodromos pequeños que lo llevan en el nombre (Akron Fulton
+      // International) y hubs reales que no, asi que premiar la palabra mueve
+      // casos en las dos direcciones. Una regla que acierta de media no vale
+      // dentro de un ranking afinado a mano.
+      if (/air force base|air base|naval air|army airfield|heliport|seaplane base/.test(a.nombreLower || "")) {
+        score -= 40;
+      }
     }
     if (score > 0) scored.push({ a, score });
     if (scored.length > limite * 6) break;
