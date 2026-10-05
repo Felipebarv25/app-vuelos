@@ -1181,7 +1181,21 @@ export default function Presupuesto({ onElegirCiudad, onCerrar, t = (k) => k, in
             </div>
           )}
 
-          <div className="mt-4 text-[11px] leading-relaxed text-slate-400">{t("presupAviso")}</div>
+          {/* LA NOTA NO PUEDE CONTRADECIR A LAS TARJETAS.
+              Esta linea decia siempre "los vuelos son aproximados; confirma el
+              precio real con el detector", incluso cuando la tarjeta de arriba
+              mostraba el sello PRECIO REAL con la oferta detectada, sus fechas y
+              "visto hace 2 h". Es decir: el detector YA habia hablado y el pie
+              de pagina le llevaba la contraria en la misma pantalla.
+              Un viajero que lee las dos cosas no sabe cual creer, y la duda cae
+              siempre del lado de no fiarse.
+              Ahora la frase de los vuelos solo aparece cuando NINGUN vuelo en
+              pantalla trae precio real. Si alguno lo trae, cada tarjeta ya lleva
+              su propio sello y no hace falta —ni es cierto— generalizar. */}
+          <div className="mt-4 text-[11px] leading-relaxed text-slate-400">
+            {t("presupAvisoCostos")}
+            {resultados.some((d) => d.esReal) ? "" : " " + t("presupAvisoVuelos")}
+          </div>
         </div>
       </div>
     </div>

@@ -594,8 +594,8 @@ const T = {
     presupAlcanza: "alcanza para",
     presupPlanear: "Planear",
     presupVerVuelos: "Ver vuelos",
-    presupAviso:
-      "Costos promedio orientativos para un turista de gama media (USD). Los vuelos son aproximados; confirma el precio real con el detector según tu aeropuerto de origen.",
+    presupAvisoCostos: "Costos promedio orientativos para un turista de gama media (USD).",
+    presupAvisoVuelos: "Los vuelos son aproximados; confirma el precio real con el detector según tu aeropuerto de origen.",
     // Diseño / etiquetas
     heroEyebrow: "Planifica tu próxima aventura",
     destinosEyebrow: "Inspiración",
@@ -1990,8 +1990,8 @@ const T = {
     presupAlcanza: "enough for",
     presupPlanear: "Plan",
     presupVerVuelos: "Flights",
-    presupAviso:
-      "Average estimated costs for a mid-range tourist (USD). Flights are approximate; confirm the real price with the detector for your origin airport.",
+    presupAvisoCostos: "Average estimated costs for a mid-range tourist (USD).",
+    presupAvisoVuelos: "Flights are approximate; confirm the real price with the detector for your origin airport.",
     heroEyebrow: "Plan your next adventure",
     destinosEyebrow: "Inspiration",
     recomendadoEyebrow: "We think you'll like",
@@ -3372,8 +3372,8 @@ const T = {
     presupAlcanza: "dá para",
     presupPlanear: "Planejar",
     presupVerVuelos: "Voos",
-    presupAviso:
-      "Custos médios estimados para um turista intermediário (USD). Os voos são aproximados desde a Colômbia; confirme o preço real com o detector de voos.",
+    presupAvisoCostos: "Custos médios estimados para um turista intermediário (USD).",
+    presupAvisoVuelos: "Os voos são aproximados; confirme o preço real com o detector de voos.",
     heroEyebrow: "Planeje sua próxima aventura",
     destinosEyebrow: "Inspiração",
     recomendadoEyebrow: "Achamos que você vai gostar",
@@ -4755,8 +4755,8 @@ const T = {
     presupAlcanza: "assez pour",
     presupPlanear: "Planifier",
     presupVerVuelos: "Vols",
-    presupAviso:
-      "Coûts moyens estimés pour un touriste de gamme moyenne (USD). Les vols sont approximatifs ; confirmez le prix réel avec le détecteur selon votre aéroport de départ.",
+    presupAvisoCostos: "Coûts moyens estimés pour un touriste de gamme moyenne (USD).",
+    presupAvisoVuelos: "Les vols sont approximatifs ; confirmez le prix réel avec le détecteur selon votre aéroport de départ.",
     heroEyebrow: "Planifiez votre prochaine aventure",
     destinosEyebrow: "Inspiration",
     recomendadoEyebrow: "Nous pensons que vous aimerez",
